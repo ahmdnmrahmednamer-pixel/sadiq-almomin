@@ -6,115 +6,14 @@ import '../../../core/notifications/prayer_notification_service.dart';
 import '../../../core/services/islamic_audio_service.dart';
 
 String getAdhanVoiceName(String key) {
-  switch (key) {
-    case 'adhan_makkah':
-      return 'أذان المسجد الحرام (مكة المكرمة) — الشيخ علي ملا';
-    case 'adhan_madinah':
-      return 'أذان المسجد النبوي الشريف (المدينة المنورة)';
-    case 'adhan_aqsa':
-      return 'أذان المسجد الأقصى المبارك (القدس الشريف)';
-    case 'adhan_cairo':
-    case 'adhan_cairo_refaat':
-      return 'أذان القاهرة ومصر — الشيخ محمد رفعت';
-    case 'adhan_hussary':
-      return 'أذان الشيخ محمود خليل الحصري (مقام البيات)';
-    case 'adhan_abdulbasit':
-      return 'أذان الشيخ عبد الباسط عبد الصمد';
-    case 'adhan_afasy':
-      return 'أذان الشيخ مشاري بن راشد العفاسي (الكويت والخليج)';
-    case 'adhan_fajr':
-      return 'أذان الفجر (الصلاة خير من النوم - الحرم المكي)';
-    case 'adhan_fajr_afasy':
-      return 'أذان الفجر — الشيخ مشاري العفاسي';
-    case 'adhan_fajr_madinah':
-      return 'أذان الفجر من المسجد النبوي الشريف';
-    case 'adhan_fajr_aqsa':
-      return 'أذان الفجر من المسجد الأقصى المبارك';
-    case 'adhan_shoaisha':
-      return 'أذان الشيخ أبو العينين شعيشع';
-    case 'adhan_banna':
-      return 'أذان الشيخ محمود علي البنا';
-    case 'adhan_naina':
-      return 'أذان الدكتور أحمد نعينع';
-    case 'adhan_turkey':
-      return 'أذان مساجد إسطنبول وتركيا (النمط العثماني)';
-    case 'adhan_dubai':
-      return 'أذان دبي والإمارات العربية المتحدة';
-    case 'adhan_sham':
-      return 'أذان الجامع الأموي الكبير (دمشق الشام)';
-    case 'adhan_algeria':
-      return 'أذان الجزائر والمغرب العربي';
-    case 'adhan_alqatami':
-      return 'أذان الشيخ ناصر القطامي (الرياض)';
-    case 'adhan_alzamil':
-      return 'أذان الشيخ ماجد الزامل (صوت شجي)';
-    case 'adhan_mansoor_alsalimi':
-      return 'أذان الشيخ منصور السالمي (خاشع ومؤثر)';
-    case 'adhan_essam_bukhari':
-      return 'أذان الشيخ عصام بخاري (المسجد النبوي)';
-    case 'adhan_farooq_hadrawi':
-      return 'أذان الشيخ فاروق حضراوي (المسجد الحرام)';
-    case 'adhan_naif_feeda':
-      return 'أذان الشيخ نايف فيده (المسجد الحرام)';
-    case 'adhan_mustafa_ismail':
-      return 'أذان الشيخ مصطفى إسماعيل (مقام الصبا)';
-    case 'adhan_omran':
-      return 'أذان الشيخ محمد عمران (سلطان المبتهلين)';
-    case 'adhan_islam_sobhi':
-      return 'أذان القارئ إسلام صبحي (هادئ وناعم)';
-    case 'adhan_wadih_alyamani':
-      return 'أذان الشيخ وديع اليمني (صنعاء واليمن)';
-    case 'adhan_idrees_abkar':
-      return 'أذان الشيخ إدريس أبكر (خاشع ومهيب)';
-    case 'adhan_tunisia':
-      return 'أذان جامع الزيتونة المعمور (تونس الخضراء)';
-    case 'adhan_bosnia':
-      return 'أذان سراييفو والبوسنة (جامع الغازي خسرو بك)';
-    case 'adhan_fajr_abdulbasit':
-      return 'أذان الفجر — الشيخ عبد الباسط عبد الصمد';
-    case 'adhan_fajr_alqatami':
-      return 'أذان الفجر — الشيخ ناصر القطامي';
-    case 'adhan_haza_albalushi':
-      return 'أذان القارئ هزاع البلوشي (سلطنة عمان)';
-    case 'adhan_aldosari':
-      return 'أذان الشيخ ياسر الدوسري (الحرم المكي)';
-    case 'adhan_albani':
-      return 'أذان الشيخ العلامة محمد ناصر الدين الألباني';
-    case 'adhan_trabelsi':
-      return 'أذان القارئ أحمد الطرابلسي';
-    case 'adhan_fajr_trabelsi':
-      return 'أذان الفجر — القارئ أحمد الطرابلسي';
-    case 'adhan_kabara_rast':
-      return 'أذان الشيخ محمد صلاح الدين كبارة (مقام رست 1957)';
-    case 'adhan_doukali':
-      return 'أذان الشيخ الدوكالي العالم (ليبيا)';
-    case 'adhan_tokhi':
-      return 'أذان الجمعة من جامع الرفاعي — الشيخ محمود الطوخي';
-    case 'adhan_walid_mehsas':
-      return 'أذان الشيخ وليد مهساس (الجزائر)';
-    case 'adhan_fakhro':
-      return 'أذان أحمد فخرو (جامع قطر الكبير)';
-    case 'adhan_emadi':
-      return 'أذان أحمد العمادي (قطر)';
-    case 'adhan_marroush':
-      return 'أذان القارئ كمال محمد المروش (المغرب)';
-    case 'adhan_palestine_sohaib':
-      return 'أذان من فلسطين — بصوت صهيب هاني';
-    case 'adhan_iraq_assaf':
-      return 'أذان العشاء من بغداد — القارئ ياسين العساف';
-    case 'adhan_fajr_iraq_assaf':
-      return 'أذان الفجر من العراق — القارئ ياسين العساف';
-    case 'adhan_kuwait':
-      return 'أذان دولة الكويت الرسمي';
-    case 'adhan_fajr_kuwait':
-      return 'أذان الفجر من دولة الكويت';
-    case 'adhan_oman':
-      return 'أذان مسقط وسلطنة عمان';
-    case 'takbeerat':
-      return 'تكبيرات الأذان والعيدين (نغمة سريعة)';
-    default:
-      return 'أذان المسجد الحرام (مكة المكرمة)';
+  final track = IslamicAudioService.allTracks.firstWhere(
+    (t) => t.id == key || t.rawNotificationSound == key,
+    orElse: () => IslamicAudioService.allTracks.first,
+  );
+  if (track.muezzinName != null && track.muezzinName!.isNotEmpty) {
+    return '${track.title} — ${track.muezzinName}';
   }
+  return track.title;
 }
 
 String getIqamahVoiceName(String key) {
@@ -627,6 +526,9 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _currentlyPlayingTrackId;
+  bool _isBatchDownloading = false;
+  int _batchDownloadedCount = 0;
+  int _batchTotalCount = 0;
 
   @override
   void initState() {
@@ -811,6 +713,107 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
               ),
             ),
 
+            // Batch Download Banner for 100% Offline Playback
+            AnimatedBuilder(
+              animation: IslamicAudioService.instance,
+              builder: (context, _) {
+                final adhanTracks = IslamicAudioService.allTracks
+                    .where((t) => t.type == (widget.isIqamah ? IslamicAudioType.iqamah : IslamicAudioType.adhan))
+                    .toList();
+                final downloadedCount = adhanTracks
+                    .where((t) => t.assetPath != null || IslamicAudioService.instance.isDownloaded(t.id))
+                    .length;
+                final allDownloaded = downloadedCount == adhanTracks.length;
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1B2B22) : const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.offline_pin_rounded, color: Color(0xFF10B981), size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'العمل بدون إنترنت ($downloadedCount من ${adhanTracks.length} صوتاً)',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+                              ),
+                            ],
+                          ),
+                          if (!allDownloaded && !_isBatchDownloading)
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              icon: const Icon(Icons.download_for_offline_rounded, size: 14),
+                              label: const Text('تحميل الكل HD', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                              onPressed: () async {
+                                setState(() {
+                                  _isBatchDownloading = true;
+                                  _batchDownloadedCount = 0;
+                                  _batchTotalCount = adhanTracks.length - downloadedCount;
+                                });
+                                await IslamicAudioService.instance.downloadAllAdhanTracks(
+                                  onProgress: (comp, tot) {
+                                    if (mounted) {
+                                      setState(() {
+                                        _batchDownloadedCount = comp;
+                                        _batchTotalCount = tot;
+                                      });
+                                    }
+                                  },
+                                );
+                                if (mounted) {
+                                  setState(() {
+                                    _isBatchDownloading = false;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('تم تنزيل جميع أصوات الأذان بجودة استوديو HD بنجاح! 🎉'),
+                                      backgroundColor: AppColors.primaryGreen,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                      if (_isBatchDownloading) ...[
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: _batchTotalCount > 0 ? (_batchDownloadedCount / _batchTotalCount) : null,
+                            color: AppColors.primaryGreen,
+                            backgroundColor: Colors.grey.withOpacity(0.2),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'جاري تنزيل الأصوات بجودة HD: $_batchDownloadedCount / $_batchTotalCount',
+                          style: const TextStyle(fontSize: 10.5, color: AppColors.mutedText),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+
             const Divider(height: 1),
 
             // Sheikhs List
@@ -913,6 +916,96 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.accentGold),
                                           ),
                                         ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 6),
+
+                              // Audio Quality & Offline Status Badges
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primaryGreen.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.high_quality_rounded, size: 12, color: AppColors.primaryGreen),
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          track.quality,
+                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      track.durationFormatted,
+                                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  if (track.assetPath != null || IslamicAudioService.instance.isDownloaded(track.id))
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withOpacity(0.14),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.check_circle_outline_rounded, size: 11, color: Color(0xFF10B981)),
+                                          SizedBox(width: 3),
+                                          Text(
+                                            'محفوظ محلياً',
+                                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981)),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  else if (IslamicAudioService.instance.isDownloading(track.id))
+                                    const SizedBox(
+                                      width: 40,
+                                      height: 6,
+                                      child: LinearProgressIndicator(color: AppColors.primaryGreen),
+                                    )
+                                  else
+                                    InkWell(
+                                      borderRadius: BorderRadius.circular(6),
+                                      onTap: () async {
+                                        await IslamicAudioService.instance.downloadTrack(track.id);
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.accentGold.withOpacity(0.16),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.download_rounded, size: 12, color: AppColors.accentGold),
+                                            SizedBox(width: 3),
+                                            Text(
+                                              'تحميل HD',
+                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.accentGold),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                 ],
