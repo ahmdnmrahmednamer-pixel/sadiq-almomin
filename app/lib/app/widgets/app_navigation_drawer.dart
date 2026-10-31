@@ -183,6 +183,32 @@ class AppNavigationDrawer extends StatelessWidget {
                               },
                             ),
 
+                            _buildDrawerTile(
+                              context: context,
+                              icon: Icons.auto_stories_rounded,
+                              title: 'مصحف الصحابة في القراءات العشر 📜',
+                              subtitle: 'القراءات العشر المتواترة من طريق الشاطبية والدرة وتوجيهها',
+                              semanticLabel: 'مصحف الصحابة في القراءات العشر',
+                              color: const Color(0xFF0F766E),
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push('/qiraat');
+                              },
+                            ),
+
+                            _buildDrawerTile(
+                              context: context,
+                              icon: Icons.record_voice_over_rounded,
+                              title: 'المختصر الصوتي في تفسير القرآن 🎧',
+                              subtitle: 'مركز تفسير للدراسات القرآنية (الأسمري، الغامدي، الشايع)',
+                              semanticLabel: 'المختصر الصوتي في تفسير القرآن',
+                              color: const Color(0xFF6D28D9),
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push('/audio-tafsir');
+                              },
+                            ),
+
                             const Divider(height: 18),
 
                             // ================= 2. قسم الصلاة والأذان والمؤذنون =================
@@ -317,6 +343,19 @@ class AppNavigationDrawer extends StatelessWidget {
                               onTap: () {
                                 Navigator.pop(context);
                                 context.push('/zakat');
+                              },
+                            ),
+
+                            _buildDrawerTile(
+                              context: context,
+                              icon: Icons.library_books_rounded,
+                              title: 'المصادر والمراجع القرآنية المعتمدة 📚',
+                              subtitle: 'مصحف القراءات، تفسير وإعراب الدرة، والمختصر الصوتي',
+                              semanticLabel: 'المصادر والمراجع القرآنية المعتمدة',
+                              color: const Color(0xFFB45309),
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push('/approved-sources');
                               },
                             ),
 

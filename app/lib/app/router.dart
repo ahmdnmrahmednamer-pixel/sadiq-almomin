@@ -30,6 +30,9 @@ import '../features/audio/downloads_manager_screen.dart';
 import '../features/audio/widgets/global_mini_player_bar.dart';
 import '../features/mushaf/screens/quran_asbab_nuzul_screen.dart';
 import '../features/mushaf/screens/quran_irab_screen.dart';
+import '../features/mushaf/screens/audio_tafsir_screen.dart';
+import '../features/mushaf/screens/qiraat_mushaf_screen.dart';
+import '../features/library/screens/approved_sources_screen.dart';
 import '../features/prayer/prayer_times_detail_screen.dart';
 import '../features/backup/backup_restore_screen.dart';
 import '../features/egypt/egyptian_heritage_screen.dart';
@@ -114,6 +117,9 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/tajweed') ||
         location.startsWith('/tajweed-rule') ||
         location.startsWith('/quran-irab') ||
+        location.startsWith('/qiraat') ||
+        location.startsWith('/audio-tafsir') ||
+        location.startsWith('/approved-sources') ||
         location.startsWith('/quran-asbab-nuzul')) {
       return 1;
     }
@@ -439,6 +445,18 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/quran-irab',
           builder: (context, state) => const QuranIrabScreen(),
+        ),
+        GoRoute(
+          path: '/qiraat',
+          builder: (context, state) => const QiraatMushafScreen(),
+        ),
+        GoRoute(
+          path: '/audio-tafsir',
+          builder: (context, state) => const AudioTafsirScreen(),
+        ),
+        GoRoute(
+          path: '/approved-sources',
+          builder: (context, state) => const ApprovedSourcesScreen(),
         ),
         GoRoute(
           path: '/quran-asbab-nuzul',

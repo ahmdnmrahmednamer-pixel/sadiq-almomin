@@ -76,8 +76,13 @@ void main() {
         100,
         scrollable: find.byType(Scrollable).last,
       );
-
       expect(find.text('التواصل والمقترحات'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('رسالة التطبيق'),
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('رسالة التطبيق'), findsOneWidget);
       expect(find.textContaining('الدعاء للمرحوم مؤمن'), findsOneWidget);
     });
