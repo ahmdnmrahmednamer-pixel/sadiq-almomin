@@ -181,7 +181,7 @@ class TafsirService {
       author: edition.authorAr,
       surahId: surahId,
       ayahNumber: ayahNumber,
-      ayahText: ayah?.textUthmani ?? '',
+      ayahText: ayah?.cleanTextUthmani ?? '',
       tafsirText: content,
     );
   }

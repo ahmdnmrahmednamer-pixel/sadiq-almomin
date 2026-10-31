@@ -38,7 +38,8 @@ void main() {
         ayahNumber: 1,
         uthmaniText: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ۝',
       );
-      expect(label, contains('آية رقم 1 من سورة الفاتحة'));
+      expect(label, contains('1'));
+      expect(label.endsWith('1'), isTrue);
       expect(label.contains('ٱ'), isFalse);
 
       final prayerLabel = QuranAccessibilityService.buildPrayerTimeSemanticLabel(

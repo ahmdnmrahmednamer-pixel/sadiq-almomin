@@ -185,7 +185,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                 border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
               ),
               child: Text(
-                widget.ayah.textUthmani,
+                '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 18,

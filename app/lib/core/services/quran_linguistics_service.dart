@@ -354,7 +354,7 @@ class QuranLinguisticsService {
     required int ayahNumber,
   }) async {
     final ayah = await QuranRepository.getAyah(surahId, ayahNumber);
-    final uthmaniText = ayah?.textUthmani ?? '';
+    final uthmaniText = ayah?.cleanTextUthmani ?? '';
     final surah = await QuranRepository.getSurah(surahId);
     final surahName = surah?.nameAr ?? '';
 

@@ -144,7 +144,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                             surahId: selectedSurahId,
                             surahName: surah?.nameAr ?? 'الفاتحة',
                             ayahNumber: selectedAyahNum,
-                            ayahSnippet: ayah?.textUthmani ?? '',
+                            ayahSnippet: ayah?.cleanTextUthmani ?? '',
                             faithMessage: faithCtrl.text.trim().isNotEmpty
                                 ? faithCtrl.text.trim()
                                 : 'تأمل في عظمة كلام الله وهدايته.',

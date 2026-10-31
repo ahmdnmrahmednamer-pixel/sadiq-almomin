@@ -337,11 +337,11 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                           return TextSpan(
                             children: [
                               TextSpan(
-                                text: '${ayah.textUthmani} ',
+                                text: '${ayah.cleanTextUthmani} ',
                                 semanticsLabel: QuranAccessibilityService.buildAyahSemanticLabel(
                                   surahName: widget.surah.nameAr,
                                   ayahNumber: ayah.ayahNumber,
-                                  uthmaniText: ayah.textUthmani,
+                                  uthmaniText: ayah.cleanTextUthmani,
                                 ),
                                 recognizer: rec,
                                 style: TextStyle(
@@ -454,14 +454,14 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
         final isPlaying = playingKey == '${widget.surah.id}:${ayah.ayahNumber}';
         final isTafseerExpanded = _expandedTafseerAyahs.contains(ayah.ayahNumber);
         final isBookmarked = SettingsService.instance.isBookmarked(widget.surah.id, ayah.ayahNumber);
-        final spokenText = QuranAccessibilityService.toScreenReaderText(ayah.textUthmani);
+        final spokenText = '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}';
 
         return Semantics(
           container: true,
           label: QuranAccessibilityService.buildAyahSemanticLabel(
             surahName: widget.surah.nameAr,
             ayahNumber: ayah.ayahNumber,
-            uthmaniText: ayah.textUthmani,
+            uthmaniText: ayah.cleanTextUthmani,
           ),
           hint: QuranAccessibilityService.ayahSemanticHint,
           child: Container(
@@ -519,22 +519,42 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Quranic Text
-                Text(
-                  ayah.textUthmani,
-                  textAlign: TextAlign.justify,
-                  style: TextStyle(
-                    fontSize: _fontSize,
-                    height: 2.1,
-                    fontWeight: FontWeight.w600,
-                    color: isPlaying ? AppColors.accentGold : textColor,
-                    fontFamilyFallback: const [
-                      'Traditional Arabic',
-                      'Scheherazade New',
-                      'Amiri',
-                      'serif',
+                // Quranic Text (Ayah text followed immediately by its rosette number)
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${ayah.cleanTextUthmani} ',
+                        style: TextStyle(
+                          fontSize: _fontSize,
+                          height: 2.1,
+                          fontWeight: FontWeight.w600,
+                          color: isPlaying ? AppColors.accentGold : textColor,
+                          fontFamilyFallback: const [
+                            'Traditional Arabic',
+                            'Scheherazade New',
+                            'Amiri',
+                            'serif',
+                          ],
+                        ),
+                      ),
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: AyahEndMarker(
+                            ayahNumber: ayah.ayahNumber,
+                            size: (_fontSize * 1.1).clamp(24.0, 38.0),
+                            color: isPlaying
+                                ? AppColors.accentGold
+                                : (isDark ? AppColors.softGold : AppColors.accentGold),
+                            isPlaying: isPlaying,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  textAlign: TextAlign.justify,
                 ),
                 const SizedBox(height: 10),
 

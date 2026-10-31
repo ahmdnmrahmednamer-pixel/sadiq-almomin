@@ -38,7 +38,7 @@ class MemorizationAyahCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final memItem = MemorizationService.instance.getItem(surahId, ayah.ayahNumber);
-    final words = MemorizationMaskHelper.splitAyahWords(ayah.textUthmani);
+    final words = MemorizationMaskHelper.splitAyahWords(ayah.cleanTextUthmani);
 
     return Card(
       elevation: isCurrentPlaying ? 4 : 1,

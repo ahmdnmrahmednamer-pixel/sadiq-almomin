@@ -154,7 +154,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   void _copyAyah(Ayah ayah, Surah surah) {
-    final text = '﴿${ayah.textUthmani}﴾ [سورة ${surah.nameAr}: ${ayah.ayahNumber}]';
+    final text = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾ [سورة ${surah.nameAr}]';
     Clipboard.setData(ClipboardData(text: text)).catchError((_) {});
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('تم نسخ الآية الكريمة بنجاح')),
@@ -162,7 +162,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   void _shareAyah(Ayah ayah, Surah surah) {
-    final text = '﴿${ayah.textUthmani}﴾\n[سورة ${surah.nameAr} — الآية ${ayah.ayahNumber} · صفحة ${ayah.page}]\n\nتمت المشاركة من تطبيق نور المؤمن';
+    final text = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾\n[سورة ${surah.nameAr} · صفحة ${ayah.page}]\n\nتمت المشاركة من تطبيق نور المؤمن';
     try {
       Share.share(text);
     } catch (_) {}
@@ -554,7 +554,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '﴿${_referenceAyah!.textUthmani}﴾',
+                  '${_referenceAyah!.cleanTextUthmani} ﴿${_referenceAyah!.ayahNumber}﴾',
                   style: TextStyle(
                     fontFamily: 'Amiri',
                     fontSize: 18,
@@ -726,7 +726,13 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                           height: 1.6,
                           color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                         ),
-                        children: _buildHighlightedSpans(ayah.textUthmani, result.query),
+                        children: [
+                          ..._buildHighlightedSpans(ayah.cleanTextUthmani, result.query),
+                          TextSpan(
+                            text: ' ﴿${ayah.ayahNumber}﴾',
+                            style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 10),

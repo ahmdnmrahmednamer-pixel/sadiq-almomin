@@ -1,3 +1,4 @@
+import 'package:almomin/core/models/ayah.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:almomin/core/models/surah.dart';
@@ -43,16 +44,46 @@ void main() {
       expect(spoken, contains('لِّلْمُتَّقِينَ'));
     });
 
-    test('buildAyahSemanticLabel returns complete context for TalkBack', () {
+    test('buildAyahSemanticLabel returns ayah text followed by number for TalkBack', () {
       final label = QuranAccessibilityService.buildAyahSemanticLabel(
         surahName: 'الفاتحة',
         ayahNumber: 2,
         uthmaniText: 'ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِینَ',
       );
 
-      expect(label, contains('آية رقم 2 من سورة الفاتحة:'));
       expect(label, contains('الْحَمْدُ لِلَّهِ'));
       expect(label, contains('الْعَالَمِينَ'));
+      expect(label.endsWith('2'), isTrue);
+    });
+
+    test('Ayah.cleanTextUthmani strips duplicate Basmalah from Ayah 1 except Surah 1', () {
+      const ayahFatihah = Ayah(
+        id: 1, surahId: 1, ayahNumber: 1, juz: 1, hizb: 1, rub: 1, page: 1, sajdah: 0,
+        textUthmani: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ',
+        textImlaei: '', textSearch: '',
+      );
+      expect(ayahFatihah.cleanTextUthmani, 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ');
+
+      const ayahIkhlas = Ayah(
+        id: 6222, surahId: 112, ayahNumber: 1, juz: 30, hizb: 60, rub: 4, page: 604, sajdah: 0,
+        textUthmani: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ قُلۡ هُوَ ٱللَّهُ أَحَدٌ',
+        textImlaei: '', textSearch: '',
+      );
+      expect(ayahIkhlas.cleanTextUthmani, 'قُلۡ هُوَ ٱللَّهُ أَحَدٌ');
+
+      const ayahBaqarah = Ayah(
+        id: 8, surahId: 2, ayahNumber: 1, juz: 1, hizb: 1, rub: 1, page: 2, sajdah: 0,
+        textUthmani: 'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ الۤمۤ',
+        textImlaei: '', textSearch: '',
+      );
+      expect(ayahBaqarah.cleanTextUthmani, 'الۤمۤ');
+
+      const ayahTin = Ayah(
+        id: 6100, surahId: 95, ayahNumber: 1, juz: 30, hizb: 59, rub: 3, page: 597, sajdah: 0,
+        textUthmani: 'بِّسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ وَٱلتِّینِ وَٱلزَّیۡتُونِ',
+        textImlaei: '', textSearch: '',
+      );
+      expect(ayahTin.cleanTextUthmani, 'وَٱلتِّینِ وَٱلزَّیۡتُونِ');
     });
 
     test('buildSurahHeaderSemanticLabel formats surah metadata clearly', () {

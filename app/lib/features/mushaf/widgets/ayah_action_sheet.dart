@@ -34,7 +34,7 @@ class AyahActionSheet extends StatelessWidget {
   }
 
   void _copyAyah(BuildContext context) {
-    final textToCopy = '﴿${ayah.textUthmani}﴾ [سورة ${surah.nameAr}: ${ayah.ayahNumber}]';
+    final textToCopy = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾ [سورة ${surah.nameAr}]';
     Clipboard.setData(ClipboardData(text: textToCopy)).catchError((_) {});
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +44,7 @@ class AyahActionSheet extends StatelessWidget {
 
   void _shareAyah(BuildContext context) {
     Navigator.pop(context);
-    final textToShare = '﴿${ayah.textUthmani}﴾\n[سورة ${surah.nameAr} - الآية ${ayah.ayahNumber}]\n\n— تطبيق نور المؤمن (بدون إنترنت وبدون إعلانات)';
+    final textToShare = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾\n[سورة ${surah.nameAr}]\n\n— تطبيق نور المؤمن (بدون إنترنت وبدون إعلانات)';
     try {
       Share.share(textToShare);
     } catch (_) {}
@@ -125,7 +125,7 @@ class AyahActionSheet extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                ayah.textUthmani,
+                '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 18, height: 1.8, fontWeight: FontWeight.w500),
               ),

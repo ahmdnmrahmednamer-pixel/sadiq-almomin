@@ -66,7 +66,7 @@ class QuranAccessibilityService {
     required String uthmaniText,
   }) {
     final cleanPronunciation = toScreenReaderText(uthmaniText);
-    return 'آية رقم $ayahNumber من سورة $surahName: $cleanPronunciation';
+    return '$cleanPronunciation $ayahNumber';
   }
 
   /// Semantic interaction hint for an Ayah

@@ -542,7 +542,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                     alignment: PlaceholderAlignment.baseline,
                     baseline: TextBaseline.alphabetic,
                     child: Semantics(
-                      label: 'آية رقم ${ayah.ayahNumber}: ${QuranAccessibilityService.toScreenReaderText(ayah.textUthmani)}',
+                      label: '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}',
                       hint: QuranAccessibilityService.ayahSemanticHint,
                       child: InkWell(
                         onTap: () {
@@ -569,7 +569,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            ayah.textUthmani,
+                            ayah.cleanTextUthmani,
                             style: TextStyle(
                               fontSize: _fontSize,
                               height: 2.1,

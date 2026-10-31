@@ -69,7 +69,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
       surahId: widget.surah.id,
       surahName: widget.surah.nameAr,
       ayahNumber: widget.ayah.ayahNumber,
-      ayahText: widget.ayah.textUthmani,
+      ayahText: widget.ayah.cleanTextUthmani,
       noteText: text,
       pageNumber: widget.ayah.page,
     );
@@ -200,7 +200,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
                   border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
                 ),
                 child: Text(
-                  '﴿${widget.ayah.textUthmani}﴾',
+                  '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 16, height: 1.8, fontWeight: FontWeight.bold),
                 ),

@@ -143,7 +143,7 @@ class AyahIslamicCardWidget extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                '﴿${ayah.textUthmani}﴾',
+                '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: fontSize,

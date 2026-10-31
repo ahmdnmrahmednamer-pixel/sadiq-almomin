@@ -44,5 +44,48 @@ class Ayah {
     );
   }
 
-  bool get hasSajdah => sajdah > 0;
+    bool get hasSajdah => sajdah > 0;
+
+  /// Returns the Uthmani text of the Ayah without the prefixed Basmalah
+  /// in Ayah 1 of all surahs (Surahs 2-114, except Surah 9 which has no Basmalah).
+  /// Surah 1 (Al-Fatihah) keeps its Basmalah as it is Ayah 1 by consensus.
+  String get cleanTextUthmani {
+    if (surahId != 1 && ayahNumber == 1) {
+      const basmalaPrefixes = [
+        'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ ',
+        'بِّسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ ',
+        'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ',
+        'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ ',
+        'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ',
+        'بِّسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ',
+        'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+        'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+      ];
+      for (final prefix in basmalaPrefixes) {
+        if (textUthmani.startsWith(prefix)) {
+          return textUthmani.substring(prefix.length).trim();
+        }
+      }
+    }
+    return textUthmani;
+  }
+
+  /// Returns the Imlaei text without the prefixed Basmalah
+  String get cleanTextImlaei {
+    if (surahId != 1 && ayahNumber == 1) {
+      const basmalaPrefixes = [
+        'بسم الله الرحمن الرحيم ',
+        'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ ',
+        'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ ',
+        'بسم الله الرحمن الرحيم',
+        'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+      ];
+      for (final prefix in basmalaPrefixes) {
+        if (textImlaei.startsWith(prefix)) {
+          return textImlaei.substring(prefix.length).trim();
+        }
+      }
+    }
+    return textImlaei;
+  }
 }
