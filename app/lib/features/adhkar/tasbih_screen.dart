@@ -161,11 +161,7 @@ class _TasbihScreenState extends State<TasbihScreen>
       });
     }
 
-    // Short celebratory takbeerat sound
-    if (_soundEnabled) {
-      IslamicAudioService.instance.playTakbeeratShort();
-    }
-
+    // Pure textual celebration and reflection without audio playback per user preference
     showTasbihMotivationDialog(
       context,
       onDismissed: () {
