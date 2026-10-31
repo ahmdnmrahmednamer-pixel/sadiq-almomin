@@ -340,8 +340,13 @@ class ScholarAudioResolverService extends ChangeNotifier {
             config,
           );
           final ihUrls = await _fetchFromIslamHouseApi(lecture);
-          final advArchUrls = await _fetchFromArchiveAdvancedSearch(lecture);
-          final pipedUrls = await _fetchFromPipedAudioApi(lecture);
+          // لا نلجأ إلى البحث المتقدم الفضفاض إلا إذا لم تتوفر أي روابط موثقة مسبقاً
+          final advArchUrls = (archUrls.isEmpty && staticIsolatedUrls.isEmpty)
+              ? await _fetchFromArchiveAdvancedSearch(lecture)
+              : const <String>[];
+          final pipedUrls = (archUrls.isEmpty && staticIsolatedUrls.isEmpty)
+              ? await _fetchFromPipedAudioApi(lecture)
+              : const <String>[];
           dynamicUrls.addAll([
             ...archUrls,
             ...ihUrls,
@@ -358,7 +363,8 @@ class ScholarAudioResolverService extends ChangeNotifier {
     final merged = <String>[];
     final seen = <String>{};
 
-    for (final url in [...dynamicUrls, ...staticIsolatedUrls]) {
+    // وضع الروابط الأساسية المعزولة والمحققة في الصدارة المطلقة دائماً
+    for (final url in [...staticIsolatedUrls, ...dynamicUrls]) {
       final clean = url.trim();
       if (clean.isEmpty || seen.contains(clean)) continue;
       if (verifyUrlBelongsToScholar(clean, scholarId)) {
@@ -524,9 +530,8 @@ class ScholarAudioResolverService extends ChangeNotifier {
             continue;
           }
 
-          // تسجيل ملكية هذا المعرف للشيخ الحالي
-          _exclusiveCollectionOwnerMap[identifier.toLowerCase()] =
-              lecture.scholarId;
+          // تجنب تسجيل المعرف كملك حصري إلا إذا كان خاصاً بالشيخ فقط
+          // لمنع اختلاط المجموعات المشتركة بين المشايخ
 
           final metaResp = await _dio.get<Map<String, dynamic>>(
             'https://archive.org/metadata/$identifier',
