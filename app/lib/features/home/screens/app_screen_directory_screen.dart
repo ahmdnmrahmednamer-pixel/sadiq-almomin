@@ -66,17 +66,6 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['رئيسية', 'اليوم', 'مواقيت', 'أذكار الوقت', 'إشراقة'],
       ),
       AppDirectoryItem(
-        id: 'momen_duaa',
-        title: 'صفحة الوفاء والدعاء للمرحوم مؤمن إبراهيم',
-        subtitle: 'صدقة جارية ودعاء جامع بالرحمة والمغفرة ونور القبر',
-        category: 'إشراقة اليوم',
-        categoryKey: 'home',
-        route: '/momen-duaa',
-        icon: Icons.volunteer_activism_rounded,
-        color: AppColors.accentGold,
-        keywords: ['مؤمن', 'إبراهيم', 'دعاء', 'صدقة جارية', 'وفاء', 'ميت'],
-      ),
-      AppDirectoryItem(
         id: 'daily_wird',
         title: context.tr('daily_wird'),
         subtitle: 'جدول أوراد العبادات الموزعة ومتابعة العمل الصالح اليومي',

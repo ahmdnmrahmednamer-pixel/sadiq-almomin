@@ -6,7 +6,7 @@ enum SupportCategory {
   suggestion('اقتراح تطوير ميزة'),
   bugReport('إبلاغ عن مشكلة أو خطأ'),
   inquiry('استفسار عام أو ملاحظة'),
-  appreciation('شكر ودعاء لمؤمن إبراهيم');
+  appreciation('شكر وتقدير للمطور');
 
   final String titleAr;
   const SupportCategory(this.titleAr);

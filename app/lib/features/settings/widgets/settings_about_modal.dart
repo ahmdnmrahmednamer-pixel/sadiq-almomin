@@ -34,7 +34,7 @@ void showSettingsAboutModal(BuildContext context) {
                   ),
                   SizedBox(height: 2),
                   Text(
-                    'منظومة إسلامية شاملة · صدقة جارية',
+                    'منظومة إسلامية شاملة',
                     style: TextStyle(fontSize: 11.5, color: AppColors.lightText, fontWeight: FontWeight.normal),
                   ),
                 ],
@@ -54,48 +54,6 @@ void showSettingsAboutModal(BuildContext context) {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Dedication Banner
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [const Color(0xFF1E2822), const Color(0xFF163026)]
-                            : [AppColors.accentGold.withOpacity(0.15), AppColors.primaryGreen.withOpacity(0.08)],
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.45)),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'صَدَقَةٌ جَارِيَةٌ عَنْ رُوحِ المَرْحُومِ بِإِذْنِ اللَّهِ تَعَالَى:\nمُؤْمِن إِبْرَاهِيم (رَحِمَهُ اللَّهُ)',
-                          style: TextStyle(
-                            height: 1.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryGreen,
-                            fontSize: 13.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '«اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ قَبْرَهُ رَوْضَةً مِنْ رِيَاضِ الجَنَّةِ» 🤲',
-                          style: TextStyle(
-                            height: 1.5,
-                            fontSize: 12,
-                            color: isDark ? AppColors.softGold : const Color(0xFF8B6B00),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
 
                   // Section Header
                   const Row(

@@ -287,7 +287,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.volunteer_activism_rounded, color: AppColors.accentGold, size: 24),
+                  const Icon(Icons.mosque_rounded, color: AppColors.accentGold, size: 24),
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -297,7 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
                     ),
                     child: const Text(
-                      'إهداء ودعاء مبارك 🕊️',
+                      'أهلاً بك في رحاب الإيمان 🕊️',
                       style: TextStyle(color: AppColors.softGold, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -305,7 +305,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'إِهْدَاءٌ وَدُعَاءٌ عَنْ رُوحِ المَرْحُومِ بِإِذْنِ اللَّهِ تَعَالَى:\nمؤمن إبراهيم رحمهُ الله\n(الله يرحمه ويغفر له ويسكنه فسيح جناته ورضوانه)',
+                'تطبيق «نور المؤمن»\nرفيقك اليومي للقرآن والصلاة والذكر',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 17,
@@ -326,30 +326,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: const Column(
                   children: [
                     Text(
-                      '«اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاغْسِلْهُ بِالْمَاءِ وَالثَّلْجِ وَالْبَرَدِ، وَنَقِّهِ مِنَ الذُّنُوبِ وَالْخَطَايَا كَمَا يُنَقَّى الثَّوْبُ الأَبْيَضُ مِنَ الدَّنَسِ.\n\nاللَّهُمَّ اجْعَلْ قَبْرَهُ رَوْضَةً مِنْ رِيَاضِ الجَنَّةِ، وَافْسَحْ لَهُ فِيهِ مَدَّ بَصَرِهِ، وَآنِسْ وَحْشَتَهُ، وَاجْعَلْ كُلَّ حَرْفٍ يُتْلَى مِنْ كِتَابِكَ الكَرِيمِ نُوراً فِي قَبْرِهِ وَرِفْعَةً فِي دَرَجَاتِهِ يَوْمَ يَلْقَاكَ.. آمِينَ»',
+                      'تطبيق إسلامي شامل ومجاني 100% لوجه الله تعالى:\n\n'
+                      '• المصحف الشريف كاملاً بالرسم العثماني المعتمد مع التفسير والتجويد.\n'
+                      '• مواقيت الصلاة الدقيقة واستوديو الأذان والإقامة لجميع المدن.\n'
+                      '• حصن المسلم وصحيح الأذكار والأدعية النبوية.\n'
+                      '• خالٍ تماماً من الإعلانات ومن أي أدوات تتبع.',
                       style: TextStyle(
                         color: AppColors.softGold,
                         fontSize: 13,
                         height: 1.7,
                         fontWeight: FontWeight.w500,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.favorite, size: 14, color: AppColors.accentGold),
-                        SizedBox(width: 6),
-                        Text(
-                          'نسألكم الدعاء له بالرحمة والمغفرة 🤲',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                      textAlign: TextAlign.right,
                     ),
                   ],
                 ),

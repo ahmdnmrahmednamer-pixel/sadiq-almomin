@@ -23,7 +23,6 @@ import 'widgets/home_adhkar_tasbih_row.dart';
 import 'widgets/home_adhkar_time_banner.dart';
 import 'widgets/home_date_header_card.dart';
 import 'widgets/home_khatma_card.dart';
-import 'widgets/home_momen_memorial_banner.dart';
 import 'widgets/home_next_prayer_card.dart';
 import 'widgets/home_prayer_tracker_card.dart';
 import 'widgets/home_quran_continue_card.dart';
@@ -38,6 +37,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
     FiqhLibraryService.instance.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final uri = GoRouterState.of(context).uri;
+        if (uri.queryParameters['openDrawer'] == 'true' && mounted) {
+          _scaffoldKey.currentState?.openDrawer();
+        }
+      } catch (_) {}
+
       if (!SettingsService.instance.hasCompletedOnboarding &&
           SettingsService.instance.showTutorialScreens &&
           mounted) {
@@ -85,13 +93,17 @@ class _HomeScreenState extends State<HomeScreen> {
         return Directionality(
           textDirection: s.textDirection,
           child: Scaffold(
+            key: _scaffoldKey,
             drawer: const AppNavigationDrawer(),
             appBar: AppBar(
-              leading: Builder(
-                builder: (ctx) => IconButton(
+              leading: Semantics(
+                label: 'open navigation menu',
+                button: true,
+                hint: 'افتح قائمة التنقل',
+                child: IconButton(
                   icon: const Icon(Icons.menu_rounded),
-                  tooltip: s.isArabic ? 'القائمة الإيمانية' : 'Menu',
-                  onPressed: () => Scaffold.of(ctx).openDrawer(),
+                  tooltip: 'open navigation menu',
+                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                 ),
               ),
               title: Text(context.tr('app_name')),
@@ -127,8 +139,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   hijriStr: hijriStr,
                   gregStr: gregStr,
                 ),
-                const SizedBox(height: 10),
-                const HomeMomenMemorialBanner(),
                 const SizedBox(height: 20),
 
                 // ================= المحطة الأولى: نداء المحراب ومواقيت النور =================

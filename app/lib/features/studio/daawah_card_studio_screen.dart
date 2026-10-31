@@ -55,7 +55,7 @@ class _DaawahCardStudioScreenState extends State<DaawahCardStudioScreen> {
     _quoteController = TextEditingController(text: _presets[0]['quote']);
     _sourceController = TextEditingController(text: _presets[0]['source']);
     _dedicationController = TextEditingController(
-      text: 'صدقة جارية عن روح مؤمن إبراهيم (رحمه الله)',
+      text: 'تطبيق نور المؤمن · لوجه الله تعالى',
     );
   }
 

@@ -158,22 +158,17 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                                 ),
                                 const SizedBox(height: 12),
                                 const Text(
-                                  'عن روح المرحوم',
-                                  style: TextStyle(color: AppColors.softGold, fontSize: 14, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                const Text(
-                                  'مؤمن إبراهيم رحمهُ الله',
+                                  'دعاء ختم القرآن الكريم',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 22,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const SizedBox(height: 10),
                                 const Text(
-                                  'اللهم اغفر له وارحمه رحمة واسعة، وعافه واعف عنه، وأكرم نزله ووسّع مدخله، واجعل ثواب هذه التلاوة وتلك الختمة المباركة نوراً في قبره وضياءً، واجعله في أعلى عليين مع النبيين والصديقين والشهداء والصالحين.',
+                                  'اللَّهُمَّ ارْحَمْنَا بِالقُرْآنِ، وَاجْعَلْهُ لَنَا إِمَاماً وَنُوراً وَهُدًى وَرَحْمَةً.. اللَّهُمَّ ذَكِّرْنَا مِنْهُ مَا نَسِينَا، وَعَلِّمْنَا مِنْهُ مَا جَهِلْنَا، وَارْزُقْنَا تِلَاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ، وَاجْعَلْهُ لَنَا حُجَّةً يَا رَبَّ العَالَمِينَ.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.white70, fontSize: 13.5, height: 1.7),
                                 ),

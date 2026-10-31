@@ -251,7 +251,7 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                     border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                   ),
                   child: const Text(
-                    'حافظ على صلواتك في أوقاتها 🤲 صدقة جارية عن روح مؤمن إبراهيم رحمه الله',
+                    'حافظ على صلواتك في أوقاتها 🤲 «إِنَّ الصَّلَاةَ كَانَتْ عَلَى الْمُؤْمِنِينَ كِتَاباً مَوْقُوتاً»',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                   ),

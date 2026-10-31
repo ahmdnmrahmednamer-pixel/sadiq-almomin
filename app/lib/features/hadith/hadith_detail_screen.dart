@@ -310,43 +310,6 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Golden Dedication Card to مؤمن إبراهيم رحمه الله
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.accentGold.withOpacity(0.15),
-                    AppColors.primaryGreen.withOpacity(0.1),
-                  ],
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
-              ),
-              child: Column(
-                children: [
-                  const Icon(Icons.volunteer_activism, color: AppColors.accentGold, size: 28),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'دُعَاءٌ وَرَجَاءٌ بِالمَغْفِرَةِ لِلْمَرْحُومِ',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'مُؤْمِن إِبْرَاهِيم',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.brown),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '«اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ، وَاجْعَلْ قَبْرَهُ رَوْضَةً مِنْ رِيَاضِ الجَنَّةِ، وَاجْعَلْ كُلَّ عِلْمٍ نَافِعٍ يُتَعَلَّمُ فِي هَذَا التَّطْبِيقِ نُوراً فِي مِيزَانِ حَسَنَاتِهِ»',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, height: 1.6, color: Colors.brown.shade700, fontStyle: FontStyle.italic),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 24),
           ],
         ),

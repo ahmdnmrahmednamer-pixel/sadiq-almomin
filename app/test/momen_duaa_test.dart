@@ -132,8 +132,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      expect(find.textContaining('دعاء لمؤمن إبراهيم رحمهُ الله'), findsOneWidget);
-      expect(find.textContaining('فتح شاشة الإهداء'), findsOneWidget);
+      // Verify internal cleanliness per user spec
+      expect(find.textContaining('دعاء لمؤمن إبراهيم رحمهُ الله'), findsNothing);
       expect(find.text('إظهار شاشات شرح البرنامج عند الفتح'), findsOneWidget);
       expect(find.text('عرض شاشات شرح استخدام البرنامج'), findsOneWidget);
 

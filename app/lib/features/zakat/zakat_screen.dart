@@ -205,7 +205,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
             IconButton(
               icon: const Icon(Icons.info_outline),
               tooltip: 'عن الحاسبة والإهداء',
-              onPressed: () => _showDedicationDialog(context),
+              onPressed: () => _showZakatInfoDialog(context),
             ),
           ],
         ),
@@ -407,8 +407,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.favorite_rounded, color: AppColors.accentGold, size: 20),
-            onPressed: () => _showDedicationDialog(context),
-            tooltip: 'دعاء لمؤمن إبراهيم',
+            onPressed: () => _showZakatInfoDialog(context),
+            tooltip: 'عن حاسبة الزكاة',
           ),
         ],
       ),
@@ -751,7 +751,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
     );
   }
 
-  void _showDedicationDialog(BuildContext context) {
+  void _showZakatInfoDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => Directionality(

@@ -21,9 +21,9 @@ class MomenDuaaScreen extends StatelessWidget {
     }
 
     try {
-      context.go('/home');
+      context.go('/home?openDrawer=true');
     } catch (_) {
-      context.pushReplacement('/home');
+      context.pushReplacement('/home?openDrawer=true');
     }
   }
 

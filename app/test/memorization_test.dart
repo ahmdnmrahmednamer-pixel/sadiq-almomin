@@ -319,9 +319,9 @@ void main() {
       // Verify Screen title
       expect(find.text('المحفظ القرآني والتكرار الذكي'), findsOneWidget);
 
-      // Verify Noble Dedication Header
-      expect(find.text('إهداء ودعاء للمرحوم مؤمن إبراهيم رحمه الله'), findsOneWidget);
-      expect(find.text('اللهم اجعل القرآن الكريم نوراً له وأنيساً في قبره ورفعة لدرجاته'), findsOneWidget);
+      // Verify Memorization Banner
+      expect(find.text('محراب التحفيظ والتثبيت القرآني'), findsOneWidget);
+      expect(find.text('«خَيْرُكُمْ مَنْ تَعَلَّمَ القُرْآنَ وَعَلَّمَهُ»'), findsOneWidget);
 
       // Verify controls
       expect(find.text('كامل الآية ظاهر'), findsOneWidget);

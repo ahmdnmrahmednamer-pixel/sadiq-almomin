@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'memorization_dedication_dialog.dart';
 
-/// Top banner dedicating the Quran memorizer as ongoing charity for Momen Ibrahim (رحمه الله).
 class MemorizationDedicationBanner extends StatelessWidget {
   const MemorizationDedicationBanner({super.key});
 
@@ -12,33 +10,28 @@ class MemorizationDedicationBanner extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.accentGold.withOpacity(0.12),
+        color: AppColors.primaryGreen.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.volunteer_activism, color: AppColors.primaryGreen, size: 22),
-          const SizedBox(width: 10),
-          const Expanded(
+          Icon(Icons.auto_stories_rounded, color: AppColors.primaryGreen, size: 22),
+          SizedBox(width: 10),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'إهداء ودعاء للمرحوم مؤمن إبراهيم رحمه الله',
+                  'محراب التحفيظ والتثبيت القرآني',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primaryGreen),
                 ),
                 Text(
-                  'اللهم اجعل القرآن الكريم نوراً له وأنيساً في قبره ورفعة لدرجاته',
+                  '«خَيْرُكُمْ مَنْ تَعَلَّمَ القُرْآنَ وَعَلَّمَهُ»',
                   style: TextStyle(fontSize: 11, color: AppColors.mutedText),
                 ),
               ],
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.favorite_rounded, color: AppColors.accentGold, size: 20),
-            onPressed: () => showMemorizationDedicationDialog(context),
-            tooltip: 'دعاء لمؤمن إبراهيم',
           ),
         ],
       ),

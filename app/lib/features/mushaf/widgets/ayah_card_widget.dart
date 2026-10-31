@@ -206,45 +206,23 @@ class AyahIslamicCardWidget extends StatelessWidget {
               const SizedBox(height: 14),
             ],
 
-            // 5. Dedication Footer (إهداء الأجر ودعاء للمرحوم مؤمن إبراهيم)
+            // 5. App Footer
             if (includeDedication) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: theme.dedicationBg,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: theme.accentColor.withOpacity(0.35)),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'إهداء ودعاء بالرحمة والمغفرة للمرحوم',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: theme.dedicationTextColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'مؤمن إبراهيم (رحمهُ الله)',
-                      style: TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w900,
-                        color: theme.dedicationNameColor,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: theme.dedicationTextColor.withOpacity(0.75),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: theme.dedicationTextColor,
+                  ),
                 ),
               ),
             ],

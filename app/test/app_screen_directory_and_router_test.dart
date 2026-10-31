@@ -28,7 +28,7 @@ void main() {
 
       // Verify Category Chips
       expect(find.byType(ChoiceChip), findsAtLeastNWidgets(5));
-      expect(find.widgetWithText(ChoiceChip, 'الكل (53)'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'الكل (52)'), findsOneWidget);
       expect(find.textContaining('إشراقة اليوم'), findsAtLeastNWidgets(1));
       expect(find.textContaining('رحاب القرآن'), findsAtLeastNWidgets(1));
       expect(find.textContaining('محراب الصلاة'), findsAtLeastNWidgets(1));
@@ -60,11 +60,11 @@ void main() {
       await tester.tap(find.byIcon(Icons.clear_rounded));
       await tester.pumpAndSettle();
 
-      // Search for Momen Ibrahim dedication
-      await tester.enterText(find.byType(TextField), 'مؤمن');
+      // Search for Adhkar item
+      await tester.enterText(find.byType(TextField), 'أذكار');
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('مؤمن إبراهيم'), findsOneWidget);
+      expect(find.textContaining('أذكار'), findsAtLeastNWidgets(1));
     });
   });
 }

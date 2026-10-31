@@ -99,7 +99,7 @@ void main() {
 
     // Verify Duaa Modal Content
     expect(find.text('دعاء ختم القرآن الكريم المأثور'), findsOneWidget);
-    expect(find.text('مؤمن إبراهيم رحمهُ الله'), findsOneWidget);
+    expect(find.text('دعاء ختم القرآن الكريم'), findsOneWidget);
     expect(find.text('دعاء مبارك'), findsOneWidget);
     expect(find.text('آمين يا رب العالمين'), findsOneWidget);
 

@@ -59,6 +59,7 @@ import '../features/prayer/qibla_compass_screen.dart';
 import '../features/prayer/voluntary_fasting_screen.dart';
 import '../features/ramadan/ramadan_screen.dart';
 import '../features/search/quran_search_screen.dart';
+import '../features/settings/about_developer_screen.dart';
 import '../features/settings/contact_support_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/stories/stories_screen.dart';
@@ -428,6 +429,10 @@ final GoRouter appRouter = GoRouter(
             final page = int.tryParse(state.uri.queryParameters['page'] ?? '1') ?? 1;
             return PageModeMushafScreen(initialPage: page);
           },
+        ),
+        GoRoute(
+          path: '/about-developer',
+          builder: (context, state) => const AboutDeveloperScreen(),
         ),
         GoRoute(
           path: '/support',

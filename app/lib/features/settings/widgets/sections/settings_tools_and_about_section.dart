@@ -5,7 +5,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../adhkar/widgets/sharawi_post_prayer_card.dart';
 import '../../../audio/widgets/islamic_audio_player_sheet.dart';
 import '../../../backup/backup_restore_screen.dart';
-import '../../../home/momen_duaa_screen.dart';
 import '../../../home/screens/app_screen_directory_screen.dart';
 import '../../../khatma/khatma_screen.dart';
 import '../../../onboarding/onboarding_screen.dart';
@@ -80,19 +79,6 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const BackupRestoreScreen())),
-        ),
-        ListTile(
-          leading: const Icon(Icons.volunteer_activism_rounded,
-              color: AppColors.accentGold),
-          title: const Text('دعاء لمؤمن إبراهيم رحمهُ الله (صدقة جارية)',
-              style: TextStyle(fontWeight: FontWeight.w800)),
-          subtitle: const Text('فتح شاشة الإهداء والدعاء للمرحوم بإذن الله',
-              style: TextStyle(fontSize: 12)),
-          onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (_) =>
-                      const MomenDuaaScreen(isFromInsideApp: true))),
         ),
         SwitchListTile(
           secondary: const Icon(Icons.school_rounded, color: AppColors.primaryGreen),

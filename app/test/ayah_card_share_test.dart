@@ -116,8 +116,7 @@ void main() {
       expect(find.text('﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsOneWidget);
       expect(find.text('الله واحد أحد لا شريك له.'), findsOneWidget);
-      expect(find.text('مؤمن إبراهيم (رحمهُ الله)'), findsOneWidget);
-      expect(find.text('إهداء ودعاء بالرحمة والمغفرة للمرحوم'), findsOneWidget);
+      expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsOneWidget);
     });
 
     testWidgets('Respects toggles to hide tafsir, header, or dedication', (tester) async {
@@ -146,7 +145,7 @@ void main() {
       expect(find.text('سورة الإخلاص'), findsNothing);
       expect(find.text('﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsNothing);
-      expect(find.text('مؤمن إبراهيم (رحمهُ الله)'), findsNothing);
+      expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsNothing);
     });
   });
 
