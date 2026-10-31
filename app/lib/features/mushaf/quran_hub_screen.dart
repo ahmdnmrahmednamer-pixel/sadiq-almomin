@@ -133,7 +133,7 @@ class QuranHubScreen extends StatelessWidget {
               icon: Icons.record_voice_over_rounded,
               color: const Color(0xFF1E8260),
               badgeText: '٦١ قارئاً',
-              onTap: () => context.push('/scholars-audio'),
+              onTap: () => context.push('/audio'),
             ),
 
             // 3. البحث في القرآن

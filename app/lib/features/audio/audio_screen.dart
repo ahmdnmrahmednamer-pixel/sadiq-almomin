@@ -538,48 +538,6 @@ class _AudioScreenState extends State<AudioScreen> {
         textDirection: SettingsService.instance.textDirection,
         child: Column(
           children: [
-            // Quick Portal Banner to 115+ Scholars Audio Lectures Library
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ScholarsAudioLibraryScreen()),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.5)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.mic_external_on_rounded, color: AppColors.primaryGreen, size: 24),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'موسوعة دروس ومحاضرات الشيوخ والعلماء (١١٥ شيخاً وداعية)',
-                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5, color: AppColors.primaryGreen),
-                            ),
-                            Text(
-                              'سمير مصطفى • نبيل العوضي • محمود الحسنات • الشعراوي • الحويني • كشك (أكثر من ٧٠٠ درس مقسمة حسب المحتوى)',
-                              style: TextStyle(fontSize: 11, color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 15, color: AppColors.primaryGreen),
-                    ],
-                  ),
-                ),
-              ),
-            ),
             // Reciter Info Banner with Dropdown & Sample Preview
             AnimatedBuilder(
               animation: Listenable.merge([
