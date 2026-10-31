@@ -1,3 +1,5 @@
+import '../../core/audio/ayah_audio_player.dart';
+import '../../core/ui/app_dropdown_field.dart';
 import '../../core/text/arabic_normalizer.dart';
 import 'scholars_audio_library_screen.dart';
 import 'dart:async';
@@ -578,68 +580,89 @@ class _AudioScreenState extends State<AudioScreen> {
                 ),
               ),
             ),
-            // Reciter Info Banner
-            Container(
-              margin: const EdgeInsets.all(16.0),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.2),
-                      shape: BoxShape.circle,
+            // Reciter Info Banner with Dropdown & Sample Preview
+            AnimatedBuilder(
+              animation: Listenable.merge([
+                AyahAudioPlayer.instance.isPlaying,
+                AyahAudioPlayer.instance.currentPlayingKey,
+              ]),
+              builder: (context, _) {
+                final curReciter = _currentReciter ?? SettingsService.instance.currentReciter;
+                final isPreviewing = AyahAudioPlayer.instance.isPlaying.value &&
+                    AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_${curReciter.id}';
+
+                return Container(
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF16251E)
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.2),
+                      width: 1.2,
                     ),
-                    child: const Icon(Icons.record_voice_over, color: AppColors.softGold, size: 28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'القارئ الحالي للتلاوة:',
-                          style: TextStyle(color: AppColors.softGold, fontSize: 11),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppAudioDropdownField<String>(
+                        label: 'اختر الشيخ / القارئ (٦١ قارئاً معتمداً)',
+                        value: curReciter.id,
+                        prefixIcon: Icons.record_voice_over_rounded,
+                        isPlaying: isPreviewing,
+                        previewButtonLabel: 'استماع عينة',
+                        previewTooltip: 'استماع عينة صوتية للشيخ ${curReciter.nameAr}',
+                        options: SettingsService.availableReciters
+                            .map((r) => AppDropdownOption<String>(
+                                  value: r.id,
+                                  label: r.nameAr,
+                                  subtitle: r.style,
+                                ))
+                            .toList(),
+                        onChanged: (newReciterId) {
+                          final r = SettingsService.availableReciters.firstWhere(
+                            (x) => x.id == newReciterId,
+                            orElse: () => SettingsService.availableReciters.first,
+                          );
+                          setState(() {
+                            _currentReciter = r;
+                          });
+                          SettingsService.instance.setSelectedReciter(newReciterId);
+                          if (AyahAudioPlayer.instance.isPlaying.value) {
+                            AyahAudioPlayer.instance.playReciterPreview(r);
+                          }
+                        },
+                        onPreviewPressed: () {
+                          AyahAudioPlayer.instance.playReciterPreview(curReciter);
+                        },
+                      ),
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          'القارئ الحالي: ${curReciter.nameAr} — ${curReciter.style} (اضغط استماع عينة لتجربة الصوت فوراً)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.white60
+                                : AppColors.mutedText,
+                          ),
                         ),
-                        Text(
-                          reciter.nameAr,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          'رواية حفص عن عاصم — ${reciter.style}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 11),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: AppColors.softGold),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      minimumSize: Size.zero,
-                    ),
-                    icon: const Icon(Icons.swap_horiz, size: 16, color: AppColors.softGold),
-                    label: const Text('تغيير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    onPressed: _showReciterPicker,
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             // Search Bar

@@ -256,3 +256,118 @@ class AppToolbarDropdown<T> extends StatelessWidget {
     );
   }
 }
+
+
+/// Dropdown selector with a dedicated audio preview button right beside it.
+/// Enables selecting a Sheikh (Reciter) or Muezzin (Adhan voice) from the dropdown
+/// and instantly listening to a high-fidelity audio sample.
+class AppAudioDropdownField<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<AppDropdownOption<T>> options;
+  final ValueChanged<T> onChanged;
+  final VoidCallback onPreviewPressed;
+  final bool isPlaying;
+  final IconData? prefixIcon;
+  final String? helperText;
+  final bool dense;
+  final String previewButtonLabel;
+  final String? previewTooltip;
+
+  const AppAudioDropdownField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+    required this.onPreviewPressed,
+    this.isPlaying = false,
+    this.prefixIcon,
+    this.helperText,
+    this.dense = false,
+    this.previewButtonLabel = 'استماع',
+    this.previewTooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // 1. The Dropdown
+        Expanded(
+          child: AppDropdownField<T>(
+            label: label,
+            value: value,
+            options: options,
+            onChanged: onChanged,
+            prefixIcon: prefixIcon,
+            helperText: helperText,
+            dense: dense,
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // 2. Audio Preview Button right beside the Dropdown
+        Semantics(
+          button: true,
+          label: previewTooltip ?? (isPlaying ? 'إيقاف الاستماع' : 'استماع عينة من $label'),
+          child: Container(
+            margin: EdgeInsets.only(bottom: helperText != null ? 20 : 0),
+            child: Material(
+              color: Colors.transparent,
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: isPlaying
+                      ? const LinearGradient(
+                          colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
+                        )
+                      : const LinearGradient(
+                          colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
+                        ),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isPlaying ? Colors.red : AppColors.primaryGreen).withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: onPreviewPressed,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: dense ? 10 : 12,
+                      vertical: dense ? 10 : 13,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isPlaying ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
+                          color: Colors.white,
+                          size: dense ? 18 : 20,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isPlaying ? 'إيقاف' : previewButtonLabel,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: dense ? 11.5 : 12.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

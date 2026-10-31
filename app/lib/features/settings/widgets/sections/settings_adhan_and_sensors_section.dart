@@ -194,44 +194,84 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           final adhanTracks = IslamicAudioService.allTracks
               .where((t) => t.type == IslamicAudioType.adhan)
               .toList();
+          final isPlayingThis = IslamicAudioService.instance.isPlaying &&
+              (IslamicAudioService.instance.currentTrack?.id == currentVoice ||
+                  IslamicAudioService.instance.currentTrack?.rawNotificationSound == currentVoice);
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: AppDropdownField<String>(
+            child: AppAudioDropdownField<String>(
               label: 'مؤذن صلاة $pName',
               value: adhanTracks.any((t) => t.id == currentVoice)
                   ? currentVoice
                   : adhanTracks.first.id,
               dense: true,
               prefixIcon: Icons.mosque_rounded,
+              isPlaying: isPlayingThis,
+              previewButtonLabel: 'استماع',
+              previewTooltip: 'استماع عينة أذان صلاة $pName',
               options: adhanTracks
                   .map((t) => AppDropdownOption<String>(
                         value: t.id,
                         label: t.title,
                       ))
                   .toList(),
-              onChanged: (voiceId) {
-                pn.setPrayerCustomVoice(pName, voiceId);
+              onChanged: (voiceId) async {
+                await pn.setPrayerCustomVoice(pName, voiceId);
+                if (IslamicAudioService.instance.isPlaying) {
+                  await IslamicAudioService.instance.playTrackById(voiceId);
+                }
+              },
+              onPreviewPressed: () {
+                if (isPlayingThis) {
+                  IslamicAudioService.instance.stop();
+                } else {
+                  IslamicAudioService.instance.playTrackById(currentVoice);
+                }
               },
             ),
           );
         }),
 
-        // Iqamah Voice Dropdown
+        // Iqamah Voice Dropdown with Audio Preview
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: AppDropdownField<String>(
-            label: 'صوت إقامة الصلاة المعتمد',
-            value: pn.selectedIqamahVoice,
-            dense: true,
-            prefixIcon: Icons.hourglass_bottom_rounded,
-            options: IslamicAudioService.allTracks
-                .where((t) => t.type == IslamicAudioType.iqamah)
-                .map((t) => AppDropdownOption<String>(
-                      value: t.id,
-                      label: t.title,
-                    ))
-                .toList(),
-            onChanged: (val) => pn.setIqamahVoice(val),
+          child: Builder(
+            builder: (ctx) {
+              final isPlayingIqamah = IslamicAudioService.instance.isPlaying &&
+                  (IslamicAudioService.instance.currentTrack?.id == pn.selectedIqamahVoice ||
+                      IslamicAudioService.instance.currentTrack?.rawNotificationSound == pn.selectedIqamahVoice);
+
+              return AppAudioDropdownField<String>(
+                label: 'صوت إقامة الصلاة المعتمد',
+                value: pn.selectedIqamahVoice,
+                dense: true,
+                prefixIcon: Icons.hourglass_bottom_rounded,
+                isPlaying: isPlayingIqamah,
+                previewButtonLabel: 'استماع',
+                previewTooltip: 'استماع عينة صوت الإقامة',
+                options: IslamicAudioService.allTracks
+                    .where((t) => t.type == IslamicAudioType.iqamah)
+                    .map((t) => AppDropdownOption<String>(
+                          value: t.id,
+                          label: t.title,
+                        ))
+                    .toList(),
+                onChanged: (val) async {
+                  await pn.setIqamahVoice(val);
+                  if (IslamicAudioService.instance.isPlaying) {
+                    await IslamicAudioService.instance.playTrackById(val);
+                  }
+                },
+                onPreviewPressed: () {
+                  if (isPlayingIqamah) {
+                    IslamicAudioService.instance.stop();
+                  } else {
+                    IslamicAudioService.instance.playTrackById(pn.selectedIqamahVoice);
+                  }
+                },
+              );
+            },
           ),
         ),
 

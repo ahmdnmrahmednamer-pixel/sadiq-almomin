@@ -1,3 +1,4 @@
+import '../../../../core/audio/ayah_audio_player.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/services/islamic_audio_service.dart';
@@ -23,22 +24,44 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           icon: Icons.menu_book_rounded,
         ),
 
-        // 1. Default Reciter Dropdown
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: AppDropdownField<String>(
-            label: context.tr('default_reciter'),
-            value: s.selectedReciterId,
-            prefixIcon: Icons.record_voice_over_rounded,
-            options: SettingsService.availableReciters
-                .map((r) => AppDropdownOption<String>(
-                      value: r.id,
-                      label: r.nameAr,
-                      subtitle: r.style,
-                    ))
-                .toList(),
-            onChanged: (val) => s.setSelectedReciter(val),
-          ),
+        // 1. Default Reciter Dropdown with Audio Sample Preview
+        AnimatedBuilder(
+          animation: Listenable.merge([
+            AyahAudioPlayer.instance.isPlaying,
+            AyahAudioPlayer.instance.currentPlayingKey,
+          ]),
+          builder: (context, _) {
+            final isPreviewing = AyahAudioPlayer.instance.isPlaying.value &&
+                AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_${s.selectedReciterId}';
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              child: AppAudioDropdownField<String>(
+                label: context.tr('default_reciter'),
+                value: s.selectedReciterId,
+                prefixIcon: Icons.record_voice_over_rounded,
+                isPlaying: isPreviewing,
+                previewButtonLabel: 'استماع عينة',
+                previewTooltip: 'استماع عينة صوتية للشيخ ${s.currentReciter.nameAr}',
+                options: SettingsService.availableReciters
+                    .map((r) => AppDropdownOption<String>(
+                          value: r.id,
+                          label: r.nameAr,
+                          subtitle: r.style,
+                        ))
+                    .toList(),
+                onChanged: (val) async {
+                  await s.setSelectedReciter(val);
+                  if (AyahAudioPlayer.instance.isPlaying.value) {
+                    await AyahAudioPlayer.instance.playReciterPreview(s.currentReciter);
+                  }
+                },
+                onPreviewPressed: () {
+                  AyahAudioPlayer.instance.playReciterPreview(s.currentReciter);
+                },
+              ),
+            );
+          },
         ),
 
         // 2. Default Tafsir Dropdown (9 Editions)

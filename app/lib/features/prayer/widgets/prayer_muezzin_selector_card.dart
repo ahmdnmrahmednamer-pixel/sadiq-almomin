@@ -1,3 +1,4 @@
+import '../../../core/ui/app_dropdown_field.dart';
 import 'package:flutter/material.dart';
 import '../../../core/notifications/prayer_notification_service.dart';
 import '../../../core/services/islamic_audio_service.dart';
@@ -282,59 +283,36 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
 
                           const SizedBox(height: 10),
 
-                          // Action Buttons: Preview audio & Dropdown selector
-                          Row(
-                            children: [
-                              // 1. Direct Preview Button (استماع للصوت الحالي)
-                              Expanded(
-                                flex: 4,
-                                child: OutlinedButton.icon(
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: isPlaying ? Colors.white : AppColors.primaryGreen,
-                                    backgroundColor: isPlaying ? AppColors.primaryGreen : Colors.transparent,
-                                    side: BorderSide(
-                                      color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.35),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  onPressed: () => _playPreview(currentVoiceKey),
-                                  icon: Icon(
-                                    isPlaying ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
-                                    size: 18,
-                                    color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
-                                  ),
-                                  label: Text(
-                                    isPlaying ? 'إيقاف الأذان' : 'استماع 🔊',
-                                    style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(width: 8),
-
-                              // 2. Dropdown / Change Sheikh with preview-before-choose
-                              Expanded(
-                                flex: 6,
-                                child: ElevatedButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primaryGreen,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                  onPressed: () {
-                                    showPrayerMuezzinDropdownPicker(context, name);
-                                  },
-                                  icon: const Icon(Icons.arrow_drop_down_circle_rounded, size: 16),
-                                  label: const Text(
-                                    'قائمة الشيوخ ▾',
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          // Dropdown selector with direct audio sample preview
+                          AppAudioDropdownField<String>(
+                            label: 'اختر مؤذن صلاة $name',
+                            value: IslamicAudioService.allTracks
+                                    .where((t) => t.type == IslamicAudioType.adhan)
+                                    .any((t) => t.id == currentVoiceKey)
+                                ? currentVoiceKey
+                                : IslamicAudioService.allTracks
+                                    .where((t) => t.type == IslamicAudioType.adhan)
+                                    .first
+                                    .id,
+                            dense: true,
+                            prefixIcon: Icons.mosque_rounded,
+                            isPlaying: isPlaying,
+                            previewButtonLabel: 'استماع',
+                            previewTooltip: 'استماع عينة أذان صلاة $name',
+                            options: IslamicAudioService.allTracks
+                                .where((t) => t.type == IslamicAudioType.adhan)
+                                .map((t) => AppDropdownOption<String>(
+                                      value: t.id,
+                                      label: t.title,
+                                    ))
+                                .toList(),
+                            onChanged: (newVoiceId) async {
+                              await notifService.setPrayerCustomVoice(name, newVoiceId);
+                              if (audioService.isPlaying) {
+                                _playPreview(newVoiceId);
+                              }
+                            },
+                            onPreviewPressed: () => _playPreview(currentVoiceKey),
                           ),
                         ],
                       ),
