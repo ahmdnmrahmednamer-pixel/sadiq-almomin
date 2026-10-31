@@ -64,6 +64,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/data/
     - assets/data/surahs.json
     - assets/data/juz.json
     - assets/data/quran_ayahs.json
