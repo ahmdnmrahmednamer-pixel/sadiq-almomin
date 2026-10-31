@@ -28,6 +28,9 @@ import '../features/adhkar/tasbih_screen.dart';
 import '../features/audio/audio_screen.dart';
 import '../features/audio/downloads_manager_screen.dart';
 import '../features/audio/widgets/global_mini_player_bar.dart';
+import '../features/mushaf/screens/quran_asbab_nuzul_screen.dart';
+import '../features/mushaf/screens/quran_irab_screen.dart';
+import '../features/prayer/prayer_times_detail_screen.dart';
 import '../features/backup/backup_restore_screen.dart';
 import '../features/egypt/egyptian_heritage_screen.dart';
 import '../features/hadith/hadith_detail_screen.dart';
@@ -110,25 +113,30 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/comparative-tafsir') ||
         location.startsWith('/tadabbur-journal') ||
         location.startsWith('/tajweed') ||
-        location.startsWith('/tajweed-rule')) {
-      return 1;
+        location.startsWith('/tajweed-rule') ||
+        location.startsWith('/quran-irab') ||
+        location.startsWith('/quran-asbab-nuzul')) {
+      return 0;
     }
     if (location.startsWith('/prayer') ||
+        location.startsWith('/prayer-times-detail') ||
         location.startsWith('/adhan-control') ||
         location.startsWith('/qibla') ||
         location.startsWith('/calendar') ||
         location.startsWith('/prayer-tracker') ||
         location.startsWith('/fajr-qiyam-alarm') ||
         location.startsWith('/sunan-rawatib') ||
-        location.startsWith('/voluntary-fasting') ||
         location.startsWith('/battery-guide')) {
-      return 2;
+      return 1;
     }
     if (location.startsWith('/adhkar') ||
         location.startsWith('/adhkar-hub') ||
         location.startsWith('/spiritual-mood') ||
-        location.startsWith('/tasbih')) {
-      return 3;
+        location.startsWith('/tasbih') ||
+        location.startsWith('/voluntary-fasting') ||
+        location.startsWith('/daily-wird') ||
+        location.startsWith('/daawah-studio')) {
+      return 2;
     }
     if (location.startsWith('/library') ||
         location.startsWith('/hadith') ||
@@ -148,38 +156,28 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/islamic-history') ||
         location.startsWith('/islamic-mutoon') ||
         location.startsWith('/riyad-alsalihin') ||
-        location.startsWith('/library-search') ||
-        location.startsWith('/daily-wird') ||
-        location.startsWith('/daawah-studio')) {
-      return 4;
+        location.startsWith('/library-search')) {
+      return 3;
     }
-    if (location.startsWith('/settings') ||
-        location.startsWith('/backup') ||
-        location.startsWith('/support')) {
-      return 5;
-    }
-    return 0;
+    return 4;
   }
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
-        context.go('/home');
-        break;
-      case 1:
         context.go('/mushaf');
         break;
-      case 2:
+      case 1:
         context.go('/prayer');
         break;
-      case 3:
+      case 2:
         context.go('/adhkar-hub');
         break;
-      case 4:
+      case 3:
         context.go('/library');
         break;
-      case 5:
-        context.go('/settings');
+      case 4:
+        context.go('/home');
         break;
     }
   }
@@ -233,13 +231,6 @@ class _MainScaffoldState extends State<MainScaffold> {
                         NavigationDestinationLabelBehavior.alwaysShow,
                     destinations: [
                       NavigationDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        selectedIcon: const Icon(Icons.home_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_home'),
-                        tooltip: context.tr('tooltip_home'),
-                      ),
-                      NavigationDestination(
                         icon: const Icon(Icons.menu_book_outlined),
                         selectedIcon: const Icon(Icons.menu_book_rounded,
                             color: AppColors.primaryGreen),
@@ -271,11 +262,11 @@ class _MainScaffoldState extends State<MainScaffold> {
                         tooltip: context.tr('tooltip_library'),
                       ),
                       NavigationDestination(
-                        icon: const Icon(Icons.settings_outlined),
-                        selectedIcon: const Icon(Icons.settings_rounded,
+                        icon: const Icon(Icons.home_outlined),
+                        selectedIcon: const Icon(Icons.home_rounded,
                             color: AppColors.primaryGreen),
-                        label: context.tr('nav_settings'),
-                        tooltip: context.tr('tooltip_settings'),
+                        label: context.tr('nav_home'),
+                        tooltip: context.tr('tooltip_home'),
                       ),
                     ],
                   ),
@@ -429,6 +420,18 @@ final GoRouter appRouter = GoRouter(
             final page = int.tryParse(state.uri.queryParameters['page'] ?? '1') ?? 1;
             return PageModeMushafScreen(initialPage: page);
           },
+        ),
+        GoRoute(
+          path: '/quran-irab',
+          builder: (context, state) => const QuranIrabScreen(),
+        ),
+        GoRoute(
+          path: '/quran-asbab-nuzul',
+          builder: (context, state) => const QuranAsbabNuzulScreen(),
+        ),
+        GoRoute(
+          path: '/prayer-times-detail',
+          builder: (context, state) => const PrayerTimesDetailScreen(),
         ),
         GoRoute(
           path: '/about-developer',
