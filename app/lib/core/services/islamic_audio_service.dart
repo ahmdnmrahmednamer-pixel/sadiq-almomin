@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import '../audio/fast_audio_service.dart';
+import 'settings_service.dart';
 
 enum IslamicAudioType {
   adhan,
@@ -134,6 +135,8 @@ class IslamicAudioService extends ChangeNotifier {
   Duration get duration => _duration;
   Duration get bufferedPosition => _bufferedPosition;
   double get playbackSpeed => _playbackSpeed;
+  AudioPlayer get player => _player;
+  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
 
   List<IslamicAudioTrack> get queue => List.unmodifiable(_queue);
   int get currentIndex => _currentIndex;
@@ -881,27 +884,45 @@ class IslamicAudioService extends ChangeNotifier {
       subtitle: 'النداء الخاشع الباكي بمقام النهاوند العذب من كروان القرآن',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/028.mp3',
+      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/020.mp3',
       fallbackUrls: ['https://server10.mp3quran.net/minsh/001.mp3'],
-      durationFormatted: '03:45',
+      durationFormatted: '03:41',
       quality: 'استوديو نقي 320kbps HD',
       categoryAr: 'أذان مصر',
       muezzinName: 'الشيخ محمد صديق المنشاوي',
-      fileSizeBytes: 3600000,
+      fileSizeBytes: 3550000,
     ),
     IslamicAudioTrack(
-      id: 'adhan_mustafa_ismail',
-      title: 'أذان الشيخ مصطفى إسماعيل',
-      subtitle: 'تسجيل تاريخي نادر لقارئ الأزهر وأمير دولة التلاوة',
+      id: 'adhan_naqshbandi',
+      title: 'أذان الشيخ سيد النقشبندي',
+      subtitle: 'نداء الحق بنفحات الخشوع والابتهال الشجي من كروان الإنشاد',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/029.mp3',
-      fallbackUrls: ['https://server8.mp3quran.net/mustafa/001.mp3'],
-      durationFormatted: '03:50',
-      quality: 'تسجيل استوديو نادر 320kbps',
+      remoteUrl: 'https://archive.org/download/Sama3almelouk_yahoo_20160525/%D8%A7%D9%84%D8%A7%D8%B0%D8%A7%D9%86.MP3',
+      fallbackUrls: const [
+        'https://archive.org/download/Naqshbandi_Ibtihalat/Adhan_Naqshbandi.mp3',
+      ],
+      durationFormatted: '03:40',
+      quality: 'تسجيل تاريخي نقي HD',
       categoryAr: 'أذان مصر',
-      muezzinName: 'الشيخ مصطفى إسماعيل',
-      fileSizeBytes: 3700000,
+      muezzinName: 'الشيخ سيد النقشبندي',
+      fileSizeBytes: 2650000,
+    ),
+    IslamicAudioTrack(
+      id: 'adhan_fares_abbad',
+      title: 'أذان الشيخ فارس عباد',
+      subtitle: 'صدح ندي خاشع يأسر القلوب لنداء الحق من اليمن والخليج',
+      type: IslamicAudioType.adhan,
+      assetPath: null,
+      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/076-3.mp3',
+      fallbackUrls: const [
+        'https://server8.mp3quran.net/frs_a/001.mp3',
+      ],
+      durationFormatted: '02:41',
+      quality: 'استوديو نقي 192kbps HD',
+      categoryAr: 'أذان الخليج والشام',
+      muezzinName: 'الشيخ فارس عباد',
+      fileSizeBytes: 2275000,
     ),
     IslamicAudioTrack(
       id: 'adhan_ali_jaber',
@@ -1414,8 +1435,13 @@ class IslamicAudioService extends ChangeNotifier {
           _currentIndex = 0;
           playTrack(_queue.first);
         } else {
+          final wasAdhan = _currentTrack?.type == IslamicAudioType.adhan;
           _position = Duration.zero;
           _isPlaying = false;
+          if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan) {
+            playTrackById('duaa_sharawi_post_prayer');
+            return;
+          }
         }
       }
       notifyListeners();

@@ -1,3 +1,4 @@
+import 'package:almomin/core/services/settings_service.dart';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,5 +75,59 @@ void main() {
       expect(() => audioService.playTrack(track), returnsNormally);
       expect(audioService.currentTrack?.id, 'duaa_sharawi_post_prayer');
     });
+
+    test('5. SettingsService playSharawiDuaaAfterAdhan toggle works and persists', () async {
+      final settings = SettingsService.instance;
+      await settings.init();
+
+      expect(settings.playSharawiDuaaAfterAdhan, isTrue, reason: 'Default should be enabled');
+
+      await settings.togglePlaySharawiDuaaAfterAdhan(false);
+      expect(settings.playSharawiDuaaAfterAdhan, isFalse);
+
+      await settings.togglePlaySharawiDuaaAfterAdhan(true);
+      expect(settings.playSharawiDuaaAfterAdhan, isTrue);
+    });
+
+    test('6. Sheikh Al-Sha\'rawi Duaa is isolated and NOT in adhan list', () {
+      final adhanTracks = IslamicAudioService.allTracks
+          .where((t) => t.type == IslamicAudioType.adhan)
+          .toList();
+
+      final sharawiInAdhans = adhanTracks.where((t) => t.id.contains('sharawi') || t.id.contains('duaa'));
+      expect(sharawiInAdhans, isEmpty, reason: 'Sheikh Al-Sha\'rawi is post-adhan duaa, not an adhan mu\'adhin');
+    });
+
+    test('7. All 7 requested Sheikhs exist in adhan list with valid authentic URLs', () {
+      final adhanTracks = IslamicAudioService.allTracks
+          .where((t) => t.type == IslamicAudioType.adhan)
+          .toList();
+
+      final ids = adhanTracks.map((t) => t.id).toSet();
+
+      // 1. ناصر القطامي
+      expect(ids.contains('adhan_alqatami'), isTrue);
+
+      // 2. محمد صديق المنشاوي (verified authentic 020.mp3 Damascus Adhan)
+      expect(ids.contains('adhan_menshawi'), isTrue);
+      final menshawiTrack = adhanTracks.firstWhere((t) => t.id == 'adhan_menshawi');
+      expect(menshawiTrack.remoteUrl, contains('020.mp3'));
+
+      // 3. سيد النقشبندي
+      expect(ids.contains('adhan_naqshbandi'), isTrue);
+
+      // 4. عبد الباسط عبد الصمد
+      expect(ids.contains('adhan_abdulbasit'), isTrue);
+
+      // 5. محمود خليل الحصري
+      expect(ids.contains('adhan_hussary'), isTrue);
+
+      // 6. فارس عباد
+      expect(ids.contains('adhan_fares_abbad'), isTrue);
+
+      // 7. ياسر الدوسري
+      expect(ids.contains('adhan_aldosari'), isTrue);
+    });
   });
 }
+

@@ -287,11 +287,11 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
                           AppAudioDropdownField<String>(
                             label: 'اختر مؤذن صلاة $name',
                             value: IslamicAudioService.allTracks
-                                    .where((t) => t.type == IslamicAudioType.adhan)
+                                    .where((t) => t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi'))
                                     .any((t) => t.id == currentVoiceKey)
                                 ? currentVoiceKey
                                 : IslamicAudioService.allTracks
-                                    .where((t) => t.type == IslamicAudioType.adhan)
+                                    .where((t) => t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi'))
                                     .first
                                     .id,
                             dense: true,
@@ -300,7 +300,7 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
                             previewButtonLabel: 'استماع',
                             previewTooltip: 'استماع عينة أذان صلاة $name',
                             options: IslamicAudioService.allTracks
-                                .where((t) => t.type == IslamicAudioType.adhan)
+                                .where((t) => t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi'))
                                 .map((t) => AppDropdownOption<String>(
                                       value: t.id,
                                       label: t.title,

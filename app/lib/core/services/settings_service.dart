@@ -546,6 +546,7 @@ class SettingsService extends ChangeNotifier {
   bool _autoPlayNextAyah = true;
   bool _preAdhanAlertEnabled = true;
   bool _iqamahAlertEnabled = true;
+  bool _playSharawiDuaaAfterAdhan = true;
   bool _tasbihVibrationEnabled = true;
   bool _tasbihCycleAlertEnabled = true;
   bool _tasbihVolumeButtonEnabled = true;
@@ -567,6 +568,7 @@ class SettingsService extends ChangeNotifier {
   bool get autoPlayNextAyah => _autoPlayNextAyah;
   bool get preAdhanAlertEnabled => _preAdhanAlertEnabled;
   bool get iqamahAlertEnabled => _iqamahAlertEnabled;
+  bool get playSharawiDuaaAfterAdhan => _playSharawiDuaaAfterAdhan;
   bool get tasbihVibrationEnabled => _tasbihVibrationEnabled;
   bool get hapticEnabled => _tasbihVibrationEnabled;
   bool get tasbihCycleAlertEnabled => _tasbihCycleAlertEnabled;
@@ -657,6 +659,7 @@ class SettingsService extends ChangeNotifier {
     _autoPlayNextAyah = _prefs?.getBool('auto_play_next_ayah') ?? true;
     _preAdhanAlertEnabled = _prefs?.getBool('pre_adhan_alert') ?? true;
     _iqamahAlertEnabled = _prefs?.getBool('iqamah_alert') ?? true;
+    _playSharawiDuaaAfterAdhan = _prefs?.getBool('play_sharawi_duaa_after_adhan') ?? true;
     _tasbihVibrationEnabled = _prefs?.getBool('tasbih_vibration') ?? true;
     _tasbihCycleAlertEnabled = _prefs?.getBool('tasbih_cycle_alert') ?? true;
     _tasbihVolumeButtonEnabled = _prefs?.getBool('tasbih_volume_button_enabled') ?? true;
@@ -896,6 +899,12 @@ class SettingsService extends ChangeNotifier {
     try {
       await PrayerNotificationService.instance.toggleIqamahReminder(enabled);
     } catch (_) {}
+    notifyListeners();
+  }
+
+  Future<void> togglePlaySharawiDuaaAfterAdhan(bool enabled) async {
+    _playSharawiDuaaAfterAdhan = enabled;
+    await _prefs?.setBool('play_sharawi_duaa_after_adhan', enabled);
     notifyListeners();
   }
 

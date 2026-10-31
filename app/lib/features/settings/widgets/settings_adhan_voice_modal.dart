@@ -559,7 +559,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
       if (widget.isIqamah) {
         return t.type == IslamicAudioType.iqamah;
       } else {
-        return t.type == IslamicAudioType.adhan;
+        return t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi');
       }
     }).toList();
 
@@ -718,7 +718,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
               animation: IslamicAudioService.instance,
               builder: (context, _) {
                 final adhanTracks = IslamicAudioService.allTracks
-                    .where((t) => t.type == (widget.isIqamah ? IslamicAudioType.iqamah : IslamicAudioType.adhan))
+                    .where((t) => widget.isIqamah ? t.type == IslamicAudioType.iqamah : (t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi')))
                     .toList();
                 final downloadedCount = adhanTracks
                     .where((t) => t.assetPath != null || IslamicAudioService.instance.isDownloaded(t.id))

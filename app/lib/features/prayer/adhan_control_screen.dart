@@ -101,9 +101,23 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     // Start motion sensor gestures
     _initSensorGestures();
 
+    audioService.addListener(_onAudioStateChanged);
+
     // Auto-play Adhan/Iqamah if requested and not already playing
     if (widget.autoPlay && !audioService.isPlaying) {
       _startAudioPlayback();
+    }
+  }
+
+  void _onAudioStateChanged() {
+    if (!mounted) return;
+    if (audioService.currentTrack?.id == 'duaa_sharawi_post_prayer' && !_showDedicatedStopView) {
+      setState(() {
+        _showDedicatedStopView = true;
+        _isMutedOrStopped = true;
+      });
+    } else {
+      setState(() {});
     }
   }
 
@@ -174,6 +188,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
   void _handleGestureStop({required bool isShake}) {
     _triggerStopVibration();
+    final wasAdhan = audioService.currentTrack?.type == IslamicAudioType.adhan;
     audioService.stop();
     setState(() {
       _isMutedOrStopped = true;
@@ -182,6 +197,10 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           ? 'تم إيقاف الأذان بنجاح عبر هز الهاتف 📳'
           : 'تم كتم الأذان بنجاح عند قلب الهاتف على وجهه 📱';
     });
+
+    if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan && !widget.isIqamah) {
+      audioService.playTrackById('duaa_sharawi_post_prayer');
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -198,12 +217,17 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
   void _stopAdhanManually() {
     _triggerStopVibration();
+    final wasAdhan = audioService.currentTrack?.type == IslamicAudioType.adhan;
     audioService.stop();
     setState(() {
       _isMutedOrStopped = true;
       _showDedicatedStopView = true;
       _lastGestureTriggered = 'تم إيقاف الأذان يدوياً ⏹️';
     });
+
+    if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan && !widget.isIqamah) {
+      audioService.playTrackById('duaa_sharawi_post_prayer');
+    }
   }
 
   void _togglePlayPause() {
@@ -985,6 +1009,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
   @override
   void dispose() {
+    audioService.removeListener(_onAudioStateChanged);
     _clockTimer?.cancel();
     _iqamahCountdownTimer?.cancel();
     _pulseController.dispose();
@@ -1392,6 +1417,151 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
   }
 
   /// Dedicated Stop & Serenity Screen (شاشة الإيقاف وسكينة ما بعد الأذان)
+
+  Widget _buildSharawiDuaaCard(_PrayerAtmosphereTheme themeData) {
+    final isSharawiPlaying = audioService.isPlaying && audioService.currentTrack?.id == 'duaa_sharawi_post_prayer';
+    final settings = SettingsService.instance;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.4),
+          width: isSharawiPlaying ? 1.8 : 1.2,
+        ),
+        boxShadow: [
+          if (isSharawiPlaying)
+            BoxShadow(
+              color: AppColors.accentGold.withOpacity(0.2),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen).withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isSharawiPlaying ? Icons.graphic_eq_rounded : Icons.record_voice_over_rounded,
+                  color: isSharawiPlaying ? AppColors.accentGold : Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'دعاء ما بعد الأذان — الشيخ الشعراوي 🎧',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isSharawiPlaying ? 'جاري الاستماع الآن بصوت إمام الدعاة...' : 'تسجيل نادر بصوت فضيلة الشيخ الشعراوي (01:08)',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: isSharawiPlaying ? AppColors.accentGold : Colors.white70,
+                        fontWeight: isSharawiPlaying ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Play / Pause Audio Control Button
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen,
+              foregroundColor: isSharawiPlaying ? Colors.black87 : Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: Icon(
+              isSharawiPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded,
+              size: 22,
+            ),
+            label: Text(
+              isSharawiPlaying ? 'إيقاف دعاء الشيخ الشعراوي ⏹️' : 'تشغيل دعاء الشيخ الشعراوي الآن ▶️',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+            ),
+            onPressed: () async {
+              if (settings.hapticEnabled) HapticFeedback.selectionClick();
+              if (isSharawiPlaying) {
+                await audioService.stop();
+              } else {
+                await audioService.playTrackById('duaa_sharawi_post_prayer');
+              }
+              setState(() {});
+            },
+          ),
+
+          const SizedBox(height: 8),
+
+          // Checkbox toggle: تشغيل تلقائي بعد كل أذان
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.18),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: settings.playSharawiDuaaAfterAdhan,
+                  activeColor: AppColors.accentGold,
+                  checkColor: Colors.black87,
+                  side: const BorderSide(color: Colors.white54, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  onChanged: (val) {
+                    if (val != null) {
+                      settings.togglePlaySharawiDuaaAfterAdhan(val);
+                      setState(() {});
+                    }
+                  },
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      settings.togglePlaySharawiDuaaAfterAdhan(!settings.playSharawiDuaaAfterAdhan);
+                      setState(() {});
+                    },
+                    child: const Text(
+                      'تشغيل الدعاء تلقائياً بعد كل أذان',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDedicatedStopView(
     _PrayerAtmosphereTheme themeData,
     String timeStr,
@@ -1446,6 +1616,10 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
             ),
           ),
           const SizedBox(height: 16),
+
+          // Dedicated Sheikh Al-Sha'rawi Duaa Card
+          _buildSharawiDuaaCard(themeData),
+          const SizedBox(height: 14),
 
           // Prominent Duaa Al-Wasila Card
           Container(

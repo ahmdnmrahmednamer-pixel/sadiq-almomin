@@ -192,7 +192,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         ...['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'].map((pName) {
           final currentVoice = pn.getPrayerVoice(pName);
           final adhanTracks = IslamicAudioService.allTracks
-              .where((t) => t.type == IslamicAudioType.adhan)
+              .where((t) => t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi'))
               .toList();
           final isPlayingThis = IslamicAudioService.instance.isPlaying &&
               (IslamicAudioService.instance.currentTrack?.id == currentVoice ||
@@ -331,6 +331,20 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           activeColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => pn.toggleFajrDistinctVoice(val),
+        ),
+
+        SwitchListTile(
+          secondary: const Icon(Icons.record_voice_over_rounded,
+              color: AppColors.accentGold),
+          title: const Text('تشغيل دعاء الشيخ الشعراوي بعد الأذان 🎧',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
+          subtitle: const Text(
+              'سماع دعاء «اللهم رب هذه الدعوة التامة» بصوت إمام الدعاة الشيخ الشعراوي عقب كل أذان تلقائياً',
+              style: TextStyle(fontSize: 12)),
+          value: s.playSharawiDuaaAfterAdhan,
+          activeColor: AppColors.accentGold,
+          activeTrackColor: AppColors.primaryGreen,
+          onChanged: (val) => s.togglePlaySharawiDuaaAfterAdhan(val),
         ),
 
         SwitchListTile(
