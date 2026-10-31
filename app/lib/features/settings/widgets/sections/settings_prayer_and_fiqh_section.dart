@@ -4,7 +4,6 @@ import '../../../../core/services/prayer_service.dart';
 import '../../../../core/services/settings_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
-import '../../../prayer/widgets/arab_city_picker_modal.dart';
 import 'settings_section_header.dart';
 
 /// Refactored Section 3: Prayer Calculation, Fiqh Madhhab & Hijri Adjustment
@@ -86,18 +85,29 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
         ),
 
         ListTile(
-          leading: const Icon(Icons.location_city_rounded,
+          leading: const Icon(Icons.my_location_rounded,
               color: AppColors.primaryGreen),
-          title: const Text('اختيار الدولة والمدينة يدوياً (قوائم منسدلة)',
+          title: const Text('الموقع الفعلي وتحديد المدينة تلقائياً',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           subtitle: Text(
-              PrayerService.instance.currentData?.locationName ?? 'القاهرة، مصر'),
+              'الموقع الفعلي: ${PrayerService.instance.currentData?.locationName ?? 'جاري التحديد عبر GPS...'}'),
           trailing: OutlinedButton.icon(
-            icon: const Icon(Icons.my_location_rounded, size: 16),
-            label: const Text('GPS'),
-            onPressed: () => PrayerService.instance.requestGpsLocation(),
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('تحديث'),
+            onPressed: () async {
+              final ok = await PrayerService.instance.requestGpsLocation();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok
+                        ? 'تم تحديث الموقع الفعلي بنجاح'
+                        : (PrayerService.instance.errorMessage ?? 'تعذر تحديث الموقع')),
+                    backgroundColor: ok ? AppColors.primaryGreen : Colors.redAccent,
+                  ),
+                );
+              }
+            },
           ),
-          onTap: () => showArabCityPickerModal(context),
         ),
         const Divider(),
       ],

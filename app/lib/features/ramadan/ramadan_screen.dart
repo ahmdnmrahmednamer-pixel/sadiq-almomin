@@ -6,7 +6,6 @@ import '../../core/models/ramadan_day.dart';
 import '../../core/services/ramadan_service.dart';
 import '../../core/services/prayer_service.dart';
 import '../../core/theme/app_theme.dart';
-import '../prayer/widgets/arab_city_picker_modal.dart';
 
 class RamadanScreen extends StatefulWidget {
   const RamadanScreen({super.key});
@@ -218,15 +217,22 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                           backgroundColor: Colors.white.withOpacity(0.12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        icon: const Icon(Icons.tune_rounded, size: 14, color: AppColors.softGold),
-                        label: const Text('تغيير المدينة', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold)),
-                        onPressed: () {
-                          showArabCityPickerModal(context).then((_) {
-                            if (!mounted) return;
-                            setState(() {
-                              _imsakiyyahList = RamadanService.instance.generateImsakiyyah();
-                            });
+                        icon: const Icon(Icons.my_location_rounded, size: 14, color: AppColors.softGold),
+                        label: const Text('تحديث الموقع الفعلي', style: TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.bold)),
+                        onPressed: () async {
+                          final ok = await PrayerService.instance.requestGpsLocation();
+                          if (!mounted) return;
+                          setState(() {
+                            _imsakiyyahList = RamadanService.instance.generateImsakiyyah();
                           });
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(ok ? 'تم تحديث الموقع الفعلي عبر GPS بنجاح' : (PrayerService.instance.errorMessage ?? 'تعذر تحديث الموقع')),
+                                backgroundColor: ok ? AppColors.primaryGreen : Colors.redAccent,
+                              ),
+                            );
+                          }
                         },
                       ),
                     ],

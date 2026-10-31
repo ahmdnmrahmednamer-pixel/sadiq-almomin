@@ -144,7 +144,7 @@ class PrayerService extends ChangeNotifier {
 
   String identifyCity(double lat, double lng) {
     double minDistance = double.infinity;
-    String closest = 'موقعك الفعلي (${lat.toStringAsFixed(2)}°, ${lng.toStringAsFixed(2)}°)';
+    CityCoordinate? closestCity;
 
     for (final c in famousCities) {
       final dLat = (lat - c.latitude) * 111.0;
@@ -152,12 +152,20 @@ class PrayerService extends ChangeNotifier {
       final distKm = sqrt(dLat * dLat + dLng * dLng);
       if (distKm < minDistance) {
         minDistance = distKm;
-        if (distKm <= 90.0) {
-          closest = '${c.name} (GPS)';
-        }
+        closestCity = c;
       }
     }
-    return closest;
+
+    if (closestCity != null && minDistance <= 120.0) {
+      // Auto-adapt calculation method if country/city has dedicated method
+      if (closestCity.method.isNotEmpty && closestCity.method != _lastCalculationMethod) {
+        _lastCalculationMethod = closestCity.method;
+        SettingsService.instance.setCalculationMethod(closestCity.method);
+      }
+      return '${closestCity.name}، ${closestCity.country} (موقعك الفعلي)';
+    }
+
+    return 'موقعك الفعلي (${lat.toStringAsFixed(2)}°, ${lng.toStringAsFixed(2)}°)';
   }
 
   Future<void> init({bool forceRefresh = false, bool forceReload = false}) async {
@@ -181,10 +189,8 @@ class PrayerService extends ChangeNotifier {
     _startLiveTicker();
     _isInitialized = true;
 
-    // Only attempt automatic GPS lookup if the user has NOT explicitly chosen a manual city (Bug #1 fix)
-    if (!_isManualLocation) {
-      unawaited(requestGpsLocation(isAutoInit: true));
-    }
+    // Automatically detect physical location and city via GPS on launch
+    unawaited(requestGpsLocation(isAutoInit: true));
   }
 
   void _onSettingsChanged() {
@@ -293,9 +299,6 @@ class PrayerService extends ChangeNotifier {
   }
 
   Future<bool> requestGpsLocation({bool isAutoInit = false}) async {
-    if (isAutoInit && _isManualLocation) {
-      return false;
-    }
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -321,7 +324,7 @@ class PrayerService extends ChangeNotifier {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        _errorMessage = 'إذن الموقع مرفوض نهائياً. يمكنك اختيار مدينتك يدوياً';
+        _errorMessage = 'إذن الموقع مرفوض نهائياً. يرجى تفعيله من إعدادات الهاتف لتحديد المواقيت تلقائياً';
         _isLoading = false;
         notifyListeners();
         return false;

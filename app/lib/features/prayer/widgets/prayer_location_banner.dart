@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/services/prayer_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_theme.dart';
-import 'arab_city_picker_modal.dart';
 
 /// Location, calculation method, GPS refresher, and next prayer countdown banner.
+/// Fully automated physical GPS location detection with no manual city pickers.
 class PrayerLocationBanner extends StatelessWidget {
   final PrayerData? data;
 
@@ -28,11 +28,11 @@ class PrayerLocationBanner extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.place_rounded, color: AppColors.softGold, size: 18),
+                          const Icon(Icons.my_location_rounded, color: AppColors.softGold, size: 18),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              data?.locationName ?? 'جاري تحديد الموقع...',
+                              data?.locationName ?? 'جاري تحديد موقعك الفعلي عبر GPS...',
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14.5),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -41,7 +41,7 @@ class PrayerLocationBanner extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'طريقة الحساب: ${SettingsService.calculationMethods.firstWhere((m) => m['id'] == SettingsService.instance.calculationMethod, orElse: () => SettingsService.calculationMethods.first)['name']}',
+                        'طريقة الحساب: ${SettingsService.calculationMethods.firstWhere((m) => m['id'] == SettingsService.instance.calculationMethod, orElse: () => SettingsService.calculationMethods.first)['name']} (تلقائي)',
                         style: const TextStyle(color: AppColors.softGold, fontSize: 11, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -51,38 +51,29 @@ class PrayerLocationBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.softGold, width: 1.2),
+                        color: const Color(0xFF4ADE80).withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF4ADE80), width: 1),
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => showArabCityPickerModal(context),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.location_city_rounded, size: 15, color: AppColors.softGold),
-                                SizedBox(width: 5),
-                                Text(
-                                  'تغيير المدينة',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.gps_fixed_rounded, size: 12, color: Color(0xFF4ADE80)),
+                          SizedBox(width: 4),
+                          Text(
+                            'تلقائي عبر GPS',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
@@ -109,7 +100,7 @@ class PrayerLocationBanner extends StatelessWidget {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                          ok ? 'تم تحديث الإحداثيات عبر GPS' : (PrayerService.instance.errorMessage ?? 'فشل التحديث'),
+                                          ok ? 'تم تحديث الموقع الفعلي عبر GPS بنجاح' : (PrayerService.instance.errorMessage ?? 'فشل التحديث'),
                                           style: const TextStyle(fontWeight: FontWeight.w800),
                                         ),
                                         backgroundColor: ok ? AppColors.secondaryGreen : Colors.redAccent,
@@ -118,21 +109,21 @@ class PrayerLocationBanner extends StatelessWidget {
                                   }
                                 },
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (PrayerService.instance.isLoading)
                                   const SizedBox(
-                                    width: 12,
-                                    height: 12,
+                                    width: 13,
+                                    height: 13,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryGreen),
                                   )
                                 else
-                                  const Icon(Icons.my_location_rounded, size: 14, color: AppColors.primaryGreen),
+                                  const Icon(Icons.refresh_rounded, size: 14, color: AppColors.primaryGreen),
                                 const SizedBox(width: 5),
                                 const Text(
-                                  'تحديث GPS',
+                                  'تحديث الموقع',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w900,

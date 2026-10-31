@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import '../../core/services/prayer_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
-import 'widgets/arab_city_picker_modal.dart';
 import 'widgets/prayer_audio_quick_card.dart';
 import 'widgets/prayer_date_card.dart';
 import 'widgets/prayer_location_banner.dart';
 import 'widgets/prayer_muezzin_selector_card.dart';
 import 'widgets/prayer_times_card.dart';
 
-/// شاشة تفاصيل مواقيت الصلاة والأذان
+/// شاشة تفاصيل مواقيت الصلاة والأذان — تعتمد كلياً على التحديد التلقائي للموقع الفعلي
 class PrayerTimesDetailScreen extends StatefulWidget {
   const PrayerTimesDetailScreen({super.key});
 
@@ -22,10 +21,6 @@ class _PrayerTimesDetailScreenState extends State<PrayerTimesDetailScreen> {
   void initState() {
     super.initState();
     PrayerService.instance.init();
-  }
-
-  void _showCityPicker(BuildContext context) {
-    showArabCityPickerModal(context);
   }
 
   @override
@@ -49,13 +44,8 @@ class _PrayerTimesDetailScreenState extends State<PrayerTimesDetailScreen> {
               title: const Text('مواقيت الصلاة والأذان'),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.location_city_rounded),
-                  tooltip: 'اختيار المدينة',
-                  onPressed: () => _showCityPicker(context),
-                ),
-                IconButton(
                   icon: const Icon(Icons.my_location_rounded),
-                  tooltip: 'تحديث الموقع عبر GPS',
+                  tooltip: 'تحديث الموقع الفعلي عبر GPS',
                   onPressed: () async {
                     final ok = await PrayerService.instance.requestGpsLocation();
                     if (context.mounted) {
@@ -63,7 +53,7 @@ class _PrayerTimesDetailScreenState extends State<PrayerTimesDetailScreen> {
                         SnackBar(
                           content: Text(
                             ok
-                                ? 'تم تحديث الموقع ومواقيت الصلاة بنجاح'
+                                ? 'تم تحديث الموقع ومواقيت الصلاة بنجاح عبر GPS'
                                 : (PrayerService.instance.errorMessage ?? 'تعذر تحديث الموقع'),
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
@@ -82,7 +72,7 @@ class _PrayerTimesDetailScreenState extends State<PrayerTimesDetailScreen> {
                 const PrayerDateCard(),
                 const SizedBox(height: 12),
 
-                // 2. Location Banner
+                // 2. Location Banner (Automatic Physical Location)
                 PrayerLocationBanner(data: prayerData),
                 const SizedBox(height: 12),
 
