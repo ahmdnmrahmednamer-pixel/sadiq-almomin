@@ -1,5 +1,4 @@
 import '../../core/services/settings_service.dart';
-import '../../core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/models/surah.dart';

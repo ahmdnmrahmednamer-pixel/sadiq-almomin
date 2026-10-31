@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../core/models/surah.dart';
 import '../../../core/models/ayah.dart';
 import '../../../core/services/ayah_card_service.dart';
-import '../../../core/theme/app_theme.dart';
 
 class AyahIslamicCardWidget extends StatelessWidget {
   final Surah surah;

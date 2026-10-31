@@ -1,5 +1,3 @@
-import '../models/ayah.dart';
-import '../models/surah.dart';
 import 'quran_repository.dart';
 
 class WordMeaning {

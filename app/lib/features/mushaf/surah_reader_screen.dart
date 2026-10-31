@@ -123,6 +123,11 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
         title: Text('سورة ${widget.surah.nameAr}'),
         actions: [
           IconButton(
+            icon: Icon(themeIcon),
+            tooltip: 'تغيير نمط القراءة',
+            onPressed: _cycleReadingTheme,
+          ),
+          IconButton(
             icon: const Icon(Icons.record_voice_over_rounded),
             tooltip: 'تغيير القارئ للتلاوة',
             onPressed: () => showSettingsReciterModal(context),

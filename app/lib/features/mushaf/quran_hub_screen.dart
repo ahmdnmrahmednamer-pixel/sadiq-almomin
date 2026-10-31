@@ -9,20 +9,9 @@ import '../../core/services/quran_repository.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/text/arabic_normalizer.dart';
 import '../../core/theme/app_theme.dart';
-import '../audio/downloads_manager_screen.dart';
 import '../audio/widgets/islamic_audio_player_sheet.dart';
-import '../khatma/khatma_screen.dart';
-import '../library/screens/quran_sciences_screen.dart';
 import '../search/quran_search_screen.dart';
-import '../tajweed/tajweed_screen.dart';
 import '../topics/quran_topics_screen.dart';
-import 'comparative_tafsir_screen.dart';
-import 'gharib_quran_screen.dart';
-import 'memorization_screen.dart';
-import 'page_mode_mushaf_screen.dart';
-import 'quran_notes_screen.dart';
-import 'surah_reader_screen.dart';
-import 'tadabbur_journal_screen.dart';
 
 /// شاشة «رحاب القرآن الكريم» (QuranHubScreen) — منظمة في ٥ أبواب روحانية متناسقة بجميع اللغات الـ ٦
 class QuranHubScreen extends StatefulWidget {

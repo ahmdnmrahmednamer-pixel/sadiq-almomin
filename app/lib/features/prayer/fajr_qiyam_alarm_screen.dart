@@ -536,6 +536,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
               final isPreviewing =
                   _previewingToneId == tone.id && _audioService.isPlaying;
               return ListTile(
+                selected: isSelected,
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 leading: Radio<String>(

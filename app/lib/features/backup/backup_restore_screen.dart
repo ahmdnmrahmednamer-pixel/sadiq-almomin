@@ -5,7 +5,6 @@ import '../../core/services/backup_restore_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/services/khatma_service.dart';
 import '../../core/services/adhkar_service.dart';
-import '../../core/services/prayer_service.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});

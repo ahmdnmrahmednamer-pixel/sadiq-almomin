@@ -4,21 +4,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
-import '../../features/adhkar/spiritual_mood_remedy_screen.dart';
-import '../../features/audio/scholars_audio_library_screen.dart';
-import '../../features/library/screens/hajj_umrah_companion_screen.dart';
-import '../../features/library/screens/islamic_mutoon_screen.dart';
-import '../../features/library/screens/riyad_alsalihin_screen.dart';
-import '../../features/mushaf/comparative_tafsir_screen.dart';
-import '../../features/mushaf/gharib_quran_screen.dart';
-import '../../features/mushaf/tadabbur_journal_screen.dart';
-import '../../features/prayer/sunan_rawatib_screen.dart';
-import '../../features/prayer/voluntary_fasting_screen.dart';
-import '../../features/settings/contact_support_screen.dart';
 import '../../features/settings/widgets/settings_about_modal.dart';
 import '../../features/settings/widgets/settings_language_modal.dart';
-import '../../features/zakat/kaffarah_fidyah_screen.dart';
-import '../../features/zakat/mawarith_calculator_screen.dart';
 
 /// القائمة الجانبية الإيمانية (AppNavigationDrawer) — منظمة في ٤ مجموعات روحانية واضحة بجميع اللغات الـ ٦
 class AppNavigationDrawer extends StatelessWidget {

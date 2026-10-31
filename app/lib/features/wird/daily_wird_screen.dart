@@ -27,8 +27,7 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+    
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(

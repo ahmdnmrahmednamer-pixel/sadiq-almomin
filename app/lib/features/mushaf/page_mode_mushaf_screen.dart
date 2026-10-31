@@ -200,6 +200,11 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                 title: Text('صفحة ${_toArabicIndic(_currentPage)} / ٦٠٤'),
                 actions: [
                   IconButton(
+                    icon: const Icon(Icons.palette_outlined),
+                    tooltip: 'تغيير سمة القراءة',
+                    onPressed: _cycleTheme,
+                  ),
+                  IconButton(
                     icon: const Icon(Icons.swap_horiz_rounded),
                     tooltip: 'الانتقال إلى نمط السور النصي',
                     onPressed: () async {

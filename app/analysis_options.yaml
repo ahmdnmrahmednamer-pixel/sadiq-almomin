@@ -1,0 +1,23 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: false
+    strict-inference: false
+    strict-raw-types: false
+  errors:
+    experimental_member_use: ignore
+    deprecated_member_use: info
+    unused_import: warning
+    unused_local_variable: warning
+    invalid_null_aware_operator: warning
+    unnecessary_null_comparison: warning
+  exclude:
+    - build/**
+    - android/**
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    avoid_print: false

@@ -47,8 +47,6 @@ class QuranRepository {
   static Map<String, List<Ayah>>? _cachedAyahsBySurah;
   static Map<int, List<Ayah>>? _cachedAyahsByPage;
   static Map<int, PageMetadata>? _cachedPageMetadata;
-  static String? _cachedBookmarksKey;
-  static List<BookmarkDetail>? _cachedBookmarkDetails;
 
   /// Loads all 114 Surahs from the bundled asset with try/catch safety
   static Future<List<Surah>> loadSurahs() async {

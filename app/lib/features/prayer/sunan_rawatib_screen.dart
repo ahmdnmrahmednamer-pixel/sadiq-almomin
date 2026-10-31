@@ -1,5 +1,4 @@
 import '../../core/services/settings_service.dart';
-import '../../core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
 import '../../core/services/sunan_rawatib_service.dart';
 import '../../core/theme/app_theme.dart';

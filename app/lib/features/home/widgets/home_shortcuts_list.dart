@@ -4,18 +4,6 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/prayer_service.dart';
 import '../../../core/services/stories_service.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../adhkar/spiritual_mood_remedy_screen.dart';
-import '../../audio/scholars_audio_library_screen.dart';
-import '../../egypt/egyptian_heritage_screen.dart';
-import '../../hadith/hadith_library_screen.dart';
-import '../../library/screens/hajj_umrah_companion_screen.dart';
-import '../../mushaf/comparative_tafsir_screen.dart';
-import '../../mushaf/tadabbur_journal_screen.dart';
-import '../../prayer/sunan_rawatib_screen.dart';
-import '../../prayer/voluntary_fasting_screen.dart';
-import '../../stories/stories_screen.dart';
-import '../../wird/daily_wird_screen.dart';
-import '../../zakat/zakat_screen.dart';
 
 /// شبكة «مسارات القرب ورياض المعرفة» المنظمة والهادئة في الصفحة الرئيسية (بجميع اللغات الـ ٦)
 class HomeShortcutsList extends StatelessWidget {

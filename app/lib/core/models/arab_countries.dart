@@ -1,5 +1,4 @@
 import '../text/arabic_normalizer.dart';
-import 'dart:math';
 
 /// Representation of a city's coordinates and prayer calculation parameters
 class CityCoordinate {

@@ -6,7 +6,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/models/surah.dart';
 import '../../../core/models/ayah.dart';
 import '../../../core/services/quran_linguistics_service.dart';
-import '../../../core/ui/app_dropdown_field.dart';
 import 'ayah_card_share_sheet.dart';
 import 'tafsir_viewer_sheet.dart';
 

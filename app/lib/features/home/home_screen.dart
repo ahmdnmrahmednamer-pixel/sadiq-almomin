@@ -18,7 +18,6 @@ import '../../core/services/zakat_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/adaptive_screen_layouts.dart';
 import '../onboarding/onboarding_screen.dart';
-import '../search/quran_search_screen.dart';
 import '../settings/widgets/settings_language_modal.dart';
 import 'widgets/home_adhkar_tasbih_row.dart';
 import 'widgets/home_adhkar_time_banner.dart';

@@ -1,4 +1,3 @@
-import '../models/ayah.dart';
 import 'quran_repository.dart';
 
 class TafsirEdition {

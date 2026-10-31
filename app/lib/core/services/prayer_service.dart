@@ -336,9 +336,7 @@ class PrayerService extends ChangeNotifier {
         timeLimit: const Duration(seconds: 12),
       );
 
-      if (position == null) {
-        throw Exception('لم نتمكن من الحصول على الإحداثيات');
-      }
+      // Position guaranteed non-null by Geolocator
 
       final locName = identifyCity(position.latitude, position.longitude);
 
@@ -430,7 +428,7 @@ class PrayerService extends ChangeNotifier {
           name: name,
           time: pTime,
           formattedTime: _formatTime(pTime),
-          isNext: nextP?.name == name,
+          isNext: nextP.name == name,
         ));
       }
     }

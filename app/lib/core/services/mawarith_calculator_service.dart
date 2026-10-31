@@ -95,7 +95,7 @@ class MawarithCalculatorService {
     final Map<String, int> counts = {};
 
     // Spouse share
-    if (spouseStatus == 'husband') {
+    if (effectiveSpouse == 'husband') {
       final frac = hasDescendant ? 0.25 : 0.50;
       rawFractions['الزوج'] = frac;
       counts['الزوج'] = 1;
@@ -103,8 +103,8 @@ class MawarithCalculatorService {
           ? 'الربع (١/٤) فرضاً لوجود الفرع الوارث'
           : 'النصف (١/٢) فرضاً لعدم وجود الفرع الوارث';
       evidences['الزوج'] = 'قوله تعالى: ﴿وَلَكُمْ نِصْفُ مَا تَرَكَ أَزْوَاجُكُمْ إِن لَّمْ يَكُن لَّهُنَّ وَلَدٌ فَإِن كَانَ لَهُنَّ وَلَدٌ فَلَكُمُ الرُّبُعُ﴾ [النساء: ١٢].';
-    } else if (spouseStatus.startsWith('wife_')) {
-      final wCount = int.tryParse(spouseStatus.split('_').last) ?? 1;
+    } else if (effectiveSpouse.startsWith('wife_')) {
+      final wCount = int.tryParse(effectiveSpouse.split('_').last) ?? 1;
       final frac = hasDescendant ? 0.125 : 0.25;
       rawFractions['الزوجة / الزوجات'] = frac;
       counts['الزوجة / الزوجات'] = wCount;
