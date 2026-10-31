@@ -102,7 +102,6 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/mushaf-pages') ||
         location.startsWith('/surah-reader') ||
         location.startsWith('/audio') ||
-        location.startsWith('/scholars-audio') ||
         location.startsWith('/notes') ||
         location.startsWith('/memorization') ||
         location.startsWith('/topics') ||
@@ -116,7 +115,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/tajweed-rule') ||
         location.startsWith('/quran-irab') ||
         location.startsWith('/quran-asbab-nuzul')) {
-      return 0;
+      return 1;
     }
     if (location.startsWith('/prayer') ||
         location.startsWith('/prayer-times-detail') ||
@@ -126,19 +125,20 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/prayer-tracker') ||
         location.startsWith('/fajr-qiyam-alarm') ||
         location.startsWith('/sunan-rawatib') ||
+        location.startsWith('/voluntary-fasting') ||
         location.startsWith('/battery-guide')) {
-      return 1;
+      return 2;
     }
     if (location.startsWith('/adhkar') ||
         location.startsWith('/adhkar-hub') ||
         location.startsWith('/spiritual-mood') ||
         location.startsWith('/tasbih') ||
-        location.startsWith('/voluntary-fasting') ||
         location.startsWith('/daily-wird') ||
         location.startsWith('/daawah-studio')) {
-      return 2;
+      return 3;
     }
     if (location.startsWith('/library') ||
+        location.startsWith('/scholars-audio') ||
         location.startsWith('/hadith') ||
         location.startsWith('/hadith-detail') ||
         location.startsWith('/stories') ||
@@ -157,27 +157,35 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/islamic-mutoon') ||
         location.startsWith('/riyad-alsalihin') ||
         location.startsWith('/library-search')) {
-      return 3;
+      return 4;
     }
-    return 4;
+    if (location.startsWith('/settings') ||
+        location.startsWith('/backup') ||
+        location.startsWith('/support')) {
+      return 5;
+    }
+    return 0;
   }
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
-        context.go('/mushaf');
+        context.go('/home');
         break;
       case 1:
-        context.go('/prayer');
+        context.go('/mushaf');
         break;
       case 2:
-        context.go('/adhkar-hub');
+        context.go('/prayer');
         break;
       case 3:
-        context.go('/library');
+        context.go('/adhkar-hub');
         break;
       case 4:
-        context.go('/home');
+        context.go('/library');
+        break;
+      case 5:
+        context.go('/settings');
         break;
     }
   }
@@ -231,6 +239,13 @@ class _MainScaffoldState extends State<MainScaffold> {
                         NavigationDestinationLabelBehavior.alwaysShow,
                     destinations: [
                       NavigationDestination(
+                        icon: const Icon(Icons.home_outlined),
+                        selectedIcon: const Icon(Icons.home_rounded,
+                            color: AppColors.primaryGreen),
+                        label: context.tr('nav_home'),
+                        tooltip: context.tr('tooltip_home'),
+                      ),
+                      NavigationDestination(
                         icon: const Icon(Icons.menu_book_outlined),
                         selectedIcon: const Icon(Icons.menu_book_rounded,
                             color: AppColors.primaryGreen),
@@ -262,11 +277,11 @@ class _MainScaffoldState extends State<MainScaffold> {
                         tooltip: context.tr('tooltip_library'),
                       ),
                       NavigationDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        selectedIcon: const Icon(Icons.home_rounded,
+                        icon: const Icon(Icons.settings_outlined),
+                        selectedIcon: const Icon(Icons.settings_rounded,
                             color: AppColors.primaryGreen),
-                        label: context.tr('nav_home'),
-                        tooltip: context.tr('tooltip_home'),
+                        label: context.tr('nav_settings'),
+                        tooltip: context.tr('tooltip_settings'),
                       ),
                     ],
                   ),

@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/widgets/app_navigation_drawer.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/prayer_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../settings/widgets/settings_language_modal.dart';
+import 'widgets/home_date_header_card.dart';
+import 'widgets/home_next_prayer_card.dart';
+import 'widgets/home_quran_continue_card.dart';
+import 'widgets/home_adhkar_tasbih_row.dart';
 
-/// شاشة التطبيق الرئيسية (HomeScreen) — مصممة لتكون هادئة ونقية وفارغة تماماً
-/// حسب رغبة المستخدم، مع سهولة الوصول لكافة الأقسام عبر شريط التنقل السفلي والقائمة الجانبية
+/// شاشة التطبيق الرئيسية (HomeScreen)
+/// مصممة بهدوء وسكينة إيمانية، وتتيح الوصول لكافة الأقسام والشيوخ والمؤذنين عبر القائمة الجانبية (Navigation Menu)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     SettingsService.instance.init();
+    PrayerService.instance.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       try {
@@ -46,10 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: SettingsService.instance,
+      animation: Listenable.merge([SettingsService.instance, PrayerService.instance]),
       builder: (context, _) {
         final s = SettingsService.instance;
         final isDark = Theme.of(context).brightness == Brightness.dark;
+        final prayerData = PrayerService.instance.currentData;
+        final dayName = HijriDateHelper.getDayOfWeek();
+        final hijriStr = HijriDateHelper.getHijriDateString();
+        final gregStr = HijriDateHelper.getGregorianDateString();
 
         return Directionality(
           textDirection: s.textDirection,
@@ -81,69 +91,93 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            // شاشة التطبيق الرئيسية فاضية وهادئة تماماً
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.accentGold.withOpacity(isDark ? 0.15 : 0.1),
-                        border: Border.all(
-                          color: AppColors.accentGold.withOpacity(0.4),
-                          width: 2.2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accentGold.withOpacity(isDark ? 0.2 : 0.08),
-                            blurRadius: 18,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.mosque_rounded,
-                        size: 48,
-                        color: AppColors.accentGold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        fontFamily: 'Amiri',
-                        color: isDark ? AppColors.accentGold : AppColors.primaryGreen,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '«نُورُ المُؤْمِنِ»',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white70 : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'اختر القسم المطلوب من شريط التنقل السفلي',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+            body: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              children: [
+                // 1. Header Date Card (Hijri & Gregorian)
+                HomeDateHeaderCard(
+                  dayName: dayName,
+                  hijriStr: hijriStr,
+                  gregStr: gregStr,
                 ),
-              ),
+                const SizedBox(height: 12),
+
+                // 2. Open Navigation Menu Interactive Banner
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF132A20), const Color(0xFF0D1E16)]
+                            : [const Color(0xFFEFF8F3), const Color(0xFFE2F0E8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.menu_open_rounded, color: AppColors.primaryGreen, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'القائمة الإيمانية الشاملة ☰',
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'تصفح قراء القرآن، المؤذنين الـ 7، دعاء الشعراوي، ومكتبة العلماء',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: isDark ? Colors.white70 : AppColors.mutedText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                          child: const Text('فتح القائمة', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 3. Next Prayer Card
+                HomeNextPrayerCard(prayerData: prayerData),
+                const SizedBox(height: 12),
+
+                // 4. Continue Quran Card
+                const HomeQuranContinueCard(),
+                const SizedBox(height: 12),
+
+                // 5. Adhkar & Tasbih Row
+                const HomeAdhkarTasbihRow(),
+                const SizedBox(height: 16),
+              ],
             ),
           ),
         );
