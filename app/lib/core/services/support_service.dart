@@ -14,7 +14,7 @@ enum SupportCategory {
 
 class SupportService {
   static const String developerEmail = 'ahmdnmrahmednamer@gmail.com';
-  static const String appVersion = '1.2.3';
+  static const String appVersion = '1.3.0';
   static const String appBuild = '12';
 
   /// URL launcher delegate for testability

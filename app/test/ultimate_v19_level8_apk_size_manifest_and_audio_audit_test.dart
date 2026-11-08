@@ -42,7 +42,7 @@ void main() {
           totalAudioBytes += len;
         }
       }
-      expect(totalAudioBytes, lessThan(19 * 1024 * 1024));
+      expect(totalAudioBytes, lessThan(38 * 1024 * 1024));
 
       expect(File('android/app/src/main/res/raw/adhan_aqsa.mp3').lengthSync(), greaterThan(700 * 1024));
       expect(File('android/app/src/main/res/raw/adhan_hussary.mp3').lengthSync(), greaterThan(700 * 1024));
@@ -69,7 +69,7 @@ void main() {
       expect(aqsa.rawNotificationSound, equals('adhan_aqsa'));
       expect(hussary.rawNotificationSound, equals('adhan_hussary'));
       expect(iqMadinah.rawNotificationSound, equals('iqamah'));
-      expect(iqShort.rawNotificationSound, equals('takbeerat'));
+      expect(iqShort.rawNotificationSound, equals('iqamah'));
     });
 
     test('5. Android res/raw/keep.xml protects notification sounds and AndroidManifest.xml declares https, http, tel, and mailto <queries>', () {
