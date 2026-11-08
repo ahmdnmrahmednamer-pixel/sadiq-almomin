@@ -183,6 +183,29 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
             ],
           ),
         ),
+        // Quran Ayah Numbering Style Dropdown
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: AppDropdownField<String>(
+            label: 'تنسيق أرقام الآيات في المصحف',
+            value: s.quranNumberingStyle,
+            dense: true,
+            prefixIcon: Icons.pin_outlined,
+            options: const [
+              AppDropdownOption(
+                value: 'arabic',
+                label: 'أرقام قياسية (1، 2، 3...)',
+                subtitle: 'مثال: قل هو الله أحد ﴿1﴾ الله الصمد ﴿2﴾',
+              ),
+              AppDropdownOption(
+                value: 'indic',
+                label: 'أرقام مشرقية (١، ٢، ٣...)',
+                subtitle: 'مثال: قل هو الله أحد ﴿١﴾ الله الصمد ﴿٢﴾',
+              ),
+            ],
+            onChanged: (val) => s.setQuranNumberingStyle(val),
+          ),
+        ),
 
         SwitchListTile(
           secondary: const Icon(Icons.playlist_play_rounded,

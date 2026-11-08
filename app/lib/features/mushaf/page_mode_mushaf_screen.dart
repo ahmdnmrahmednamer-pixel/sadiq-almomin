@@ -1,4 +1,5 @@
 import '../../core/text/arabic_normalizer.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../core/models/ayah.dart';
 import '../../core/models/surah.dart';
@@ -28,6 +29,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
   late int _currentPage;
   late PageController _pageController;
   bool _showControls = true;
+  final List<TapGestureRecognizer> _pageRecognizers = [];
   int _themeModeIndex = 0; // 0: تلقائي/نظام, 1: ورقي مصحفي, 2: ليلي داكن, 3: نهاري ناصع
   double _fontSize = 22.0;
 
@@ -42,6 +44,10 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
 
   @override
   void dispose() {
+    for (final r in _pageRecognizers) {
+      r.dispose();
+    }
+    _pageRecognizers.clear();
     _pageController.dispose();
     super.dispose();
   }
@@ -528,105 +534,75 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
         }
       }
 
-      // Continuous Ayah RichText
+      // Continuous Ayah RichText: Ayah text followed immediately by its number (e.g. قل هو الله احد 1 الله الصمد 2)
       widgets.add(
         RichText(
           textAlign: TextAlign.justify,
           text: TextSpan(
-            children: surahAyahs.map((ayah) {
+            children: surahAyahs.expand((ayah) {
               final isPlaying = playingKey == '$surahId:${ayah.ayahNumber}';
+              final ayahRec = TapGestureRecognizer()
+                ..onTap = () {
+                  AyahAudioPlayer.instance.playAyah(
+                    context,
+                    ayah.surahId,
+                    ayah.ayahNumber,
+                  );
+                };
+              final numRec = TapGestureRecognizer()
+                ..onTap = () async {
+                  final surah = await QuranRepository.getSurahById(ayah.surahId);
+                  if (surah != null && context.mounted) {
+                    AyahActionSheet.show(
+                      context,
+                      surah: surah,
+                      ayah: ayah,
+                    );
+                  }
+                };
+              _pageRecognizers.add(ayahRec);
+              _pageRecognizers.add(numRec);
 
-              return TextSpan(
-                children: [
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.baseline,
-                    baseline: TextBaseline.alphabetic,
-                    child: Semantics(
-                      label: '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}',
-                      hint: QuranAccessibilityService.ayahSemanticHint,
-                      child: InkWell(
-                        onTap: () {
-                          AyahAudioPlayer.instance.playAyah(
-                            context,
-                            ayah.surahId,
-                            ayah.ayahNumber,
-                          );
-                        },
-                        onLongPress: () async {
-                          final surah = await QuranRepository.getSurahById(ayah.surahId);
-                          if (surah != null && context.mounted) {
-                            AyahActionSheet.show(
-                              context,
-                              surah: surah,
-                              ayah: ayah,
-                            );
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: isPlaying ? AppColors.accentGold.withOpacity(0.25) : Colors.transparent,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            ayah.cleanTextUthmani,
-                            style: TextStyle(
-                              fontSize: _fontSize,
-                              height: 2.1,
-                              color: isPlaying ? AppColors.accentGold : textColor,
-                              fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
-                              fontFamilyFallback: const [
-                                'Traditional Arabic',
-                                'Scheherazade New',
-                                'Amiri',
-                                'serif',
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+              final formattedNumber = SettingsService.instance.formatAyahNumber(ayah.ayahNumber);
+
+              return [
+                TextSpan(
+                  text: '${ayah.cleanTextUthmani} ',
+                  semanticsLabel: '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}',
+                  recognizer: ayahRec,
+                  style: TextStyle(
+                    fontSize: _fontSize,
+                    height: 2.1,
+                    color: isPlaying ? AppColors.accentGold : textColor,
+                    backgroundColor: isPlaying ? AppColors.accentGold.withOpacity(0.18) : Colors.transparent,
+                    fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
+                    fontFamilyFallback: const [
+                      'Traditional Arabic',
+                      'Scheherazade New',
+                      'Amiri',
+                      'serif',
+                    ],
                   ),
-                  // Ayah Number Islamic Medallion Ornament (Exquisite End of Ayah Rosette)
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.middle,
-                    child: ExcludeSemantics(
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          AyahAudioPlayer.instance.playAyah(
-                            context,
-                            ayah.surahId,
-                            ayah.ayahNumber,
-                          );
-                        },
-                        onLongPress: () async {
-                          final surah = await QuranRepository.getSurahById(ayah.surahId);
-                          if (surah != null && context.mounted) {
-                            AyahActionSheet.show(
-                              context,
-                              surah: surah,
-                              ayah: ayah,
-                            );
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: AyahEndMarker(
-                            ayahNumber: ayah.ayahNumber,
-                            size: (_fontSize * 1.15).clamp(22.0, 38.0),
-                            color: isPlaying
-                                ? AppColors.accentGold
-                                : (isDark ? AppColors.softGold : AppColors.accentGold),
-                            isPlaying: isPlaying,
-                          ),
-                        ),
-                      ),
-                    ),
+                ),
+                TextSpan(
+                  text: '﴿$formattedNumber﴾ ',
+                  recognizer: numRec,
+                  style: TextStyle(
+                    fontSize: _fontSize * 0.92,
+                    height: 2.1,
+                    color: isPlaying
+                        ? AppColors.accentGold
+                        : (isDark ? AppColors.softGold : AppColors.accentGold),
+                    fontWeight: FontWeight.bold,
+                    fontFamilyFallback: const [
+                      'Traditional Arabic',
+                      'Scheherazade New',
+                      'Amiri',
+                      'serif',
+                    ],
                   ),
-                  const TextSpan(text: ' '),
-                ],
-              );
+                ),
+              ];
             }).toList(),
           ),
         ),

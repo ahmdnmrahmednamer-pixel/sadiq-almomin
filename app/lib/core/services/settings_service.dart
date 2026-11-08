@@ -553,6 +553,7 @@ class SettingsService extends ChangeNotifier {
   bool _tasbihSliderEnabled = true;
   bool _downloadOverWifiOnly = false;
   String _mushafDefaultMode = 'page'; // 'page' or 'text'
+  String _quranNumberingStyle = 'arabic'; // 'arabic' (1, 2, 3...) or 'indic' (١, ٢, ٣...)
   bool _showJuzOverlay = true;
   int _hijriAdjustmentDays = 0;
   String _audioQualityPreset = 'studio_hd';
@@ -576,6 +577,24 @@ class SettingsService extends ChangeNotifier {
   bool get tasbihSliderEnabled => _tasbihSliderEnabled;
   bool get downloadOverWifiOnly => _downloadOverWifiOnly;
   String get mushafDefaultMode => _mushafDefaultMode;
+  String get quranNumberingStyle => _quranNumberingStyle;
+
+  String formatAyahNumber(int number) {
+    if (_quranNumberingStyle == 'indic') {
+      const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+      return number.toString().split('').map((char) {
+        final digit = int.tryParse(char);
+        return digit != null ? arabicDigits[digit] : char;
+      }).join();
+    }
+    return number.toString();
+  }
+
+  Future<void> setQuranNumberingStyle(String style) async {
+    _quranNumberingStyle = style;
+    await _prefs?.setString('quran_numbering_style', style);
+    notifyListeners();
+  }
   bool get showJuzOverlay => _showJuzOverlay;
   int get hijriAdjustmentDays => _hijriAdjustmentDays;
   String get audioQualityPreset => _audioQualityPreset;
@@ -666,6 +685,7 @@ class SettingsService extends ChangeNotifier {
     _tasbihSliderEnabled = _prefs?.getBool('tasbih_slider_enabled') ?? true;
     _downloadOverWifiOnly = _prefs?.getBool('download_wifi_only') ?? false;
     _mushafDefaultMode = _prefs?.getString('mushaf_default_mode') ?? 'page';
+    _quranNumberingStyle = _prefs?.getString('quran_numbering_style') ?? 'arabic';
     _showJuzOverlay = _prefs?.getBool('show_juz_overlay') ?? true;
     _hijriAdjustmentDays = (_prefs?.getInt('hijri_adjustment_days') ?? 0).clamp(-2, 2);
     _audioQualityPreset = _prefs?.getString('audio_quality_preset') ?? 'studio_hd';

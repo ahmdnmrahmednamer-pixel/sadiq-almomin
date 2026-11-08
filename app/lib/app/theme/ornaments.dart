@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../core/services/settings_service.dart';
 import 'tokens.dart';
 
 /// Helper to convert standard numbers to Arabic-Indic digits (٠١٢٣٤٥٦٧٨٩) per §4.3
@@ -38,6 +39,8 @@ class AyahEndMarker extends StatelessWidget {
         ? const Color(0xFFD4AF37)
         : (color ?? tokens?.ayahMarker ?? const Color(0xFFB8893A));
 
+    final numStr = SettingsService.instance.formatAyahNumber(ayahNumber);
+
     return SizedBox(
       width: size,
       height: size,
@@ -47,9 +50,9 @@ class AyahEndMarker extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(top: 1.0),
             child: Text(
-              ArabicIndicDigits.format(ayahNumber),
+              numStr,
               style: TextStyle(
-                fontSize: size * 0.40,
+                fontSize: size * 0.44,
                 fontWeight: FontWeight.w900,
                 color: isPlaying ? const Color(0xFF8B6508) : markerColor,
                 height: 1.0,

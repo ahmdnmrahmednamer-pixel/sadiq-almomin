@@ -316,11 +316,11 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                         ),
                       ),
 
-                    // Text Mode Ayah Flow with Uthmani text & Accessibility Semantics
+                    // Text Mode Ayah Flow: Ayah text followed immediately by its number (e.g. قل هو الله احد 1 الله الصمد 2)
                     RichText(
                       textAlign: TextAlign.justify,
                       text: TextSpan(
-                        children: ayahs.map((ayah) {
+                        children: ayahs.expand((ayah) {
                           final isPlaying = playingKey == '${widget.surah.id}:${ayah.ayahNumber}';
 
                           final rec = TapGestureRecognizer()
@@ -332,69 +332,61 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                                 surahName: widget.surah.nameAr,
                               );
                             };
+                          final recNum = TapGestureRecognizer()
+                            ..onTap = () {
+                              AyahActionSheet.show(
+                                context,
+                                surah: widget.surah,
+                                ayah: ayah,
+                              );
+                            };
                           _recognizers.add(rec);
+                          _recognizers.add(recNum);
 
-                          return TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '${ayah.cleanTextUthmani} ',
-                                semanticsLabel: QuranAccessibilityService.buildAyahSemanticLabel(
-                                  surahName: widget.surah.nameAr,
-                                  ayahNumber: ayah.ayahNumber,
-                                  uthmaniText: ayah.cleanTextUthmani,
-                                ),
-                                recognizer: rec,
-                                style: TextStyle(
-                                  fontSize: _fontSize,
-                                  height: 2.2,
-                                  color: isPlaying ? AppColors.accentGold : textColor,
-                                  backgroundColor: isPlaying ? AppColors.accentGold.withOpacity(0.18) : Colors.transparent,
-                                  fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
-                                  fontFamilyFallback: const [
-                                    'Traditional Arabic',
-                                    'Scheherazade New',
-                                    'Amiri',
-                                    'serif',
-                                  ],
-                                ),
+                          final formattedNumber = SettingsService.instance.formatAyahNumber(ayah.ayahNumber);
+
+                          return [
+                            TextSpan(
+                              text: '${ayah.cleanTextUthmani} ',
+                              semanticsLabel: QuranAccessibilityService.buildAyahSemanticLabel(
+                                surahName: widget.surah.nameAr,
+                                ayahNumber: ayah.ayahNumber,
+                                uthmaniText: ayah.cleanTextUthmani,
                               ),
-                              // Ayah Number Islamic Medallion Ornament (Exquisite End of Ayah Rosette)
-                              WidgetSpan(
-                                alignment: PlaceholderAlignment.middle,
-                                child: ExcludeSemantics(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(20),
-                                    onTap: () {
-                                      AyahActionSheet.show(
-                                        context,
-                                        surah: widget.surah,
-                                        ayah: ayah,
-                                      );
-                                    },
-                                    onLongPress: () {
-                                      AyahLinguisticsSheet.show(
-                                        context,
-                                        surah: widget.surah,
-                                        ayah: ayah,
-                                      );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                      child: AyahEndMarker(
-                                        ayahNumber: ayah.ayahNumber,
-                                        size: (_fontSize * 1.15).clamp(24.0, 42.0),
-                                        color: isPlaying
-                                            ? AppColors.accentGold
-                                            : (isDark ? AppColors.softGold : AppColors.accentGold),
-                                        isPlaying: isPlaying,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              recognizer: rec,
+                              style: TextStyle(
+                                fontSize: _fontSize,
+                                height: 2.2,
+                                color: isPlaying ? AppColors.accentGold : textColor,
+                                backgroundColor: isPlaying ? AppColors.accentGold.withOpacity(0.18) : Colors.transparent,
+                                fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
+                                fontFamilyFallback: const [
+                                  'Traditional Arabic',
+                                  'Scheherazade New',
+                                  'Amiri',
+                                  'serif',
+                                ],
                               ),
-                              const TextSpan(text: ' '),
-                            ],
-                          );
+                            ),
+                            TextSpan(
+                              text: '﴿$formattedNumber﴾ ',
+                              recognizer: recNum,
+                              style: TextStyle(
+                                fontSize: _fontSize * 0.95,
+                                height: 2.2,
+                                color: isPlaying
+                                    ? AppColors.accentGold
+                                    : (isDark ? AppColors.softGold : AppColors.accentGold),
+                                fontWeight: FontWeight.bold,
+                                fontFamilyFallback: const [
+                                  'Traditional Arabic',
+                                  'Scheherazade New',
+                                  'Amiri',
+                                  'serif',
+                                ],
+                              ),
+                            ),
+                          ];
                         }).toList(),
                       ),
                     ),
@@ -538,18 +530,20 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                           ],
                         ),
                       ),
-                      WidgetSpan(
-                        alignment: PlaceholderAlignment.middle,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: AyahEndMarker(
-                            ayahNumber: ayah.ayahNumber,
-                            size: (_fontSize * 1.1).clamp(24.0, 38.0),
-                            color: isPlaying
-                                ? AppColors.accentGold
-                                : (isDark ? AppColors.softGold : AppColors.accentGold),
-                            isPlaying: isPlaying,
-                          ),
+                      TextSpan(
+                        text: '﴿${SettingsService.instance.formatAyahNumber(ayah.ayahNumber)}﴾',
+                        style: TextStyle(
+                          fontSize: _fontSize * 0.95,
+                          fontWeight: FontWeight.bold,
+                          color: isPlaying
+                              ? AppColors.accentGold
+                              : (isDark ? AppColors.softGold : AppColors.accentGold),
+                          fontFamilyFallback: const [
+                            'Traditional Arabic',
+                            'Scheherazade New',
+                            'Amiri',
+                            'serif',
+                          ],
                         ),
                       ),
                     ],
