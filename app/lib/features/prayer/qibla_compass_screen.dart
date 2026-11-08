@@ -33,6 +33,9 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PrayerService.instance.checkAndUpdateLocationOnResume();
+    });
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),

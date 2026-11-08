@@ -3,14 +3,42 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../core/services/settings_service.dart';
+import '../core/services/prayer_service.dart';
 import '../core/localization/app_localizations.dart';
 import 'router.dart';
 
-class AlMominApp extends ConsumerWidget {
+class AlMominApp extends ConsumerStatefulWidget {
   const AlMominApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AlMominApp> createState() => _AlMominAppState();
+}
+
+class _AlMominAppState extends ConsumerState<AlMominApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PrayerService.instance.checkAndUpdateLocationOnResume();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      PrayerService.instance.checkAndUpdateLocationOnResume();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: SettingsService.instance,
       builder: (context, _) {

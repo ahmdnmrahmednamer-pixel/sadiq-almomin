@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:adhan_dart/adhan_dart.dart';
@@ -124,8 +123,10 @@ class PrayerService extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInitialized = false;
   bool _isManualLocation = false;
+  bool _isAutoLocation = true;
   String? _errorMessage;
   Timer? _tickerTimer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   String _lastCalculationMethod = '';
 
   /// Lightweight 1-second notifier for countdown badges so the entire HomeScreen
@@ -135,6 +136,7 @@ class PrayerService extends ChangeNotifier {
   PrayerData? get currentData => _currentData;
   bool get isLoading => _isLoading;
   bool get isManualLocation => _isManualLocation;
+  bool get isAutoLocation => _isAutoLocation;
   String? get errorMessage => _errorMessage;
 
   // Default fallback: Cairo, Egypt
@@ -143,20 +145,18 @@ class PrayerService extends ChangeNotifier {
   static const String defaultCity = 'القاهرة، مصر';
 
   String identifyCity(double lat, double lng) {
-    double minDistance = double.infinity;
+    double minDistanceKm = double.infinity;
     CityCoordinate? closestCity;
 
     for (final c in famousCities) {
-      final dLat = (lat - c.latitude) * 111.0;
-      final dLng = (lng - c.longitude) * 111.0 * cos(lat * pi / 180.0);
-      final distKm = sqrt(dLat * dLat + dLng * dLng);
-      if (distKm < minDistance) {
-        minDistance = distKm;
+      final distKm = Geolocator.distanceBetween(lat, lng, c.latitude, c.longitude) / 1000.0;
+      if (distKm < minDistanceKm) {
+        minDistanceKm = distKm;
         closestCity = c;
       }
     }
 
-    if (closestCity != null && minDistance <= 120.0) {
+    if (closestCity != null && minDistanceKm <= 150.0) {
       // Auto-adapt calculation method if country/city has dedicated method
       if (closestCity.method.isNotEmpty && closestCity.method != _lastCalculationMethod) {
         _lastCalculationMethod = closestCity.method;
@@ -178,6 +178,7 @@ class PrayerService extends ChangeNotifier {
     final savedLng = prefs.getDouble('last_longitude') ?? defaultLng;
     final savedCity = prefs.getString('last_city') ?? defaultCity;
     _isManualLocation = prefs.getBool('is_manual_location') ?? false;
+    _isAutoLocation = prefs.getBool('auto_location_enabled') ?? true;
     _lastCalculationMethod = SettingsService.instance.calculationMethod;
 
     SettingsService.instance.removeListener(_onSettingsChanged);
@@ -189,8 +190,10 @@ class PrayerService extends ChangeNotifier {
     _startLiveTicker();
     _isInitialized = true;
 
-    // Automatically detect physical location and city via GPS on launch
-    unawaited(requestGpsLocation(isAutoInit: true));
+    // Automatically check physical location and adapt to city/governorate on launch
+    if (_isAutoLocation && !_isManualLocation) {
+      unawaited(checkAndUpdateLocationOnResume(isUserTriggered: false));
+    }
   }
 
   void _onSettingsChanged() {
@@ -278,9 +281,12 @@ class PrayerService extends ChangeNotifier {
   }
 
   Future<bool> setManualCity(CityCoordinate city) async {
+    _positionStreamSubscription?.cancel();
     _isManualLocation = true;
+    _isAutoLocation = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_manual_location', true);
+    await prefs.setBool('auto_location_enabled', false);
     await prefs.setDouble('last_latitude', city.latitude);
     await prefs.setDouble('last_longitude', city.longitude);
     await prefs.setString('last_city', city.name);
@@ -298,70 +304,140 @@ class PrayerService extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> requestGpsLocation({bool isAutoInit = false}) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  Future<bool> enableAutoLocation() async {
+    _isManualLocation = false;
+    _isAutoLocation = true;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_manual_location', false);
+    await prefs.setBool('auto_location_enabled', true);
+    return requestGpsLocation();
+  }
+
+  /// Checks and automatically adapts location when resuming from background or traveling
+  Future<bool> checkAndUpdateLocationOnResume({bool isUserTriggered = false}) async {
+    if (_isManualLocation && !isUserTriggered) {
+      return false;
+    }
 
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _errorMessage = 'خدمات تحديد الموقع (GPS) غير مفعلة على الهاتف';
-        _isLoading = false;
-        notifyListeners();
+        if (isUserTriggered) {
+          _errorMessage = 'خدمات تحديد الموقع (GPS) غير مفعلة على الهاتف';
+          notifyListeners();
+        }
         return false;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _errorMessage = 'تم رفض إذن الوصول إلى الموقع الجغرافي';
-          _isLoading = false;
-          notifyListeners();
+        if (isUserTriggered) {
+          permission = await Geolocator.requestPermission();
+        } else {
           return false;
         }
       }
 
-      if (permission == LocationPermission.deniedForever) {
-        _errorMessage = 'إذن الموقع مرفوض نهائياً. يرجى تفعيله من إعدادات الهاتف لتحديد المواقيت تلقائياً';
-        _isLoading = false;
-        notifyListeners();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        if (isUserTriggered) {
+          _errorMessage = 'تم رفض إذن الوصول إلى الموقع الجغرافي';
+          notifyListeners();
+        }
         return false;
       }
 
-      // First check fast cached position
+      // Fast check cached position first
       Position? position = await Geolocator.getLastKnownPosition();
 
-      // If no cached position or stale, fetch current with fallback
-      position ??= await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 12),
+      // If no cached position or triggered or stale, fetch current
+      if (position == null || isUserTriggered) {
+        position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 10),
+        );
+      }
+
+      final double currentLat = _currentData?.latitude ?? defaultLat;
+      final double currentLng = _currentData?.longitude ?? defaultLng;
+      final distMeters = Geolocator.distanceBetween(
+        currentLat,
+        currentLng,
+        position.latitude,
+        position.longitude,
       );
 
-      // Position guaranteed non-null by Geolocator
+      final newLocName = identifyCity(position.latitude, position.longitude);
+      final oldLocName = _currentData?.locationName ?? '';
 
-      final locName = identifyCity(position.latitude, position.longitude);
+      // If moved by >= 2500 meters (2.5 km) or city/governorate changed or triggered
+      if (distMeters >= 2500 || newLocName != oldLocName || isUserTriggered) {
+        final prefs = await SharedPreferences.getInstance();
+        if (isUserTriggered) {
+          _isManualLocation = false;
+          _isAutoLocation = true;
+          await prefs.setBool('is_manual_location', false);
+          await prefs.setBool('auto_location_enabled', true);
+        }
+        await prefs.setDouble('last_latitude', position.latitude);
+        await prefs.setDouble('last_longitude', position.longitude);
+        await prefs.setString('last_city', newLocName);
 
-      final prefs = await SharedPreferences.getInstance();
-      if (!isAutoInit) {
-        _isManualLocation = false;
-        await prefs.setBool('is_manual_location', false);
+        _calculatePrayers(position.latitude, position.longitude, newLocName);
+        notifyListeners();
       }
-      await prefs.setDouble('last_latitude', position.latitude);
-      await prefs.setDouble('last_longitude', position.longitude);
-      await prefs.setString('last_city', locName);
 
-      _calculatePrayers(position.latitude, position.longitude, locName);
-      _isLoading = false;
-      notifyListeners();
+      // Start movement listener for continuous highway/train travel updates
+      _startPositionStream();
       return true;
-    } catch (e) {
-      _errorMessage = 'تعذر تثبيت إشارة GPS. تم الاحتفاظ بالموقع الحالي.';
-      _isLoading = false;
-      notifyListeners();
+    } catch (_) {
       return false;
     }
+  }
+
+  void _startPositionStream() {
+    _positionStreamSubscription?.cancel();
+    try {
+      const locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.medium,
+        distanceFilter: 3000, // Trigger only when moved by 3 km to prevent battery drain
+      );
+      _positionStreamSubscription = Geolocator.getPositionStream(
+        locationSettings: locationSettings,
+      ).listen((Position position) async {
+        if (_isManualLocation) return;
+        final currentLat = _currentData?.latitude ?? defaultLat;
+        final currentLng = _currentData?.longitude ?? defaultLng;
+        final distMeters = Geolocator.distanceBetween(
+          currentLat,
+          currentLng,
+          position.latitude,
+          position.longitude,
+        );
+        final newLocName = identifyCity(position.latitude, position.longitude);
+        final oldLocName = _currentData?.locationName ?? '';
+
+        if (distMeters >= 2500 || newLocName != oldLocName) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setDouble('last_latitude', position.latitude);
+          await prefs.setDouble('last_longitude', position.longitude);
+          await prefs.setString('last_city', newLocName);
+
+          _calculatePrayers(position.latitude, position.longitude, newLocName);
+          notifyListeners();
+        }
+      }, onError: (_) {});
+    } catch (_) {}
+  }
+
+  Future<bool> requestGpsLocation({bool isAutoInit = false}) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final result = await checkAndUpdateLocationOnResume(isUserTriggered: true);
+    _isLoading = false;
+    notifyListeners();
+    return result;
   }
 
   void _calculatePrayers(double lat, double lng, String locName) {
@@ -479,6 +555,7 @@ class PrayerService extends ChangeNotifier {
   @override
   void dispose() {
     _tickerTimer?.cancel();
+    _positionStreamSubscription?.cancel();
     SettingsService.instance.removeListener(_onSettingsChanged);
     countdownNotifier.dispose();
     super.dispose();

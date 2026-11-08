@@ -26,6 +26,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (PrayerService.instance.isAutoLocation) {
+        PrayerService.instance.checkAndUpdateLocationOnResume();
+      }
+    });
     _fontSize = SettingsService.instance.mushafFontSize;
     _selectedReciterId = SettingsService.instance.selectedReciterId;
     _enableNotifications = SettingsService.instance.adhanAlertsEnabled;
@@ -386,6 +391,82 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
+
+        // GPS Automatic Location Card
+        Card(
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          color: AppColors.primaryGreen.withValues(alpha: 0.08),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryGreen.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.gps_fixed_rounded, color: AppColors.primaryGreen, size: 22),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'تحديد موقعك ومحافظتك تلقائياً (GPS)',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryGreen),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'يتكيف التطبيق تلقائياً مع مدينتك لتحديث مواقيت الصلاة والقبلة بدقة عند السفر والتنقل',
+                            style: TextStyle(fontSize: 11.5, color: Colors.black87),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  icon: const Icon(Icons.my_location_rounded, size: 18),
+                  label: Text(
+                    PrayerService.instance.isAutoLocation && PrayerService.instance.currentData != null
+                        ? 'موقعك الفعلي الحالي: ${PrayerService.instance.currentData!.locationName}'
+                        : 'تفعيل التحديد التلقائي للموقع الآن (GPS)',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  onPressed: () async {
+                    final ok = await PrayerService.instance.requestGpsLocation();
+                    if (mounted) {
+                      setState(() {
+                        if (PrayerService.instance.currentData != null) {
+                          _selectedCityName = PrayerService.instance.currentData!.locationName;
+                        }
+                      });
+                      if (ok) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('تم تحديد موقعك ومحافظتك بنجاح: $_selectedCityName')),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
 
         // City Selection
         Card(
