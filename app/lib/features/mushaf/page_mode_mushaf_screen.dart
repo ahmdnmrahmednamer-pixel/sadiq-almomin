@@ -541,25 +541,18 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
           text: TextSpan(
             children: surahAyahs.expand((ayah) {
               final isPlaying = playingKey == '$surahId:${ayah.ayahNumber}';
-              final ayahRec = TapGestureRecognizer()
-                ..onTap = () {
-                  AyahAudioPlayer.instance.playAyah(
+              Future<void> openAyahOptions() async {
+                final surah = await QuranRepository.getSurahById(ayah.surahId);
+                if (surah != null && context.mounted) {
+                  AyahActionSheet.show(
                     context,
-                    ayah.surahId,
-                    ayah.ayahNumber,
+                    surah: surah,
+                    ayah: ayah,
                   );
-                };
-              final numRec = TapGestureRecognizer()
-                ..onTap = () async {
-                  final surah = await QuranRepository.getSurahById(ayah.surahId);
-                  if (surah != null && context.mounted) {
-                    AyahActionSheet.show(
-                      context,
-                      surah: surah,
-                      ayah: ayah,
-                    );
-                  }
-                };
+                }
+              }
+              final ayahRec = TapGestureRecognizer()..onTap = openAyahOptions;
+              final numRec = TapGestureRecognizer()..onTap = openAyahOptions;
               _pageRecognizers.add(ayahRec);
               _pageRecognizers.add(numRec);
 

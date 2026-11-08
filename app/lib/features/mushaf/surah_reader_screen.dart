@@ -290,7 +290,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '💡 اضغط على الآية للاستماع · اضغط ضغطة مطولة للخيارات والتفسير',
+                              '💡 اضغط على أي آية لعرض الخيارات والتفاسير والاستماع',
                               style: TextStyle(fontSize: 12, color: isDark ? AppColors.softGold : AppColors.secondaryGreen),
                             ),
                           ],
@@ -323,23 +323,15 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                         children: ayahs.expand((ayah) {
                           final isPlaying = playingKey == '${widget.surah.id}:${ayah.ayahNumber}';
 
-                          final rec = TapGestureRecognizer()
-                            ..onTap = () {
-                              AyahAudioPlayer.instance.playAyah(
-                                context,
-                                widget.surah.id,
-                                ayah.ayahNumber,
-                                surahName: widget.surah.nameAr,
-                              );
-                            };
-                          final recNum = TapGestureRecognizer()
-                            ..onTap = () {
-                              AyahActionSheet.show(
-                                context,
-                                surah: widget.surah,
-                                ayah: ayah,
-                              );
-                            };
+                          void openAyahOptions() {
+                            AyahActionSheet.show(
+                              context,
+                              surah: widget.surah,
+                              ayah: ayah,
+                            );
+                          }
+                          final rec = TapGestureRecognizer()..onTap = openAyahOptions;
+                          final recNum = TapGestureRecognizer()..onTap = openAyahOptions;
                           _recognizers.add(rec);
                           _recognizers.add(recNum);
 
@@ -512,7 +504,18 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 const SizedBox(height: 10),
 
                 // Quranic Text (Ayah text followed immediately by its rosette number)
-                Text.rich(
+                InkWell(
+                  onTap: () {
+                    AyahActionSheet.show(
+                      context,
+                      surah: widget.surah,
+                      ayah: ayah,
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text.rich(
                   TextSpan(
                     children: [
                       TextSpan(
@@ -549,6 +552,8 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                     ],
                   ),
                   textAlign: TextAlign.justify,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 10),
 
