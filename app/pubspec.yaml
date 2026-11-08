@@ -75,3 +75,23 @@ flutter:
     - assets/images/brand/
     - assets/images/occasions/
     - assets/images/share/
+    - assets/fonts/
+
+  fonts:
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
+          weight: 700
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+    - family: KFGQPCHafs
+      fonts:
+        - asset: assets/fonts/KFGQPCHafs.otf
+    - family: Uthmanic
+      fonts:
+        - asset: assets/fonts/KFGQPCHafs.otf
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
