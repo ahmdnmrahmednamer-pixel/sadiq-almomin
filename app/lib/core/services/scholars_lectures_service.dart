@@ -1472,10 +1472,9 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'خطب الجمعة المنبرية المؤثرة',
             category: LectureContentCategory.khutbah,
             durationFormatted: '36:40',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/008%20%D8%A7%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA%20%D9%83%D9%81%D9%89%20%D9%8A%D8%A7%20%D9%86%D9%81%D8%B3%20%D9%85%D8%A7%20%D9%83%D8%A7%D9%86.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%84%D8%A7%20%D8%AA%D8%AD%D8%B2%D9%86%20%D8%A5%D9%86%20%D8%A7%D9%84%D9%84%D9%87%20%D9%85%D8%B9%D9%86%D8%A7%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/khutbah_01.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_khutbah_01.mp3',
+              'https://archive.org/download/islami-343_202504/%D9%84%D8%A7%20%D8%AA%D8%AD%D8%B2%D9%86%20%D8%A5%D9%86%20%D8%A7%D9%84%D9%84%D9%87%20%D9%85%D8%B9%D9%86%D8%A7%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             ],
             summary: 'خطبة منبرية تهز القلوب حول معية الله للمؤمنين في الشدائد وكيف يولد الفجر من رحم الظلام.',
             keyTakeaways: [
@@ -1491,10 +1490,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة لبيك يا أقصى',
             category: LectureContentCategory.khutbah,
             durationFormatted: '38:25',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/009%20%D8%A7%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA%20%D8%B9%D9%86%20%D8%A7%D9%84%D8%B8%D9%84%D9%85.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%A3%D8%B9%D8%AF%D9%85%D9%88%D8%A7%20%D8%A3%D8%AE%D8%AA%D9%86%D8%A7%D8%A7%D8%A7%D8%A7%D8%A7%D8%A7%D8%A7%D8%A7%20%20%D8%B5%D8%B1%D8%AE%D8%A9%20%D8%BA%D8%B6%D8%A8%20%D9%85%D9%86%20%D8%A8%D9%8A%D8%AA%20%D8%A7%D9%84%D9%85%D9%82%D8%AF%D8%B3%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/khutbah_02.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_khutbah_02.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'تذكير الأمة بمكانة المسجد الأقصى المبارك أولى القبلتين ومسرى رسول الله ﷺ وواجب النصرة والدعاء.',
             keyTakeaways: [
@@ -1510,10 +1509,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة جبر الخواطر والرقائق',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '33:15',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/01.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%83%D9%84%D8%A7%D9%85%20%D8%AC%D9%85%D9%8A%D9%84%20%D8%B9%D9%86%20_%D8%A7%D9%84%D8%A3%D9%8E%D8%AE%D9%88%D9%8E%D9%91%D8%A9_%20%D8%A7%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA%20%D8%AD%D8%A7%D9%84%D8%A7%D8%AA%20%D9%88%D8%AA%D8%B3%20%D8%A7%D8%A8.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_01.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_01.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'عبادة جبر الخواطر في سيرة النبي ﷺ والصحابة وكيف يجبر الله من جبر عباده.',
             keyTakeaways: [
@@ -1529,10 +1528,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'رسائل إلى الشباب والتائبين',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '35:50',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/02.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%A3%D9%8A%D9%87%D8%A7%20%D8%A7%D9%84%D8%B1%D8%A7%D8%AD%D9%84-%20%D8%AE%D8%B7%D8%A8%D8%A9%20%D9%83%D8%A7%D9%85%D9%84%D8%A9%20%D9%85%D8%A4%D8%AB%D8%B1%D8%A9%20%D9%84%D9%84%D8%B4%D9%8A%D8%AC%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA%20%D8%AD%D9%81%D8%B8%D9%87%20%D8%A7%D9%84%D9%84%D9%87%20%D8%B9%D8%B2%20%D9%88%D8%AC%D9%84.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_02.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_02.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'نداء صادق لكل شاب أرهقته الذنوب أن يقبل على الله الغفور الرحيم ولا يقنط من رحمته.',
             keyTakeaways: [
@@ -1548,10 +1547,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'في رحاب السيرة النبوية',
             category: LectureContentCategory.seerah,
             durationFormatted: '40:10',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/03.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%8A%D8%A7%20%D9%85%D8%AD%D9%85%D8%AF%20%D8%A3%D8%AE%D8%B1%D8%AC%D9%87%D9%85%20%D9%85%D9%86%20%D8%A7%D9%84%D9%86%D8%A7%D8%A7%D8%B1%20l%20%D9%85%D8%B4%D9%87%D8%AF%20%D9%85%D8%A4%D8%AB%D8%B1%20%D9%88%D9%85%D8%A8%D9%83%D9%8A%20%D9%8A%D8%B1%D9%88%D9%8A%D9%87%20%D8%A7%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/seerah_01.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_seerah_01.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'مواقف مبكية من رحمة النبي ﷺ وشفقته على أمته في الدنيا ويوم القيامة عند الحوض والميزان.',
             keyTakeaways: [
@@ -1567,10 +1566,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة مواقف من التاريخ',
             category: LectureContentCategory.stories,
             durationFormatted: '37:45',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/04.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%82%D8%A7%D8%A6%D8%AF%20%D8%A7%D9%84%D8%B1%D9%88%D9%85%D8%A7%D9%86%20%D8%A7%D9%84%D8%A3%D8%B9%D8%B8%D9%85%20%D8%A7%D9%84%D8%B0%D9%8A%20%D8%B3%D9%84%D9%85%20%D9%85%D9%85%D9%84%D9%83%D8%AA%D9%87%20%D9%84%D9%84%D9%85%D8%B3%D9%84%D9%85%D9%8A%D9%86%20%D9%82%D8%A8%D9%84%20%D8%A7%D9%84%D9%85%D8%B9%D8%B1%D9%83%D8%A9%20%D8%A7%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/stories_01.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_stories_01.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'صور مشرقة من تضحيات الصحابة وثباتهم على المبدأ وعزتهم بالإسلام.',
             keyTakeaways: [
@@ -1586,10 +1585,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'خطب الجمعة المنبرية المؤثرة',
             category: LectureContentCategory.khutbah,
             durationFormatted: '34:20',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/05.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%A8%D8%B7%D9%86%20%D8%A7%D9%84%D8%AD%D9%88%D8%AA%20%D9%88%D8%A8%D8%B7%D9%86%20%D8%A7%D9%84%D9%88%D8%A8%D8%A7%D8%A1%20%D9%85%D9%86%20%D8%B3%D9%8A%D9%86%D9%82%D8%B0%D9%86%D8%A7%20%D8%AE%D8%B7%D8%A8%D8%A9%20%D8%AC%D9%85%D8%B9%D8%A9%20%D9%85%D8%A4%D8%AB%D8%B1%D8%A9%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/khutbah_03.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_khutbah_03.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'خطبة مؤثرة عن عظمة الصبر والرضا بقضاء الله وقدره وثواب الصابرين بغير حساب.',
             keyTakeaways: [
@@ -1605,10 +1604,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'خطب الجمعة المنبرية المؤثرة',
             category: LectureContentCategory.khutbah,
             durationFormatted: '39:10',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/06.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%85%D9%86%20%D9%83%D8%A3%D9%85%D9%8A%20%D8%A5%D9%87%D8%AF%D8%A7%D8%A1%20%D8%A7%D9%84%D9%89%20%D8%A3%D9%85%D9%87%D8%A7%D8%AA%D9%86%D8%A7%20%D8%AC%D9%85%D9%8A%D8%B9%D8%A7%20%D9%83%D9%84%D9%85%D8%A7%D8%AA%20%D8%AD%D8%B2%D9%8A%D9%86%D8%A9%20%D8%B9%D9%86%20%D8%A7%D9%84%D8%A3%D9%85%20%D8%A7%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/khutbah_04.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_khutbah_04.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'رسالة إيمانية مبكية إلى كل مقصر في حق والديه وعظمة رضاهما في التوفيق والبركة.',
             keyTakeaways: [
@@ -1624,10 +1623,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة جبر الخواطر والرقائق',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '31:45',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/07.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%A3%D9%8A%D9%86%20%D9%86%D8%AD%D9%86%20%D9%85%D9%86%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20l%20%D9%83%D9%84%D9%85%D8%A7%D8%AA%20%D9%85%D8%A4%D8%AB%D8%B1%D8%A9%20%D9%88%D9%85%D8%A8%D9%83%D9%8A%D8%A9%20%D8%B9%D9%86%20%D8%AD%D8%A7%D9%84%D9%86%D8%A7%20%D9%85%D8%B9%20%D8%A7%D9%84%D9%82%D8%B1%D8%A2%D9%86%20l%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_03.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_03.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'موعظة قلبية حول لذة الخلوة بالله ومناجاة التائبين وسهام الليل التي لا تخطئ.',
             keyTakeaways: [
@@ -1643,10 +1642,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة جبر الخواطر والرقائق',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '36:15',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/010.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%B9%D8%B4%20%D9%85%D8%A7%20%D8%B4%D8%A6%D8%AA%20%D9%81%D8%A5%D9%86%D9%83%20%D9%85%D9%8A%D8%AA%20-%20%D9%83%D9%84%D9%85%D8%A7%D8%AA%20%D8%A3%D8%A8%D9%83%D8%AA%20%D8%A7%D9%84%D8%AC%D9%85%D9%8A%D8%B9%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_04.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_04.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'تذكرة بمفارقة الدنيا والمصير إلى القبر وضرورة التزود بالعمل الصالح قبل الرحيل.',
             keyTakeaways: [
@@ -1662,10 +1661,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'رسائل إلى الشباب والتائبين',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '33:50',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/011.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D9%83%D9%8A%D9%81%20%D9%8A%D9%86%D8%A7%D8%A7%D8%A7%D9%85%20%D8%A7%D9%84%D8%B8%D8%A7%D9%84%D9%85%D9%88%D9%88%D9%88%D9%86%20%20%D9%83%D9%84%D9%85%D8%A7%D8%AA%20%D9%85%D8%A8%D9%83%D9%8A%D8%A9%20%D9%84%D9%84%D8%AF%D8%A7%D8%B9%D9%8A%D8%A9%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_05.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_05.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'فضل العفو والصفح وطهارة القلب من الغل والحسد وكيف يدخل العبد الجنة بسلامة صدره.',
             keyTakeaways: [
@@ -1681,10 +1680,10 @@ class ScholarsLecturesService extends ChangeNotifier {
             seriesName: 'سلسلة جبر الخواطر والرقائق',
             category: LectureContentCategory.raqaiq,
             durationFormatted: '35:20',
-            primaryAudioUrl: 'https://archive.org/download/20230918_20230918_0013/012.mp3',
+            primaryAudioUrl: 'https://archive.org/download/islami-343_202504/%D8%A3%D8%AD%D8%B3%D9%86%D9%88%D8%A7%20%D8%A7%D9%84%D8%B8%D9%86%20%D8%A8%D8%A7%D9%84%D9%84%D9%87%20%D9%85%D9%88%D9%82%D9%81%20%D9%85%D8%A8%D9%83%D9%8A%20%D9%84%D9%84%D8%B4%D9%8A%D8%AE%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AD%D8%B3%D9%86%D8%A7%D8%AA%20%D9%85%D9%86%20%D8%AE%D8%B7%D8%A8%D8%A9.mp3',
             fallbackAudioUrls: [
-              'https://download.media.islamway.net/lessons/mahmoud_alhasanat/raqaiq_06.mp3',
-              'https://d1.islamhouse.com/data/ar/ih_sounds/mahmoud_alhasanat/hasanat_raqaiq_06.mp3',
+              'https://archive.org/download/islami-343_202504',
+              'https://archive.org/download/islami-343_202504',
             ],
             summary: 'أنا عند ظن عبدي بي — حقيقة التوكل وجميل الظن بالله الكريم في كل أحوال المؤمن.',
             keyTakeaways: [
@@ -2230,7 +2229,7 @@ class ScholarsLecturesService extends ChangeNotifier {
     const verifiedScholarArchiveCollections = <String, List<String>>{
       'samir_mostafa': ['mostafa-mohazarat', 'mostafa-daaaar'],
       'nabil_alawadi': ['qasas-anbiya'],
-      'mahmoud_alhasanat': ['20230918_20230918_0013'],
+      'mahmoud_alhasanat': ['islami-343_202504'],
       'metwally_shaarawy': ['ta7milat.com_tafssir-cha3rawi'],
       'abdelhamid_kishk': ['Abdel-Hamid_Kichk_Mawsoaa_Mp3_uP_bY_mUSLEm'],
       'abu_ishaq_heweny': ['577-alhoweny-mawso3a-khotab-droos-slasel'],
