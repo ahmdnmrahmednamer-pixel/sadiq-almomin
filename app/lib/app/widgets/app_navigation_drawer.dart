@@ -27,7 +27,7 @@ class AppNavigationDrawer extends StatelessWidget {
             child: Directionality(
               textDirection: s.textDirection,
               child: Material(
-                color: isDark ? const Color(0xFF0F1A15) : Colors.white,
+                color: theme.colorScheme.surface,
                 child: SafeArea(
                   bottom: true,
                   top: false,
@@ -43,12 +43,12 @@ class AppNavigationDrawer extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: isDark
                                   ? [
-                                      const Color(0xFF0B2B20),
-                                      const Color(0xFF071C15),
+                                      AppColors.emerald900,
+                                      AppColors.night900,
                                     ]
                                   : [
-                                      const Color(0xFF0F5B45),
-                                      const Color(0xFF093E2F),
+                                      AppColors.emerald700,
+                                      AppColors.emerald900,
                                     ],
                               begin: Alignment.topRight,
                               end: Alignment.bottomLeft,
@@ -413,9 +413,7 @@ class AppNavigationDrawer extends StatelessWidget {
                         decoration: BoxDecoration(
                           border: Border(
                             top: BorderSide(
-                              color: isDark
-                                  ? const Color(0xFF1A2A22)
-                                  : const Color(0xFFE5EDE8),
+                              color: theme.colorScheme.outlineVariant,
                             ),
                           ),
                         ),
@@ -424,7 +422,7 @@ class AppNavigationDrawer extends StatelessWidget {
                           children: [
                             const Flexible(
                               child: Text(
-                                'إصدار رسمي v1.2.2',
+                                'إصدار رسمي v1.3.0',
                                 style: TextStyle(
                                     color: Colors.grey, fontSize: 11),
                                 overflow: TextOverflow.ellipsis,
@@ -486,7 +484,8 @@ class AppNavigationDrawer extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Semantics(
       label: semanticLabel,
@@ -496,8 +495,8 @@ class AppNavigationDrawer extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: isDark
-              ? const Color(0xFF15221B)
-              : const Color(0xFFF7FBF8),
+              ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.35)
+              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
           border: Border.all(
             color: color.withOpacity(0.2),
             width: 1.2,

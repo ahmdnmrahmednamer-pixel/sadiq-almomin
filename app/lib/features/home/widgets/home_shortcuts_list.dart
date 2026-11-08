@@ -41,7 +41,7 @@ class HomeShortcutsList extends StatelessWidget {
                   context,
                   title: context.tr('scholars_gatherings'),
                   icon: Icons.mic_external_on_rounded,
-                  color: const Color(0xFF0F5B45),
+                  color: AppColors.emerald700,
                   onTap: () => context.push('/scholars-audio'),
                 ),
                 _buildSpiritualDoorTile(
@@ -55,7 +55,7 @@ class HomeShortcutsList extends StatelessWidget {
                   context,
                   title: context.tr('sunan_rawatib'),
                   icon: Icons.mosque_rounded,
-                  color: const Color(0xFF1B4332),
+                  color: AppColors.emerald900,
                   onTap: () => context.push('/sunan-rawatib'),
                 ),
                 _buildSpiritualDoorTile(
@@ -76,7 +76,7 @@ class HomeShortcutsList extends StatelessWidget {
                   context,
                   title: context.tr('voluntary_fasting'),
                   icon: Icons.wb_twilight_rounded,
-                  color: const Color(0xFFB88917),
+                  color: AppColors.gold500,
                   onTap: () => context.push('/voluntary-fasting'),
                 ),
                 _buildSpiritualDoorTile(
@@ -178,8 +178,8 @@ class HomeShortcutsList extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
-                ? [const Color(0xFF0F3D2E), const Color(0xFF1A2520)]
-                : [const Color(0xFF0D5C46), const Color(0xFF083B2C)],
+                ? [AppColors.emerald900, AppColors.night900]
+                : [AppColors.emerald700, AppColors.emerald900],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),

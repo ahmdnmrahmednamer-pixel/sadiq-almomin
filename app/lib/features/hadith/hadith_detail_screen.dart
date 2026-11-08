@@ -216,7 +216,8 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
                       hadith.matn,
                       textAlign: TextAlign.justify,
                       style: TextStyle(
-                        fontFamily: 'Uthmanic',
+                        fontFamily: 'Amiri',
+                        fontFamilyFallback: const ['Uthmanic', 'Cairo'],
                         fontSize: _fontSize,
                         height: 1.9,
                         color: Theme.of(context).textTheme.bodyLarge?.color,

@@ -4,7 +4,7 @@ import 'tokens.dart';
 
 /// Noor Al-Momin Theme Builder per Noor Noor Al-Momin Design System §13.4
 abstract final class AppTheme {
-  static const String uiFont = 'IBMPlexSansArabic';
+  static const String uiFont = 'Cairo';
   static const Color emerald = AppColors.emerald700;
   static const Color gold = AppColors.gold500;
   static const Color darkBg = AppColors.night900;

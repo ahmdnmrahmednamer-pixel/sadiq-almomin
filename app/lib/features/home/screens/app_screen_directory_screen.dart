@@ -84,7 +84,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'home',
         route: '/daawah-studio',
         icon: Icons.palette_rounded,
-        color: const Color(0xFFB88917),
+        color: AppColors.gold500,
         keywords: ['بطاقات', 'تصميم', 'دعوة', 'مشاركة', 'استوديو'],
       ),
       AppDirectoryItem(
@@ -108,7 +108,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/mushaf',
         icon: Icons.menu_book_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['مصحف', 'قرآن', 'تلاوة', 'سور', 'أجزاء'],
       ),
       AppDirectoryItem(
@@ -119,7 +119,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/mushaf-pages',
         icon: Icons.auto_stories_rounded,
-        color: const Color(0xFF0A3D2E),
+        color: AppColors.emerald900,
         keywords: ['صفحات', 'رسم عثماني', 'مجمع الملك فهد', 'قراءة'],
       ),
       AppDirectoryItem(
@@ -297,7 +297,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/adhan-control',
         icon: Icons.notifications_active_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['أذان', 'إقامة', 'منبه', 'مؤذن', 'تنبيه'],
       ),
       AppDirectoryItem(
@@ -308,7 +308,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/qibla',
         icon: Icons.explore_rounded,
-        color: const Color(0xFFB88917),
+        color: AppColors.gold500,
         keywords: ['قبلة', 'بوصلة', 'كعبة', 'مكة', 'اتجاه'],
       ),
       AppDirectoryItem(
@@ -330,7 +330,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/prayer-tracker',
         icon: Icons.fact_check_rounded,
-        color: const Color(0xFFB88917),
+        color: AppColors.gold500,
         keywords: ['متابع الصلوات', 'قضاء', 'جماعة', 'محاسبة'],
       ),
       AppDirectoryItem(
@@ -341,7 +341,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/fajr-qiyam-alarm',
         icon: Icons.alarm_on_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['فجر', 'قيام ليل', 'منبه فجر', 'تهجد'],
       ),
       AppDirectoryItem(
@@ -363,7 +363,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/voluntary-fasting',
         icon: Icons.wb_twilight_rounded,
-        color: const Color(0xFFB88917),
+        color: AppColors.gold500,
         keywords: ['صيام', 'نوافل', 'أيام بيض', 'عرفة', 'عاشوراء'],
       ),
       AppDirectoryItem(
@@ -420,7 +420,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'adhkar',
         route: '/spiritual-mood',
         icon: Icons.favorite_border_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['مشاعر', 'حزن', 'ضيق', 'هم', 'سكينة', 'قلوب'],
       ),
 
@@ -455,7 +455,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'library',
         route: '/riyad-alsalihin',
         icon: Icons.collections_bookmark_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['رياض الصالحين', 'النووي', 'أخلاق', 'أحاديث'],
       ),
       AppDirectoryItem(
@@ -521,7 +521,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'library',
         route: '/hajj-umrah',
         icon: Icons.explore_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['حج', 'عمرة', 'طواف', 'سعي', 'مناسك'],
       ),
       AppDirectoryItem(
@@ -576,7 +576,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'library',
         route: '/scholars-audio',
         icon: Icons.mic_external_on_rounded,
-        color: const Color(0xFF0F5B45),
+        color: AppColors.emerald700,
         keywords: ['علماء', 'شيوخ', 'محاضرات', 'ابن باز', 'ابن عثيمين', 'الشعراوي'],
       ),
       AppDirectoryItem(
@@ -716,7 +716,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                           ),
                           filled: true,
                           fillColor: isDark
-                              ? const Color(0xFF13221C)
+                              ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.4)
                               : Colors.grey.withOpacity(0.08),
                         ),
                       ),
@@ -797,14 +797,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF14221C)
-                              : Colors.white,
+                          color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isDark
-                                ? const Color(0xFF1F352C)
-                                : const Color(0xFFE5EDE8),
+                            color: theme.colorScheme.outlineVariant,
                           ),
                         ),
                         child: Material(

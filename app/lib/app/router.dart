@@ -215,12 +215,10 @@ class _MainScaffoldState extends State<MainScaffold> {
                 textDirection: SettingsService.instance.textDirection,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF111A14) : Colors.white,
+                    color: theme.colorScheme.surface,
                     border: Border(
                       top: BorderSide(
-                        color: isDark
-                            ? const Color(0xFF1E3126)
-                            : const Color(0xFFE2EBE5),
+                        color: theme.colorScheme.outlineVariant,
                         width: 1,
                       ),
                     ),
