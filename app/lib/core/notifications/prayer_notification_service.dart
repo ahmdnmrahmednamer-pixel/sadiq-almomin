@@ -510,6 +510,8 @@ class PrayerNotificationService extends ChangeNotifier {
         'تنبيه قيام الليل والتهجد',
         description: 'تذكير بالثلث الأخير من الليل لقيام الليل والدعاء',
         importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_qiyam'),
         enableVibration: true,
       ),
       const AndroidNotificationChannel(
@@ -517,6 +519,8 @@ class PrayerNotificationService extends ChangeNotifier {
         'تذكير سنن يوم الجمعة',
         description: 'تذكير بقراءة سورة الكهف والصلاة على النبي ﷺ',
         importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_salawat'),
         enableVibration: true,
       ),
       const AndroidNotificationChannel(
@@ -524,6 +528,17 @@ class PrayerNotificationService extends ChangeNotifier {
         'تذكير صلاة الضحى',
         description: 'صلاة الأوابين بعد شروق الشمس بـ ٢٠-٣٠ دقيقة',
         importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_duha'),
+        enableVibration: true,
+      ),
+      const AndroidNotificationChannel(
+        'prayer_sunrise_channel',
+        'تنبيه شروق الشمس',
+        description: 'تنبيه بحلول وقت شروق الشمس وانتهاء وقت الفجر',
+        importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_sunrise'),
         enableVibration: true,
       ),
       const AndroidNotificationChannel(
@@ -531,6 +546,9 @@ class PrayerNotificationService extends ChangeNotifier {
         'أذكار ما بعد الصلاة المكتوبة',
         description: 'تذكير بالاستغفار والتسبيح وقراءة آية الكرسي دبر كل صلاة',
         importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+        enableVibration: true,
       ),
     ];
 
@@ -1021,6 +1039,30 @@ class PrayerNotificationService extends ChangeNotifier {
         // Schedule Main Adhan / Prayer Time Notification
         final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
 
+        if (prayer.name.contains('الشروق')) {
+          final sunriseDetails = AndroidNotificationDetails(
+            'prayer_sunrise_channel',
+            'تنبيه شروق الشمس',
+            channelDescription: 'تنبيه بحلول وقت شروق الشمس وانتهاء وقت الفجر',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+            sound: const RawResourceAndroidNotificationSound('reminder_sunrise'),
+            enableVibration: _soundMode != AdhanSoundMode.silent,
+          );
+          await _localNotifications.zonedSchedule(
+            notificationId++,
+            'شروق الشمس 🌅',
+            'أشرقت الشمس.. تقبل الله طاعاتكم وصالح أعمالكم',
+            scheduledTz,
+            NotificationDetails(android: sunriseDetails),
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+          );
+          continue;
+        }
+
         final isFajr = prayer.name.contains('الفجر');
         final prayerVoice = getPrayerVoice(prayer.name);
         final channelId = _resolveChannelIdForVoice(prayerVoice, isFajr: isFajr);
@@ -1155,12 +1197,14 @@ class PrayerNotificationService extends ChangeNotifier {
           final adhkarTime = prayer.time.add(Duration(minutes: _iqamahOffsetMinutes + _postPrayerAdhkarMinutes));
           if (adhkarTime.isAfter(now)) {
             final adhkarTz = tz.TZDateTime.from(adhkarTime, tz.local);
-            const adhkarDetails = AndroidNotificationDetails(
+            final adhkarDetails = AndroidNotificationDetails(
               'prayer_post_adhkar_channel',
               'أذكار ما بعد الصلاة المكتوبة',
               channelDescription: 'تذكير بالاستغفار والتسبيح وقراءة آية الكرسي دبر كل صلاة',
               importance: Importance.high,
               priority: Priority.high,
+              playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+              sound: const RawResourceAndroidNotificationSound('reminder_istighfar'),
               enableVibration: true,
             );
 
@@ -1169,7 +1213,7 @@ class PrayerNotificationService extends ChangeNotifier {
               'أذكار ما بعد صلاة ${prayer.name} 📿',
               'أستغفر الله، أستغفر الله، أستغفر الله.. اللهم أنت السلام ومنك السلام تباركت يا ذا الجلال والإكرام',
               adhkarTz,
-              const NotificationDetails(android: adhkarDetails),
+              NotificationDetails(android: adhkarDetails),
               androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
               uiLocalNotificationDateInterpretation:
                   UILocalNotificationDateInterpretation.absoluteTime,
@@ -1187,12 +1231,14 @@ class PrayerNotificationService extends ChangeNotifier {
         final duhaTime = shurouqPrayer.time.add(Duration(minutes: _duhaReminderMinutesAfterSunrise));
         if (duhaTime.isAfter(now)) {
           final duhaTz = tz.TZDateTime.from(duhaTime, tz.local);
-          const duhaDetails = AndroidNotificationDetails(
+          final duhaDetails = AndroidNotificationDetails(
             'prayer_duha_channel',
             'تذكير صلاة الضحى',
             channelDescription: 'صلاة الأوابين بعد شروق الشمس بـ ٢٥ دقيقة',
             importance: Importance.high,
             priority: Priority.high,
+            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+            sound: const RawResourceAndroidNotificationSound('reminder_duha'),
             enableVibration: true,
           );
 
@@ -1201,7 +1247,7 @@ class PrayerNotificationService extends ChangeNotifier {
             'صلاة الضحى (صلاة الأوابين) ☀️',
             'يصبح على كل سلامى من أحدكم صدقة.. وتجزئ من ذلك ركعتان يركعهما من الضحى',
             duhaTz,
-            const NotificationDetails(android: duhaDetails),
+            NotificationDetails(android: duhaDetails),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
@@ -1218,12 +1264,14 @@ class PrayerNotificationService extends ChangeNotifier {
         final qiyamTime = fajrPrayer.time.subtract(Duration(minutes: _qiyamOffsetMinutes));
         if (qiyamTime.isAfter(now)) {
           final qiyamTz = tz.TZDateTime.from(qiyamTime, tz.local);
-          const qiyamDetails = AndroidNotificationDetails(
+          final qiyamDetails = AndroidNotificationDetails(
             'prayer_qiyam_channel',
             'تنبيه قيام الليل والتهجد',
             channelDescription: 'تذكير إيماني بالثلث الأخير من الليل لقيام الليل والوتر والدعاء',
             importance: Importance.max,
             priority: Priority.high,
+            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+            sound: const RawResourceAndroidNotificationSound('reminder_qiyam'),
             enableVibration: true,
           );
 
@@ -1232,7 +1280,7 @@ class PrayerNotificationService extends ChangeNotifier {
             'قيام الليل والتهجد 🌙',
             'ركعتان في جوف الليل خير من الدنيا وما فيها — ثلث الليل الآخر وقت النزول الإلهي واستجابة الدعاء',
             qiyamTz,
-            const NotificationDetails(android: qiyamDetails),
+            NotificationDetails(android: qiyamDetails),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,
@@ -1248,12 +1296,14 @@ class PrayerNotificationService extends ChangeNotifier {
 
         if (fridayTime.isAfter(now)) {
           final fridayTz = tz.TZDateTime.from(fridayTime, tz.local);
-          const fridayDetails = AndroidNotificationDetails(
+          final fridayDetails = AndroidNotificationDetails(
             'prayer_friday_channel',
             'تذكير سنن يوم الجمعة',
             channelDescription: 'تذكير بقراءة سورة الكهف، الصلاة على النبي ﷺ، وساعة الاستجابة',
             importance: Importance.high,
             priority: Priority.high,
+            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+            sound: const RawResourceAndroidNotificationSound('reminder_salawat'),
             enableVibration: true,
           );
 
@@ -1262,7 +1312,7 @@ class PrayerNotificationService extends ChangeNotifier {
             'سنن يوم الجمعة المباركة 🕌',
             'نور ما بين الجمعتين: قراءة سورة الكهف، الإكثار من الصلاة على النبي ﷺ، والدعاء في ساعة الاستجابة',
             fridayTz,
-            const NotificationDetails(android: fridayDetails),
+            NotificationDetails(android: fridayDetails),
             androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
             uiLocalNotificationDateInterpretation:
                 UILocalNotificationDateInterpretation.absoluteTime,

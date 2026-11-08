@@ -618,6 +618,23 @@ void showSettingsQiyamOffsetModal(BuildContext context) {
                   ),
                 );
               }),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryGreen,
+                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
+                label: const Text(
+                  'استماع لتنبيه قيام الليل (قوموا لقيام الليل) 🎧',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  IslamicAudioService.instance.playReminderAudio('qiyam');
+                },
+              ),
               const SizedBox(height: 12),
             ],
           ),
@@ -699,6 +716,23 @@ void showSettingsDuhaOffsetModal(BuildContext context) {
                   ),
                 );
               }),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryGreen,
+                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
+                label: const Text(
+                  'استماع لتنبيه صلاة الضحى 🎧',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  IslamicAudioService.instance.playReminderAudio('duha');
+                },
+              ),
               const SizedBox(height: 12),
             ],
           ),
@@ -780,6 +814,23 @@ void showSettingsPostAdhkarModal(BuildContext context) {
                 );
               }),
               const SizedBox(height: 8),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryGreen,
+                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
+                label: const Text(
+                  'استماع لتذكير الاستغفار والحوقلة 🎧',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: () {
+                  IslamicAudioService.instance.playReminderAudio('istighfar');
+                },
+              ),
+              const SizedBox(height: 6),
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,

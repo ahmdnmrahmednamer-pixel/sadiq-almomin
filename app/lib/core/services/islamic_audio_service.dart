@@ -1172,21 +1172,21 @@ class IslamicAudioService extends ChangeNotifier {
       title: 'إقامة سريعة وخفيفة للتنبيه',
       subtitle: 'نغمة إقامة مختصرة سريعة للتذكير الفوري بحلول الصلاة',
       type: IslamicAudioType.iqamah,
-      assetPath: 'assets/audio/takbeerat.mp3',
-      rawNotificationSound: 'takbeerat',
+      assetPath: 'assets/audio/iqamah.mp3',
+      rawNotificationSound: 'iqamah',
       durationFormatted: '00:15',
       quality: 'نغمة سريعة مدمجة',
       categoryAr: 'تنبيه سريع',
-      fileSizeBytes: 150560,
+      fileSizeBytes: 369836,
     ),
 
     // 3. الأذكار والأدعية (تعمل عبر الإنترنت افتراضياً، وتعمل أوفلاين إذا حمّلها المستخدم)
     IslamicAudioTrack(
       id: 'adhkar_morning',
       title: 'أذكار الصباح كاملة (استوديو HD)',
-      subtitle: 'حصن المسلم وبركة اليوم وانشراح الصدر بصوت الشيخ مشاري العفاسي',
+      subtitle: 'حصن المسلم وبركة اليوم وانشراح الصدر بصوت خاشع نقي (تعمل أوفلاين)',
       type: IslamicAudioType.adhkar,
-      assetPath: null,
+      assetPath: 'assets/audio/adhkar_morning_full.mp3',
       remoteUrl: 'https://archive.org/download/adkar_sabah_masae_safar/adkar_assbah.mp3',
       fallbackUrls: ['https://archive.org/download/TvQuran.com__Athkar/TvQuran.com_athkar_01.mp3'],
       durationFormatted: '03:38',
@@ -1198,9 +1198,9 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhkar_evening',
       title: 'أذكار المساء كاملة (استوديو HD)',
-      subtitle: 'حفظ الليل وسكينة الروح والاستعاذة من الشرور بصوت الشيخ مشاري العفاسي',
+      subtitle: 'حفظ الليل وسكينة الروح والاستعاذة من الشرور (تعمل أوفلاين)',
       type: IslamicAudioType.adhkar,
-      assetPath: null,
+      assetPath: 'assets/audio/adhkar_evening_full.mp3',
       remoteUrl: 'https://archive.org/download/adkar_sabah_masae_safar/adkar_lmasaa.mp3',
       fallbackUrls: ['https://archive.org/download/TvQuran.com__Athkar/TvQuran.com_athkar_02.mp3'],
       durationFormatted: '03:48',
@@ -1243,9 +1243,9 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhkar_sleep',
       title: 'أذكار النوم والاضطجاع والسكينة (HD)',
-      subtitle: 'باسمك ربي وضعت جنبي وبك أرفعه — سكينة المضجع وحفظ النائم',
+      subtitle: 'باسمك ربي وضعت جنبي وبك أرفعه — سكينة المضجع وحفظ النائم (تعمل أوفلاين)',
       type: IslamicAudioType.adhkar,
-      assetPath: null,
+      assetPath: 'assets/audio/adhkar_sleep_full.mp3',
       remoteUrl: 'https://archive.org/download/TvQuran.com__Athkar/TvQuran.com_athkar_02.mp3',
       fallbackUrls: ['https://archive.org/download/adkar_sabah_masae_safar/adkar_lmasaa.mp3'],
       durationFormatted: '02:50',
@@ -2024,6 +2024,19 @@ class IslamicAudioService extends ChangeNotifier {
     try {
       await _sfxPlayer.stop();
       await _sfxPlayer.setAsset('assets/audio/$assetName.mp3');
+      await _sfxPlayer.play();
+    } catch (_) {}
+  }
+
+  /// Plays authentic reminder audio (qiyam, duha, sunrise, salawat, istighfar, iqamah)
+  Future<void> playReminderAudio(String reminderKey) async {
+    String assetName = 'reminder_' + reminderKey;
+    if (reminderKey == 'iqamah') {
+      assetName = 'iqamah';
+    }
+    try {
+      await _sfxPlayer.stop();
+      await _sfxPlayer.setAsset('assets/audio/' + assetName + '.mp3');
       await _sfxPlayer.play();
     } catch (_) {}
   }
