@@ -102,7 +102,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
-              Icon(Icons.info_outline, color: AppColors.accentGold, size: 26),
+              Icon(Icons.info_rounded, color: AppColors.accentGold, size: 26),
               SizedBox(width: 8),
               Expanded(
                 child: Text('فتح تطبيق البريد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -238,7 +238,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.email_outlined, color: AppColors.primaryGreen, size: 20),
+                                  Icon(Icons.mail_rounded, color: AppColors.primaryGreen, size: 20),
                                   SizedBox(width: 8),
                                   Text(
                                     SupportService.developerEmail,
@@ -398,7 +398,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                             decoration: InputDecoration(
                               hintText: 'مثال: فاعل خير',
                               hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-                              prefixIcon: const Icon(Icons.person_outline, size: 20, color: AppColors.secondaryGreen),
+                              prefixIcon: const Icon(Icons.person_rounded, size: 20, color: AppColors.secondaryGreen),
                               filled: true,
                               fillColor: Colors.grey.shade50,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
@@ -428,7 +428,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                             decoration: InputDecoration(
                               hintText: 'بريدك أو رقم هاتفك',
                               hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-                              prefixIcon: const Icon(Icons.contact_mail_outlined, size: 20, color: AppColors.secondaryGreen),
+                              prefixIcon: const Icon(Icons.contact_mail_rounded, size: 20, color: AppColors.secondaryGreen),
                               filled: true,
                               fillColor: Colors.grey.shade50,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),

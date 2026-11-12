@@ -18,18 +18,98 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
     final pn = PrayerNotificationService.instance;
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [5, 10, 15, 20, 30].map((min) {
-            return ListTile(
-              title: Text('$min دقائق قبل الأذان'),
-              onTap: () {
-                pn.setPreReminder(min);
-                Navigator.pop(ctx);
-              },
-            );
-          }).toList(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Directionality(
+        textDirection: SettingsService.instance.textDirection,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer_rounded, color: AppColors.primaryGreen, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'تعديل دقائق التنبيه المسبق',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...[5, 10, 15, 20, 30].map((min) {
+                final isSelected = pn.preReminderMinutes == min;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Material(
+                    color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected ? AppColors.accentGold : Colors.grey.shade200,
+                          width: isSelected ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.accentGold.withOpacity(0.2) : AppColors.primaryGreen.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isSelected ? Icons.check_circle_rounded : Icons.timer_rounded,
+                            color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
+                            size: 18,
+                          ),
+                        ),
+                        title: Text(
+                          '$min دقائق قبل الأذان',
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                            fontSize: 14.5,
+                            color: isSelected ? AppColors.primaryGreen : null,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
+                              )
+                            : null,
+                        onTap: () {
+                          pn.setPreReminder(min);
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -37,27 +117,107 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
 
   void _showQiyamOffsetPicker(BuildContext context) {
     final pn = PrayerNotificationService.instance;
+    final options = [
+      {'minutes': 60, 'label': 'قبل أذان الفجر بساعة (٦٠ دقيقة)'},
+      {'minutes': 90, 'label': 'قبل أذان الفجر بساعة ونصف (٩٠ دقيقة)'},
+    ];
+
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('قبل أذان الفجر بساعة (٦٠ دقيقة)'),
-              onTap: () {
-                pn.setQiyamOffset(60);
-                Navigator.pop(ctx);
-              },
-            ),
-            ListTile(
-              title: const Text('قبل أذان الفجر بساعة ونصف (٩٠ دقيقة)'),
-              onTap: () {
-                pn.setQiyamOffset(90);
-                Navigator.pop(ctx);
-              },
-            ),
-          ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Directionality(
+        textDirection: SettingsService.instance.textDirection,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.nightlight_round, color: AppColors.accentGold, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'تعديل توقيت تنبيه قيام الليل',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...options.map((opt) {
+                final mins = opt['minutes'] as int;
+                final label = opt['label'] as String;
+                final isSelected = pn.qiyamOffsetMinutes == mins;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Material(
+                    color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected ? AppColors.accentGold : Colors.grey.shade200,
+                          width: isSelected ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.accentGold.withOpacity(0.2) : AppColors.primaryGreen.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isSelected ? Icons.check_circle_rounded : Icons.access_time_filled_rounded,
+                            color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
+                            size: 18,
+                          ),
+                        ),
+                        title: Text(
+                          label,
+                          style: TextStyle(
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                            fontSize: 14.5,
+                            color: isSelected ? AppColors.primaryGreen : null,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
+                              )
+                            : null,
+                        onTap: () {
+                          pn.setQiyamOffset(mins);
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -85,8 +245,17 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           onChanged: (val) => pn.togglePreReminder(val),
         ),
         ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.10),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.timer_rounded, color: AppColors.primaryGreen, size: 20),
+          ),
           title: const Text('تعديل دقائق التنبيه المسبق'),
           subtitle: Text('${pn.preReminderMinutes} دقائق قبل الأذان'),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => _showPreReminderPicker(context),
         ),
         SwitchListTile(
@@ -98,8 +267,17 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           onChanged: (val) => pn.toggleQiyamReminder(val),
         ),
         ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.accentGold.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.access_time_filled_rounded, color: AppColors.accentGold, size: 20),
+          ),
           title: const Text('تعديل توقيت تنبيه قيام الليل'),
           subtitle: Text('${pn.qiyamOffsetMinutes} دقيقة قبل الفجر'),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => _showQiyamOffsetPicker(context),
         ),
         SwitchListTile(
@@ -197,6 +375,13 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           final isPlayingThis = IslamicAudioService.instance.isPlaying &&
               (IslamicAudioService.instance.currentTrack?.id == currentVoice ||
                   IslamicAudioService.instance.currentTrack?.rawNotificationSound == currentVoice);
+          final prayerIcon = {
+            'الفجر': Icons.nights_stay_rounded,
+            'الظهر': Icons.wb_sunny_rounded,
+            'العصر': Icons.wb_twilight_rounded,
+            'المغرب': Icons.mode_night_rounded,
+            'العشاء': Icons.dark_mode_rounded,
+          }[pName] ?? Icons.mosque_rounded;
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -206,7 +391,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                   ? currentVoice
                   : adhanTracks.first.id,
               dense: true,
-              prefixIcon: Icons.mosque_rounded,
+              prefixIcon: prayerIcon,
               isPlaying: isPlayingThis,
               previewButtonLabel: 'استماع',
               previewTooltip: 'استماع عينة أذان صلاة $pName',
@@ -287,7 +472,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                       ? pn.preReminderMinutes
                       : 15,
                   dense: true,
-                  prefixIcon: Icons.timer_outlined,
+                  prefixIcon: Icons.timer_rounded,
                   options: const [
                     AppDropdownOption(value: 5, label: 'قبل الأذان بـ ٥ د'),
                     AppDropdownOption(value: 10, label: 'قبل الأذان بـ ١٠ د'),

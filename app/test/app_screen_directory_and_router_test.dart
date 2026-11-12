@@ -28,12 +28,13 @@ void main() {
 
       // Verify Category Chips
       expect(find.byType(ChoiceChip), findsAtLeastNWidgets(5));
-      expect(find.widgetWithText(ChoiceChip, 'الكل (52)'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'الكل (63)'), findsOneWidget);
       expect(find.textContaining('إشراقة اليوم'), findsAtLeastNWidgets(1));
       expect(find.textContaining('رحاب القرآن'), findsAtLeastNWidgets(1));
       expect(find.textContaining('محراب الصلاة'), findsAtLeastNWidgets(1));
       expect(find.textContaining('أُنس الذاكرين'), findsAtLeastNWidgets(1));
       expect(find.textContaining('رياض العلم'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('العناية والإعدادات'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('Filters AppScreenDirectory items using search input',
@@ -65,6 +66,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('أذكار'), findsAtLeastNWidgets(1));
+
+      // Clear search
+      await tester.tap(find.byIcon(Icons.clear_rounded));
+      await tester.pumpAndSettle();
+
+      // Search for Developer item
+      await tester.enterText(find.byType(TextField), 'المطور');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('عن المطور'), findsAtLeastNWidgets(1));
     });
   });
 }

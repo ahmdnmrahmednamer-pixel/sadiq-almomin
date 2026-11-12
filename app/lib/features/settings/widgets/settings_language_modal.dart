@@ -287,7 +287,7 @@ Widget _buildLanguageCard({
               ),
             ),
             child: isSelected
-                ? const Icon(Icons.check, size: 15, color: Colors.white)
+                ? const Icon(Icons.check_rounded, size: 15, color: Colors.white)
                 : null,
           ),
         ],

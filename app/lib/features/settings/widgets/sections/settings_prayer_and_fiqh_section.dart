@@ -4,6 +4,7 @@ import '../../../../core/services/prayer_service.dart';
 import '../../../../core/services/settings_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
+import '../settings_calculation_method_modal.dart';
 import 'settings_section_header.dart';
 
 /// Refactored Section 3: Prayer Calculation, Fiqh Madhhab & Hijri Adjustment
@@ -20,6 +21,34 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
         SettingsSectionHeader(
           title: context.tr('section_prayer_fiqh'),
           icon: Icons.mosque_rounded,
+        ),
+
+        // Calculation Method Guide Launcher Row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr('calc_method'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: AppColors.secondaryGreen,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.calculate_rounded, size: 16),
+                label: Text(
+                  s.isArabic ? 'دليل طرق الحساب' : 'Methods Guide',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onPressed: () => showSettingsCalculationMethodModal(context),
+              ),
+            ],
+          ),
         ),
 
         Padding(
@@ -69,7 +98,7 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
                   label: context.tr('hijri_adjust'),
                   value: s.hijriAdjustmentDays,
                   dense: true,
-                  prefixIcon: Icons.nightlight_round,
+                  prefixIcon: Icons.calendar_month_rounded,
                   options: const [
                     AppDropdownOption(value: -2, label: '-٢ يوم'),
                     AppDropdownOption(value: -1, label: '-١ يوم'),
@@ -85,8 +114,18 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
         ),
 
         ListTile(
-          leading: const Icon(Icons.my_location_rounded,
-              color: AppColors.primaryGreen),
+          leading: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.10),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.my_location_rounded,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
+          ),
           title: const Text('الموقع الفعلي وتحديد المدينة تلقائياً',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           subtitle: Text(

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/settings_service.dart';
+import '../../../core/services/support_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/text/arabic_normalizer.dart';
+import '../../settings/widgets/settings_about_modal.dart';
 
 /// نموذج بيانات عنصر دليل وفهرس شاشات تطبيق نور المؤمن
 class AppDirectoryItem {
@@ -16,6 +18,7 @@ class AppDirectoryItem {
   final IconData icon;
   final Color color;
   final List<String> keywords;
+  final void Function(BuildContext context)? onAction;
 
   const AppDirectoryItem({
     required this.id,
@@ -27,11 +30,12 @@ class AppDirectoryItem {
     required this.icon,
     required this.color,
     this.keywords = const [],
+    this.onAction,
   });
 }
 
 /// شاشة «دليل وفهرس شاشات وأبواب تطبيق نور المؤمن الشامل» (AppScreenDirectoryScreen)
-/// توفر فهرسة هيكلية كاملة لجميع شاشات وخدمات التطبيق (58 شاشة وباباً إيمانياً)
+/// توفر فهرسة هيكلية كاملة لجميع شاشات وخدمات التطبيق (٦٣ شاشة وباباً إيمانياً)
 class AppScreenDirectoryScreen extends StatefulWidget {
   const AppScreenDirectoryScreen({super.key});
 
@@ -53,7 +57,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
 
   List<AppDirectoryItem> _getAllItems(BuildContext context) {
     return [
-      // ================= المقام الأول: إشراقة اليوم والمتابعة الروحانية =================
+      // ================= المقام الأول: إشراقة اليوم والمتابعة الروحانية (٥ أبواب) =================
       AppDirectoryItem(
         id: 'home_main',
         title: context.tr('nav_home'),
@@ -63,7 +67,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         route: '/home',
         icon: Icons.wb_sunny_rounded,
         color: AppColors.primaryGreen,
-        keywords: ['رئيسية', 'اليوم', 'مواقيت', 'أذكار الوقت', 'إشراقة'],
+        keywords: ['رئيسية', 'اليوم', 'مواقيت', 'أذكار الوقت', 'إشراقة', 'لوحة التحكم'],
       ),
       AppDirectoryItem(
         id: 'daily_wird',
@@ -74,7 +78,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         route: '/daily-wird',
         icon: Icons.checklist_rtl_rounded,
         color: const Color(0xFF1B6B4E),
-        keywords: ['ورد', 'يومي', 'محاسبة', 'جدول', 'طاعة'],
+        keywords: ['ورد', 'يومي', 'محاسبة', 'جدول', 'طاعة', 'برنامج'],
       ),
       AppDirectoryItem(
         id: 'daawah_studio',
@@ -85,7 +89,18 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         route: '/daawah-studio',
         icon: Icons.palette_rounded,
         color: AppColors.gold500,
-        keywords: ['بطاقات', 'تصميم', 'دعوة', 'مشاركة', 'استوديو'],
+        keywords: ['بطاقات', 'تصميم', 'دعوة', 'مشاركة', 'استوديو', 'صور'],
+      ),
+      AppDirectoryItem(
+        id: 'momen_duaa',
+        title: 'إهداء ودعاء للمرحوم مؤمن إبراهيم',
+        subtitle: 'شاشة الدعاء الخالص والصدقة الجارية لروح الفقيد رحمه الله',
+        category: 'إشراقة اليوم',
+        categoryKey: 'home',
+        route: '/duaa',
+        icon: Icons.volunteer_activism_rounded,
+        color: const Color(0xFF0D5C46),
+        keywords: ['دعاء', 'مؤمن', 'إهداء', 'رحمه الله', 'صدقة جارية', 'مؤمن إبراهيم'],
       ),
       AppDirectoryItem(
         id: 'onboarding',
@@ -96,10 +111,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         route: '/onboarding',
         icon: Icons.explore_rounded,
         color: const Color(0xFF25739B),
-        keywords: ['ترحيب', 'بداية', 'شرح', 'تعليم'],
+        keywords: ['ترحيب', 'بداية', 'شرح', 'تعليم', 'جولة'],
       ),
 
-      // ================= المقام الثاني: رحاب القرآن الكريم وعلومه =================
+      // ================= المقام الثاني: رحاب القرآن الكريم وعلومه (٢٠ باباً) =================
       AppDirectoryItem(
         id: 'quran_hub',
         title: context.tr('holy_quran'),
@@ -140,9 +155,20 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         category: 'رحاب القرآن',
         categoryKey: 'quran',
         route: '/mushaf-reader',
-        icon: Icons.menu_book_outlined,
+        icon: Icons.menu_book_rounded,
         color: const Color(0xFF135A43),
         keywords: ['مصحف متقدم', 'تفاعل', 'قراءة حرة'],
+      ),
+      AppDirectoryItem(
+        id: 'qiraat_mushaf',
+        title: 'مصحف الصحابة في القراءات العشر المتواترة',
+        subtitle: 'القراءات العشر من طريق الشاطبية والدرة مع توجيه القراءات',
+        category: 'رحاب القرآن',
+        categoryKey: 'quran',
+        route: '/qiraat',
+        icon: Icons.history_edu_rounded,
+        color: const Color(0xFF0F766E),
+        keywords: ['قراءات', 'عشر', 'شاطبية', 'درة', 'صحابة', 'روايات', 'ورش', 'قالون'],
       ),
       AppDirectoryItem(
         id: 'quran_search',
@@ -167,6 +193,17 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['تفسير', 'مقارنة', 'ابن كثير', 'الطبري', 'السعدي', 'إعراب'],
       ),
       AppDirectoryItem(
+        id: 'audio_tafsir',
+        title: 'المختصر الصوتي في تفسير القرآن',
+        subtitle: 'تفسير الآيات صوتياً بنخبة من المشايخ عبر مركز تفسير',
+        category: 'رحاب القرآن',
+        categoryKey: 'quran',
+        route: '/audio-tafsir',
+        icon: Icons.headphones_rounded,
+        color: const Color(0xFF6D28D9),
+        keywords: ['تفسير صوتي', 'صوتيات', 'مركز تفسير', 'استماع', 'معاني'],
+      ),
+      AppDirectoryItem(
         id: 'gharib_quran',
         title: context.tr('gharib_quran_dict'),
         subtitle: 'شرح مفردات القرآن الغريبة وجذورها واختبارات قياس الفهم',
@@ -176,6 +213,28 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         icon: Icons.translate_rounded,
         color: const Color(0xFF1565C0),
         keywords: ['غريب', 'معاني الكلمات', 'مفردات', 'لغة القرآن'],
+      ),
+      AppDirectoryItem(
+        id: 'quran_irab',
+        title: 'إعراب القرآن الكريم وبيانه النحوي',
+        subtitle: 'الإعراب المفصل لكلمات وآيات التنزيل الحكيم لخدمة المعنى',
+        category: 'رحاب القرآن',
+        categoryKey: 'quran',
+        route: '/quran-irab',
+        icon: Icons.spellcheck_rounded,
+        color: const Color(0xFF0E7490),
+        keywords: ['إعراب', 'نحو', 'إعراب القرآن', 'لغة', 'بيان', 'فاعل', 'مفعول'],
+      ),
+      AppDirectoryItem(
+        id: 'quran_asbab_nuzul',
+        title: 'أسباب نزول الآيات وسياق التنزيل',
+        subtitle: 'معرفة أسباب ورود الآيات والوقائع التي نزلت فيها',
+        category: 'رحاب القرآن',
+        categoryKey: 'quran',
+        route: '/quran-asbab-nuzul',
+        icon: Icons.history_rounded,
+        color: const Color(0xFFB45309),
+        keywords: ['أسباب النزول', 'سياق التنزيل', 'نزول الآيات', 'الواحدي', 'السيوطي'],
       ),
       AppDirectoryItem(
         id: 'tadabbur_journal',
@@ -277,7 +336,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['تنزيلات', 'بدون نت', 'أوفلاين', 'صوتيات محملة'],
       ),
 
-      // ================= المقام الثالث: محراب الصلاة ومواقيت النور =================
+      // ================= المقام الثالث: محراب الصلاة ومواقيت النور (١٠ أبواب) =================
       AppDirectoryItem(
         id: 'prayer_main',
         title: context.tr('nav_prayer'),
@@ -288,6 +347,17 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         icon: Icons.access_time_filled_rounded,
         color: AppColors.primaryGreen,
         keywords: ['صلاة', 'مواقيت', 'أذان', 'فجر', 'ظهر', 'عصر', 'مغرب', 'عشاء'],
+      ),
+      AppDirectoryItem(
+        id: 'prayer_times_detail',
+        title: 'تفاصيل مواقيت الصلاة والمراحل',
+        subtitle: 'أوقات الصلوات مع أوقات الإمساك والشروق والثلث الأخير',
+        category: 'محراب الصلاة',
+        categoryKey: 'prayer',
+        route: '/prayer-times-detail',
+        icon: Icons.schedule_rounded,
+        color: const Color(0xFF1A6B54),
+        keywords: ['مواقيت تفصيلية', 'أوقات الصلاة', 'شروق', 'إمساك', 'ثلث أخير'],
       ),
       AppDirectoryItem(
         id: 'adhan_control',
@@ -378,7 +448,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['بطارية', 'أذان لا يعمل', 'تنبيهات', 'خلفية'],
       ),
 
-      // ================= المقام الرابع: أُنس الذاكرين وسكينة القلوب =================
+      // ================= المقام الرابع: أُنس الذاكرين وسكينة القلوب (٤ أبواب) =================
       AppDirectoryItem(
         id: 'adhkar_hub',
         title: context.tr('adhkar_hub'),
@@ -419,12 +489,12 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         category: 'أُنس الذاكرين',
         categoryKey: 'adhkar',
         route: '/spiritual-mood',
-        icon: Icons.favorite_border_rounded,
+        icon: Icons.spa_rounded,
         color: AppColors.emerald700,
         keywords: ['مشاعر', 'حزن', 'ضيق', 'هم', 'سكينة', 'قلوب'],
       ),
 
-      // ================= المقام الخامس: رياض العلم والهدي النبوي =================
+      // ================= المقام الخامس: رياض العلم والهدي النبوي (١٧ باباً) =================
       AppDirectoryItem(
         id: 'library_main',
         title: context.tr('islamic_library'),
@@ -591,6 +661,17 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['إذاعة القاهرة', 'ابتهالات', 'نقشبندي', 'طوبار', 'شعراوي'],
       ),
       AppDirectoryItem(
+        id: 'approved_sources',
+        title: 'المصادر والمراجع المعتمدة',
+        subtitle: 'قائمة كتب التفسير والفقه والحديث واللغة المعتمدة بالتطبيق',
+        category: 'رياض العلم',
+        categoryKey: 'library',
+        route: '/approved-sources',
+        icon: Icons.verified_rounded,
+        color: const Color(0xFF0F766E),
+        keywords: ['مصادر', 'مراجع', 'كتب معتمدة', 'تحقيق', 'أصول'],
+      ),
+      AppDirectoryItem(
         id: 'library_search',
         title: 'الكشاف الجامع في رياض العلم',
         subtitle: 'محرك بحث موحد في كتب الحديث والفقه والتفسير والتاريخ',
@@ -602,7 +683,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['بحث شامل', 'كشاف', 'كتب', 'مكتبة كاملة'],
       ),
 
-      // ================= المقام السادس: تهيئة التطبيق والعناية =================
+      // ================= المقام السادس: تهيئة التطبيق والعناية (٧ أبواب) =================
       AppDirectoryItem(
         id: 'settings',
         title: context.tr('settings_title'),
@@ -628,13 +709,60 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       AppDirectoryItem(
         id: 'support',
         title: context.tr('contact_support'),
-        subtitle: 'التواصل مع فريق التطوير وإرسال المقترحات والرسائل',
+        subtitle: 'التواصل المباشر مع المطور وإرسال المقترحات والملاحظات',
         category: 'العناية والإعدادات',
         categoryKey: 'settings',
         route: '/support',
         icon: Icons.headset_mic_rounded,
         color: const Color(0xFF25739B),
         keywords: ['دعم', 'تواصل', 'مقترحات', 'فريق البرمجة'],
+      ),
+      AppDirectoryItem(
+        id: 'about_app',
+        title: 'عن تطبيق نور المؤمن (الإصدار السابع v7.0)',
+        subtitle: 'الرؤية الوقفية، المعالم الكبرى، وخلوه التام من الإعلانات والتتبع',
+        category: 'العناية والإعدادات',
+        categoryKey: 'settings',
+        route: '/settings',
+        icon: Icons.info_rounded,
+        color: AppColors.accentGold,
+        keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقفي', 'بدون إعلانات', 'v7.0', 'نور المؤمن'],
+        onAction: (ctx) => showSettingsAboutModal(ctx),
+      ),
+      AppDirectoryItem(
+        id: 'about_developer',
+        title: 'عن المطور ورابط المشروع',
+        subtitle: 'نبذة عن المهندس أحمد إبراهيم، المشروع الوقفي، ومستودع GitHub',
+        category: 'العناية والإعدادات',
+        categoryKey: 'settings',
+        route: '/about-developer',
+        icon: Icons.person_pin_rounded,
+        color: AppColors.primaryGreen,
+        keywords: ['مطور', 'أحمد إبراهيم', 'جيت هاب', 'github', 'مفتوح المصدر', 'عن المطور'],
+      ),
+      AppDirectoryItem(
+        id: 'developer_apps',
+        title: 'برامج وتطبيقات المطور على Google Play',
+        subtitle: 'استكشاف باقي البرمجيات والأنظمة الإسلامية للمطور على المتجر',
+        category: 'العناية والإعدادات',
+        categoryKey: 'settings',
+        route: '/about-developer',
+        icon: Icons.shop_two_rounded,
+        color: const Color(0xFF0284C7),
+        keywords: ['برامج المطور', 'متجر', 'جوجل بلاي', 'google play', 'store', 'تطبيقات'],
+        onAction: (ctx) => SupportService.openDeveloperPlayStore(context: ctx),
+      ),
+      AppDirectoryItem(
+        id: 'developer_facebook',
+        title: 'حساب وصفحة المطور على فيسبوك',
+        subtitle: 'التواصل المباشر مع المطور ومتابعة أحدث التحديثات البرمجية',
+        category: 'العناية والإعدادات',
+        categoryKey: 'settings',
+        route: '/about-developer',
+        icon: Icons.facebook_rounded,
+        color: const Color(0xFF1877F2),
+        keywords: ['فيسبوك', 'facebook', 'حساب المطور', 'تواصل', 'صفحة'],
+        onAction: (ctx) => SupportService.openDeveloperFacebook(context: ctx),
       ),
     ];
   }
@@ -644,6 +772,13 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final allItems = _getAllItems(context);
+
+    final homeCount = allItems.where((i) => i.categoryKey == 'home').length;
+    final quranCount = allItems.where((i) => i.categoryKey == 'quran').length;
+    final prayerCount = allItems.where((i) => i.categoryKey == 'prayer').length;
+    final adhkarCount = allItems.where((i) => i.categoryKey == 'adhkar').length;
+    final libraryCount = allItems.where((i) => i.categoryKey == 'library').length;
+    final settingsCount = allItems.where((i) => i.categoryKey == 'settings').length;
 
     // Apply Filter
     final filteredItems = allItems.where((item) {
@@ -696,7 +831,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                         onChanged: (val) =>
                             setState(() => _searchQuery = val.trim()),
                         decoration: InputDecoration(
-                          hintText: 'ابحث في كافة أبواب وخدمات التطبيق (٥٨ شاشة)...',
+                          hintText: 'ابحث في كافة أبواب وخدمات التطبيق (${allItems.length} شاشة)...',
                           prefixIcon: const Icon(Icons.search_rounded,
                               size: 20, color: AppColors.primaryGreen),
                           suffixIcon: _searchQuery.isNotEmpty
@@ -732,22 +867,22 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                           _buildFilterChip('الكل (${allItems.length})', 'all',
                               Icons.grid_view_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('إشراقة اليوم (٥)', 'home',
+                          _buildFilterChip('إشراقة اليوم ($homeCount)', 'home',
                               Icons.wb_sunny_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('رحاب القرآن (١٦)', 'quran',
+                          _buildFilterChip('رحاب القرآن ($quranCount)', 'quran',
                               Icons.menu_book_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('محراب الصلاة (٩)', 'prayer',
+                          _buildFilterChip('محراب الصلاة ($prayerCount)', 'prayer',
                               Icons.access_time_filled_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('أُنس الذاكرين (٤)', 'adhkar',
+                          _buildFilterChip('أُنس الذاكرين ($adhkarCount)', 'adhkar',
                               Icons.favorite_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('رياض العلم (١٦)', 'library',
+                          _buildFilterChip('رياض العلم ($libraryCount)', 'library',
                               Icons.auto_stories_rounded),
                           const SizedBox(width: 6),
-                          _buildFilterChip('العناية والإعدادات (٣)', 'settings',
+                          _buildFilterChip('العناية والإعدادات ($settingsCount)', 'settings',
                               Icons.tune_rounded),
                         ],
                       ),
@@ -866,7 +1001,11 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                               color: Colors.grey,
                             ),
                             onTap: () {
-                              context.push(item.route);
+                              if (item.onAction != null) {
+                                item.onAction!(context);
+                              } else if (item.route.isNotEmpty) {
+                                context.push(item.route);
+                              }
                             },
                           ),
                         ),

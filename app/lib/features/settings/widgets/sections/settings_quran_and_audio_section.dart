@@ -6,6 +6,8 @@ import '../../../../core/services/settings_service.dart';
 import '../../../../core/services/tafsir_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
+import '../settings_font_size_modal.dart';
+import '../settings_reciter_modal.dart';
 import 'settings_section_header.dart';
 
 /// Refactored Section 2: Quran, Recitation, Tafsir & Audio DSP Settings
@@ -22,6 +24,34 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
         SettingsSectionHeader(
           title: context.tr('section_quran_audio'),
           icon: Icons.menu_book_rounded,
+        ),
+
+        // Reciters Directory Sheet Launcher Row
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  context.tr('default_reciter'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: AppColors.secondaryGreen,
+                  ),
+                ),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.manage_search_rounded, size: 16),
+                label: Text(
+                  s.isArabic ? 'دليل وبحث القراء (٦١ قارئاً)' : 'Reciters Directory',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                onPressed: () => showSettingsReciterModal(context),
+              ),
+            ],
+          ),
         ),
 
         // 1. Default Reciter Dropdown with Audio Sample Preview
@@ -190,7 +220,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
             label: 'تنسيق أرقام الآيات في المصحف',
             value: s.quranNumberingStyle,
             dense: true,
-            prefixIcon: Icons.pin_outlined,
+            prefixIcon: Icons.tag_rounded,
             options: const [
               AppDropdownOption(
                 value: 'arabic',
@@ -236,7 +266,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           onChanged: (val) => s.toggleKeepScreenOn(val),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.wifi_rounded, color: Colors.teal),
+          secondary: const Icon(Icons.wifi_rounded, color: AppColors.primaryGreen),
           title: Text(context.tr('wifi_only'),
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),

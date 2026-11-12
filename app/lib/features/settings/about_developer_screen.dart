@@ -414,7 +414,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.lightbulb_outline_rounded,
+                        Icon(Icons.lightbulb_rounded,
                             color: AppColors.accentGold, size: 22),
                         SizedBox(width: 8),
                         Text(
@@ -440,7 +440,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        icon: const Icon(Icons.mail_outline_rounded, size: 18),
+                        icon: const Icon(Icons.mail_rounded, size: 18),
                         label: const Text(
                           'تواصل مع المطور مباشرة',
                           style: TextStyle(fontWeight: FontWeight.bold),

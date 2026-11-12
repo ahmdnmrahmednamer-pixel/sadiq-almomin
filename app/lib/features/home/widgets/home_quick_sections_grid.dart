@@ -69,11 +69,11 @@ class HomeQuickSectionsGrid extends StatelessWidget {
     ),
     _QuickSectionItem(
       title: 'دليل الشاشات الشامل',
-      subtitle: 'فهرس تفصيلي لـ ٥٨ باباً وشاشة',
+      subtitle: 'فهرس تفصيلي لـ ٦٣ باباً وشاشة إيمانية',
       icon: Icons.grid_view_rounded,
       color: AppColors.accentGold,
       route: '/app-screen-directory',
-      badgeText: '٥٨ شاشة',
+      badgeText: '٦٣ شاشة',
     ),
   ];
 

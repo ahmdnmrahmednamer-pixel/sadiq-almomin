@@ -9,6 +9,7 @@ import '../../../home/screens/app_screen_directory_screen.dart';
 import '../../../khatma/khatma_screen.dart';
 import '../../../onboarding/onboarding_screen.dart';
 import '../../../prayer/battery_reliability_screen.dart';
+import '../../about_developer_screen.dart';
 import '../../contact_support_screen.dart';
 import '../settings_about_modal.dart';
 import 'settings_section_header.dart';
@@ -24,7 +25,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
       children: [
         SettingsSectionHeader(
           title: context.tr('section_tools_about'),
-          icon: Icons.build_circle_outlined,
+          icon: Icons.build_circle_rounded,
         ),
         ListTile(
           leading: const Icon(Icons.dashboard_customize_rounded,
@@ -90,10 +91,11 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
           onChanged: (val) => SettingsService.instance.setShowTutorialScreens(val),
         ),
         ListTile(
-          leading: const Icon(Icons.help_outline_rounded,
+          leading: const Icon(Icons.help_rounded,
               color: AppColors.primaryGreen),
           title: const Text('عرض شاشات شرح استخدام البرنامج',
               style: TextStyle(fontWeight: FontWeight.w800)),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const OnboardingScreen())),
         ),
@@ -104,14 +106,27 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.w800)),
           subtitle: const Text('إرسال اقتراح، ملاحظة، أو إبلاغ عن مشكلة بريدياً للمطور',
               style: TextStyle(fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const ContactSupportScreen())),
         ),
         ListTile(
-          leading: const Icon(Icons.info_outline_rounded,
+          leading: const Icon(Icons.code_rounded,
+              color: AppColors.primaryGreen),
+          title: const Text('عن المطور ومشروع التطبيق مفتوح المصدر',
+              style: TextStyle(fontWeight: FontWeight.w800)),
+          subtitle: const Text('المستودع البرمجي على GitHub والمساهمة في الصدقة الجارية',
+              style: TextStyle(fontSize: 12)),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+          onTap: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AboutDeveloperScreen())),
+        ),
+        ListTile(
+          leading: const Icon(Icons.info_rounded,
               color: AppColors.accentGold),
           title: Text('${context.tr('about_app')} (الإصدار السابع v7.0)',
               style: const TextStyle(fontWeight: FontWeight.w800)),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => showSettingsAboutModal(context),
         ),
       ],

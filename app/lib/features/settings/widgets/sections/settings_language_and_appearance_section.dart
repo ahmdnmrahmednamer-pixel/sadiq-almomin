@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/adaptive_screen_layouts.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
 import '../settings_language_modal.dart';
+import '../settings_theme_modal.dart';
 import 'settings_section_header.dart';
 
 /// Refactored Section 1: Multi-Language Switcher (6 Languages), Quran Translation, Theme & Layout
@@ -134,55 +135,25 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
 
         // Theme Mode ListTile & Modal
         ListTile(
-          leading: const Icon(
-            Icons.brightness_medium_rounded,
-            color: AppColors.primaryGreen,
+          leading: Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.10),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.brightness_medium_rounded,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
           ),
           title: const Text(
             'مظهر التطبيق والوضع الليلي (Dark & OLED)',
             style: TextStyle(fontWeight: FontWeight.w800),
           ),
           subtitle: Text(s.themeModeName),
-          trailing: const Icon(Icons.chevron_left_rounded),
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (ctx) => SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ListTile(
-                      title: const Text('الوضع الليلي الفاخر (OLED أسود نقي)'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        s.setThemeMode('oled');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'تم تفعيل: الوضع الليلي الفاخر (OLED أسود نقي)'),
-                          ),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      title: const Text('الوضع الداكن الهادئ'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        s.setThemeMode('dark');
-                      },
-                    ),
-                    ListTile(
-                      title: const Text('الوضع الفاتح (النهاري)'),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        s.setThemeMode('light');
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+          onTap: () => showSettingsThemeModal(context),
         ),
 
         Padding(

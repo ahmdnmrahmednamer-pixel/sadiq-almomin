@@ -493,6 +493,10 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const AppScreenDirectoryScreen(),
         ),
         GoRoute(
+          path: '/app-screen-directory',
+          builder: (context, state) => const AppScreenDirectoryScreen(),
+        ),
+        GoRoute(
           path: '/surah-reader',
           builder: (context, state) {
             if (state.extra is Surah) {

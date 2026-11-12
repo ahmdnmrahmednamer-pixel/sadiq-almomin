@@ -388,7 +388,7 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                                       onPressed: () {
                                         showPrayerMuezzinDropdownPicker(context, name);
                                       },
-                                      icon: const Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
+                                      icon: const Icon(Icons.arrow_drop_down_circle_rounded, size: 16),
                                       label: const Text(
                                         'تغيير المؤذن ▾',
                                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),

@@ -19,9 +19,27 @@ void showSettingsFontSizeModal(BuildContext context) {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'حجم خط المصحف الشريف',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.format_size_rounded, color: AppColors.primaryGreen, size: 22),
+                      SizedBox(width: 8),
+                      Text(
+                        'حجم خط المصحف الشريف',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Container(

@@ -53,7 +53,7 @@ void showSettingsPreReminderModal(BuildContext context) {
                     ),
                     child: ListTile(
                       leading: Icon(
-                        isSelected ? Icons.check_circle_rounded : Icons.timer_outlined,
+                        isSelected ? Icons.check_circle_rounded : Icons.timer_rounded,
                         color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
                       ),
                       title: Text(
@@ -366,7 +366,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                isSelected ? Icons.check_circle_rounded : Icons.timer_outlined,
+                                isSelected ? Icons.check_circle_rounded : Icons.timer_rounded,
                                 size: 16,
                                 color: isSelected ? AppColors.accentGold : AppColors.mutedText,
                               ),
@@ -883,7 +883,7 @@ void showSettingsSoundModeModal(BuildContext context) {
           'mode': AdhanSoundMode.softBeep,
           'title': 'نغمة إشعار هادئة (إشعار النظام)',
           'desc': 'تنبيه بصوت إشعار الهاتف القياسي دون تشغيل الأذان',
-          'icon': Icons.notifications_active_outlined,
+          'icon': Icons.notifications_active_rounded,
         },
         {
           'mode': AdhanSoundMode.vibrateOnly,
@@ -895,7 +895,7 @@ void showSettingsSoundModeModal(BuildContext context) {
           'mode': AdhanSoundMode.silent,
           'title': 'تنبيه صامت (بدون صوت)',
           'desc': 'إشعار بصري فقط على الشاشة وقفل الهاتف دون أي رنين',
-          'icon': Icons.notifications_off_outlined,
+          'icon': Icons.notifications_off_rounded,
         },
       ];
 

@@ -21,7 +21,7 @@ void showSettingsAboutModal(BuildContext context) {
                 color: AppColors.primaryGreen.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.mosque, color: AppColors.primaryGreen, size: 26),
+              child: const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen, size: 26),
             ),
             const SizedBox(width: 10),
             const Expanded(
@@ -58,7 +58,7 @@ void showSettingsAboutModal(BuildContext context) {
                   // Section Header
                   const Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: AppColors.accentGold, size: 18),
+                      Icon(Icons.auto_awesome_rounded, color: AppColors.accentGold, size: 18),
                       SizedBox(width: 6),
                       Text(
                         'مميزات التطبيق ومعالمه الكبرى:',
