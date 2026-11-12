@@ -66,27 +66,48 @@ void main() {
       expect(find.text('أذكار المسلم وحصن المسلم 🤲'), findsOneWidget);
       expect(find.text('السبحة الإلكترونية الذكية 📿'), findsOneWidget);
 
-      // Verify Settings & Support
+      // Verify Settings, About, Developer, & Support
       await tester.scrollUntilVisible(
-        find.text('تهيئة الخشوع وإعدادات التطبيق'),
+        find.text('الإعدادات'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('تهيئة الخشوع وإعدادات التطبيق'), findsOneWidget);
+      expect(find.text('الإعدادات'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('التواصل والمقترحات'),
+        find.text('عن التطبيق'),
         100,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('التواصل والمقترحات'), findsOneWidget);
+      expect(find.text('عن التطبيق'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('رسالة التطبيق'),
+        find.text('عن المطور'),
         100,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('رسالة التطبيق'), findsOneWidget);
+      expect(find.text('عن المطور'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('تواصل مع المطور'),
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('تواصل مع المطور'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('برامج المطور على المتجر'),
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('برامج المطور على المتجر'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('حساب المطور على الفيس بوك'),
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('حساب المطور على الفيس بوك'), findsOneWidget);
     });
   });
 }

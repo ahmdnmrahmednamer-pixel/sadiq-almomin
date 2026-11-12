@@ -165,11 +165,6 @@ class _MainScaffoldState extends State<MainScaffold> {
         location.startsWith('/library-search')) {
       return 4;
     }
-    if (location.startsWith('/settings') ||
-        location.startsWith('/backup') ||
-        location.startsWith('/support')) {
-      return 5;
-    }
     return 0;
   }
 
@@ -190,15 +185,17 @@ class _MainScaffoldState extends State<MainScaffold> {
       case 4:
         context.go('/library');
         break;
-      case 5:
-        context.go('/settings');
-        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = _calculateSelectedIndex(context);
+    final location = _safeLocation(context);
+    final isSecondaryPage = location.startsWith('/settings') ||
+        location.startsWith('/backup') ||
+        location.startsWith('/support') ||
+        location.startsWith('/about-developer');
+    final selectedIndex = _calculateSelectedIndex(context).clamp(0, 4);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -207,92 +204,87 @@ class _MainScaffoldState extends State<MainScaffold> {
       builder: (context, _) {
         return Scaffold(
           body: widget.child,
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const GlobalMiniPlayerBar(),
-              Directionality(
-                textDirection: SettingsService.instance.textDirection,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    border: Border(
-                      top: BorderSide(
-                        color: theme.colorScheme.outlineVariant,
-                        width: 1,
+          bottomNavigationBar: isSecondaryPage
+              ? const GlobalMiniPlayerBar()
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const GlobalMiniPlayerBar(),
+                    Directionality(
+                      textDirection: SettingsService.instance.textDirection,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
+                          border: Border(
+                            top: BorderSide(
+                              color: theme.colorScheme.outlineVariant,
+                              width: 1,
+                            ),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(isDark ? 0.35 : 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: NavigationBar(
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: (index) =>
+                              _onItemTapped(index, context),
+                          height: 70,
+                          elevation: 0,
+                          backgroundColor: Colors.transparent,
+                          indicatorColor: AppColors.primaryGreen
+                              .withOpacity(isDark ? 0.28 : 0.15),
+                          labelBehavior:
+                              NavigationDestinationLabelBehavior.alwaysShow,
+                          destinations: [
+                            NavigationDestination(
+                              icon: const Icon(Icons.home_outlined),
+                              selectedIcon: const Icon(Icons.home_rounded,
+                                  color: AppColors.primaryGreen),
+                              label: context.tr('nav_home'),
+                              tooltip: context.tr('tooltip_home'),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(Icons.menu_book_outlined),
+                              selectedIcon: const Icon(Icons.menu_book_rounded,
+                                  color: AppColors.primaryGreen),
+                              label: context.tr('nav_quran'),
+                              tooltip: context.tr('tooltip_quran'),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(Icons.access_time_outlined),
+                              selectedIcon: const Icon(
+                                  Icons.access_time_filled_rounded,
+                                  color: AppColors.primaryGreen),
+                              label: context.tr('nav_prayer'),
+                              tooltip: context.tr('tooltip_prayer'),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(Icons.fingerprint_outlined),
+                              selectedIcon: const Icon(
+                                  Icons.fingerprint_rounded,
+                                  color: AppColors.primaryGreen),
+                              label: context.tr('nav_adhkar'),
+                              tooltip: context.tr('tooltip_adhkar'),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(Icons.auto_stories_outlined),
+                              selectedIcon: const Icon(
+                                  Icons.auto_stories_rounded,
+                                  color: AppColors.primaryGreen),
+                              label: context.tr('nav_library'),
+                              tooltip: context.tr('tooltip_library'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.35 : 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                      ),
-                    ],
-                  ),
-                  child: NavigationBar(
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (index) =>
-                        _onItemTapped(index, context),
-                    height: 70,
-                    elevation: 0,
-                    backgroundColor: Colors.transparent,
-                    indicatorColor: AppColors.primaryGreen
-                        .withOpacity(isDark ? 0.28 : 0.15),
-                    labelBehavior:
-                        NavigationDestinationLabelBehavior.alwaysShow,
-                    destinations: [
-                      NavigationDestination(
-                        icon: const Icon(Icons.home_outlined),
-                        selectedIcon: const Icon(Icons.home_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_home'),
-                        tooltip: context.tr('tooltip_home'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.menu_book_outlined),
-                        selectedIcon: const Icon(Icons.menu_book_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_quran'),
-                        tooltip: context.tr('tooltip_quran'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.access_time_outlined),
-                        selectedIcon: const Icon(
-                            Icons.access_time_filled_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_prayer'),
-                        tooltip: context.tr('tooltip_prayer'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.fingerprint_outlined),
-                        selectedIcon: const Icon(
-                            Icons.fingerprint_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_adhkar'),
-                        tooltip: context.tr('tooltip_adhkar'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.auto_stories_outlined),
-                        selectedIcon: const Icon(
-                            Icons.auto_stories_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_library'),
-                        tooltip: context.tr('tooltip_library'),
-                      ),
-                      NavigationDestination(
-                        icon: const Icon(Icons.settings_outlined),
-                        selectedIcon: const Icon(Icons.settings_rounded,
-                            color: AppColors.primaryGreen),
-                        label: context.tr('nav_settings'),
-                        tooltip: context.tr('tooltip_settings'),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         );
       },
     );

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/services/settings_service.dart';
+import '../../core/services/support_service.dart';
 import '../../core/text/arabic_normalizer.dart';
 import '../../core/theme/app_theme.dart';
+import '../../features/settings/widgets/settings_about_modal.dart';
 import '../../features/settings/widgets/settings_adhan_voice_modal.dart';
 
 class _DrawerItemData {
@@ -320,7 +322,85 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
 
-      // ================= 6. قسم الإعدادات والتواصل والرسالة =================
+      // ================= 6. قسم الإعدادات والتواصل والمطور =================
+      _DrawerItemData(
+        title: 'الإعدادات',
+        subtitle: 'تهيئة الخشوع وإعدادات التطبيق، المظهر، وأوقات الأذكار',
+        semanticLabel: 'الإعدادات',
+        icon: Icons.settings_suggest_rounded,
+        color: const Color(0xFFB8893A),
+        categoryKey: 'settings',
+        keywords: ['إعدادات', 'مظهر', 'ثيم', 'خط', 'تخصيص', 'أذان', 'أذكار', 'تهيئة الخشوع وإعدادات التطبيق'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/settings');
+        },
+      ),
+      _DrawerItemData(
+        title: 'عن التطبيق',
+        subtitle: 'رؤية مشروع نور المؤمن، الوقفية، ورسالة التطبيق',
+        semanticLabel: 'عن التطبيق',
+        icon: Icons.info_outline_rounded,
+        color: AppColors.primaryGreen,
+        categoryKey: 'settings',
+        keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقف', 'صدقة جارية', 'رؤية', 'رسالة التطبيق'],
+        onTap: () {
+          Navigator.pop(context);
+          showSettingsAboutModal(context);
+        },
+      ),
+      _DrawerItemData(
+        title: 'عن المطور',
+        subtitle: 'أحمد إبراهيم، كود المشروع المفتوح، ورابط GitHub',
+        semanticLabel: 'عن المطور',
+        icon: Icons.person_rounded,
+        color: const Color(0xFF1B6B4E),
+        categoryKey: 'settings',
+        keywords: ['عن المطور', 'مطور', 'أحمد إبراهيم', 'github', 'المطور'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/about-developer');
+        },
+      ),
+      _DrawerItemData(
+        title: 'تواصل مع المطور',
+        subtitle: 'إرسال اقتراح، ملاحظة، والتواصل والمقترحات بريدياً',
+        semanticLabel: 'تواصل مع المطور',
+        icon: Icons.mail_outline_rounded,
+        color: const Color(0xFF25739B),
+        categoryKey: 'settings',
+        keywords: ['تواصل مع المطور', 'تواصل', 'مقترحات', 'دعم', 'مطور', 'رسالة', 'التواصل والمقترحات'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/support');
+        },
+      ),
+      _DrawerItemData(
+        title: 'برامج المطور على المتجر',
+        subtitle: 'تطبيقات وبرمجيات المطور على متجر Google Play',
+        semanticLabel: 'برامج المطور على المتجر',
+        icon: Icons.shop_two_rounded,
+        color: const Color(0xFF0284C7),
+        categoryKey: 'settings',
+        keywords: ['برامج المطور على المتجر', 'متجر', 'جوجل بلاي', 'تطبيقات', 'store', 'google play', 'مطور'],
+        onTap: () async {
+          Navigator.pop(context);
+          await SupportService.openDeveloperPlayStore(context: context);
+        },
+      ),
+      _DrawerItemData(
+        title: 'حساب المطور على الفيس بوك',
+        subtitle: 'الصفحة والحساب الرسمي على Facebook للتواصل والمتابعة',
+        semanticLabel: 'حساب المطور على الفيس بوك',
+        icon: Icons.facebook_rounded,
+        color: const Color(0xFF1877F2),
+        categoryKey: 'settings',
+        keywords: ['حساب المطور على الفيس بوك', 'فيسبوك', 'فيس بوك', 'facebook', 'مطور', 'تواصل'],
+        onTap: () async {
+          Navigator.pop(context);
+          await SupportService.openDeveloperFacebook(context: context);
+        },
+      ),
       _DrawerItemData(
         title: 'دليل وفهرس شاشات التطبيق الشامل 📑',
         subtitle: 'فهرسة تفصيلية لجميع الـ ٥٨ شاشة وباباً إيمانياً مع البحث',
@@ -332,45 +412,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         onTap: () {
           Navigator.pop(context);
           context.push('/app-screen-directory');
-        },
-      ),
-      _DrawerItemData(
-        title: 'تهيئة الخشوع وإعدادات التطبيق',
-        subtitle: 'تخصيص المظهر، صوت الأذان، دعاء الشعراوي، والخط',
-        semanticLabel: 'تهيئة الخشوع وإعدادات التطبيق',
-        icon: Icons.settings_suggest_rounded,
-        color: const Color(0xFFB8893A),
-        categoryKey: 'settings',
-        keywords: ['إعدادات', 'مظهر', 'ثيم', 'خط', 'تخصيص'],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/settings');
-        },
-      ),
-      _DrawerItemData(
-        title: 'التواصل والمقترحات',
-        subtitle: 'إرسال اقتراح، ملاحظة، أو رسالة مباشرة للمطور',
-        semanticLabel: 'التواصل والمقترحات',
-        icon: Icons.mail_outline_rounded,
-        color: const Color(0xFF25739B),
-        categoryKey: 'settings',
-        keywords: ['تواصل', 'مقترحات', 'دعم', 'مطور'],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/support');
-        },
-      ),
-      _DrawerItemData(
-        title: 'رسالة التطبيق',
-        subtitle: 'عن المطور، رابط GitHub، ورؤية المشروع الإيماني',
-        semanticLabel: 'رسالة التطبيق وعن المطور',
-        icon: Icons.info_outline_rounded,
-        color: AppColors.primaryGreen,
-        categoryKey: 'settings',
-        keywords: ['عن التطبيق', 'مطور', 'صدقة جارية', 'رؤية'],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/about-developer');
         },
       ),
     ];
@@ -567,7 +608,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             const SizedBox(width: 6),
                             _buildFilterChip('📚 المكتبة', 'library'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('⚙️ الإعدادات', 'settings'),
+                            _buildFilterChip('⚙️ الإعدادات والمطور', 'settings'),
                           ],
                         ),
                       ),

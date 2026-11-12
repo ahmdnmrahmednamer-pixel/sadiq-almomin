@@ -121,7 +121,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // 2. Open Navigation Menu Interactive Banner
+                // 2. Next Prayer & Location Card (الوقت المتبقي على الصلاة القادمة وموقعك الحالي الفعلي)
+                HomeNextPrayerCard(prayerData: prayerData),
+                const SizedBox(height: 12),
+
+                // 3. Open Navigation Menu Interactive Banner
                 InkWell(
                   borderRadius: BorderRadius.circular(16),
                   onTap: () => _scaffoldKey.currentState?.openDrawer(),
@@ -159,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'تصفح قراء القرآن، المؤذنين الـ 7، دعاء الشعراوي، ومكتبة العلماء',
+                                'الإعدادات، عن التطبيق، المطور، والتواصل في القائمة الجانبية',
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   color: isDark ? Colors.white70 : AppColors.mutedText,
@@ -182,10 +186,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // 3. Next Prayer Card
-                HomeNextPrayerCard(prayerData: prayerData),
                 const SizedBox(height: 12),
 
                 // 4. Continue Quran Card
