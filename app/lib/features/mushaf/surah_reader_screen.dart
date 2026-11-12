@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/services/quran_repository.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/audio/ayah_audio_player.dart';
+import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
 import 'widgets/ayah_linguistics_sheet.dart';
 import 'widgets/ayah_card_share_sheet.dart';
@@ -290,7 +291,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '💡 اضغط على أي آية لعرض الخيارات والتفاسير والاستماع',
+                              '💡 اضغط ضغطة عادية للاستماع للآية، وضغطة مطولة لفتح كافة خيارات الآية',
                               style: TextStyle(fontSize: 12, color: isDark ? AppColors.softGold : AppColors.secondaryGreen),
                             ),
                           ],
@@ -323,15 +324,35 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                         children: ayahs.expand((ayah) {
                           final isPlaying = playingKey == '${widget.surah.id}:${ayah.ayahNumber}';
 
-                          void openAyahOptions() {
+                          void handleAyahTap() {
+                            if (isPlaying) {
+                              AyahAudioPlayer.instance.stop();
+                            } else {
+                              AyahAudioPlayer.instance.playAyah(
+                                context,
+                                widget.surah.id,
+                                ayah.ayahNumber,
+                                surahName: widget.surah.nameAr,
+                              );
+                            }
+                          }
+
+                          void handleAyahLongPress() {
                             AyahActionSheet.show(
                               context,
                               surah: widget.surah,
                               ayah: ayah,
                             );
                           }
-                          final rec = TapGestureRecognizer()..onTap = openAyahOptions;
-                          final recNum = TapGestureRecognizer()..onTap = openAyahOptions;
+
+                          final rec = AyahGestureRecognizer(
+                            onAyahTap: handleAyahTap,
+                            onAyahLongPress: handleAyahLongPress,
+                          );
+                          final recNum = AyahGestureRecognizer(
+                            onAyahTap: handleAyahTap,
+                            onAyahLongPress: handleAyahLongPress,
+                          );
                           _recognizers.add(rec);
                           _recognizers.add(recNum);
 
@@ -420,7 +441,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'عرض بطاقات الآيات المفصلة: اضغط على أي آية للاستماع أو فتح التفسير والإعراب وأسباب النزول.',
+                    'عرض بطاقات الآيات: اضغط ضغطة عادية للاستماع للآية، وضغطة مطولة لعرض كافة خيارات الآية والتفاسير.',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -504,8 +525,21 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 const SizedBox(height: 10),
 
                 // Quranic Text (Ayah text followed immediately by its rosette number)
+                // Single tap plays/stops the Ayah audio; Long press opens full AyahActionSheet.
                 InkWell(
                   onTap: () {
+                    if (isPlaying) {
+                      AyahAudioPlayer.instance.stop();
+                    } else {
+                      AyahAudioPlayer.instance.playAyah(
+                        context,
+                        widget.surah.id,
+                        ayah.ayahNumber,
+                        surahName: widget.surah.nameAr,
+                      );
+                    }
+                  },
+                  onLongPress: () {
                     AyahActionSheet.show(
                       context,
                       surah: widget.surah,
@@ -590,26 +624,6 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    IconButton(
-                      iconSize: 26,
-                      icon: Icon(
-                        isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                        color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
-                      ),
-                      tooltip: isPlaying ? 'إيقاف التلاوة' : 'استماع للتلاوة',
-                      onPressed: () {
-                        if (isPlaying) {
-                          AyahAudioPlayer.instance.stop();
-                        } else {
-                          AyahAudioPlayer.instance.playAyah(
-                            context,
-                            widget.surah.id,
-                            ayah.ayahNumber,
-                            surahName: widget.surah.nameAr,
-                          );
-                        }
-                      },
-                    ),
                     IconButton(
                       iconSize: 22,
                       icon: Icon(

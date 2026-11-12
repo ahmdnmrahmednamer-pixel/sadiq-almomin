@@ -8,6 +8,7 @@ import '../../core/services/settings_service.dart';
 import '../../core/services/khatma_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/audio/ayah_audio_player.dart';
+import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
 import 'surah_reader_screen.dart';
 import '../../core/services/quran_accessibility_service.dart';
@@ -541,6 +542,18 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
           text: TextSpan(
             children: surahAyahs.expand((ayah) {
               final isPlaying = playingKey == '$surahId:${ayah.ayahNumber}';
+              void playOrStopAyah() {
+                if (isPlaying) {
+                  AyahAudioPlayer.instance.stop();
+                } else {
+                  AyahAudioPlayer.instance.playAyah(
+                    context,
+                    ayah.surahId,
+                    ayah.ayahNumber,
+                  );
+                }
+              }
+
               Future<void> openAyahOptions() async {
                 final surah = await QuranRepository.getSurahById(ayah.surahId);
                 if (surah != null && context.mounted) {
@@ -551,8 +564,15 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                   );
                 }
               }
-              final ayahRec = TapGestureRecognizer()..onTap = openAyahOptions;
-              final numRec = TapGestureRecognizer()..onTap = openAyahOptions;
+
+              final ayahRec = AyahGestureRecognizer(
+                onAyahTap: playOrStopAyah,
+                onAyahLongPress: openAyahOptions,
+              );
+              final numRec = AyahGestureRecognizer(
+                onAyahTap: playOrStopAyah,
+                onAyahLongPress: openAyahOptions,
+              );
               _pageRecognizers.add(ayahRec);
               _pageRecognizers.add(numRec);
 
