@@ -74,6 +74,10 @@ class KhatmaPlan {
 
   /// Days remaining until the target completion date
   int get daysRemaining {
+    if (customDailyPace != null && customDailyPace! > 0) {
+      final rem = (remainingPages / customDailyPace!).ceil();
+      return rem < 0 ? 0 : rem;
+    }
     final rem = targetDays - daysElapsed;
     return rem < 0 ? 0 : rem;
   }
@@ -227,12 +231,13 @@ class KhatmaService extends ChangeNotifier {
     bool reminderEnabled = true,
     int reminderHour = 8,
     int reminderMinute = 0,
+    int? customDailyPace,
   }) async {
     final start = startingPage.clamp(1, 604);
     _activePlan = KhatmaPlan(
       id: 'khatma_${DateTime.now().millisecondsSinceEpoch}',
       title: title,
-      targetDays: targetDays.clamp(1, 365),
+      targetDays: targetDays.clamp(1, 730),
       startDate: DateTime.now(),
       startingPage: start,
       currentPage: start,
@@ -243,7 +248,20 @@ class KhatmaService extends ChangeNotifier {
       reminderEnabled: reminderEnabled,
       reminderHour: reminderHour,
       reminderMinute: reminderMinute,
+      customDailyPace: customDailyPace,
     );
+    await _savePlan();
+    await _rescheduleDailyReminder();
+    notifyListeners();
+  }
+
+  /// Updates or customizes the daily Quran wird pace (pages per day) for the active Khatma
+  Future<void> updateDailyWirdPace(int pagesPerDay) async {
+    if (_activePlan == null) return;
+    final pace = pagesPerDay.clamp(1, 604);
+    _activePlan!.customDailyPace = pace;
+    final remaining = _activePlan!.remainingPages;
+    _activePlan!.targetDays = (_activePlan!.daysElapsed + (remaining / pace).ceil()).clamp(1, 730);
     await _savePlan();
     await _rescheduleDailyReminder();
     notifyListeners();

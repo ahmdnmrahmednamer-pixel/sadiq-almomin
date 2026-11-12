@@ -3,6 +3,7 @@ import '../../../core/services/khatma_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../mushaf/page_mode_mushaf_screen.dart';
 import 'khatma_helpers.dart';
+import 'khatma_manual_adjust_dialogs.dart';
 
 /// Today's reading target card and 5 prayers distribution checklist.
 class KhatmaTodayTargetCard extends StatelessWidget {
@@ -62,9 +63,28 @@ class KhatmaTodayTargetCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'المستهدف لليوم: صفحة ${KhatmaFormatHelper.toArabicIndic(plan.currentPage)} إلى صفحة ${KhatmaFormatHelper.toArabicIndic((plan.currentPage + plan.pagesPerDay).clamp(1, 604))}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'المستهدف لليوم: صفحة ${KhatmaFormatHelper.toArabicIndic(plan.currentPage)} إلى ${KhatmaFormatHelper.toArabicIndic((plan.currentPage + plan.pagesPerDay).clamp(1, 604))} (${KhatmaFormatHelper.toArabicIndic(plan.pagesPerDay)} صفحة)',
+                        style: const TextStyle(fontSize: 13, color: AppColors.mutedText),
+                      ),
+                    ),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: const Icon(Icons.tune_rounded, size: 16, color: AppColors.primaryGreen),
+                      label: const Text(
+                        'تعديل الورد',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                      ),
+                      onPressed: () => showKhatmaDailyWirdAdjustDialog(context, plan),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
                 Row(

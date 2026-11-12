@@ -175,6 +175,241 @@ void showKhatmaReminderSettingsDialog(BuildContext context, KhatmaPlan plan) {
   );
 }
 
+/// Dialog to adjust daily Quran wird pace (pages per day) for the active Khatma.
+void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
+  int currentPace = plan.pagesPerDay;
+  int selectedPace = currentPace;
+  bool isCustom = ![5, 10, 20, 40, 4].contains(selectedPace);
+  final customController = TextEditingController(text: selectedPace.toString());
+
+  showDialog(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (context, setDialogState) {
+        final remainingPages = plan.remainingPages;
+        final estimatedDays = selectedPace > 0 ? (remainingPages / selectedPace).ceil() : 0;
+        final perPrayer = (selectedPace / 5).ceil();
+
+        return Directionality(
+          textDirection: SettingsService.instance.textDirection,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.tune_rounded, color: AppColors.primaryGreen),
+                SizedBox(width: 8),
+                Text('تحديد وتعديل الورد اليومي', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'حدد المقدار القرآني الذي ترغب بتلاوته يومياً، وسيتم تحديث جدول الختمة والمدة المتبقية تلقائياً:',
+                    style: TextStyle(fontSize: 13, color: AppColors.mutedText, height: 1.4),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Presets Wrap
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      ChoiceChip(
+                        label: const Text('جزء كامل (٢٠ صفحة)'),
+                        selected: !isCustom && selectedPace == 20,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = false;
+                              selectedPace = 20;
+                            });
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('نصف جزء (١٠ صفحات)'),
+                        selected: !isCustom && selectedPace == 10,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = false;
+                              selectedPace = 10;
+                            });
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('حزب / ربع جزء (٥ صفحات)'),
+                        selected: !isCustom && selectedPace == 5,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = false;
+                              selectedPace = 5;
+                            });
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('جزآن يومياً (٤٠ صفحة)'),
+                        selected: !isCustom && selectedPace == 40,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = false;
+                              selectedPace = 40;
+                            });
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('صفحة بعد كل صلاة (٤ صفحات)'),
+                        selected: !isCustom && selectedPace == 4,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = false;
+                              selectedPace = 4;
+                            });
+                          }
+                        },
+                      ),
+                      ChoiceChip(
+                        label: const Text('مقدار مخصص...'),
+                        selected: isCustom,
+                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        onSelected: (val) {
+                          if (val) {
+                            setDialogState(() {
+                              isCustom = true;
+                              selectedPace = ArabicNormalizer.tryParseInt(customController.text) ?? 10;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+
+                  if (isCustom) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Text('عدد الصفحات يومياً: ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 80,
+                          child: TextField(
+                            controller: customController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                            onChanged: (val) {
+                              final p = ArabicNormalizer.tryParseInt(val) ?? 10;
+                              setDialogState(() => selectedPace = p.clamp(1, 604));
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('صفحة / يوم', style: TextStyle(color: AppColors.mutedText)),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 16),
+
+                  // Real-time Calculation Summary Box
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('الورد اليومي المعتمد:', style: TextStyle(fontSize: 12.5)),
+                            Text(
+                              '${KhatmaFormatHelper.toArabicIndic(selectedPace)} صفحة يومياً',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('حصة كل صلاة (٥ صلوات):', style: TextStyle(fontSize: 12.5)),
+                            Text(
+                              '${KhatmaFormatHelper.toArabicIndic(perPrayer)} صفحات',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondaryGreen),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('المدة المتبقية لإتمام الختمة:', style: TextStyle(fontSize: 12.5)),
+                            Text(
+                              '${KhatmaFormatHelper.toArabicIndic(estimatedDays)} يوماً',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.accentGold),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () async {
+                  await KhatmaService.instance.updateDailyWirdPace(selectedPace);
+                  if (context.mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('تم تحديث الورد اليومي إلى ${KhatmaFormatHelper.toArabicIndic(selectedPace)} صفحة بنجاح.'),
+                        backgroundColor: AppColors.primaryGreen,
+                      ),
+                    );
+                  }
+                },
+                child: const Text('حفظ الورد الجديد', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  ).whenComplete(() {
+    Future.delayed(const Duration(milliseconds: 350), customController.dispose);
+  });
+}
+
 /// Dialog to confirm cancelling the active Khatma plan.
 void confirmCancelKhatmaPlan(BuildContext context) {
   showDialog(

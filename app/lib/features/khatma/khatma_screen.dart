@@ -61,6 +61,11 @@ class _KhatmaScreenState extends State<KhatmaScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
+                        icon: const Icon(Icons.tune_rounded),
+                        tooltip: 'تحديد وتعديل الورد اليومي',
+                        onPressed: () => showKhatmaDailyWirdAdjustDialog(context, plan),
+                      ),
+                      IconButton(
                         icon: const Icon(Icons.notifications_active_outlined),
                         tooltip: 'إعدادات التذكير بالورد',
                         onPressed: () => _showReminderSettingsDialog(plan),
