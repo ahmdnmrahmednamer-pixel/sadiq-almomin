@@ -223,6 +223,12 @@ class PrayerService extends ChangeNotifier {
     });
   }
 
+  /// Cancels live ticker countdown timer (used during testing and cleanup)
+  void stopLiveTicker() {
+    _tickerTimer?.cancel();
+    _tickerTimer = null;
+  }
+
   void _tickContinuousCountdown() {
     if (_currentData == null) return;
     final now = DateTime.now();
@@ -331,11 +337,7 @@ class PrayerService extends ChangeNotifier {
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        if (isUserTriggered) {
-          permission = await Geolocator.requestPermission();
-        } else {
-          return false;
-        }
+        permission = await Geolocator.requestPermission();
       }
 
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
@@ -349,11 +351,11 @@ class PrayerService extends ChangeNotifier {
       // Fast check cached position first
       Position? position = await Geolocator.getLastKnownPosition();
 
-      // If no cached position or triggered or stale, fetch current
-      if (position == null || isUserTriggered) {
+      // If no cached position, or triggered, or accuracy > 100m, fetch fresh high-accuracy GPS position
+      if (position == null || isUserTriggered || position.accuracy > 100) {
         position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 10),
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15),
         );
       }
 
@@ -398,8 +400,8 @@ class PrayerService extends ChangeNotifier {
     _positionStreamSubscription?.cancel();
     try {
       const locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        distanceFilter: 3000, // Trigger only when moved by 3 km to prevent battery drain
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 1000, // Trigger when moved by 1 km with high GPS accuracy
       );
       _positionStreamSubscription = Geolocator.getPositionStream(
         locationSettings: locationSettings,

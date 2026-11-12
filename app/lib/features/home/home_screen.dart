@@ -13,6 +13,7 @@ import 'widgets/home_date_header_card.dart';
 import 'widgets/home_next_prayer_card.dart';
 import 'widgets/home_quran_continue_card.dart';
 import 'widgets/home_adhkar_tasbih_row.dart';
+import 'widgets/home_quick_sections_grid.dart';
 
 /// شاشة التطبيق الرئيسية (HomeScreen)
 /// مصممة بهدوء وسكينة إيمانية، وتتيح الوصول لكافة الأقسام والشيوخ والمؤذنين عبر القائمة الجانبية (Navigation Menu)
@@ -193,7 +194,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // 5. Adhkar & Tasbih Row
                 const HomeAdhkarTasbihRow(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
+
+                // 6. Quick Access Sections Grid
+                const HomeQuickSectionsGrid(),
+                const SizedBox(height: 20),
               ],
             ),
           ),

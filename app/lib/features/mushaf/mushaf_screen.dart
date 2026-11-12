@@ -13,6 +13,7 @@ import '../khatma/khatma_screen.dart';
 import '../tajweed/tajweed_screen.dart';
 import 'memorization_screen.dart';
 import 'quran_notes_screen.dart';
+import 'quran_hub_screen.dart';
 
 class MushafScreen extends StatefulWidget {
   const MushafScreen({super.key});
@@ -135,6 +136,16 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                     ),
                   );
                 }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.dashboard_customize_rounded),
+              tooltip: 'بوابة علوم القرآن والتفاسير',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const QuranHubScreen()),
+                );
               },
             ),
             IconButton(
