@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -83,6 +83,23 @@ class PrayerNotificationService extends ChangeNotifier {
   bool _postPrayerAdhkarReminderEnabled = true;
   int _postPrayerAdhkarMinutes = 5;
 
+  // Adhkar Reminders Timing & States
+  bool _morningAdhkarEnabled = true;
+  int _morningAdhkarHour = 7;
+  int _morningAdhkarMinute = 0;
+
+  bool _eveningAdhkarEnabled = true;
+  int _eveningAdhkarHour = 17;
+  int _eveningAdhkarMinute = 0;
+
+  bool _sleepAdhkarEnabled = true;
+  int _sleepAdhkarHour = 22;
+  int _sleepAdhkarMinute = 30;
+
+  static const int morningAdhkarNotificationId = 801;
+  static const int eveningAdhkarNotificationId = 802;
+  static const int sleepAdhkarNotificationId = 803;
+
   final Map<String, bool> _prayerToggles = {
     'الفجر': true,
     'الشروق': false,
@@ -124,6 +141,22 @@ class PrayerNotificationService extends ChangeNotifier {
   bool get fajrDistinctVoiceEnabled => _fajrDistinctVoiceEnabled;
   bool get postPrayerAdhkarReminderEnabled => _postPrayerAdhkarReminderEnabled;
   int get postPrayerAdhkarMinutes => _postPrayerAdhkarMinutes;
+
+  // Morning, Evening, and Sleep Adhkar Getters
+  bool get morningAdhkarEnabled => _morningAdhkarEnabled;
+  int get morningAdhkarHour => _morningAdhkarHour;
+  int get morningAdhkarMinute => _morningAdhkarMinute;
+  TimeOfDay get morningAdhkarTime => TimeOfDay(hour: _morningAdhkarHour, minute: _morningAdhkarMinute);
+
+  bool get eveningAdhkarEnabled => _eveningAdhkarEnabled;
+  int get eveningAdhkarHour => _eveningAdhkarHour;
+  int get eveningAdhkarMinute => _eveningAdhkarMinute;
+  TimeOfDay get eveningAdhkarTime => TimeOfDay(hour: _eveningAdhkarHour, minute: _eveningAdhkarMinute);
+
+  bool get sleepAdhkarEnabled => _sleepAdhkarEnabled;
+  int get sleepAdhkarHour => _sleepAdhkarHour;
+  int get sleepAdhkarMinute => _sleepAdhkarMinute;
+  TimeOfDay get sleepAdhkarTime => TimeOfDay(hour: _sleepAdhkarHour, minute: _sleepAdhkarMinute);
   Map<String, bool> get prayerToggles => _prayerToggles;
 
   bool isPrayerEnabled(String prayerName) => _prayerToggles[prayerName] ?? true;
@@ -219,6 +252,18 @@ class PrayerNotificationService extends ChangeNotifier {
     _postPrayerAdhkarReminderEnabled = prefs.getBool('notif_post_adhkar_enabled') ?? true;
     _postPrayerAdhkarMinutes = prefs.getInt('notif_post_adhkar_offset') ?? 5;
 
+    _morningAdhkarEnabled = prefs.getBool('notif_morning_adhkar_enabled') ?? true;
+    _morningAdhkarHour = prefs.getInt('notif_morning_adhkar_hour') ?? 7;
+    _morningAdhkarMinute = prefs.getInt('notif_morning_adhkar_minute') ?? 0;
+
+    _eveningAdhkarEnabled = prefs.getBool('notif_evening_adhkar_enabled') ?? true;
+    _eveningAdhkarHour = prefs.getInt('notif_evening_adhkar_hour') ?? 17;
+    _eveningAdhkarMinute = prefs.getInt('notif_evening_adhkar_minute') ?? 0;
+
+    _sleepAdhkarEnabled = prefs.getBool('notif_sleep_adhkar_enabled') ?? true;
+    _sleepAdhkarHour = prefs.getInt('notif_sleep_adhkar_hour') ?? 22;
+    _sleepAdhkarMinute = prefs.getInt('notif_sleep_adhkar_minute') ?? 30;
+
     _vibrateOnStop = prefs.getBool('notif_vibrate_on_stop') ?? true;
     final muteStr = prefs.getString('notif_mute_until');
     if (muteStr != null) {
@@ -243,6 +288,9 @@ class PrayerNotificationService extends ChangeNotifier {
     } catch (_) {}
 
     _isInitialized = true;
+    try {
+      scheduleAdhkarReminders();
+    } catch (_) {}
     notifyListeners();
   }
 
@@ -324,6 +372,21 @@ class PrayerNotificationService extends ChangeNotifier {
 
   void _handlePayloadNavigation(String payload) {
     try {
+      if (payload.contains('type=adhkar')) {
+        final uri = Uri.parse('app://adhkar?$payload');
+        final cat = uri.queryParameters['category'];
+        int targetIndex = 0;
+        if (cat == 'morning') {
+          targetIndex = 0;
+        } else if (cat == 'evening') {
+          targetIndex = 1;
+        } else if (cat == 'sleep') {
+          targetIndex = 3;
+        }
+        appRouter.push('/adhkar?index=$targetIndex');
+        return;
+      }
+
       final uri = Uri.parse('app://adhan?$payload');
       final prayer = uri.queryParameters['prayer'] ?? 'الظهر';
       final isIqamah = uri.queryParameters['type'] == 'iqamah';
@@ -545,6 +608,33 @@ class PrayerNotificationService extends ChangeNotifier {
         'prayer_post_adhkar_channel',
         'أذكار ما بعد الصلاة المكتوبة',
         description: 'تذكير بالاستغفار والتسبيح وقراءة آية الكرسي دبر كل صلاة',
+        importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+        enableVibration: true,
+      ),
+      const AndroidNotificationChannel(
+        'adhkar_morning_channel',
+        'أذكار الصباح المباركة',
+        description: 'تنبيه يومي لموعد أذكار الصباح وحصن المسلم',
+        importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+        enableVibration: true,
+      ),
+      const AndroidNotificationChannel(
+        'adhkar_evening_channel',
+        'أذكار المساء المباركة',
+        description: 'تنبيه يومي لموعد أذكار المساء وحفظ النفس',
+        importance: Importance.high,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+        enableVibration: true,
+      ),
+      const AndroidNotificationChannel(
+        'adhkar_sleep_channel',
+        'أذكار النوم والسنن النبوية',
+        description: 'تنبيه يومي لموعد أذكار النوم وسنن الاضطجاع',
         importance: Importance.high,
         playSound: true,
         sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
@@ -786,6 +876,69 @@ class PrayerNotificationService extends ChangeNotifier {
     await prefs.setInt('notif_post_adhkar_offset', minutes);
     rescheduleCurrentPrayers();
     notifyListeners();
+  }
+
+  // Morning, Evening, and Sleep Adhkar Management
+  Future<void> toggleMorningAdhkar(bool enabled) async {
+    _morningAdhkarEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_morning_adhkar_enabled', enabled);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  Future<void> setMorningAdhkarTime(int hour, int minute) async {
+    _morningAdhkarHour = hour;
+    _morningAdhkarMinute = minute;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('notif_morning_adhkar_hour', hour);
+    await prefs.setInt('notif_morning_adhkar_minute', minute);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  Future<void> toggleEveningAdhkar(bool enabled) async {
+    _eveningAdhkarEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_evening_adhkar_enabled', enabled);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  Future<void> setEveningAdhkarTime(int hour, int minute) async {
+    _eveningAdhkarHour = hour;
+    _eveningAdhkarMinute = minute;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('notif_evening_adhkar_hour', hour);
+    await prefs.setInt('notif_evening_adhkar_minute', minute);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  Future<void> toggleSleepAdhkar(bool enabled) async {
+    _sleepAdhkarEnabled = enabled;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notif_sleep_adhkar_enabled', enabled);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  Future<void> setSleepAdhkarTime(int hour, int minute) async {
+    _sleepAdhkarHour = hour;
+    _sleepAdhkarMinute = minute;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('notif_sleep_adhkar_hour', hour);
+    await prefs.setInt('notif_sleep_adhkar_minute', minute);
+    await scheduleAdhkarReminders();
+    notifyListeners();
+  }
+
+  static String formatTimeArabic(int hour, int minute) {
+    final period = hour >= 12 ? 'م' : 'ص';
+    final h12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    final hStr = h12.toString().padLeft(2, '0');
+    final mStr = minute.toString().padLeft(2, '0');
+    return '$hStr:$mStr $period';
   }
 
   void rescheduleCurrentPrayers() {
@@ -1319,8 +1472,129 @@ class PrayerNotificationService extends ChangeNotifier {
           );
         }
       }
+
+      // Schedule Morning, Evening, and Sleep Adhkar Reminders
+      await scheduleAdhkarReminders();
     } catch (e) {
       debugPrint('Error scheduling prayer notifications: $e');
+    }
+  }
+
+  /// Schedules recurring daily notifications for Morning, Evening, and Sleep Adhkar
+  Future<void> scheduleAdhkarReminders() async {
+    if (!_masterEnabled || !_isInitialized) return;
+    _ensureTimeZonesInitialized();
+    final now = DateTime.now();
+
+    // 1. Morning Adhkar
+    try {
+      if (_morningAdhkarEnabled) {
+        var morningTarget = DateTime(now.year, now.month, now.day, _morningAdhkarHour, _morningAdhkarMinute);
+        if (morningTarget.isBefore(now)) {
+          morningTarget = morningTarget.add(const Duration(days: 1));
+        }
+        final morningTz = tz.TZDateTime.from(morningTarget, tz.local);
+        const morningDetails = AndroidNotificationDetails(
+          'adhkar_morning_channel',
+          'أذكار الصباح المباركة',
+          channelDescription: 'تنبيه يومي لموعد أذكار الصباح وحصن المسلم',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+          enableVibration: true,
+        );
+
+        await _localNotifications.zonedSchedule(
+          morningAdhkarNotificationId,
+          'حان وقت أذكار الصباح ☀️',
+          'أصبحنا وأصبح الملك لله والحمد لله.. حصّن يومك بذكر الله وانشراح الصدر',
+          morningTz,
+          const NotificationDetails(android: morningDetails),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+          payload: 'type=adhkar&category=morning',
+        );
+      } else {
+        await _localNotifications.cancel(morningAdhkarNotificationId);
+      }
+    } catch (e) {
+      debugPrint('Error scheduling morning adhkar: $e');
+    }
+
+    // 2. Evening Adhkar
+    try {
+      if (_eveningAdhkarEnabled) {
+        var eveningTarget = DateTime(now.year, now.month, now.day, _eveningAdhkarHour, _eveningAdhkarMinute);
+        if (eveningTarget.isBefore(now)) {
+          eveningTarget = eveningTarget.add(const Duration(days: 1));
+        }
+        final eveningTz = tz.TZDateTime.from(eveningTarget, tz.local);
+        const eveningDetails = AndroidNotificationDetails(
+          'adhkar_evening_channel',
+          'أذكار المساء المباركة',
+          channelDescription: 'تنبيه يومي لموعد أذكار المساء وحفظ النفس',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+          enableVibration: true,
+        );
+
+        await _localNotifications.zonedSchedule(
+          eveningAdhkarNotificationId,
+          'حان وقت أذكار المساء 🌙',
+          'أمسينا وأمسى الملك لله والحمد لله.. حفظ ووقاية وبركة لليلتك',
+          eveningTz,
+          const NotificationDetails(android: eveningDetails),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+          payload: 'type=adhkar&category=evening',
+        );
+      } else {
+        await _localNotifications.cancel(eveningAdhkarNotificationId);
+      }
+    } catch (e) {
+      debugPrint('Error scheduling evening adhkar: $e');
+    }
+
+    // 3. Sleep Adhkar
+    try {
+      if (_sleepAdhkarEnabled) {
+        var sleepTarget = DateTime(now.year, now.month, now.day, _sleepAdhkarHour, _sleepAdhkarMinute);
+        if (sleepTarget.isBefore(now)) {
+          sleepTarget = sleepTarget.add(const Duration(days: 1));
+        }
+        final sleepTz = tz.TZDateTime.from(sleepTarget, tz.local);
+        const sleepDetails = AndroidNotificationDetails(
+          'adhkar_sleep_channel',
+          'أذكار النوم والسنن النبوية',
+          channelDescription: 'تنبيه يومي لموعد أذكار النوم وسنن الاضطجاع',
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('reminder_istighfar'),
+          enableVibration: true,
+        );
+
+        await _localNotifications.zonedSchedule(
+          sleepAdhkarNotificationId,
+          'حان وقت أذكار النوم 🛏️',
+          'باسمك ربي وضعت جنبي وبك أرفعه.. سنة النبي ﷺ وقراءة المعوذات وآية الكرسي قبل النوم',
+          sleepTz,
+          const NotificationDetails(android: sleepDetails),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+          payload: 'type=adhkar&category=sleep',
+        );
+      } else {
+        await _localNotifications.cancel(sleepAdhkarNotificationId);
+      }
+    } catch (e) {
+      debugPrint('Error scheduling sleep adhkar: $e');
     }
   }
 

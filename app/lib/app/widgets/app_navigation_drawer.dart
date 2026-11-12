@@ -265,6 +265,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           context.push('/spiritual-mood');
         },
       ),
+      _DrawerItemData(
+        title: 'مواقيت تنبيهات الأذكار ⏰',
+        subtitle: 'تحديد أوقات إشعارات أذكار الصباح والمساء والنوم',
+        semanticLabel: 'مواقيت تنبيهات الأذكار',
+        icon: Icons.alarm_rounded,
+        color: const Color(0xFFD97706),
+        categoryKey: 'adhkar',
+        keywords: ['تنبيه', 'أذكار', 'مواقيت', 'وقت', 'صباح', 'مساء', 'نوم', 'إشعار', 'ساعة'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/settings');
+        },
+      ),
 
       // ================= 5. قسم المكتبة الإسلامية والقصص والفقه =================
       _DrawerItemData(

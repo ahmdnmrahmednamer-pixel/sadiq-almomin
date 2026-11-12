@@ -7,6 +7,7 @@ import '../../core/services/adhan_sensor_gesture_service.dart';
 import '../../core/services/prayer_service.dart';
 import '../../core/services/settings_service.dart';
 import 'widgets/sections/settings_adhan_and_sensors_section.dart';
+import 'widgets/sections/settings_adhkar_reminders_section.dart';
 import 'widgets/sections/settings_language_and_appearance_section.dart';
 import 'widgets/sections/settings_prayer_and_fiqh_section.dart';
 import 'widgets/sections/settings_quran_and_audio_section.dart';
@@ -67,6 +68,7 @@ class SettingsScreen extends StatelessWidget {
                 SettingsLanguageAndAppearanceSection(),
                 SettingsQuranAndAudioSection(),
                 SettingsPrayerAndFiqhSection(),
+                SettingsAdhkarRemindersSection(),
                 SettingsAdhanAndSensorsSection(),
                 SettingsToolsAndAboutSection(),
               ],

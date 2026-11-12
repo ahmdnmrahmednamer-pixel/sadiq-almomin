@@ -194,7 +194,11 @@ void main() {
       await tester.pumpAndSettle();
 
       final tile = find.text('الدعم والتواصل مع المطور');
-      await tester.scrollUntilVisible(tile, 300);
+      await tester.scrollUntilVisible(
+        tile,
+        300,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && (w.axisDirection == AxisDirection.down || w.axisDirection == AxisDirection.up)),
+      );
       expect(tile, findsOneWidget);
       expect(find.textContaining('إرسال اقتراح، ملاحظة، أو إبلاغ عن مشكلة بريدياً للمطور'), findsOneWidget);
     });

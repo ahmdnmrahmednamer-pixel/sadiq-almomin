@@ -46,6 +46,11 @@ class AdhkarHubScreen extends StatelessWidget {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.alarm_rounded),
+              tooltip: 'مواقيت تنبيهات الأذكار',
+              onPressed: () => context.push('/settings'),
+            ),
+            IconButton(
               icon: const Icon(Icons.fingerprint_rounded),
               tooltip: 'السبحة الإلكترونية',
               onPressed: () => context.push('/tasbih'),
@@ -173,6 +178,17 @@ class AdhkarHubScreen extends StatelessWidget {
               icon: Icons.palette_rounded,
               color: const Color(0xFF25739B),
               onTap: () => context.push('/daawah-studio'),
+            ),
+
+            // 7. مواقيت وتنبيهات أذكار المسلم
+            PortalCategoryCard(
+              numberText: '٧',
+              title: 'مواقيت وتنبيهات أذكار المسلم',
+              subtitle: 'تخصيص أوقات إشعارات أذكار الصباح والمساء والنوم بدقة وفق جدولك اليومي',
+              icon: Icons.alarm_rounded,
+              color: const Color(0xFFC07D30),
+              badgeText: 'تنبيهات مخصصة',
+              onTap: () => context.push('/settings'),
             ),
 
             const SizedBox(height: 20),
