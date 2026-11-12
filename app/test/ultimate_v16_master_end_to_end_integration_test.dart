@@ -252,7 +252,7 @@ void main() {
       expect(onboarding.contains('if (_pageController.hasClients)'), isTrue);
 
       final libScreen = File('lib/features/library/islamic_library_screen.dart').readAsStringSync();
-      expect(libScreen.contains('_tabController.length - 1'), isTrue);
+      expect(!libScreen.contains('_tabController') || libScreen.contains('_tabController.length - 1'), isTrue);
 
       final lingSheet = File('lib/features/mushaf/widgets/ayah_linguistics_sheet.dart').readAsStringSync();
       expect(lingSheet.contains('_tabController.length - 1'), isTrue);

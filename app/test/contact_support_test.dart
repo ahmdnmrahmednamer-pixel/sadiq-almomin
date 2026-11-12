@@ -32,7 +32,7 @@ void main() {
       expect(body, contains('• التصنيف: استفسار عام أو ملاحظة'));
       expect(body, contains('• اسم الراسل: عبد الرحمن'));
       expect(body, contains('• وسيلة التواصل: abdurrahman@example.com'));
-      expect(body, contains('• إصدار تطبيق نور المؤمن: v1.2.0'));
+      expect(body, contains('• إصدار تطبيق نور المؤمن: v${SupportService.appVersion}'));
       expect(body, contains('تطبيق «نور المؤمن»'));
     });
 

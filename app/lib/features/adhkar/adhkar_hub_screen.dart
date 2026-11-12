@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../app/widgets/app_navigation_drawer.dart';
 import '../../core/services/settings_service.dart';
+import '../../core/text/arabic_normalizer.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/portal_category_card.dart';
 
@@ -22,6 +23,8 @@ class AdhkarHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    // Level-7 normalized verification
+    assert(ArabicNormalizer.normalize('أُنس الذاكرين').isNotEmpty);
 
     return Directionality(
       textDirection: SettingsService.instance.textDirection,

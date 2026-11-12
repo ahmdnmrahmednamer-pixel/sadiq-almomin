@@ -310,7 +310,22 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.accentGold.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('صدقة جارية عن روح: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('مُؤْمِن إِبْرَاهِيم', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.accentGold)),
+                  Text(' (رحمه الله)', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
           ],
         ),

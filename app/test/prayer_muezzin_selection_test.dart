@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
+import 'package:almomin/core/ui/app_dropdown_field.dart';
 import 'package:almomin/features/settings/widgets/settings_adhan_voice_modal.dart';
 import 'package:almomin/features/prayer/widgets/prayer_muezzin_selector_card.dart';
 
@@ -126,9 +127,9 @@ void main() {
       expect(find.text('صلاة المغرب'), findsOneWidget);
       expect(find.text('صلاة العشاء'), findsOneWidget);
 
-      // Verify preview and dropdown buttons
-      expect(find.text('استماع 🔊'), findsNWidgets(5));
-      expect(find.text('قائمة الشيوخ ▾'), findsNWidgets(5));
+      // Verify preview and dropdown fields
+      expect(find.text('استماع'), findsNWidgets(5));
+      expect(find.byType(AppAudioDropdownField<String>), findsNWidgets(5));
     });
   });
 }

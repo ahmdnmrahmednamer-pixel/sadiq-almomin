@@ -153,6 +153,31 @@ class ScholarAudioResolverService extends ChangeNotifier {
       final savedPref = prefs.getString('scholar_audio_source_pref_v11');
       _sourcePreference = ScholarAudioSourcePreference.fromId(savedPref);
     } catch (_) {}
+
+    // Automatically build isolated source configs from ScholarsLecturesService
+    for (final scholar in ScholarsLecturesService.instance.allScholars) {
+      final archiveIds = <String>{};
+      final urls = <String>{};
+      final lectures = ScholarsLecturesService.instance.getLecturesForScholar(scholar.id);
+      for (final l in lectures) {
+        urls.add(l.primaryAudioUrl);
+        urls.addAll(l.fallbackAudioUrls);
+        for (final u in [l.primaryAudioUrl, ...l.fallbackAudioUrls]) {
+          final m = RegExp(r'archive\.org/(?:download|details|metadata)/([^/?#]+)', caseSensitive: false).firstMatch(u);
+          if (m != null) archiveIds.add(m.group(1)!.toLowerCase());
+        }
+      }
+      final nameParts = scholar.name.replaceAll('الشيخ', '').replaceAll('الدكتور', '').trim().split(' ');
+      registerScholarConfig(ScholarIsolatedSourceConfig(
+        scholarId: scholar.id,
+        scholarName: scholar.name,
+        requiredNameTokens: nameParts.where((p) => p.length > 2).toList(),
+        dedicatedArchiveIds: archiveIds.toList(),
+        dedicatedIslamwaySlug: scholar.id,
+        verifiedDirectUrls: urls.toList(),
+      ));
+    }
+
     _isInitialized = true;
   }
 

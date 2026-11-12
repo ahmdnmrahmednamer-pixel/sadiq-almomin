@@ -60,7 +60,7 @@ void main() {
 
       // Mahmoud Al-Hasanat URL belongs to mahmoud_alhasanat ONLY
       const hasanatUrl =
-          'https://archive.org/download/20230918_20230918_0013/01.mp3';
+          'https://archive.org/download/islami-343_202504/01.mp3';
       expect(resolver.verifyUrlBelongsToScholar(hasanatUrl, 'mahmoud_alhasanat'), isTrue);
       expect(resolver.verifyUrlBelongsToScholar(hasanatUrl, 'samir_mostafa'), isFalse);
       expect(resolver.verifyUrlBelongsToScholar(hasanatUrl, 'nabil_alawadi'), isFalse);

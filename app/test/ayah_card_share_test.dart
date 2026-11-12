@@ -113,7 +113,7 @@ void main() {
       );
 
       expect(find.text('سورة الإخلاص'), findsOneWidget);
-      expect(find.text('﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾'), findsOneWidget);
+      expect(find.text('${testAyah.cleanTextUthmani} ﴿${testAyah.ayahNumber}﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsOneWidget);
       expect(find.text('الله واحد أحد لا شريك له.'), findsOneWidget);
       expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsOneWidget);
@@ -143,7 +143,7 @@ void main() {
       );
 
       expect(find.text('سورة الإخلاص'), findsNothing);
-      expect(find.text('﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾'), findsOneWidget);
+      expect(find.text('${testAyah.cleanTextUthmani} ﴿${testAyah.ayahNumber}﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsNothing);
       expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsNothing);
     });

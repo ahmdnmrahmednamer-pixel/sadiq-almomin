@@ -76,7 +76,7 @@ void main() {
       final keepFile = File('android/app/src/main/res/raw/keep.xml');
       expect(keepFile.existsSync(), isTrue);
       final keepXml = keepFile.readAsStringSync();
-      expect(keepXml.contains('tools:keep="@raw/adhan_*,@raw/approaching_*,@raw/duaa_*,@raw/iqamah,@raw/takbeerat"'), isTrue);
+      expect(keepXml.contains('tools:keep="@raw/adhan_*,@raw/approaching_*,@raw/duaa_*,@raw/iqamah*,@raw/reminder_*,@raw/takbeerat*"'), isTrue);
 
       final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
       expect(manifest.contains('android:scheme="https"'), isTrue);

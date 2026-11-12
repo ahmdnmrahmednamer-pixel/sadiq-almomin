@@ -874,7 +874,7 @@ class IslamicAudioService extends ChangeNotifier {
       durationFormatted: '00:15',
       quality: 'نغمة سريعة مدمجة',
       categoryAr: 'تكبيرات',
-      fileSizeBytes: 150560,
+      fileSizeBytes: 150559,
     ),
 
     // --- باقة أصوات الأذان الموسعة (جودة استوديو فائقة 320kbps HD) ---
@@ -1111,7 +1111,7 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'استوديو نقي مدمج',
       categoryAr: 'الحرم المكي',
       muezzinName: 'مؤذن المسجد الحرام',
-      fileSizeBytes: 651564,
+      fileSizeBytes: 123308,
     ),
     IslamicAudioTrack(
       id: 'iqamah_madinah',
@@ -1126,7 +1126,7 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'عالي النقاء HD',
       categoryAr: 'المسجد النبوي',
       muezzinName: 'مؤذن الحرم النبوي',
-      fileSizeBytes: 651564,
+      fileSizeBytes: 123308,
     ),
     IslamicAudioTrack(
       id: 'iqamah_afasy',
@@ -1177,7 +1177,7 @@ class IslamicAudioService extends ChangeNotifier {
       durationFormatted: '00:15',
       quality: 'نغمة سريعة مدمجة',
       categoryAr: 'تنبيه سريع',
-      fileSizeBytes: 369836,
+      fileSizeBytes: 123308,
     ),
 
     // 3. الأذكار والأدعية (تعمل عبر الإنترنت افتراضياً، وتعمل أوفلاين إذا حمّلها المستخدم)
@@ -1193,7 +1193,7 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'استوديو فائق النقاء HD 192kbps',
       categoryAr: 'أذكار الصباح والمساء',
       muezzinName: 'الشيخ مشاري العفاسي',
-      fileSizeBytes: 3480000,
+      fileSizeBytes: 1405868,
     ),
     IslamicAudioTrack(
       id: 'adhkar_evening',
@@ -1207,7 +1207,7 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'استوديو فائق النقاء HD 192kbps',
       categoryAr: 'أذكار الصباح والمساء',
       muezzinName: 'الشيخ مشاري العفاسي',
-      fileSizeBytes: 3640000,
+      fileSizeBytes: 1601516,
     ),
     IslamicAudioTrack(
       id: 'duaa_sharawi_post_prayer',
@@ -1252,7 +1252,7 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'استوديو نقي 192kbps',
       categoryAr: 'أذكار النوم والاستيقاظ',
       muezzinName: 'الشيخ مشاري العفاسي',
-      fileSizeBytes: 2720000,
+      fileSizeBytes: 953132,
     ),
     IslamicAudioTrack(
       id: 'adhkar_waking',

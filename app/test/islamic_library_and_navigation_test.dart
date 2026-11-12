@@ -21,14 +21,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check AppBar Title
-      expect(find.text('رياض العلم والهدي النبوي'), findsOneWidget);
+      expect(find.text('المكتبة الإسلامية ورياض العلم'), findsOneWidget);
 
-      // Check Tabs
-      expect(find.text('رياض المعرفة الشاملة'), findsAtLeastNWidgets(1));
-      expect(find.text('مشكاة الحديث النبوي'), findsOneWidget);
-      expect(find.text('قصص الوحي والأنبياء'), findsOneWidget);
-      expect(find.text('نفحات رمضان والريّان'), findsOneWidget);
-      expect(find.text('طُهرة المال والفرائض'), findsOneWidget);
+      // Check Portal Category Cards
+      expect(find.text('رياض الصالحين وصحيح الحديث'), findsOneWidget);
+      expect(find.text('قصص الأنبياء المسموعة والمقروءة'), findsOneWidget);
+      expect(find.text('المتون العلمية وأحكام التجويد'), findsOneWidget);
     });
 
     testWidgets('Renders HomeShortcutsList clean categorized grid with 9 spiritual doors', (tester) async {

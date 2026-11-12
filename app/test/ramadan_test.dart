@@ -112,7 +112,7 @@ void main() {
       expect(find.textContaining('أدعية وسنن الصائم'), findsOneWidget);
 
       // Hero banner
-      expect(find.textContaining('تغيير المدينة'), findsOneWidget);
+      expect(find.textContaining('تحديث الموقع الفعلي'), findsOneWidget);
 
       // Switch to Tab 2: Tracker
       await tester.tap(find.textContaining('متابع الصيام والعبادات'));

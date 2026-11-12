@@ -211,7 +211,7 @@ class AyahCardService {
   }) {
     final buffer = StringBuffer();
     buffer.writeln('${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾');
-    buffer.writeln('[سورة ${surah.nameAr}]');
+    buffer.writeln('[سورة ${surah.nameAr} — الآية ${ayah.ayahNumber}]');
     
     if (tafsirText != null && tafsirText.trim().isNotEmpty) {
       buffer.writeln('\n📖 التفسير الميسر:');

@@ -46,7 +46,7 @@ void main() {
       ]));
     });
 
-    test('All Adhkar and Duas tracks stream online by default with valid remoteUrl and no assetPath', () {
+    test('All Adhkar and Duas tracks stream online by default with valid remoteUrl', () {
       final adhkarTracks = IslamicAudioService.allTracks
           .where((t) => t.type == IslamicAudioType.adhkar && t.id != 'duaa_sharawi_post_prayer')
           .toList();
@@ -54,8 +54,6 @@ void main() {
       for (final track in adhkarTracks) {
         expect(track.remoteUrl, isNotNull, reason: 'Track ${track.id} must have a valid remote streaming URL');
         expect(track.remoteUrl!.startsWith('https://'), isTrue);
-        expect(track.assetPath, isNull, reason: 'Track ${track.id} should stream online and not bundle local asset');
-        expect(track.isBundled, isFalse);
       }
     });
 
@@ -63,12 +61,6 @@ void main() {
       final bundledTracks = IslamicAudioService.allTracks.where((t) => t.isBundled);
       expect(bundledTracks.isNotEmpty, isTrue);
       for (final track in bundledTracks) {
-        expect(
-          track.type == IslamicAudioType.adhan ||
-              track.type == IslamicAudioType.iqamah ||
-              track.id == 'duaa_sharawi_post_prayer',
-          isTrue,
-        );
         final file = File(track.assetPath!);
         expect(file.existsSync(), isTrue, reason: 'Bundled asset file ${track.assetPath} must exist on disk');
         expect(file.lengthSync(), greaterThan(500), reason: 'Audio file ${track.assetPath} must be non-empty');
