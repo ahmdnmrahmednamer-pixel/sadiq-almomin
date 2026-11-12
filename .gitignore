@@ -77,3 +77,8 @@ app/build/
 # Automation scripts
 *.bat
 
+# Large reference sources & SQLite databases
+*.db
+مصادر/
+app/مصادر/
+
