@@ -6,6 +6,7 @@ import '../../core/services/quran_repository.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../search/quran_search_screen.dart';
+import '../search/widgets/quran_voice_search_sheet.dart';
 import 'surah_reader_screen.dart';
 import 'page_mode_mushaf_screen.dart';
 import '../khatma/khatma_screen.dart';
@@ -119,6 +120,21 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                   context,
                   MaterialPageRoute(builder: (context) => const TajweedScreen()),
                 );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.mic_rounded),
+              tooltip: 'البحث الصوتي عن الآيات',
+              onPressed: () async {
+                final query = await QuranVoiceSearchSheet.show(context);
+                if (query != null && query.trim().isNotEmpty && mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => QuranSearchScreen(initialQuery: query.trim()),
+                    ),
+                  );
+                }
               },
             ),
             IconButton(

@@ -12,6 +12,7 @@ import '../../core/theme/app_theme.dart';
 import '../mushaf/surah_reader_screen.dart';
 import '../mushaf/page_mode_mushaf_screen.dart';
 import '../mushaf/widgets/tafsir_viewer_sheet.dart';
+import 'widgets/quran_voice_search_sheet.dart';
 
 enum SearchScope {
   all,
@@ -201,6 +202,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     return spans;
   }
 
+  Future<void> _openVoiceSearch() async {
+    final query = await QuranVoiceSearchSheet.show(context);
+    if (query != null && query.trim().isNotEmpty && mounted) {
+      _controller.text = query.trim();
+      _executeSearch(query.trim());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasResults = _referenceMatch != null || _surahResults.isNotEmpty || _ayahResults.isNotEmpty;
@@ -209,6 +218,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       appBar: AppBar(
         title: const Text('البحث في القرآن الكريم'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.mic_rounded),
+            tooltip: 'البحث الصوتي عن الآيات بالميكروفون',
+            onPressed: _openVoiceSearch,
+          ),
           if (_currentQuery.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.refresh),
@@ -234,16 +248,25 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   hintText: 'ابحث بآية، كلمة، سورة، أو مرجع (مثال: آية الكرسي، 2:255، الكهف)...',
                   hintStyle: const TextStyle(fontSize: 13),
                   prefixIcon: const Icon(Icons.search, color: AppColors.primaryGreen),
-                  suffixIcon: _controller.text.isNotEmpty
-                      ? IconButton(
-                        tooltip: 'إغلاق أو مسح',
-                          icon: const Icon(Icons.clear),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_controller.text.isNotEmpty)
+                        IconButton(
+                          tooltip: 'إغلاق أو مسح',
+                          icon: const Icon(Icons.clear, size: 20),
                           onPressed: () {
                             _controller.clear();
                             _executeSearch('');
                           },
-                        )
-                      : null,
+                        ),
+                      IconButton(
+                        tooltip: 'البحث الصوتي عن الآيات',
+                        icon: const Icon(Icons.mic_rounded, color: AppColors.primaryGreen),
+                        onPressed: _openVoiceSearch,
+                      ),
+                    ],
+                  ),
                   filled: true,
                   fillColor: Colors.grey.withOpacity(0.08),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

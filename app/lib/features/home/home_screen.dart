@@ -7,6 +7,8 @@ import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../settings/widgets/settings_language_modal.dart';
+import '../search/widgets/quran_voice_search_sheet.dart';
+import '../search/quran_search_screen.dart';
 import 'widgets/home_date_header_card.dart';
 import 'widgets/home_next_prayer_card.dart';
 import 'widgets/home_quran_continue_card.dart';
@@ -79,6 +81,21 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               title: Text(context.tr('app_name')),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.mic_rounded),
+                  tooltip: 'البحث الصوتي عن الآيات',
+                  onPressed: () async {
+                    final query = await QuranVoiceSearchSheet.show(context);
+                    if (query != null && query.trim().isNotEmpty && mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuranSearchScreen(initialQuery: query.trim()),
+                        ),
+                      );
+                    }
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.language_rounded),
                   tooltip: context.tr('app_language'),
