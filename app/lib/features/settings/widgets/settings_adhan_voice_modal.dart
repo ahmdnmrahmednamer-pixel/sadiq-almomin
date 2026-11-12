@@ -65,31 +65,31 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
     {
       'name': 'الفجر',
       'icon': Icons.nights_stay_rounded,
-      'color': Color(0xFF1E293B),
+      'color': const Color(0xFF1E293B),
       'desc': 'أذان الفجر المبارك (نداء الصلاة خير من النوم)',
     },
     {
       'name': 'الظهر',
       'icon': Icons.wb_sunny_rounded,
-      'color': Color(0xFFEAB308),
+      'color': const Color(0xFFEAB308),
       'desc': 'أذان صلاة الظهر ودخول وقت الفريضة',
     },
     {
       'name': 'العصر',
       'icon': Icons.wb_twilight_rounded,
-      'color': Color(0xFFF97316),
+      'color': const Color(0xFFF97316),
       'desc': 'أذان صلاة العصر والصلاة الوسطى',
     },
     {
       'name': 'المغرب',
       'icon': Icons.mode_night_rounded,
-      'color': Color(0xFFDC2626),
+      'color': const Color(0xFFDC2626),
       'desc': 'أذان صلاة المغرب وحلول المساء والإفطار',
     },
     {
       'name': 'العشاء',
       'icon': Icons.dark_mode_rounded,
-      'color': Color(0xFF312E81),
+      'color': const Color(0xFF312E81),
       'desc': 'أذان صلاة العشاء والختام المبارك لليوم',
     },
   ];
@@ -163,7 +163,7 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                       width: 44,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.35),
+                        color: Colors.grey.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -178,13 +178,13 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryGreen.withOpacity(0.3),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -241,9 +241,9 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.12),
+                          color: AppColors.accentGold.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
                         ),
                         child: Row(
                           children: [
@@ -288,11 +288,11 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                             color: isDark ? const Color(0xFF1A2620) : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.primaryGreen.withOpacity(0.2),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.2),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -306,7 +306,7 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: (prayer['color'] as Color).withOpacity(0.14),
+                                      color: (prayer['color'] as Color).withValues(alpha: 0.14),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
@@ -354,7 +354,7 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                                         foregroundColor: isPlaying ? Colors.white : AppColors.primaryGreen,
                                         backgroundColor: isPlaying ? AppColors.primaryGreen : Colors.transparent,
                                         side: BorderSide(
-                                          color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.3),
+                                          color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.3),
                                         ),
                                         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -410,14 +410,14 @@ class _PrayerMuezzinManagerSheetState extends State<_PrayerMuezzinManagerSheet> 
                         decoration: BoxDecoration(
                           color: isDark ? const Color(0xFF1E2822) : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withOpacity(0.18),
+                                color: AppColors.accentGold.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.hourglass_bottom_rounded, color: AppColors.accentGold, size: 22),
@@ -619,7 +619,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.35),
+                    color: Colors.grey.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -635,7 +635,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.accentGold, AppColors.softGold.withOpacity(0.8)],
+                        colors: [AppColors.accentGold, AppColors.softGold.withValues(alpha: 0.8)],
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -732,7 +732,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                     color: isDark ? const Color(0xFF1B2B22) : const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.3),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -777,17 +777,18 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                     }
                                   },
                                 );
+                                if (!context.mounted) return;
                                 if (mounted) {
                                   setState(() {
                                     _isBatchDownloading = false;
                                   });
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('تم تنزيل جميع أصوات الأذان بجودة استوديو HD بنجاح! 🎉'),
-                                      backgroundColor: AppColors.primaryGreen,
-                                    ),
-                                  );
                                 }
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('تم تنزيل جميع أصوات الأذان بجودة استوديو HD بنجاح! 🎉'),
+                                    backgroundColor: AppColors.primaryGreen,
+                                  ),
+                                );
                               },
                             ),
                         ],
@@ -799,7 +800,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                           child: LinearProgressIndicator(
                             value: _batchTotalCount > 0 ? (_batchDownloadedCount / _batchTotalCount) : null,
                             color: AppColors.primaryGreen,
-                            backgroundColor: Colors.grey.withOpacity(0.2),
+                            backgroundColor: Colors.grey.withValues(alpha: 0.2),
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -840,7 +841,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primaryGreen.withOpacity(0.08)
+                                ? AppColors.primaryGreen.withValues(alpha: 0.08)
                                 : (isDark ? const Color(0xFF19251E) : Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -903,7 +904,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentGold.withOpacity(0.18),
+                                        color: AppColors.accentGold.withValues(alpha: 0.18),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Row(
@@ -929,7 +930,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryGreen.withOpacity(0.12),
+                                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Row(
@@ -948,7 +949,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.grey.withOpacity(0.12),
+                                      color: Colors.grey.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -961,7 +962,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981).withOpacity(0.14),
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.14),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: const Row(
@@ -991,9 +992,9 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: AppColors.accentGold.withOpacity(0.16),
+                                          color: AppColors.accentGold.withValues(alpha: 0.16),
                                           borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                                         ),
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -1023,7 +1024,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                                         foregroundColor: isPlaying ? Colors.white : AppColors.primaryGreen,
                                         backgroundColor: isPlaying ? AppColors.primaryGreen : Colors.transparent,
                                         side: BorderSide(
-                                          color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.3),
+                                          color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.3),
                                         ),
                                         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

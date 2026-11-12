@@ -6,7 +6,6 @@ import '../../../../core/services/settings_service.dart';
 import '../../../../core/services/tafsir_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
-import '../settings_font_size_modal.dart';
 import '../settings_reciter_modal.dart';
 import 'settings_section_header.dart';
 
@@ -246,7 +245,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           subtitle: const Text(
               'متابعة التلاوة والاستماع تباعاً دون توقف بعد انتهاء كل آية',
               style: TextStyle(fontSize: 12)),
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.autoPlayNextAyah,
           onChanged: (val) => s.toggleAutoPlayNextAyah(val),
@@ -260,7 +259,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           subtitle: const Text(
               'منع إطفاء الشاشة تلقائياً أثناء تلاوة القرآن ومتابعة الورد',
               style: TextStyle(fontSize: 12)),
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.keepScreenOn,
           onChanged: (val) => s.toggleKeepScreenOn(val),
@@ -273,7 +272,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           subtitle: const Text(
               'توفير باقة بيانات الجوال عند تنزيل السور الكاملة',
               style: TextStyle(fontSize: 12)),
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.downloadOverWifiOnly,
           onChanged: (val) => s.toggleDownloadOverWifiOnly(val),

@@ -128,7 +128,8 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
               tooltip: 'البحث الصوتي عن الآيات',
               onPressed: () async {
                 final query = await QuranVoiceSearchSheet.show(context);
-                if (query != null && query.trim().isNotEmpty && mounted) {
+                if (!mounted) return;
+                if (query != null && query.trim().isNotEmpty) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -203,7 +204,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                           borderRadius: BorderRadius.circular(14),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryGreen.withOpacity(0.2),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.2),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -214,7 +215,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withOpacity(0.25),
+                                color: AppColors.accentGold.withValues(alpha: 0.25),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.menu_book_rounded, color: AppColors.softGold, size: 24),
@@ -322,7 +323,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                   contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                                   filled: true,
-                                  fillColor: Colors.grey.withOpacity(0.06),
+                                  fillColor: Colors.grey.withValues(alpha: 0.06),
                                 ),
                               ),
                             ),
@@ -334,7 +335,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                   final surah = _filteredSurahs[index];
                                   return ListTile(
                                     leading: CircleAvatar(
-                                      backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
+                                      backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.08),
                                       child: Text(
                                         '${surah.id}',
                                         style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
@@ -386,7 +387,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                             final juz = _juzList[index];
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: AppColors.secondaryGreen.withOpacity(0.1),
+                                backgroundColor: AppColors.secondaryGreen.withValues(alpha: 0.1),
                                 child: Text(
                                   '${juz.id}',
                                   style: const TextStyle(color: AppColors.secondaryGreen, fontWeight: FontWeight.bold),
@@ -447,7 +448,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                     decoration: BoxDecoration(
                                       border: Border.all(color: AppColors.accentGold),
                                       borderRadius: BorderRadius.circular(10),
-                                      color: AppColors.accentGold.withOpacity(0.08),
+                                      color: AppColors.accentGold.withValues(alpha: 0.08),
                                     ),
                                     child: Text(
                                       _toArabicIndic(pageNum),
@@ -481,7 +482,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.bookmark_border_rounded, size: 64, color: Colors.grey.withOpacity(0.4)),
+                                    Icon(Icons.bookmark_border_rounded, size: 64, color: Colors.grey.withValues(alpha: 0.4)),
                                     const SizedBox(height: 12),
                                     const Text(
                                       'لا توجد علامات مرجعية محفوظة بعد',
@@ -571,9 +572,9 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.09),
+          color: color.withValues(alpha: 0.09),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

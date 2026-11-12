@@ -136,7 +136,7 @@ class _GharibQuranScreenState extends State<GharibQuranScreen>
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: AppColors.primaryGreen
-                                              .withOpacity(0.12),
+                                              .withValues(alpha: 0.12),
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
@@ -308,9 +308,9 @@ class _GharibQuranScreenState extends State<GharibQuranScreen>
                               if (isAnswered) {
                                 if (isCorrect) {
                                   tileColor =
-                                      Colors.green.withOpacity(0.15);
+                                      Colors.green.withValues(alpha: 0.15);
                                 } else if (isSelected) {
-                                  tileColor = Colors.red.withOpacity(0.15);
+                                  tileColor = Colors.red.withValues(alpha: 0.15);
                                 }
                               }
 
@@ -322,7 +322,7 @@ class _GharibQuranScreenState extends State<GharibQuranScreen>
                                   border: Border.all(
                                     color: isAnswered && isCorrect
                                         ? Colors.green
-                                        : Colors.grey.withOpacity(0.3),
+                                        : Colors.grey.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: ListTile(

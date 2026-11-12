@@ -38,7 +38,7 @@ class HomeKhatmaCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accentGold.withOpacity(0.35),
+                          color: AppColors.accentGold.withValues(alpha: 0.35),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -62,7 +62,7 @@ class HomeKhatmaCard extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -85,7 +85,7 @@ class HomeKhatmaCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: plan!.progressPercentage.clamp(0.0, 1.0),
-                              backgroundColor: Colors.grey.withOpacity(0.2),
+                              backgroundColor: Colors.grey.withValues(alpha: 0.2),
                               valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGold),
                               minHeight: 6,
                             ),
@@ -98,7 +98,7 @@ class HomeKhatmaCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.08),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),

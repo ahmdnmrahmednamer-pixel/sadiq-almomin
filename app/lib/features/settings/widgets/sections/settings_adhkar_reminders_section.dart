@@ -191,21 +191,21 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: isEnabled
-                ? AppColors.accentGold.withOpacity(0.5)
-                : Colors.grey.withOpacity(0.2),
+                ? AppColors.accentGold.withValues(alpha: 0.5)
+                : Colors.grey.withValues(alpha: 0.2),
             width: isEnabled ? 1.5 : 1.0,
           ),
         ),
         clipBehavior: Clip.antiAlias,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.04),
+        shadowColor: Colors.black.withValues(alpha: 0.04),
         child: Column(
           children: [
             SwitchListTile(
               secondary: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.15),
+                  color: accentColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: AppColors.accentGold, size: 22),
@@ -219,7 +219,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               value: isEnabled,
-              activeColor: AppColors.accentGold,
+              activeThumbColor: AppColors.accentGold,
               activeTrackColor: AppColors.primaryGreen,
               onChanged: onToggle,
             ),
@@ -252,10 +252,10 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.1),
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppColors.primaryGreen.withOpacity(0.3),
+                                    color: AppColors.primaryGreen.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Text(
@@ -308,7 +308,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                           child: ChoiceChip(
                             label: Text(preset.$3),
                             selected: isSelected,
-                            selectedColor: AppColors.accentGold.withOpacity(0.25),
+                            selectedColor: AppColors.accentGold.withValues(alpha: 0.25),
                             labelStyle: TextStyle(
                               fontSize: 11.5,
                               fontWeight: isSelected
@@ -321,7 +321,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                             side: BorderSide(
                               color: isSelected
                                   ? AppColors.accentGold
-                                  : Colors.grey.withOpacity(0.3),
+                                  : Colors.grey.withValues(alpha: 0.3),
                             ),
                             onSelected: (_) =>
                                 onSelectPreset(preset.$1, preset.$2),

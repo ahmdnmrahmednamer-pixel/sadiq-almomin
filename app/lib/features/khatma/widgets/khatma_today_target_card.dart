@@ -47,8 +47,8 @@ class KhatmaTodayTargetCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: plan.isBehindSchedule
-                            ? Colors.orange.withOpacity(0.15)
-                            : Colors.green.withOpacity(0.15),
+                            ? Colors.orange.withValues(alpha: 0.15)
+                            : Colors.green.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

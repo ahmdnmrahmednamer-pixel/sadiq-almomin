@@ -38,7 +38,7 @@ class _AudioTafsirScreenState extends State<AudioTafsirScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scholars = AudioTafsirService.scholars;
+    const scholars = AudioTafsirService.scholars;
     final activeScholar = scholars[_selectedScholarIndex];
 
     return Directionality(

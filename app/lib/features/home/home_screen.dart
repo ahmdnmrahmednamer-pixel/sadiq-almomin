@@ -87,7 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   tooltip: 'البحث الصوتي عن الآيات',
                   onPressed: () async {
                     final query = await QuranVoiceSearchSheet.show(context);
-                    if (query != null && query.trim().isNotEmpty && mounted) {
+                    if (!mounted) return;
+                    if (query != null && query.trim().isNotEmpty) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -134,20 +135,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDark
-                            ? [AppColors.night900, AppColors.emerald900.withOpacity(0.4)]
-                            : [AppColors.mint100.withOpacity(0.5), AppColors.paper50],
+                            ? [AppColors.night900, AppColors.emerald900.withValues(alpha: 0.4)]
+                            : [AppColors.mint100.withValues(alpha: 0.5), AppColors.paper50],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withOpacity(0.15),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.menu_open_rounded, color: AppColors.primaryGreen, size: 24),

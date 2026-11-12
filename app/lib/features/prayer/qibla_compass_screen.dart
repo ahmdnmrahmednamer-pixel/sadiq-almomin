@@ -215,19 +215,19 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                         ? [const Color(0xFF1B4332), const Color(0xFF2D6A4F)]
                         : (isDark
                             ? [AppColors.darkSurface, const Color(0xFF263238)]
-                            : [AppColors.primaryGreen.withOpacity(0.08), AppColors.softGold.withOpacity(0.18)]),
+                            : [AppColors.primaryGreen.withValues(alpha: 0.08), AppColors.softGold.withValues(alpha: 0.18)]),
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isAligned ? AppColors.accentGold : AppColors.accentGold.withOpacity(0.4),
+                    color: isAligned ? AppColors.accentGold : AppColors.accentGold.withValues(alpha: 0.4),
                     width: isAligned ? 2 : 1,
                   ),
                   boxShadow: isAligned
                       ? [
                           BoxShadow(
-                            color: AppColors.accentGold.withOpacity(0.4),
+                            color: AppColors.accentGold.withValues(alpha: 0.4),
                             blurRadius: 16,
                             spreadRadius: 2,
                           ),
@@ -307,7 +307,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                       : null,
                   color: isAligned
                       ? null
-                      : (isDark ? Colors.white10 : Colors.black.withOpacity(0.04)),
+                      : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04)),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isAligned ? AppColors.accentGold : Colors.transparent,
@@ -316,7 +316,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                   boxShadow: isAligned
                       ? [
                           BoxShadow(
-                            color: AppColors.accentGold.withOpacity(0.35),
+                            color: AppColors.accentGold.withValues(alpha: 0.35),
                             blurRadius: 12,
                             spreadRadius: 1,
                           ),
@@ -372,8 +372,8 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                           boxShadow: [
                             BoxShadow(
                               color: isAligned
-                                  ? AppColors.accentGold.withOpacity(0.3)
-                                  : Colors.black.withOpacity(0.08),
+                                  ? AppColors.accentGold.withValues(alpha: 0.3)
+                                  : Colors.black.withValues(alpha: 0.08),
                               blurRadius: 24,
                               spreadRadius: 2,
                             ),
@@ -435,7 +435,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentGold.withOpacity(0.5),
+                                  color: AppColors.accentGold.withValues(alpha: 0.5),
                                   blurRadius: 8,
                                 ),
                               ],
@@ -462,7 +462,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                         border: Border.all(color: Colors.white, width: 2.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 6,
                           ),
                         ],

@@ -382,9 +382,9 @@ class _ZakatScreenState extends State<ZakatScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.accentGold.withOpacity(0.12),
+        color: AppColors.accentGold.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
@@ -434,8 +434,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
           borderRadius: BorderRadius.circular(18),
           gradient: LinearGradient(
             colors: reached
-                ? [AppColors.primaryGreen.withOpacity(0.08), AppColors.accentGold.withOpacity(0.12)]
-                : [Colors.grey.withOpacity(0.06), Colors.grey.withOpacity(0.1)],
+                ? [AppColors.primaryGreen.withValues(alpha: 0.08), AppColors.accentGold.withValues(alpha: 0.12)]
+                : [Colors.grey.withValues(alpha: 0.06), Colors.grey.withValues(alpha: 0.1)],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
@@ -528,7 +528,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.accentGold.withOpacity(0.15),
+                  color: AppColors.accentGold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -577,7 +577,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
@@ -701,14 +701,14 @@ class _ZakatScreenState extends State<ZakatScreen> {
         labelStyle: const TextStyle(fontSize: 12),
         hintText: hint,
         filled: true,
-        fillColor: AppColors.primaryGreen.withOpacity(0.04),
+        fillColor: AppColors.primaryGreen.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -724,9 +724,9 @@ class _ZakatScreenState extends State<ZakatScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.primaryGreen.withOpacity(0.06),
+        color: AppColors.primaryGreen.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
       ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,

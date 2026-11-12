@@ -113,7 +113,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.25),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.25),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -124,7 +124,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
+                          color: Colors.white.withValues(alpha: 0.18),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.headphones_rounded, color: AppColors.accentGold, size: 28),
@@ -146,7 +146,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                             Text(
                               'بصوت فضيلة الشيخ نبيل العوضي — قابلة للاستماع والتحميل أوفلاين',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 11.5,
                               ),
                             ),
@@ -166,7 +166,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade200),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -326,7 +326,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onTap(),
-      selectedColor: AppColors.primaryGreen.withOpacity(0.18),
+      selectedColor: AppColors.primaryGreen.withValues(alpha: 0.18),
       checkmarkColor: AppColors.primaryGreen,
       labelStyle: TextStyle(
         fontSize: 12.5,
@@ -341,10 +341,10 @@ class _StoriesScreenState extends State<StoriesScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentGold.withOpacity(0.08),
+            color: AppColors.accentGold.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -371,7 +371,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.accentGold.withOpacity(0.15),
+                        color: AppColors.accentGold.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Row(
@@ -450,12 +450,12 @@ class _StoriesScreenState extends State<StoriesScreen> {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDownloaded
-              ? Colors.green.withOpacity(0.3)
+              ? Colors.green.withValues(alpha: 0.3)
               : (isDark ? Colors.white10 : Colors.grey.shade200),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -483,8 +483,8 @@ class _StoriesScreenState extends State<StoriesScreen> {
                     CircleAvatar(
                       radius: 22,
                       backgroundColor: story.isUluAlAzm
-                          ? AppColors.accentGold.withOpacity(0.18)
-                          : AppColors.primaryGreen.withOpacity(0.1),
+                          ? AppColors.accentGold.withValues(alpha: 0.18)
+                          : AppColors.primaryGreen.withValues(alpha: 0.1),
                       child: Icon(
                         story.isUluAlAzm ? Icons.auto_awesome : Icons.record_voice_over_rounded,
                         color: story.isUluAlAzm ? const Color(0xFFB8860B) : AppColors.primaryGreen,
@@ -514,7 +514,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                                   margin: const EdgeInsets.only(right: 6),
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentGold.withOpacity(0.15),
+                                    color: AppColors.accentGold.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
@@ -568,9 +568,9 @@ class _StoriesScreenState extends State<StoriesScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.12),
+                          color: Colors.green.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.green.withOpacity(0.4)),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -661,7 +661,8 @@ class _StoriesScreenState extends State<StoriesScreen> {
                             tooltip: 'تحميل القصة للاستماع دون إنترنت',
                             onPressed: () async {
                               final ok = await service.downloadStory(story.id);
-                              if (ok && mounted) {
+                              if (!mounted) return;
+                              if (ok) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('تم تنزيل ${story.characterName} بنجاح للاستماع دون إنترنت')),
                                 );

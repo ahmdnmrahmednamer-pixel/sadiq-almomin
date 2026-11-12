@@ -178,10 +178,10 @@ class MomenDuaaScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: Column(
+                        child: const Column(
                           children: [
                             // اسم مؤمن إبراهيم بلون أبيض ناصع وخط كبير مميز
-                            const Text(
+                            Text(
                               'مُؤْمِن إِبْرَاهِيم رحمهُ الله',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -197,9 +197,9 @@ class MomenDuaaScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: 6),
                             // صيغة «الله يرحمه»
-                            const Text(
+                            Text(
                               '«الله يرحمه ويغفر له ويسكنه فسيح جناته»',
                               textAlign: TextAlign.center,
                               style: TextStyle(

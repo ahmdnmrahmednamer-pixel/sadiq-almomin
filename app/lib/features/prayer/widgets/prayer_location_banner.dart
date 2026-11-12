@@ -53,7 +53,7 @@ class PrayerLocationBanner extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4ADE80).withOpacity(0.18),
+                        color: const Color(0xFF4ADE80).withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: const Color(0xFF4ADE80), width: 1),
                       ),
@@ -82,7 +82,7 @@ class PrayerLocationBanner extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),

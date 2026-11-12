@@ -223,7 +223,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(isDark ? 0.35 : 0.05),
+                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, -2),
                             ),
@@ -237,7 +237,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                           elevation: 0,
                           backgroundColor: Colors.transparent,
                           indicatorColor: AppColors.primaryGreen
-                              .withOpacity(isDark ? 0.28 : 0.15),
+                              .withValues(alpha: isDark ? 0.28 : 0.15),
                           labelBehavior:
                               NavigationDestinationLabelBehavior.alwaysShow,
                           destinations: [

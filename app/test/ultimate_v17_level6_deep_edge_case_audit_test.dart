@@ -6,12 +6,6 @@ import 'package:almomin/core/services/backup_restore_service.dart';
 import 'package:almomin/core/services/gharib_quran_service.dart';
 import 'package:almomin/core/services/hadith_service.dart';
 import 'package:almomin/core/services/hajj_umrah_service.dart';
-import 'package:almomin/core/services/islamic_mutoon_service.dart';
-import 'package:almomin/core/services/ramadan_service.dart';
-import 'package:almomin/core/services/riyad_alsalihin_service.dart';
-import 'package:almomin/core/services/stories_service.dart';
-import 'package:almomin/core/services/tajweed_service.dart';
-import 'package:almomin/core/services/voluntary_fasting_service.dart';
 import 'package:almomin/core/text/arabic_normalizer.dart';
 
 void main() {

@@ -77,9 +77,9 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.06),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                   ),
                   child: Column(
                     children: [
@@ -110,7 +110,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                   decoration: BoxDecoration(
                     color: isDark ? AppColors.darkCard : const Color(0xFFFBFBFB),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -190,7 +190,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.3),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -214,7 +214,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                       TextButton.icon(
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          backgroundColor: Colors.white.withOpacity(0.12),
+                          backgroundColor: Colors.white.withValues(alpha: 0.12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         icon: const Icon(Icons.my_location_rounded, size: 14, color: AppColors.softGold),
@@ -241,9 +241,9 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.5)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -335,10 +335,10 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               decoration: BoxDecoration(
                 color: isEven
-                    ? (isDark ? Colors.white.withOpacity(0.03) : const Color(0xFFF7FBF8))
+                    ? (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF7FBF8))
                     : (isDark ? Colors.transparent : Colors.white),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
               ),
               child: Row(
                 children: [
@@ -347,7 +347,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withOpacity(0.12),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -373,7 +373,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.accentGold.withOpacity(0.16),
+                        color: AppColors.accentGold.withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -413,12 +413,12 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.primaryGreen.withOpacity(0.12),
-                    AppColors.accentGold.withOpacity(0.1),
+                    AppColors.primaryGreen.withValues(alpha: 0.12),
+                    AppColors.accentGold.withValues(alpha: 0.1),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,7 +430,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.2),
+                          color: AppColors.accentGold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text('${(progress * 100).toInt()}% مكتمل', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 12)),
@@ -443,7 +443,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                     child: LinearProgressIndicator(
                       value: progress.clamp(0.0, 1.0),
                       minHeight: 8,
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGold),
                     ),
                   ),
@@ -479,7 +479,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                         height: 38,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: isFasted ? AppColors.primaryGreen : AppColors.primaryGreen.withOpacity(0.08),
+                          color: isFasted ? AppColors.primaryGreen : AppColors.primaryGreen.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -560,7 +560,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
 
   // 3. Ramadan Supplications Tab
   Widget _buildDuaaTab() {
-    final supplications = RamadanService.supplications;
+    const supplications = RamadanService.supplications;
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -580,7 +580,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.18),
+                          color: AppColors.accentGold.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -620,9 +620,9 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.06),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.15)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.15)),
                     ),
                     child: Text(
                       '«${duaa.arabicText}»',
@@ -651,9 +651,9 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.primaryGreen.withOpacity(0.06),
+            color: AppColors.primaryGreen.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
           ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,

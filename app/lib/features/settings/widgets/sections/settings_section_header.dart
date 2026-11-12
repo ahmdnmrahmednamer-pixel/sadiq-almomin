@@ -21,7 +21,7 @@ class SettingsSectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.12),
+              color: AppColors.primaryGreen.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: AppColors.primaryGreen, size: 18),

@@ -47,10 +47,10 @@ class PrayerTrackerOverviewCard extends StatelessWidget {
                               gradient: LinearGradient(
                                 colors: isDark
                                     ? [const Color(0xFF1E3A2E), const Color(0xFF162920)]
-                                    : [AppColors.primaryGreen.withOpacity(0.15), AppColors.emeraldLight.withOpacity(0.1)],
+                                    : [AppColors.primaryGreen.withValues(alpha: 0.15), AppColors.emeraldLight.withValues(alpha: 0.1)],
                               ),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                              border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                             ),
                             child: const Icon(Icons.fact_check_rounded, color: AppColors.primaryGreen, size: 22),
                           ),
@@ -64,9 +64,9 @@ class PrayerTrackerOverviewCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.08),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -148,9 +148,9 @@ class PrayerQiblaOverviewCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.accentGold.withOpacity(0.2),
+                            color: AppColors.accentGold.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                           ),
                           child: const Text('بوصلة تفاعلية 🧭', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.primaryGreen)),
                         ),
@@ -173,7 +173,7 @@ class PrayerQiblaOverviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accentGold.withOpacity(0.35),
+                      color: AppColors.accentGold.withValues(alpha: 0.35),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -232,7 +232,7 @@ class PrayerZakatOverviewCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withOpacity(0.12),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('ركن الإسلام 💰', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.primaryGreen)),
@@ -250,9 +250,9 @@ class PrayerZakatOverviewCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.1),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.25), width: 1.2),
+                  border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25), width: 1.2),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -307,7 +307,7 @@ class PrayerRamadanOverviewCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.accentGold.withOpacity(0.18),
+                            color: AppColors.accentGold.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text('شهر القرآن 🌙', style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: AppColors.primaryGreen)),
@@ -331,7 +331,7 @@ class PrayerRamadanOverviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accentGold.withOpacity(0.35),
+                      color: AppColors.accentGold.withValues(alpha: 0.35),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -367,7 +367,7 @@ class PrayerBatteryOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      color: AppColors.primaryGreen.withOpacity(0.04),
+      color: AppColors.primaryGreen.withValues(alpha: 0.04),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: const BorderSide(color: AppColors.accentGold, width: 1.4),
@@ -393,7 +393,7 @@ class PrayerBatteryOverviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryGreen.withOpacity(0.3),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.3),
                       blurRadius: 6,
                     ),
                   ],
@@ -433,7 +433,7 @@ class PrayerBatteryOverviewCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.08),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),

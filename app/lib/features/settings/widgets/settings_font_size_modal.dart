@@ -25,7 +25,7 @@ void showSettingsFontSizeModal(BuildContext context) {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -45,9 +45,9 @@ void showSettingsFontSizeModal(BuildContext context) {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.06),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                     ),
                     child: Text(
                       'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
@@ -71,7 +71,7 @@ void showSettingsFontSizeModal(BuildContext context) {
                           max: 38.0,
                           divisions: 10,
                           activeColor: AppColors.primaryGreen,
-                          inactiveColor: AppColors.accentGold.withOpacity(0.4),
+                          inactiveColor: AppColors.accentGold.withValues(alpha: 0.4),
                           onChanged: (val) {
                             setLocalState(() {});
                             SettingsService.instance.setMushafFontSize(val);
@@ -84,7 +84,7 @@ void showSettingsFontSizeModal(BuildContext context) {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.2),
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text('${currentSize.toInt()} نقطة', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 13)),

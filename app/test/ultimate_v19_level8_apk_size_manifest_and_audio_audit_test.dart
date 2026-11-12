@@ -20,7 +20,7 @@ void main() {
           .toList();
       expect(testFiles.length, greaterThanOrEqualTo(65));
 
-      final legacyPrefix = 'package:noor_' 'almomin/';
+      const legacyPrefix = 'package:noor_' 'almomin/';
       for (final tf in testFiles) {
         final content = tf.readAsStringSync();
         expect(
@@ -60,7 +60,7 @@ void main() {
     });
 
     test('4. IslamicAudioService maps rawNotificationSound for adhan_aqsa, adhan_hussary, iqamah_madinah, and iqamah_short', () {
-      final tracks = IslamicAudioService.allTracks;
+      const tracks = IslamicAudioService.allTracks;
       final aqsa = tracks.firstWhere((t) => t.id == 'adhan_aqsa');
       final hussary = tracks.firstWhere((t) => t.id == 'adhan_hussary');
       final iqMadinah = tracks.firstWhere((t) => t.id == 'iqamah_madinah');

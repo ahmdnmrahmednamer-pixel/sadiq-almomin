@@ -121,13 +121,13 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.06),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                 ),
-                child: SelectableText(
+                child: const SelectableText(
                   SupportService.developerEmail,
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                 ),
               ),
             ],
@@ -186,14 +186,14 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.accentGold.withOpacity(0.18),
-                        AppColors.primaryGreen.withOpacity(0.08),
+                        AppColors.accentGold.withValues(alpha: 0.18),
+                        AppColors.primaryGreen.withValues(alpha: 0.08),
                       ],
                       begin: Alignment.topRight,
                       end: Alignment.bottomLeft,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                   ),
                   child: Column(
                     children: [
@@ -231,7 +231,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.primaryGreen.withOpacity(0.25)),
+                            border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
                           ),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

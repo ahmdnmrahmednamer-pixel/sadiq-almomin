@@ -80,7 +80,7 @@ void main() {
     });
 
     test('AppLocalizations.delegate supports ar and en', () {
-      final delegate = AppLocalizations.delegate;
+      const delegate = AppLocalizations.delegate;
       expect(delegate.isSupported(const Locale('ar')), isTrue);
       expect(delegate.isSupported(const Locale('en')), isTrue);
       expect(delegate.isSupported(const Locale('es')), isFalse);

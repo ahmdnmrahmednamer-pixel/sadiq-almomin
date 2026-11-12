@@ -1,7 +1,6 @@
 import '../../../core/services/settings_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/services/islamic_audio_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -97,7 +96,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -158,7 +157,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -179,9 +178,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.12),
+                    color: AppColors.accentGold.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -212,7 +211,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                     return ActionChip(
                       avatar: const Icon(Icons.timer_outlined, size: 16),
                       label: Text('$mins دقيقة'),
-                      backgroundColor: isSel ? AppColors.accentGold.withOpacity(0.3) : null,
+                      backgroundColor: isSel ? AppColors.accentGold.withValues(alpha: 0.3) : null,
                       onPressed: () {
                         _audioService.setSleepTimer(mins);
                         Navigator.pop(ctx);
@@ -270,7 +269,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 width: 44,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -285,7 +284,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -317,7 +316,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                 shape: BoxShape.circle,
                                 color: isCurrent
                                     ? AppColors.accentGold
-                                    : AppColors.primaryGreen.withOpacity(0.12),
+                                    : AppColors.primaryGreen.withValues(alpha: 0.12),
                               ),
                               child: Icon(
                                 isCurrent ? Icons.volume_up_rounded : Icons.audiotrack_rounded,
@@ -404,7 +403,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 25,
               offset: const Offset(0, -6),
             ),
@@ -456,7 +455,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.06),
+                                      color: Colors.white.withValues(alpha: 0.06),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Text(
@@ -504,12 +503,12 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryGreen.withOpacity(0.4),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.4),
                                 blurRadius: 24,
                                 spreadRadius: 4,
                               ),
                               BoxShadow(
-                                color: AppColors.accentGold.withOpacity(0.2),
+                                color: AppColors.accentGold.withValues(alpha: 0.2),
                                 blurRadius: 14,
                               ),
                             ],
@@ -524,7 +523,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: AppColors.accentGold.withOpacity(0.35),
+                                    color: AppColors.accentGold.withValues(alpha: 0.35),
                                     width: 1.5,
                                   ),
                                 ),
@@ -587,9 +586,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.2),
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.4)),
+                                  border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.4)),
                                 ),
                                 child: Text(
                                   track.categoryAr ?? 'محتوى إسلامي',
@@ -603,9 +602,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.18),
+                                  color: Colors.amber.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                                 ),
                                 child: Text(
                                   track.quality,
@@ -620,9 +619,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.2),
+                                    color: Colors.green.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: Colors.green.withOpacity(0.4)),
+                                    border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
                                   ),
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -655,7 +654,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               activeTrackColor: AppColors.accentGold,
                               inactiveTrackColor: Colors.white12,
                               thumbColor: AppColors.accentGold,
-                              overlayColor: AppColors.accentGold.withOpacity(0.2),
+                              overlayColor: AppColors.accentGold.withValues(alpha: 0.2),
                               trackHeight: 4.5,
                               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                             ),
@@ -677,7 +676,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                   _formatDuration(pos),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -685,7 +684,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                   _formatDuration(dur),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -739,7 +738,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentGold.withOpacity(0.4),
+                                  color: AppColors.accentGold.withValues(alpha: 0.4),
                                   blurRadius: 16,
                                   spreadRadius: 2,
                                 ),
@@ -806,9 +805,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -862,7 +861,8 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                     ? null
                                     : () async {
                                         final ok = await _audioService.downloadTrack(track.id);
-                                        if (mounted && ok) {
+                                        if (!mounted) return;
+                                        if (ok) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('تم اكتمال التحميل للاستخدام أوفلاين ✓')),
                                           );

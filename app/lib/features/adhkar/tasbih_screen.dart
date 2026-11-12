@@ -358,13 +358,13 @@ class _TasbihScreenState extends State<TasbihScreen>
                                       const Color(0xFF1E2B24)
                                     ]
                                   : [
-                                      AppColors.primaryGreen.withOpacity(0.08),
-                                      AppColors.softGold.withOpacity(0.15)
+                                      AppColors.primaryGreen.withValues(alpha: 0.08),
+                                      AppColors.softGold.withValues(alpha: 0.15)
                                     ],
                             ),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.accentGold.withOpacity(0.4),
+                              color: AppColors.accentGold.withValues(alpha: 0.4),
                               width: 1,
                             ),
                           ),
@@ -454,7 +454,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: AppColors.primaryGreen.withOpacity(0.28),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.28),
                               ),
                             ),
                             child: Column(
@@ -480,7 +480,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                                       height: 28,
                                       child: Switch(
                                         value: volumeBtnEnabled,
-                                        activeColor: AppColors.accentGold,
+                                        activeThumbColor: AppColors.accentGold,
                                         activeTrackColor:
                                             AppColors.primaryGreen,
                                         onChanged: (val) {
@@ -509,10 +509,10 @@ class _TasbihScreenState extends State<TasbihScreen>
                                               AppColors.primaryGreen,
                                           inactiveTrackColor: AppColors
                                               .primaryGreen
-                                              .withOpacity(0.18),
+                                              .withValues(alpha: 0.18),
                                           thumbColor: AppColors.accentGold,
                                           overlayColor: AppColors.accentGold
-                                              .withOpacity(0.2),
+                                              .withValues(alpha: 0.2),
                                           trackHeight: 6,
                                         ),
                                         child: Slider(
@@ -540,7 +540,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                                         decoration: BoxDecoration(
                                           color: volumeBtnEnabled
                                               ? AppColors.primaryGreen
-                                              : Colors.grey.withOpacity(0.3),
+                                              : Colors.grey.withValues(alpha: 0.3),
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),

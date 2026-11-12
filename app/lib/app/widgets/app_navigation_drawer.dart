@@ -485,7 +485,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                     height: 48,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: AppColors.accentGold.withOpacity(0.18),
+                                      color: AppColors.accentGold.withValues(alpha: 0.18),
                                       border: Border.all(color: AppColors.accentGold, width: 2),
                                     ),
                                     child: const Icon(
@@ -528,9 +528,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.25),
+                                  color: Colors.black.withValues(alpha: 0.25),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+                                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
                                 ),
                                 child: const Row(
                                   children: [
@@ -580,7 +580,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   )
                                 : null,
                             filled: true,
-                            fillColor: isDark ? Colors.white.withOpacity(0.06) : Colors.grey.shade100,
+                            fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade100,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -745,10 +745,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: isDark
-              ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.35)
-              : theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
+              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
           border: Border.all(
-            color: color.withOpacity(0.2),
+            color: color.withValues(alpha: 0.2),
             width: 1.2,
           ),
         ),
@@ -762,9 +762,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.14),
+                color: color.withValues(alpha: 0.14),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.35)),
+                border: Border.all(color: color.withValues(alpha: 0.35)),
               ),
               child: Icon(icon, color: color, size: 20),
             ),

@@ -68,12 +68,12 @@ class QuranHubScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.accentGold.withOpacity(0.4),
+                  color: AppColors.accentGold.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.35 : 0.1),
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

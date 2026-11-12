@@ -192,7 +192,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
 
     final Color frameColor = isSepia
         ? const Color(0xFFC9A84D)
-        : (isDark ? AppColors.accentGold.withOpacity(0.4) : AppColors.accentGold);
+        : (isDark ? AppColors.accentGold.withValues(alpha: 0.4) : AppColors.accentGold);
 
     final Color textColor = isSepia
         ? const Color(0xFF262019)
@@ -302,16 +302,16 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E2522).withOpacity(0.95) : Colors.white.withOpacity(0.95),
+                      color: isDark ? const Color(0xFF1E2522).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
                       ],
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -390,7 +390,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                 border: Border.all(color: frameColor, width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -423,7 +423,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                       ],
                     ),
                   ),
-                  Divider(color: frameColor.withOpacity(0.4), height: 1, thickness: 1),
+                  Divider(color: frameColor.withValues(alpha: 0.4), height: 1, thickness: 1),
                   const SizedBox(height: 8),
 
                   // Page Content
@@ -438,7 +438,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
 
                   // Page Footer: Page Number in Arabic Ornament
                   const SizedBox(height: 6),
-                  Divider(color: frameColor.withOpacity(0.4), height: 1, thickness: 1),
+                  Divider(color: frameColor.withValues(alpha: 0.4), height: 1, thickness: 1),
                   const SizedBox(height: 6),
                   Center(
                     child: Container(
@@ -446,7 +446,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                       decoration: BoxDecoration(
                         border: Border.all(color: frameColor, width: 1.2),
                         borderRadius: BorderRadius.circular(12),
-                        color: frameColor.withOpacity(0.12),
+                        color: frameColor.withValues(alpha: 0.12),
                       ),
                       child: Text(
                         '﴿ ${_toArabicIndic(pageNum)} ﴾',
@@ -587,7 +587,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                     fontSize: _fontSize,
                     height: 2.1,
                     color: isPlaying ? AppColors.accentGold : textColor,
-                    backgroundColor: isPlaying ? AppColors.accentGold.withOpacity(0.18) : Colors.transparent,
+                    backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : Colors.transparent,
                     fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
                     fontFamilyFallback: const [
                       'Traditional Arabic',

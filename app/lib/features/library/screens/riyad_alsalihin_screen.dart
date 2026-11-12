@@ -102,7 +102,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                       end: Alignment.bottomLeft,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.5)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +112,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withOpacity(0.2),
+                              color: AppColors.accentGold.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.menu_book_rounded, color: AppColors.accentGold, size: 24),
@@ -213,7 +213,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                     fillColor: isDark ? const Color(0xFF16201C) : Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.primaryGreen.withOpacity(0.25)),
+                      borderSide: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
                     ),
                   ),
                   onChanged: (val) => setState(() => _searchQuery = val),
@@ -258,7 +258,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: BorderSide(
-            color: AppColors.accentGold.withOpacity(0.35),
+            color: AppColors.accentGold.withValues(alpha: 0.35),
           ),
         ),
         child: Padding(
@@ -273,7 +273,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -324,7 +324,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.10),
+                    color: AppColors.accentGold.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -345,7 +345,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF151E1A) : const Color(0xFFF9FBF9),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.primaryGreen.withOpacity(0.18)),
+                  border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.18)),
                 ),
                 child: Text(
                   entry.arabicMatn,
@@ -367,7 +367,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.08),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -378,7 +378,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.18),
+                      color: AppColors.accentGold.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -398,7 +398,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.04) : Colors.amber.withOpacity(0.06),
+                  color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.amber.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(

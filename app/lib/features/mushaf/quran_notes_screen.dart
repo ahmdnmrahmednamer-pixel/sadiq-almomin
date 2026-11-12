@@ -120,9 +120,9 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD4AF37).withOpacity(0.12),
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
+                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
                   ),
                   child: const Row(
                     children: [
@@ -157,7 +157,7 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withOpacity(0.12),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.rate_review_rounded, color: AppColors.primaryGreen, size: 24),
@@ -213,7 +213,7 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                             )
                           : null,
                       filled: true,
-                      fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.06),
+                      fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.06),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -305,7 +305,7 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: AppColors.primaryGreen.withOpacity(0.12),
+                                        color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -336,9 +336,9 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.04),
+                                color: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.04),
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: AppColors.accentGold.withOpacity(0.25)),
+                                border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.25)),
                               ),
                               child: Text(
                                 '﴿${note.ayahText}﴾',

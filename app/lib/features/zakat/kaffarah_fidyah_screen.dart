@@ -158,10 +158,10 @@ class _KaffarahFidyahScreenState extends State<KaffarahFidyahScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.08),
+                color: AppColors.primaryGreen.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                    color: AppColors.primaryGreen.withOpacity(0.35), width: 1.5),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.35), width: 1.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +207,7 @@ class _KaffarahFidyahScreenState extends State<KaffarahFidyahScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

@@ -66,7 +66,7 @@ class MemorizationAyahCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: isCurrentPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.12),
+                        color: isCurrentPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -101,7 +101,7 @@ class MemorizationAyahCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: memItem.leitnerBox >= 3 ? Colors.green.withOpacity(0.15) : Colors.amber.withOpacity(0.15),
+                      color: memItem.leitnerBox >= 3 ? Colors.green.withValues(alpha: 0.15) : Colors.amber.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -139,9 +139,9 @@ class MemorizationAyahCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(isDark ? 0.25 : 0.15),
+                        color: Colors.grey.withValues(alpha: isDark ? 0.25 : 0.15),
                         borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey.withOpacity(0.35)),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.35)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -174,7 +174,7 @@ class MemorizationAyahCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                     decoration: BoxDecoration(
-                      color: isRevealed ? AppColors.accentGold.withOpacity(0.2) : Colors.transparent,
+                      color: isRevealed ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -197,7 +197,7 @@ class MemorizationAyahCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.02),
+                color: Colors.black.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

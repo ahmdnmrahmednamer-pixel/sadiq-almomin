@@ -137,10 +137,10 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF14241C) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -180,7 +180,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withOpacity(0.08),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: DropdownButtonHideUnderline(
@@ -228,7 +228,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                           end: Alignment.bottomLeft,
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                       ),
                       child: Column(
                         children: [
@@ -247,9 +247,9 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                                 ),
                                 child: Text(
                                   'الآية $_selectedAyah',
@@ -285,11 +285,11 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                         color: isDark ? const Color(0xFF14241C) : Colors.white,
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: AppColors.primaryGreen.withOpacity(0.25),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.25),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -303,7 +303,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.12),
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Icon(
@@ -327,9 +327,9 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.15),
+                                    color: Colors.amber.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                                    border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                                   ),
                                   child: const Text(
                                     'واقعة خاصة',
@@ -357,7 +357,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                             decoration: BoxDecoration(
                               color: isDark ? const Color(0xFF0F241A) : const Color(0xFFF4F7F4),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                             ),
                             child: Row(
                               children: [
@@ -388,7 +388,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF14241C) : const Color(0xFFF9FBF9),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                       ),
                       child: const Row(
                         crossAxisAlignment: CrossAxisAlignment.start,

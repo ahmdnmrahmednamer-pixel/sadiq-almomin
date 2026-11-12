@@ -212,7 +212,7 @@ void main() {
       double f(double v) {
         return v <= 0.03928 ? v / 12.92 : _mathPow((v + 0.055) / 1.055, 2.4);
       }
-      return 0.2126 * f(c.red / 255.0) + 0.7152 * f(c.green / 255.0) + 0.0722 * f(c.blue / 255.0);
+      return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
     }
 
     double contrastRatio(Color fg, Color bg) {

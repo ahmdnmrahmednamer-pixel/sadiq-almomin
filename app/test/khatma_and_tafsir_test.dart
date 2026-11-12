@@ -194,7 +194,7 @@ void main() {
     });
 
     test('Formats Tafsir attribution for copy and share per FR-TAF-005', () {
-      final res = TafsirResult(
+      const res = TafsirResult(
         editionId: 'saadi',
         editionName: 'تفسير السعدي',
         author: 'الشيخ عبد الرحمن السعدي',

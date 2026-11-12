@@ -115,7 +115,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
               width: 48,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.4),
+                color: Colors.grey.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -128,7 +128,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 22),
@@ -142,9 +142,9 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                           'سورة ${widget.surah.nameAr} — آية ${_toArabicIndic(widget.ayah.ayahNumber)}',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                         ),
-                        Text(
+                        const Text(
                           'إعراب القرآن · أسباب النزول · الغريب · البلاغة',
-                          style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
+                          style: TextStyle(fontSize: 12, color: AppColors.mutedText),
                         ),
                       ],
                     ),
@@ -180,9 +180,9 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.05),
+                color: AppColors.primaryGreen.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
               ),
               child: Text(
                 '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾',
@@ -247,7 +247,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF18221E) : Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+                border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
               ),
               child: Row(
                 children: [
@@ -333,7 +333,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.2),
+                          color: AppColors.accentGold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -380,13 +380,13 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: asbab.hasSpecificIncident
-                    ? AppColors.primaryGreen.withOpacity(0.08)
-                    : Colors.amber.withOpacity(0.1),
+                    ? AppColors.primaryGreen.withValues(alpha: 0.08)
+                    : Colors.amber.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: asbab.hasSpecificIncident
-                      ? AppColors.primaryGreen.withOpacity(0.3)
-                      : Colors.amber.shade700.withOpacity(0.3),
+                      ? AppColors.primaryGreen.withValues(alpha: 0.3)
+                      : Colors.amber.shade700.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -427,7 +427,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -458,9 +458,9 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.06),
+                color: AppColors.primaryGreen.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,9 +513,9 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.accentGold.withOpacity(0.08),
+            color: AppColors.accentGold.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

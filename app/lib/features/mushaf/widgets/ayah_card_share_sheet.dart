@@ -128,7 +128,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                     width: 44,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.35),
+                      color: Colors.grey.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -141,7 +141,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withOpacity(0.15),
+                              color: AppColors.accentGold.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Icon(Icons.brush_rounded, color: AppColors.accentGold, size: 20),
@@ -245,9 +245,9 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                                   Text(t.nameAr),
                                 ],
                               ),
-                              selectedColor: AppColors.primaryGreen.withOpacity(0.15),
+                              selectedColor: AppColors.primaryGreen.withValues(alpha: 0.15),
                               side: BorderSide(
-                                color: isSelected ? AppColors.primaryGreen : Colors.grey.withOpacity(0.3),
+                                color: isSelected ? AppColors.primaryGreen : Colors.grey.withValues(alpha: 0.3),
                                 width: isSelected ? 1.5 : 1.0,
                               ),
                               onSelected: (_) {
@@ -284,7 +284,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                         ),
                         child: Column(
                           children: [
@@ -293,7 +293,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                               title: const Text('تضمين التفسير الميسر للآية', style: TextStyle(fontSize: 13.5)),
                               subtitle: const Text('إظهار بيان موجز لمعنى الآية الكريمة أسفل النص', style: TextStyle(fontSize: 11.5)),
                               value: _includeTafsir,
-                              activeColor: AppColors.primaryGreen,
+                              activeThumbColor: AppColors.primaryGreen,
                               onChanged: (val) => setState(() => _includeTafsir = val),
                             ),
                             const Divider(height: 1),
@@ -301,7 +301,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                               dense: true,
                               title: const Text('ترويسة اسم السورة ورقم الآية', style: TextStyle(fontSize: 13.5)),
                               value: _includeSurahHeader,
-                              activeColor: AppColors.primaryGreen,
+                              activeThumbColor: AppColors.primaryGreen,
                               onChanged: (val) => setState(() => _includeSurahHeader = val),
                             ),
                             const Divider(height: 1),
@@ -310,7 +310,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                               title: const Text('إظهار توقيع تطبيق نور المؤمن أسفل البطاقة', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                               subtitle: const Text('تطبيق نور المؤمن بدون إعلانات وبدون إنترنت', style: TextStyle(fontSize: 11.5)),
                               value: _includeDedication,
-                              activeColor: AppColors.primaryGreen,
+                              activeThumbColor: AppColors.primaryGreen,
                               onChanged: (val) => setState(() => _includeDedication = val),
                             ),
                           ],
@@ -329,7 +329,7 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                 color: theme.scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 8,
                     offset: const Offset(0, -2),
                   ),
@@ -393,10 +393,10 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryGreen.withOpacity(0.12) : Colors.transparent,
+            color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.12) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? AppColors.primaryGreen : Colors.grey.withOpacity(0.3),
+              color: isSelected ? AppColors.primaryGreen : Colors.grey.withValues(alpha: 0.3),
               width: isSelected ? 1.5 : 1.0,
             ),
           ),

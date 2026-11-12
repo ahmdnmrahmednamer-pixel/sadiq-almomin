@@ -38,12 +38,12 @@ class HomeQuranContinueCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          AppColors.primaryGreen.withOpacity(0.16),
-                          AppColors.emeraldLight.withOpacity(0.12),
+                          AppColors.primaryGreen.withValues(alpha: 0.16),
+                          AppColors.emeraldLight.withValues(alpha: 0.12),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                     ),
                     child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 28),
                   ),
@@ -66,7 +66,7 @@ class HomeQuranContinueCard extends StatelessWidget {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.08),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: IconButton(
@@ -84,7 +84,7 @@ class HomeQuranContinueCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.08),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),

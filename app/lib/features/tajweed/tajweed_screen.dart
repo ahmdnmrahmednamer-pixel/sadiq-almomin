@@ -219,12 +219,12 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: rule.ruleColor.withOpacity(0.3),
+          color: rule.ruleColor.withValues(alpha: 0.3),
           width: 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
@@ -252,7 +252,7 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
                       children: [
                         CircleAvatar(
                           radius: 12,
-                          backgroundColor: rule.ruleColor.withOpacity(0.18),
+                          backgroundColor: rule.ruleColor.withValues(alpha: 0.18),
                           child: CircleAvatar(
                             radius: 6,
                             backgroundColor: rule.ruleColor,
@@ -297,7 +297,7 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: rule.ruleColor.withOpacity(0.12),
+                        color: rule.ruleColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -342,9 +342,9 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.primaryGreen.withOpacity(0.08),
+            color: AppColors.primaryGreen.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -385,10 +385,10 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: item.color.withOpacity(0.35), width: 1.2),
+              border: Border.all(color: item.color.withValues(alpha: 0.35), width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: item.color.withOpacity(0.05),
+                  color: item.color.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -407,7 +407,7 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: item.color.withOpacity(0.4),
+                            color: item.color.withValues(alpha: 0.4),
                             blurRadius: 6,
                           ),
                         ],
@@ -426,7 +426,7 @@ class _TajweedScreenState extends State<TajweedScreen> with SingleTickerProvider
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.12),
+                        color: item.color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

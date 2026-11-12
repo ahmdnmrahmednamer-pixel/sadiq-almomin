@@ -18,7 +18,7 @@ void showSettingsAboutModal(BuildContext context) {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.12),
+                color: AppColors.primaryGreen.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen, size: 26),
@@ -155,11 +155,11 @@ Widget _buildFeaturePillar({
       color: isDark ? const Color(0xFF1E2824) : const Color(0xFFFBFBFB),
       borderRadius: BorderRadius.circular(14),
       border: Border.all(
-        color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.06),
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
       ),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.02),
+          color: Colors.black.withValues(alpha: 0.02),
           blurRadius: 4,
           offset: const Offset(0, 2),
         ),
@@ -171,7 +171,7 @@ Widget _buildFeaturePillar({
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.12),
+            color: iconColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: iconColor, size: 20),

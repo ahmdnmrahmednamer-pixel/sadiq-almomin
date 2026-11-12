@@ -33,15 +33,15 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primaryGreen.withOpacity(0.10),
-                  AppColors.accentGold.withOpacity(0.08),
+                  AppColors.primaryGreen.withValues(alpha: 0.10),
+                  AppColors.accentGold.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.primaryGreen.withOpacity(0.28),
+                color: AppColors.primaryGreen.withValues(alpha: 0.28),
               ),
             ),
             child: Column(
@@ -123,7 +123,7 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
                     context.tr('bilingual_mode_sub'),
                     style: const TextStyle(fontSize: 11.5),
                   ),
-                  activeColor: AppColors.accentGold,
+                  activeThumbColor: AppColors.accentGold,
                   activeTrackColor: AppColors.primaryGreen,
                   value: s.bilingualDisplayEnabled,
                   onChanged: (val) => s.toggleBilingualDisplay(val),
@@ -138,7 +138,7 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.10),
+              color: AppColors.primaryGreen.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
             child: const Icon(

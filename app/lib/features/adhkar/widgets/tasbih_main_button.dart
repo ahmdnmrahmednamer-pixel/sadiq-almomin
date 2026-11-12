@@ -45,13 +45,13 @@ class TasbihMainButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(isDark ? 0.4 : 0.35),
+                color: AppColors.primaryGreen.withValues(alpha: isDark ? 0.4 : 0.35),
                 blurRadius: 28,
                 spreadRadius: 4,
                 offset: const Offset(0, 10),
               ),
               BoxShadow(
-                color: AppColors.accentGold.withOpacity(0.2),
+                color: AppColors.accentGold.withValues(alpha: 0.2),
                 blurRadius: 16,
                 spreadRadius: 1,
               ),

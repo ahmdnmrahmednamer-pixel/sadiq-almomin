@@ -75,12 +75,12 @@ class AboutDeveloperScreen extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.accentGold.withOpacity(0.5),
+                    color: AppColors.accentGold.withValues(alpha: 0.5),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.35 : 0.12),
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -93,7 +93,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                       height: 72,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.accentGold.withOpacity(0.2),
+                        color: AppColors.accentGold.withValues(alpha: 0.2),
                         border: Border.all(color: AppColors.accentGold, width: 2.2),
                       ),
                       child: const Icon(
@@ -127,9 +127,9 @@ class AboutDeveloperScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Colors.black.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -160,11 +160,11 @@ class AboutDeveloperScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF14241C) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: AppColors.primaryGreen.withOpacity(0.25),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.25),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -178,7 +178,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -215,7 +215,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF0A1612) : const Color(0xFFF5F7F5),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -272,11 +272,11 @@ class AboutDeveloperScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF14241C) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFF0284C7).withOpacity(0.3),
+                    color: const Color(0xFF0284C7).withValues(alpha: 0.3),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -335,11 +335,11 @@ class AboutDeveloperScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF14241C) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFF1877F2).withOpacity(0.3),
+                    color: const Color(0xFF1877F2).withValues(alpha: 0.3),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -399,11 +399,11 @@ class AboutDeveloperScreen extends StatelessWidget {
                   color: isDark ? const Color(0xFF14241C) : Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: AppColors.accentGold.withOpacity(0.3),
+                    color: AppColors.accentGold.withValues(alpha: 0.3),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.25 : 0.05),
+                      color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

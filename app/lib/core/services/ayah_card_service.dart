@@ -197,7 +197,7 @@ class AyahCardService {
       dir = Directory.systemTemp;
     }
     
-    final filename = 'ayah_card_${surahId}_$ayahNumber\_${DateTime.now().millisecondsSinceEpoch}.png';
+    final filename = 'ayah_card_${surahId}_${ayahNumber}_${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes, flush: true);
     return file;

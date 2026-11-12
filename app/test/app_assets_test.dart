@@ -5,7 +5,7 @@ import 'package:almomin/app/theme/app_assets.dart';
 void main() {
   group('Al-Momin AppAssets Tests (Assets Inventory & Prayer Mapping)', () {
     test('All registered assets in AppAssets exist on disk in assets/images/', () {
-      final allAssets = AppAssets.allAssets;
+      const allAssets = AppAssets.allAssets;
       expect(allAssets.isNotEmpty, isTrue);
 
       for (final assetPath in allAssets) {

@@ -158,7 +158,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 14),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -171,7 +171,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.15),
+                          color: AppColors.accentGold.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.edit_note_rounded, color: AppColors.primaryGreen, size: 22),
@@ -195,9 +195,9 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.06),
+                  color: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾',
@@ -220,7 +220,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
                   fillColor: isDark ? const Color(0xFF242A27) : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                    borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),

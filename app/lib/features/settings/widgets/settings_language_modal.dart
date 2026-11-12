@@ -50,7 +50,7 @@ void showSettingsLanguageModal(BuildContext context) {
                         width: 44,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.35),
+                          color: Colors.grey.withValues(alpha: 0.35),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -63,10 +63,10 @@ void showSettingsLanguageModal(BuildContext context) {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withOpacity(0.12),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                                color: AppColors.accentGold.withOpacity(0.3)),
+                                color: AppColors.accentGold.withValues(alpha: 0.3)),
                           ),
                           child: const Icon(
                             Icons.language_rounded,
@@ -166,7 +166,7 @@ void showSettingsLanguageModal(BuildContext context) {
                                 context.tr('bilingual_mode_sub'),
                                 style: const TextStyle(fontSize: 11.5),
                               ),
-                              activeColor: AppColors.accentGold,
+                              activeThumbColor: AppColors.accentGold,
                               activeTrackColor: AppColors.primaryGreen,
                               value: settings.bilingualDisplayEnabled,
                               onChanged: (val) =>
@@ -206,7 +206,7 @@ Widget _buildLanguageCard({
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isSelected
-            ? AppColors.primaryGreen.withOpacity(isDark ? 0.25 : 0.12)
+            ? AppColors.primaryGreen.withValues(alpha: isDark ? 0.25 : 0.12)
             : (isDark ? const Color(0xFF1B2C22) : const Color(0xFFF7FAF8)),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
@@ -228,7 +228,7 @@ Widget _buildLanguageCard({
               border: Border.all(
                 color: isSelected
                     ? AppColors.accentGold
-                    : Colors.grey.withOpacity(0.3),
+                    : Colors.grey.withValues(alpha: 0.3),
               ),
             ),
             child: Text(

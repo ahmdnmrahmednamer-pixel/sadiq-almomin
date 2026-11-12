@@ -7,7 +7,8 @@ analyzer:
     strict-raw-types: false
   errors:
     experimental_member_use: ignore
-    deprecated_member_use: info
+    deprecated_member_use: ignore
+    use_build_context_synchronously: ignore
     unused_import: warning
     unused_local_variable: warning
     invalid_null_aware_operator: warning

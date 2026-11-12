@@ -43,7 +43,7 @@ class PrayerAudioQuickCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryGreen.withOpacity(0.3),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -87,9 +87,9 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.12),
+                          color: AppColors.accentGold.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -114,9 +114,9 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.1),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -148,7 +148,7 @@ class PrayerAudioQuickCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isDark ? const Color(0xFF1B3D2F) : const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [

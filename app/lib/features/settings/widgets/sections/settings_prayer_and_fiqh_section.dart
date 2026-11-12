@@ -117,7 +117,7 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.10),
+              color: AppColors.primaryGreen.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
             child: const Icon(

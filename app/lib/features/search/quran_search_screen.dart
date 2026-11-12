@@ -268,7 +268,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     ],
                   ),
                   filled: true,
-                  fillColor: Colors.grey.withOpacity(0.08),
+                  fillColor: Colors.grey.withValues(alpha: 0.08),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -410,7 +410,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             children: _history.map((item) {
               return InputChip(
                 label: Text(item, style: const TextStyle(fontSize: 12)),
-                backgroundColor: AppColors.primaryGreen.withOpacity(0.06),
+                backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.06),
                 onPressed: () => _selectHistoryItem(item),
                 onDeleted: () async {
                   await QuranSearchService.instance.removeFromHistory(item);
@@ -449,7 +449,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             return ActionChip(
               avatar: const Icon(Icons.search, size: 16, color: AppColors.primaryGreen),
               label: Text(item, style: const TextStyle(fontSize: 12)),
-              backgroundColor: AppColors.accentGold.withOpacity(0.12),
+              backgroundColor: AppColors.accentGold.withValues(alpha: 0.12),
               onPressed: () => _selectHistoryItem(item),
             );
           }).toList(),
@@ -523,8 +523,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primaryGreen.withOpacity(0.08),
-                  AppColors.accentGold.withOpacity(0.12),
+                  AppColors.primaryGreen.withValues(alpha: 0.08),
+                  AppColors.accentGold.withValues(alpha: 0.12),
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
@@ -652,7 +652,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
+                  backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.1),
                   child: Text('${surah.id}', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
                 ),
                 title: Text('سورة ${surah.nameAr}', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -687,7 +687,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.2),
+                    color: AppColors.accentGold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text('مصفى حسب السورة', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
@@ -718,7 +718,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withOpacity(0.1),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(

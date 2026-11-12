@@ -114,7 +114,7 @@ class _KhatmaScreenState extends State<KhatmaScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.1),
+                color: AppColors.primaryGreen.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.auto_stories_rounded, size: 72, color: AppColors.primaryGreen),
@@ -165,7 +165,7 @@ class _KhatmaScreenState extends State<KhatmaScreen> {
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            side: BorderSide(color: AppColors.accentGold.withOpacity(0.6)),
+            side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.6)),
           ),
           icon: const Icon(Icons.menu_book_rounded, color: AppColors.accentGold),
           label: const Text(

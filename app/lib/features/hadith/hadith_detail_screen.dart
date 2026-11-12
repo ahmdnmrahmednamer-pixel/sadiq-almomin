@@ -21,7 +21,7 @@ class HadithDetailScreen extends StatefulWidget {
 class _HadithDetailScreenState extends State<HadithDetailScreen> {
   late int _currentId;
   double _fontSize = 20.0;
-  bool _showExplanation = true;
+  final bool _showExplanation = true;
 
   @override
   void initState() {
@@ -142,9 +142,9 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.12),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     'الحديث رقم ${hadith.number}',
@@ -175,7 +175,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50.withOpacity(0.5),
+                color: Colors.amber.shade50.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.amber.shade200),
               ),
@@ -205,7 +205,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2)),
+                side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -254,9 +254,9 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: gradingColor.withOpacity(0.12),
+                            color: gradingColor.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: gradingColor.withOpacity(0.4)),
+                            border: Border.all(color: gradingColor.withValues(alpha: 0.4)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -313,9 +313,9 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: AppColors.accentGold.withOpacity(0.08),
+                color: AppColors.accentGold.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -338,7 +338,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
             color: Theme.of(context).cardColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),

@@ -92,9 +92,9 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD4AF37).withOpacity(0.12),
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
+                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
                   ),
                   child: const Row(
                     children: [
@@ -127,7 +127,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryGreen.withOpacity(0.3),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 5),
                       ),
@@ -142,7 +142,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: Colors.white.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -154,8 +154,8 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: isDownloaded
-                                  ? Colors.green.withOpacity(0.85)
-                                  : AppColors.accentGold.withOpacity(0.25),
+                                  ? Colors.green.withValues(alpha: 0.85)
+                                  : AppColors.accentGold.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -192,7 +192,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                       Text(
                         'صوت: ${story.narrator}',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 13.5,
                         ),
                       ),
@@ -258,7 +258,8 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                                     ),
                                     onPressed: () async {
                                       final ok = await service.downloadStory(story.id);
-                                      if (ok && mounted) {
+                                      if (!mounted) return;
+                                      if (ok) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('تم تنزيل القصة بنجاح للاستماع دون إنترنت')),
                                         );
@@ -280,7 +281,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF1A2B20) : const Color(0xFFF0FDF4),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.35)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.35)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -347,7 +348,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.7,
-                      color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                      color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
                     ),
                   ),
                 ),
@@ -363,8 +364,8 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                     children: story.surahsMentioned.map((sName) {
                       return Chip(
                         label: Text('سورة $sName', style: const TextStyle(fontSize: 12)),
-                        backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
-                        side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2)),
+                        backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.08),
+                        side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                       );
                     }).toList(),
                   ),
@@ -394,7 +395,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.5,
-                              color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
+                              color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
                             ),
                           ),
                         ),

@@ -91,7 +91,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.gold500,
         keywords: ['بطاقات', 'تصميم', 'دعوة', 'مشاركة', 'استوديو', 'صور'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'momen_duaa',
         title: 'إهداء ودعاء للمرحوم مؤمن إبراهيم',
         subtitle: 'شاشة الدعاء الخالص والصدقة الجارية لروح الفقيد رحمه الله',
@@ -99,10 +99,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'home',
         route: '/duaa',
         icon: Icons.volunteer_activism_rounded,
-        color: const Color(0xFF0D5C46),
+        color: Color(0xFF0D5C46),
         keywords: ['دعاء', 'مؤمن', 'إهداء', 'رحمه الله', 'صدقة جارية', 'مؤمن إبراهيم'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'onboarding',
         title: 'دليل البداية والتعريف بالمعالم',
         subtitle: 'جولة استكشافية لمعالم وخصائص تطبيق نور المؤمن',
@@ -110,7 +110,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'home',
         route: '/onboarding',
         icon: Icons.explore_rounded,
-        color: const Color(0xFF25739B),
+        color: Color(0xFF25739B),
         keywords: ['ترحيب', 'بداية', 'شرح', 'تعليم', 'جولة'],
       ),
 
@@ -126,7 +126,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.emerald700,
         keywords: ['مصحف', 'قرآن', 'تلاوة', 'سور', 'أجزاء'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'mushaf_pages',
         title: 'المصحف برواية حفص (عرض الصفحات ٦٠٤)',
         subtitle: 'المصحف الشريف مطابق لطبعة مجمع الملك فهد بالرسم العثماني',
@@ -137,7 +137,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.emerald900,
         keywords: ['صفحات', 'رسم عثماني', 'مجمع الملك فهد', 'قراءة'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'surah_reader',
         title: 'قارئ السور والتلاوة والتدبر المفصل',
         subtitle: 'تلاوة الآيات متتابعة مع تشغيل الصوت والترتيل والتفسير',
@@ -145,10 +145,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/surah-reader',
         icon: Icons.chrome_reader_mode_rounded,
-        color: const Color(0xFF1B6B4E),
+        color: Color(0xFF1B6B4E),
         keywords: ['قارئ', 'آيات', 'تلاوة سورة', 'استماع', 'إعراب'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'mushaf_interactive',
         title: 'المصحف التفاعلي المتقدم',
         subtitle: 'قراءة القرآن مع تدوين الفوائد واختيار القراء والمقامات',
@@ -156,10 +156,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/mushaf-reader',
         icon: Icons.menu_book_rounded,
-        color: const Color(0xFF135A43),
+        color: Color(0xFF135A43),
         keywords: ['مصحف متقدم', 'تفاعل', 'قراءة حرة'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'qiraat_mushaf',
         title: 'مصحف الصحابة في القراءات العشر المتواترة',
         subtitle: 'القراءات العشر من طريق الشاطبية والدرة مع توجيه القراءات',
@@ -167,7 +167,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/qiraat',
         icon: Icons.history_edu_rounded,
-        color: const Color(0xFF0F766E),
+        color: Color(0xFF0F766E),
         keywords: ['قراءات', 'عشر', 'شاطبية', 'درة', 'صحابة', 'روايات', 'ورش', 'قالون'],
       ),
       AppDirectoryItem(
@@ -192,7 +192,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF8E6C18),
         keywords: ['تفسير', 'مقارنة', 'ابن كثير', 'الطبري', 'السعدي', 'إعراب'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'audio_tafsir',
         title: 'المختصر الصوتي في تفسير القرآن',
         subtitle: 'تفسير الآيات صوتياً بنخبة من المشايخ عبر مركز تفسير',
@@ -200,7 +200,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/audio-tafsir',
         icon: Icons.headphones_rounded,
-        color: const Color(0xFF6D28D9),
+        color: Color(0xFF6D28D9),
         keywords: ['تفسير صوتي', 'صوتيات', 'مركز تفسير', 'استماع', 'معاني'],
       ),
       AppDirectoryItem(
@@ -214,7 +214,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF1565C0),
         keywords: ['غريب', 'معاني الكلمات', 'مفردات', 'لغة القرآن'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'quran_irab',
         title: 'إعراب القرآن الكريم وبيانه النحوي',
         subtitle: 'الإعراب المفصل لكلمات وآيات التنزيل الحكيم لخدمة المعنى',
@@ -222,10 +222,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/quran-irab',
         icon: Icons.spellcheck_rounded,
-        color: const Color(0xFF0E7490),
+        color: Color(0xFF0E7490),
         keywords: ['إعراب', 'نحو', 'إعراب القرآن', 'لغة', 'بيان', 'فاعل', 'مفعول'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'quran_asbab_nuzul',
         title: 'أسباب نزول الآيات وسياق التنزيل',
         subtitle: 'معرفة أسباب ورود الآيات والوقائع التي نزلت فيها',
@@ -233,7 +233,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/quran-asbab-nuzul',
         icon: Icons.history_rounded,
-        color: const Color(0xFFB45309),
+        color: Color(0xFFB45309),
         keywords: ['أسباب النزول', 'سياق التنزيل', 'نزول الآيات', 'الواحدي', 'السيوطي'],
       ),
       AppDirectoryItem(
@@ -269,7 +269,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.accentGold,
         keywords: ['ختمة', 'متابعة', 'دعاء الختم', 'ورد يومي'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'quran_notes',
         title: 'مفكرة وتدوينات الآيات',
         subtitle: 'سجل الملاحظات الشخصية والفوائد المستنبطة عند كل آية',
@@ -277,7 +277,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/notes',
         icon: Icons.note_alt_rounded,
-        color: const Color(0xFF4E342E),
+        color: Color(0xFF4E342E),
         keywords: ['ملاحظات', 'فوائد', 'تدوين'],
       ),
       AppDirectoryItem(
@@ -313,7 +313,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF1A237E),
         keywords: ['موضوعات', 'عقيدة', 'معاملات', 'قصص القرآن'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'quran_audio',
         title: 'المكتبة الصوتية لقراء القرآن (٦١ قارئاً)',
         subtitle: 'استماع وتنزيل تلاوات كاملة ومجودة لكبار قراء العالم الإسلامي',
@@ -321,10 +321,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/audio',
         icon: Icons.podcasts_rounded,
-        color: const Color(0xFF004D40),
+        color: Color(0xFF004D40),
         keywords: ['صوتيات', 'قراء', 'المنشاوي', 'الحصري', 'عبدالباسط'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'audio_downloads',
         title: 'مدير التنزيلات الصوتية',
         subtitle: 'إدارة الملفات المحفوظة للاستماع دون اتصال بالإنترنت',
@@ -332,7 +332,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'quran',
         route: '/downloads',
         icon: Icons.download_for_offline_rounded,
-        color: const Color(0xFF37474F),
+        color: Color(0xFF37474F),
         keywords: ['تنزيلات', 'بدون نت', 'أوفلاين', 'صوتيات محملة'],
       ),
 
@@ -348,7 +348,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.primaryGreen,
         keywords: ['صلاة', 'مواقيت', 'أذان', 'فجر', 'ظهر', 'عصر', 'مغرب', 'عشاء'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'prayer_times_detail',
         title: 'تفاصيل مواقيت الصلاة والمراحل',
         subtitle: 'أوقات الصلوات مع أوقات الإمساك والشروق والثلث الأخير',
@@ -356,10 +356,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/prayer-times-detail',
         icon: Icons.schedule_rounded,
-        color: const Color(0xFF1A6B54),
+        color: Color(0xFF1A6B54),
         keywords: ['مواقيت تفصيلية', 'أوقات الصلاة', 'شروق', 'إمساك', 'ثلث أخير'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'adhan_control',
         title: 'التحكم في الأذان والتنبيهات',
         subtitle: 'اختيار أصوات المؤذنين وضبط تنبيهات الإقامة لكل صلاة',
@@ -436,7 +436,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.gold500,
         keywords: ['صيام', 'نوافل', 'أيام بيض', 'عرفة', 'عاشوراء'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'battery_guide',
         title: 'دليل موثوقية الأذان والبطارية',
         subtitle: 'خطوات استثناء التطبيق من قيود توفير الطاقة لضمان انطلاق الأذان',
@@ -444,7 +444,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'prayer',
         route: '/battery-guide',
         icon: Icons.battery_charging_full_rounded,
-        color: const Color(0xFFE65100),
+        color: Color(0xFFE65100),
         keywords: ['بطارية', 'أذان لا يعمل', 'تنبيهات', 'خلفية'],
       ),
 
@@ -460,7 +460,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF1E8260),
         keywords: ['أذكار', 'تسبيح', 'صباح', 'مساء', 'دعاء'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'adhkar_screen',
         title: 'موسوعة حصن المسلم الكاملة',
         subtitle: 'أذكار الصباح والمساء، النوم والاستيقاظ، الصلاة، والسفر',
@@ -468,7 +468,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'adhkar',
         route: '/adhkar',
         icon: Icons.menu_book_rounded,
-        color: const Color(0xFF135A43),
+        color: Color(0xFF135A43),
         keywords: ['حصن المسلم', 'صباح ومساء', 'أذكار النوم'],
       ),
       AppDirectoryItem(
@@ -660,7 +660,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF0D5C46),
         keywords: ['إذاعة القاهرة', 'ابتهالات', 'نقشبندي', 'طوبار', 'شعراوي'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'approved_sources',
         title: 'المصادر والمراجع المعتمدة',
         subtitle: 'قائمة كتب التفسير والفقه والحديث واللغة المعتمدة بالتطبيق',
@@ -668,10 +668,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         categoryKey: 'library',
         route: '/approved-sources',
         icon: Icons.verified_rounded,
-        color: const Color(0xFF0F766E),
+        color: Color(0xFF0F766E),
         keywords: ['مصادر', 'مراجع', 'كتب معتمدة', 'تحقيق', 'أصول'],
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'library_search',
         title: 'الكشاف الجامع في رياض العلم',
         subtitle: 'محرك بحث موحد في كتب الحديث والفقه والتفسير والتاريخ',
@@ -729,7 +729,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقفي', 'بدون إعلانات', 'v7.0', 'نور المؤمن'],
         onAction: (ctx) => showSettingsAboutModal(ctx),
       ),
-      AppDirectoryItem(
+      const AppDirectoryItem(
         id: 'about_developer',
         title: 'عن المطور ورابط المشروع',
         subtitle: 'نبذة عن المهندس أحمد إبراهيم، المشروع الوقفي، ومستودع GitHub',
@@ -851,8 +851,8 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                           ),
                           filled: true,
                           fillColor: isDark
-                              ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.4)
-                              : Colors.grey.withOpacity(0.08),
+                              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+                              : Colors.grey.withValues(alpha: 0.08),
                         ),
                       ),
                     ),
@@ -947,10 +947,10 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: item.color.withOpacity(0.12),
+                                color: item.color.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: item.color.withOpacity(0.3)),
+                                    color: item.color.withValues(alpha: 0.3)),
                               ),
                               child: Icon(item.icon,
                                   color: item.color, size: 22),
@@ -970,7 +970,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: item.color.withOpacity(0.1),
+                                    color: item.color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

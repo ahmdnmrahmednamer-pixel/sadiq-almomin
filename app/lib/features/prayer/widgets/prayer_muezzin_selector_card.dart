@@ -89,12 +89,12 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
             color: widget.isDark ? const Color(0xFF15221B) : Colors.white,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: AppColors.primaryGreen.withOpacity(0.25),
+              color: AppColors.primaryGreen.withValues(alpha: 0.25),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(widget.isDark ? 0.25 : 0.05),
+                color: Colors.black.withValues(alpha: widget.isDark ? 0.25 : 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -117,7 +117,7 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryGreen.withOpacity(0.3),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -165,9 +165,9 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.12),
+                      color: AppColors.accentGold.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,7 +234,7 @@ class _PrayerMuezzinSelectorCardState extends State<PrayerMuezzinSelectorCard> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: (prayer['color'] as Color).withOpacity(0.15),
+                                  color: (prayer['color'] as Color).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(

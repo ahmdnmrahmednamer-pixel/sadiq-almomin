@@ -38,7 +38,7 @@ class AyahIslamicCardWidget extends StatelessWidget {
           border: Border.all(color: theme.borderColor, width: 2.0),
           boxShadow: [
             BoxShadow(
-              color: theme.borderColor.withOpacity(0.2),
+              color: theme.borderColor.withValues(alpha: 0.2),
               blurRadius: 16,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -90,7 +90,7 @@ class AyahIslamicCardWidget extends StatelessWidget {
                       'آية ${ayah.ayahNumber} · جزء ${ayah.juz}',
                       style: TextStyle(
                         fontSize: 12,
-                        color: theme.headerTextColor.withOpacity(0.85),
+                        color: theme.headerTextColor.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -188,9 +188,9 @@ class AyahIslamicCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.black.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+                  border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   tafsirText!.trim(),
@@ -213,7 +213,7 @@ class AyahIslamicCardWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: theme.dedicationBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: theme.accentColor.withOpacity(0.35)),
+                  border: Border.all(color: theme.accentColor.withValues(alpha: 0.35)),
                 ),
                 child: Text(
                   'تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت',

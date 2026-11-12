@@ -1,7 +1,6 @@
 import '../../../core/text/arabic_normalizer.dart';
 import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
-import '../../../core/models/arab_countries.dart';
 import '../../../core/services/prayer_service.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -63,7 +62,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -93,10 +92,10 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                       gradient: LinearGradient(
                         colors: isDark
                             ? [const Color(0xFF1E3A2E), const Color(0xFF2D6A4F)]
-                            : [AppColors.primaryGreen.withOpacity(0.15), AppColors.emeraldLight.withOpacity(0.1)],
+                            : [AppColors.primaryGreen.withValues(alpha: 0.15), AppColors.emeraldLight.withValues(alpha: 0.1)],
                       ),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.4), width: 1.2),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4), width: 1.2),
                     ),
                     child: const Icon(Icons.public_rounded, color: AppColors.primaryGreen, size: 24),
                   ),
@@ -168,7 +167,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accentGold.withOpacity(0.15),
+                            color: AppColors.accentGold.withValues(alpha: 0.15),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -182,7 +181,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.12),
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Icon(Icons.flag_rounded, size: 16, color: AppColors.primaryGreen),
@@ -206,7 +205,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                               icon: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.1),
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primaryGreen),
@@ -234,9 +233,9 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: AppColors.primaryGreen.withOpacity(0.12),
+                                          color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                           borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                                          border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                                         ),
                                         child: Text(
                                           '${country.cities.length} مدينة',
@@ -323,10 +322,10 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                         filled: true,
                         fillColor: isDark
                             ? Colors.white10
-                            : AppColors.primaryGreen.withOpacity(0.06),
+                            : AppColors.primaryGreen.withValues(alpha: 0.06),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2)),
+                          borderSide: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -363,7 +362,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withOpacity(0.15),
+                              color: AppColors.accentGold.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -425,8 +424,8 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: isCurrent
-                                            ? AppColors.accentGold.withOpacity(0.18)
-                                            : Colors.black.withOpacity(0.03),
+                                            ? AppColors.accentGold.withValues(alpha: 0.18)
+                                            : Colors.black.withValues(alpha: 0.03),
                                         blurRadius: isCurrent ? 8 : 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -484,13 +483,13 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                                       ? [const Color(0xFFD4AF37), const Color(0xFFB89628)]
                                                       : (isDark
                                                           ? [const Color(0xFF243B30), const Color(0xFF192A22)]
-                                                          : [AppColors.primaryGreen.withOpacity(0.12), AppColors.emeraldLight.withOpacity(0.1)]),
+                                                          : [AppColors.primaryGreen.withValues(alpha: 0.12), AppColors.emeraldLight.withValues(alpha: 0.1)]),
                                                 ),
                                                 borderRadius: BorderRadius.circular(12),
                                                 boxShadow: isCurrent
                                                     ? [
                                                         BoxShadow(
-                                                          color: AppColors.accentGold.withOpacity(0.4),
+                                                          color: AppColors.accentGold.withValues(alpha: 0.4),
                                                           blurRadius: 6,
                                                         ),
                                                       ]
@@ -543,7 +542,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                                   borderRadius: BorderRadius.circular(12),
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color: AppColors.accentGold.withOpacity(0.35),
+                                                      color: AppColors.accentGold.withValues(alpha: 0.35),
                                                       blurRadius: 6,
                                                       offset: const Offset(0, 2),
                                                     ),
@@ -569,10 +568,10 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                                 decoration: BoxDecoration(
-                                                  color: AppColors.primaryGreen.withOpacity(0.08),
+                                                  color: AppColors.primaryGreen.withValues(alpha: 0.08),
                                                   borderRadius: BorderRadius.circular(12),
                                                   border: Border.all(
-                                                    color: AppColors.primaryGreen.withOpacity(0.3),
+                                                    color: AppColors.primaryGreen.withValues(alpha: 0.3),
                                                     width: 1.2,
                                                   ),
                                                 ),
@@ -614,7 +613,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                           border: Border.all(color: AppColors.accentGold, width: 1.5),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryGreen.withOpacity(0.3),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -659,7 +658,7 @@ class _ArabCityPickerSheetState extends State<ArabCityPickerSheet> {
                                     Container(
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentGold.withOpacity(0.25),
+                                        color: AppColors.accentGold.withValues(alpha: 0.25),
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(Icons.satellite_alt_rounded, size: 18, color: AppColors.accentGold),

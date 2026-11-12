@@ -220,9 +220,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFD4AF37).withOpacity(0.12),
+                color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
+                border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
               ),
               child: const Row(
                 children: [
@@ -312,7 +312,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1B4D3E).withOpacity(0.12),
+                            color: const Color(0xFF1B4D3E).withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.cloud_upload_rounded, color: Color(0xFF1B4D3E)),
@@ -381,7 +381,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.amber.shade700.withOpacity(0.12),
+                            color: Colors.amber.shade700.withValues(alpha: 0.12),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.cloud_download_rounded, color: Colors.amber.shade800),
@@ -494,9 +494,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,9 +530,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -552,9 +552,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

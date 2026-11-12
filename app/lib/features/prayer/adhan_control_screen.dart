@@ -419,7 +419,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF0F1E17),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -428,7 +428,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 width: 48,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -456,9 +456,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: AppColors.accentGold.withOpacity(0.12),
+                  color: AppColors.accentGold.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                 ),
                 child: const Text(
                   '«اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ القَائِمَةِ، آتِ مُحَمَّدًا الوَسِيلَةَ وَالفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ»',
@@ -545,7 +545,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                       width: 44,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -590,9 +590,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.06),
+                            color: Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -625,7 +625,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   ),
                                   Switch.adaptive(
                                     value: isMaster,
-                                    activeColor: AppColors.primaryGreen,
+                                    activeTrackColor: AppColors.primaryGreen,
                                     onChanged: (val) async {
                                       await notifService.toggleMaster(val);
                     if (!mounted) return;
@@ -699,9 +699,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.06),
+                            color: Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -762,7 +762,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     margin: const EdgeInsets.symmetric(vertical: 4),
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.primaryGreen.withOpacity(0.2) : Colors.transparent,
+                                      color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.2) : Colors.transparent,
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                         color: isSelected ? AppColors.primaryGreen : Colors.white12,
@@ -792,7 +792,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                                 item['desc'] as String,
                                                 style: TextStyle(
                                                   fontSize: 10.5,
-                                                  color: Colors.white.withOpacity(0.5),
+                                                  color: Colors.white.withValues(alpha: 0.5),
                                                 ),
                                               ),
                                             ],
@@ -815,9 +815,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryGreen.withOpacity(0.25),
+                                    color: AppColors.primaryGreen.withValues(alpha: 0.25),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                                   ),
                                   child: Row(
                                     children: [
@@ -833,7 +833,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                             ),
                                             Text(
                                               'المؤذن المعتمد: ${getAdhanVoiceName(notifService.selectedAdhanVoice)}',
-                                              style: TextStyle(fontSize: 10.5, color: Colors.white.withOpacity(0.7)),
+                                              style: TextStyle(fontSize: 10.5, color: Colors.white.withValues(alpha: 0.7)),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -852,10 +852,10 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
                         // 3. VIBRATION & SENSOR GESTURE TOGGLES
                         Material(
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: Padding(
@@ -878,7 +878,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 // Vibrate on Stop Toggle
                                 SwitchListTile.adaptive(
                                   contentPadding: EdgeInsets.zero,
-                                  activeColor: AppColors.primaryGreen,
+                                  activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.vibration_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
                                     'الاهتزاز اللمسي عند الإيقاف 📳',
@@ -886,7 +886,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   ),
                                   subtitle: Text(
                                     'إطلاق نبض اهتزازي ثلاثي لتأكيد إيقاف نداء الصلاة',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10.5),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10.5),
                                   ),
                                   value: vibrateOnStop,
                                   onChanged: (val) async {
@@ -901,7 +901,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 // Shake to Stop Toggle
                                 SwitchListTile.adaptive(
                                   contentPadding: EdgeInsets.zero,
-                                  activeColor: AppColors.primaryGreen,
+                                  activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.screen_lock_rotation_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
                                     'إيقاف الأذان عند هز الهاتف 📳',
@@ -909,7 +909,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   ),
                                   subtitle: Text(
                                     'هز الهاتف باليد يوقف الأذان فوراً',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10.5),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10.5),
                                   ),
                                   value: shakeEnabled,
                                   onChanged: (val) async {
@@ -924,7 +924,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 // Flip to Mute Toggle
                                 SwitchListTile.adaptive(
                                   contentPadding: EdgeInsets.zero,
-                                  activeColor: AppColors.primaryGreen,
+                                  activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.phone_android_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
                                     'كتم الأذان عند قلب الهاتف 📱',
@@ -932,7 +932,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   ),
                                   subtitle: Text(
                                     'قلب الهاتف على شاشته يكتم الصوت',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10.5),
+                                    style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10.5),
                                   ),
                                   value: flipEnabled,
                                   onChanged: (val) async {
@@ -950,10 +950,10 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
                         // 4. PER-PRAYER TOGGLES
                         Material(
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: Padding(
@@ -976,7 +976,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   final isEnabled = notifService.isPrayerEnabled(prayer);
                                   return SwitchListTile.adaptive(
                                     contentPadding: EdgeInsets.zero,
-                                    activeColor: AppColors.primaryGreen,
+                                    activeTrackColor: AppColors.primaryGreen,
                                     title: Text(
                                       'أذان صلاة $prayer',
                                       style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
@@ -1062,9 +1062,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
-                          color: themeData.primaryAccent.withOpacity(0.18),
+                          color: themeData.primaryAccent.withValues(alpha: 0.18),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: themeData.primaryAccent.withOpacity(0.35)),
+                          border: Border.all(color: themeData.primaryAccent.withValues(alpha: 0.35)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1132,9 +1132,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07),
+              color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: themeData.secondaryAccent.withOpacity(0.3)),
+              border: Border.all(color: themeData.secondaryAccent.withValues(alpha: 0.3)),
             ),
             child: const Text(
               'نداء الأذان المبارك — حيّ على الصلاة',
@@ -1186,7 +1186,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
             '$hijriStr • $locationName',
             style: TextStyle(
               fontSize: 12.5,
-              color: Colors.white.withOpacity(0.75),
+              color: Colors.white.withValues(alpha: 0.75),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1200,9 +1200,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
+              color: Colors.white.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: themeData.secondaryAccent.withOpacity(0.3)),
+              border: Border.all(color: themeData.secondaryAccent.withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [
@@ -1246,9 +1246,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.25),
+                color: Colors.blue.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.blue.withOpacity(0.5)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.5)),
               ),
               child: Column(
                 children: [
@@ -1287,7 +1287,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                           ? ((_iqamahTotalSeconds - _iqamahRemainingSeconds) / _iqamahTotalSeconds).clamp(0.0, 1.0)
                           : 0.0,
                       minHeight: 6,
-                      backgroundColor: Colors.white.withOpacity(0.15),
+                      backgroundColor: Colors.white.withValues(alpha: 0.15),
                       valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightBlueAccent),
                     ),
                   ),
@@ -1345,7 +1345,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -1361,7 +1361,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.accentGold,
-                  side: BorderSide(color: AppColors.accentGold.withOpacity(0.4)),
+                  side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.4)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -1374,7 +1374,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.lightBlueAccent,
-                  side: BorderSide(color: Colors.lightBlueAccent.withOpacity(0.4)),
+                  side: BorderSide(color: Colors.lightBlueAccent.withValues(alpha: 0.4)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -1387,7 +1387,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.secondaryGreen,
-                  side: BorderSide(color: AppColors.secondaryGreen.withOpacity(0.4)),
+                  side: BorderSide(color: AppColors.secondaryGreen.withValues(alpha: 0.4)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -1400,7 +1400,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
@@ -1426,16 +1426,16 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.4),
+          color: isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.4),
           width: isSharawiPlaying ? 1.8 : 1.2,
         ),
         boxShadow: [
           if (isSharawiPlaying)
             BoxShadow(
-              color: AppColors.accentGold.withOpacity(0.2),
+              color: AppColors.accentGold.withValues(alpha: 0.2),
               blurRadius: 16,
               spreadRadius: 1,
             ),
@@ -1449,7 +1449,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen).withOpacity(0.2),
+                  color: (isSharawiPlaying ? AppColors.accentGold : AppColors.primaryGreen).withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1520,7 +1520,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -1580,11 +1580,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
             height: 86,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.primaryGreen.withOpacity(0.2),
-              border: Border.all(color: AppColors.accentGold.withOpacity(0.5), width: 1.5),
+              color: AppColors.primaryGreen.withValues(alpha: 0.2),
+              border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5), width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryGreen.withOpacity(0.3),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -1625,9 +1625,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07),
+              color: Colors.white.withValues(alpha: 0.07),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+              border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
             ),
             child: Column(
               children: [
@@ -1650,7 +1650,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.accentGold.withOpacity(0.1),
+                    color: AppColors.accentGold.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: const Text(
@@ -1763,7 +1763,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.accentGold,
-                    side: BorderSide(color: AppColors.accentGold.withOpacity(0.5)),
+                    side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.5)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1814,7 +1814,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      themeData.primaryAccent.withOpacity(glowOpacity),
+                      themeData.primaryAccent.withValues(alpha: glowOpacity),
                       Colors.transparent,
                     ],
                     stops: const [0.4, 1.0],
@@ -1828,7 +1828,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 child: CustomPaint(
                   size: const Size(140, 140),
                   painter: _RubElHizbStarPainter(
-                    color: themeData.secondaryAccent.withOpacity(0.4),
+                    color: themeData.secondaryAccent.withValues(alpha: 0.4),
                   ),
                 ),
               ),
@@ -1847,7 +1847,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                       color: (_isMutedOrStopped
                               ? Colors.grey
                               : themeData.primaryAccent)
-                          .withOpacity(0.55),
+                          .withValues(alpha: 0.55),
                       blurRadius: 22,
                       spreadRadius: 2,
                     ),
@@ -1901,9 +1901,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Column(
         children: [
@@ -1938,8 +1938,8 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: sensorService.shakeToStopEnabled
-                        ? AppColors.primaryGreen.withOpacity(0.25)
-                        : Colors.grey.withOpacity(0.2),
+                        ? AppColors.primaryGreen.withValues(alpha: 0.25)
+                        : Colors.grey.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: sensorService.shakeToStopEnabled
@@ -1977,8 +1977,8 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: sensorService.flipToMuteEnabled
-                        ? AppColors.accentGold.withOpacity(0.25)
-                        : Colors.grey.withOpacity(0.2),
+                        ? AppColors.accentGold.withValues(alpha: 0.25)
+                        : Colors.grey.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: sensorService.flipToMuteEnabled
@@ -2016,12 +2016,12 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: _isPrayerLogged
-              ? AppColors.primaryGreen.withOpacity(0.6)
-              : Colors.white.withOpacity(0.12),
+              ? AppColors.primaryGreen.withValues(alpha: 0.6)
+              : Colors.white.withValues(alpha: 0.12),
         ),
       ),
       child: Column(
@@ -2059,7 +2059,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
@@ -2099,7 +2099,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
@@ -2128,16 +2128,16 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.12)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: themeData.primaryAccent.withOpacity(0.18),
+                color: themeData.primaryAccent.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: Transform.rotate(
@@ -2161,7 +2161,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   Text(
                     'زاوية القبلة: ${qiblaDegrees.toStringAsFixed(0)}° • اضغط للمعاينة بالبوصلة',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 11,
                     ),
                   ),

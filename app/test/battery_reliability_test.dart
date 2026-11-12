@@ -12,7 +12,7 @@ void main() {
     });
 
     test('OEM guides cover all 7 major manufacturers in target markets', () {
-      final guides = BatteryReliabilityScreen.oemGuides;
+      const guides = BatteryReliabilityScreen.oemGuides;
       expect(guides.length, 7);
 
       final ids = guides.map((g) => g.id).toList();

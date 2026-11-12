@@ -13,7 +13,7 @@ void main() {
 
   group('IslamicAudioService Catalog & Integration Tests', () {
     test('Track catalog includes all required Adhan, Iqamah, and Adhkar tracks', () {
-      final tracks = IslamicAudioService.allTracks;
+      const tracks = IslamicAudioService.allTracks;
       expect(tracks.isNotEmpty, isTrue);
 
       final adhanTracks = tracks.where((t) => t.type == IslamicAudioType.adhan).toList();

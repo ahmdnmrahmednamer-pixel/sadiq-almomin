@@ -98,7 +98,7 @@ class _HajjUmrahCompanionScreenState extends State<HajjUmrahCompanionScreen>
                           side: BorderSide(
                             color: isDone
                                 ? AppColors.primaryGreen
-                                : Colors.grey.withOpacity(0.25),
+                                : Colors.grey.withValues(alpha: 0.25),
                             width: isDone ? 2 : 1,
                           ),
                         ),
@@ -129,7 +129,7 @@ class _HajjUmrahCompanionScreenState extends State<HajjUmrahCompanionScreen>
                                         horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryGreen
-                                          .withOpacity(0.12),
+                                          .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -167,7 +167,7 @@ class _HajjUmrahCompanionScreenState extends State<HajjUmrahCompanionScreen>
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.primaryGreen.withOpacity(0.07),
+                                      AppColors.primaryGreen.withValues(alpha: 0.07),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
@@ -281,7 +281,7 @@ class _HajjUmrahCompanionScreenState extends State<HajjUmrahCompanionScreen>
               value: (currentLap / 7.0).clamp(0.0, 1.0),
               minHeight: 10,
               borderRadius: BorderRadius.circular(8),
-              backgroundColor: Colors.grey.withOpacity(0.2),
+              backgroundColor: Colors.grey.withValues(alpha: 0.2),
               color: currentLap >= 7
                   ? AppColors.accentGold
                   : AppColors.primaryGreen,
@@ -330,7 +330,7 @@ class _HajjUmrahCompanionScreenState extends State<HajjUmrahCompanionScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.08),
+                color: AppColors.primaryGreen.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

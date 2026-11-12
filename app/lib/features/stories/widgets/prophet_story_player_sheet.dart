@@ -194,7 +194,7 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -223,8 +223,8 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: _isOfflinePlaying
-                        ? Colors.green.withOpacity(0.15)
-                        : Colors.blue.withOpacity(0.12),
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : Colors.blue.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: _isOfflinePlaying ? Colors.green : Colors.blueAccent,
@@ -279,7 +279,8 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
                               tooltip: 'تحميل القصة للاستماع دون إنترنت',
                               onPressed: () async {
                                 final ok = await StoriesService.instance.downloadStory(story.id);
-                                if (ok && mounted) {
+                                if (!mounted) return;
+                                if (ok) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('تم تنزيل القصة بنجاح للاستماع دون إنترنت')),
                                   );
@@ -321,7 +322,7 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: const Icon(Icons.record_voice_over_rounded, color: Colors.white, size: 30),
                   ),
                   const SizedBox(width: 14),
@@ -343,7 +344,7 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
                         Text(
                           'صوت: ${story.narrator}',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 12,
                           ),
                         ),

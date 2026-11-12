@@ -291,7 +291,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                 ),
                 Switch(
                   value: _alarmService.preFajrEnabled,
-                  activeColor: AppColors.primaryGreen,
+                  activeThumbColor: AppColors.primaryGreen,
                   onChanged: (v) => _alarmService.setPreFajrEnabled(v),
                 ),
               ],
@@ -468,7 +468,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                 ),
                 Switch(
                   value: _alarmService.qiyamEnabled,
-                  activeColor: AppColors.accentGold,
+                  activeThumbColor: AppColors.accentGold,
                   onChanged: (v) => _alarmService.setQiyamEnabled(v),
                 ),
               ],

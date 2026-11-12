@@ -65,7 +65,7 @@ class AppDropdownField<T> extends StatelessWidget {
       child: Directionality(
         textDirection: SettingsService.instance.textDirection,
         child: DropdownButtonFormField<T>(
-          value: effectiveValue,
+          initialValue: effectiveValue,
           isExpanded: true,
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
@@ -85,7 +85,7 @@ class AppDropdownField<T> extends StatelessWidget {
             filled: true,
             fillColor: isDark
                 ? const Color(0xFF16201C)
-                : AppColors.primaryGreen.withOpacity(0.04),
+                : AppColors.primaryGreen.withValues(alpha: 0.04),
             prefixIcon: prefixIcon != null
                 ? ExcludeSemantics(
                     child: Icon(
@@ -102,13 +102,13 @@ class AppDropdownField<T> extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: AppColors.primaryGreen.withOpacity(0.25),
+                color: AppColors.primaryGreen.withValues(alpha: 0.25),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: AppColors.primaryGreen.withOpacity(0.25),
+                color: AppColors.primaryGreen.withValues(alpha: 0.25),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -202,11 +202,11 @@ class AppToolbarDropdown<T> extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         decoration: BoxDecoration(
           color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : AppColors.primaryGreen.withOpacity(0.08),
+              ? Colors.white.withValues(alpha: 0.08)
+              : AppColors.primaryGreen.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.accentGold.withOpacity(0.45),
+            color: AppColors.accentGold.withValues(alpha: 0.45),
           ),
         ),
         child: DropdownButtonHideUnderline(
@@ -328,7 +328,7 @@ class AppAudioDropdownField<T> extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: (isPlaying ? Colors.red : AppColors.primaryGreen).withOpacity(0.3),
+                      color: (isPlaying ? Colors.red : AppColors.primaryGreen).withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

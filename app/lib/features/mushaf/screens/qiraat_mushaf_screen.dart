@@ -111,7 +111,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen>
 
   // 1. Reciters & Narrators Tab
   Widget _buildRecitersTab(BuildContext context, bool isDark) {
-    final reciters = QiraatService.reciters;
+    const reciters = QiraatService.reciters;
 
     return ListView.builder(
       padding: const EdgeInsets.all(14),
@@ -209,7 +209,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen>
 
   // 2. Symbols Tab
   Widget _buildSymbolsTab(BuildContext context, bool isDark) {
-    final symbols = QiraatService.symbols;
+    const symbols = QiraatService.symbols;
 
     return ListView.builder(
       padding: const EdgeInsets.all(14),
@@ -294,7 +294,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen>
 
   // 3. Usul Rules Tab
   Widget _buildUsulTab(BuildContext context, bool isDark) {
-    final rules = QiraatService.usulRules;
+    const rules = QiraatService.usulRules;
 
     return ListView.builder(
       padding: const EdgeInsets.all(14),
@@ -366,7 +366,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen>
 
   // 4. Differences Tab
   Widget _buildDifferencesTab(BuildContext context, bool isDark) {
-    final diffs = QiraatService.famousDifferences;
+    const diffs = QiraatService.famousDifferences;
 
     return ListView.builder(
       padding: const EdgeInsets.all(14),

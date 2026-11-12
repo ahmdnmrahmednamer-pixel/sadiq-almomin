@@ -58,7 +58,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final allTracks = IslamicAudioService.allTracks;
+    const allTracks = IslamicAudioService.allTracks;
     final filteredTracks = _selectedType == null
         ? allTracks
         : allTracks.where((t) => t.type == _selectedType).toList();
@@ -75,7 +75,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -211,8 +211,8 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                       boxShadow: [
                         BoxShadow(
                           color: isCurrent
-                              ? AppColors.accentGold.withOpacity(0.15)
-                              : Colors.black.withOpacity(0.03),
+                              ? AppColors.accentGold.withValues(alpha: 0.15)
+                              : Colors.black.withValues(alpha: 0.03),
                           blurRadius: isCurrent ? 8 : 4,
                           offset: const Offset(0, 2),
                         ),
@@ -238,7 +238,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                   boxShadow: [
                                     BoxShadow(
                                       color: (isCurrentlyPlaying ? AppColors.accentGold : AppColors.primaryGreen)
-                                          .withOpacity(0.35),
+                                          .withValues(alpha: 0.35),
                                       blurRadius: 8,
                                       offset: const Offset(0, 3),
                                     ),
@@ -280,7 +280,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: Colors.green.withOpacity(0.12),
+                                            color: Colors.green.withValues(alpha: 0.12),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: const Text(
@@ -309,7 +309,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: Colors.blue.withOpacity(0.1),
+                                                color: Colors.blue.withValues(alpha: 0.1),
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: const Text(
@@ -332,7 +332,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                                 final ok = await _audioService.downloadTrack(track.id);
                                                 if (ok && context.mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('تم تنزيل ' + track.title + ' بنجاح للاستماع دون إنترنت')),
+                                                    SnackBar(content: Text('تم تنزيل ${track.title} بنجاح للاستماع دون إنترنت')),
                                                   );
                                                 }
                                               },
@@ -420,9 +420,9 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentGold.withOpacity(0.18),
+                                    color: AppColors.accentGold.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                                   ),
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,

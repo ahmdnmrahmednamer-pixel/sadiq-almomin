@@ -333,7 +333,7 @@ class PrayerNotificationService extends ChangeNotifier {
         'تذكير أذان $prayer (غفوة $minutes دقائق) ⏰',
         'انتهت فترة الغفوة — حان وقت أداء الصلاة والتطهر والوقوف بين يدي الله',
         scheduledTz,
-        NotificationDetails(android: androidDetails),
+        const NotificationDetails(android: androidDetails),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -1317,13 +1317,13 @@ class PrayerNotificationService extends ChangeNotifier {
               fullScreenIntent: true,
               category: AndroidNotificationCategory.alarm,
               actions: [
-                AndroidNotificationAction(
+                const AndroidNotificationAction(
                   'stop_adhan',
                   'إيقاف ⏹️',
                   showsUserInterface: false,
                   cancelNotification: true,
                 ),
-                AndroidNotificationAction(
+                const AndroidNotificationAction(
                   'open_interactive',
                   'فتح الشاشة 🕌',
                   showsUserInterface: true,

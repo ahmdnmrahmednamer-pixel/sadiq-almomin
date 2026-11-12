@@ -16,7 +16,7 @@ void main() {
     test('Egyptian cities list includes 42 governorates and new urban centers', () {
       final egypt = ArabCountriesData.getCountryById('eg');
       expect(egypt, isNotNull);
-      expect(egypt!.defaultMethod, equals('egyptian'));
+      expect(egypt.defaultMethod, equals('egyptian'));
       expect(egypt.cities.length, equals(42));
       expect(
         egypt.cities.any((c) => c.name.contains('العاصمة الإدارية الجديدة')),

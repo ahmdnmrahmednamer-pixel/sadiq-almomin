@@ -253,9 +253,9 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD4AF37).withOpacity(0.12),
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.4)),
+                    border: Border.all(color: const Color(0xFFD4AF37).withValues(alpha: 0.4)),
                   ),
                   child: const Row(
                     children: [
@@ -293,7 +293,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primaryGreen.withOpacity(0.12),
+                                    color: AppColors.primaryGreen.withValues(alpha: 0.12),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(Icons.sd_storage_rounded,
@@ -425,10 +425,10 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.35)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.35)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -438,7 +438,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.green.withOpacity(0.15),
+            backgroundColor: Colors.green.withValues(alpha: 0.15),
             child: const Icon(Icons.record_voice_over_rounded, color: Colors.green, size: 20),
           ),
           const SizedBox(width: 12),
@@ -482,10 +482,10 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.withOpacity(0.35)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.35)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -495,7 +495,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppColors.primaryGreen.withOpacity(0.12),
+            backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.12),
             child: Text(
               '${info.surahId}',
               style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen, fontSize: 13),
@@ -542,13 +542,13 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppColors.accentGold.withOpacity(0.15),
+            backgroundColor: AppColors.accentGold.withValues(alpha: 0.15),
             child: const Icon(Icons.auto_awesome, color: Color(0xFFB8860B), size: 19),
           ),
           const SizedBox(width: 12),

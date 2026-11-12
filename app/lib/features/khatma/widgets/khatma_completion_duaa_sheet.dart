@@ -35,7 +35,7 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                     width: 48,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.4),
+                      color: Colors.grey.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -90,14 +90,14 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                           Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withOpacity(0.06),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: AppColors.primaryGreen.withOpacity(0.25)),
+                              border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
                             ),
-                            child: Column(
+                            child: const Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Row(
+                                Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.auto_stories_rounded, color: AppColors.accentGold, size: 20),
@@ -108,8 +108,8 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 14),
-                                const Text(
+                                SizedBox(height: 14),
+                                Text(
                                   'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً وَهُدًى وَرَحْمَةً.\n\n'
                                   'اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نَسِيتُ، وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ، وَارْزُقْنِي تِلاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ، وَاجْعَلْهُ لِي حُجَّةً يَا رَبَّ العَالَمِينَ.\n\n'
                                   'اللَّهُمَّ أَصْلِحْ لِي دِينِي الَّذِي هُوَ عِصْمَةُ أَمْرِي، وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي، وَأَصْلِحْ لِي آخِرَتِي الَّتِي فِيهَا مَعَادِي، وَاجْعَلِ الحَيَاةَ زِيَادَةً لِي فِي كُلِّ خَيْرٍ، وَاجْعَلِ المَوْتَ رَاحَةً لِي مِنْ كُلِّ شَرٍّ.\n\n'
@@ -137,7 +137,7 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                               border: Border.all(color: AppColors.accentGold, width: 1.5),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 3),
                                 ),
@@ -148,7 +148,7 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.accentGold.withOpacity(0.3),
+                                    color: AppColors.accentGold.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: const Text(

@@ -56,7 +56,7 @@ class HomePrayerTrackerCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.12),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -93,7 +93,7 @@ class HomePrayerTrackerCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: (completed / 5.0).clamp(0.0, 1.0),
-                      backgroundColor: Colors.grey.withOpacity(0.2),
+                      backgroundColor: Colors.grey.withValues(alpha: 0.2),
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
                       minHeight: 5,
                     ),

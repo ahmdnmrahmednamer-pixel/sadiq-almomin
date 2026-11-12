@@ -193,13 +193,13 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             gradient: LinearGradient(
               colors: isDark
                   ? [AppColors.darkSurface, const Color(0xFF263238)]
-                  : [category.primaryColor.withOpacity(0.12), AppColors.softGold.withOpacity(0.2)],
+                  : [category.primaryColor.withValues(alpha: 0.12), AppColors.softGold.withValues(alpha: 0.2)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: category.primaryColor.withOpacity(0.3),
+              color: category.primaryColor.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -368,7 +368,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.12),
+                              color: Colors.green.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
@@ -393,7 +393,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
+                                  color: Colors.blue.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
@@ -474,8 +474,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: isCompleted
-              ? Colors.green.withOpacity(0.5)
-              : (isDark ? Colors.white12 : Colors.black.withOpacity(0.06)),
+              ? Colors.green.withValues(alpha: 0.5)
+              : (isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
           width: isCompleted ? 1.5 : 1,
         ),
       ),
@@ -494,7 +494,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                   radius: 13,
                   backgroundColor: isCompleted
                       ? Colors.green
-                      : AppColors.primaryGreen.withOpacity(0.15),
+                      : AppColors.primaryGreen.withValues(alpha: 0.15),
                   child: Text(
                     '$displayIndex',
                     style: TextStyle(
@@ -564,11 +564,11 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.accentGold.withOpacity(0.1)
-                      : AppColors.softGold.withOpacity(0.25),
+                      ? AppColors.accentGold.withValues(alpha: 0.1)
+                      : AppColors.softGold.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.accentGold.withOpacity(0.3),
+                    color: AppColors.accentGold.withValues(alpha: 0.3),
                     width: 0.8,
                   ),
                 ),
@@ -605,8 +605,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? Colors.green.withOpacity(isDark ? 0.25 : 0.15)
-                      : AppColors.primaryGreen.withOpacity(isDark ? 0.2 : 0.08),
+                      ? Colors.green.withValues(alpha: isDark ? 0.25 : 0.15)
+                      : AppColors.primaryGreen.withValues(alpha: isDark ? 0.2 : 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isCompleted ? Colors.green : AppColors.primaryGreen,
@@ -642,7 +642,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.accentGold.withOpacity(0.2),
+                          color: AppColors.accentGold.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(

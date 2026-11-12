@@ -77,7 +77,7 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
         elevation: 1.5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.12)),
+          side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.12)),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -100,7 +100,7 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withOpacity(0.12),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
@@ -184,9 +184,9 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: gradingColor.withOpacity(0.1),
+                        color: gradingColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: gradingColor.withOpacity(0.3)),
+                        border: Border.all(color: gradingColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         hadith.grading,
@@ -222,7 +222,7 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
         elevation: 1.5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.accentGold.withOpacity(0.35)),
+          side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.35)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -271,7 +271,7 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.05),
+                  color: AppColors.primaryGreen.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

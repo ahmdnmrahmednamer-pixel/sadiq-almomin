@@ -96,7 +96,7 @@ class HomeNextPrayerCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4ADE80).withOpacity(0.16),
+                        color: const Color(0xFF4ADE80).withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: const Color(0xFF22C55E), width: 1),
                       ),
@@ -177,7 +177,7 @@ class HomeNextPrayerCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.2),
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.access_time_filled, color: AppColors.primaryGreen, size: 28),

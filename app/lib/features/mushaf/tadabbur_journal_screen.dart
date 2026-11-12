@@ -262,7 +262,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                       margin: const EdgeInsets.only(bottom: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
-                        side: BorderSide(color: AppColors.accentGold.withOpacity(0.45)),
+                        side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.45)),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),

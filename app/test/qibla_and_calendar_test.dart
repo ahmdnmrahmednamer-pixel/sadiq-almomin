@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
 import 'package:almomin/features/prayer/hijri_calendar_screen.dart';
 import 'package:almomin/features/prayer/qibla_compass_screen.dart';
@@ -23,8 +22,8 @@ void main() {
       const cairoLng = 31.2357;
 
       const earthRadiusKm = 6371.0;
-      final dLat = (kaabaLat - cairoLat) * (pi / 180.0);
-      final dLon = (kaabaLng - cairoLng) * (pi / 180.0);
+      const dLat = (kaabaLat - cairoLat) * (pi / 180.0);
+      const dLon = (kaabaLng - cairoLng) * (pi / 180.0);
       final a = sin(dLat / 2) * sin(dLat / 2) +
           cos(cairoLat * (pi / 180.0)) * cos(kaabaLat * (pi / 180.0)) *
           sin(dLon / 2) * sin(dLon / 2);
@@ -36,7 +35,7 @@ void main() {
     });
 
     test('Calculates accurate Qibla angle for Cairo (~136.2°)', () {
-      final cairoCoords = Coordinates(30.0444, 31.2357);
+      const cairoCoords = Coordinates(30.0444, 31.2357);
       final qibla = Qibla.qibla(cairoCoords);
 
       expect(qibla, greaterThan(135.0));
@@ -44,7 +43,7 @@ void main() {
     });
 
     test('Calculates accurate Qibla angle for Medina (~175.7° due South)', () {
-      final medinaCoords = Coordinates(24.5247, 39.5692);
+      const medinaCoords = Coordinates(24.5247, 39.5692);
       final qibla = Qibla.qibla(medinaCoords);
 
       expect(qibla, greaterThan(174.0));

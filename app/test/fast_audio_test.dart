@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:almomin/core/audio/fast_audio_service.dart';
 
 void main() {
@@ -8,7 +7,7 @@ void main() {
 
   group('FastAudioService High-Speed Audio Engine Tests', () {
     test('Fast streaming headers contain keep-alive and identity encoding', () {
-      final headers = FastAudioService.fastStreamingHeaders;
+      const headers = FastAudioService.fastStreamingHeaders;
       expect(headers['Connection'], 'keep-alive');
       expect(headers['Accept-Encoding'], 'identity');
       expect(headers['User-Agent'], contains('High-Speed-Audio-Engine'));

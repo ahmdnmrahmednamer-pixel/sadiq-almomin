@@ -17,7 +17,7 @@ void main() {
 
   group('Extracted Sources from Folder Unit & Widget Tests', () {
     test('AudioTafsirService contains all 3 scholars with 5 platform links from PDF', () {
-      final scholars = AudioTafsirService.scholars;
+      const scholars = AudioTafsirService.scholars;
       expect(scholars.length, 3);
 
       final asmari = AudioTafsirService.instance.getScholarById('asmari');

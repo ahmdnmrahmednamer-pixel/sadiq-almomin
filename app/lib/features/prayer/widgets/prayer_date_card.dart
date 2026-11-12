@@ -27,9 +27,9 @@ class PrayerDateCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           decoration: BoxDecoration(
-            color: AppColors.primaryGreen.withOpacity(0.08),
+            color: AppColors.primaryGreen.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.6), width: 1.4),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.6), width: 1.4),
           ),
           child: Column(
             children: [
@@ -41,7 +41,7 @@ class PrayerDateCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.12),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.calendar_month_rounded, color: AppColors.primaryGreen, size: 20),
@@ -56,9 +56,9 @@ class PrayerDateCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.2),
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,

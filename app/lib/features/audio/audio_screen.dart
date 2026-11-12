@@ -250,7 +250,7 @@ class _AudioScreenState extends State<AudioScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final all = SettingsService.availableReciters;
+            const all = SettingsService.availableReciters;
             final filtered = all.where((r) {
               final normRec = ArabicNormalizer.normalize(reciterSearch, loose: true);
               final matchesQuery = reciterSearch.isEmpty ||
@@ -287,7 +287,7 @@ class _AudioScreenState extends State<AudioScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.accentGold.withOpacity(0.15),
+                            color: AppColors.accentGold.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text('${filtered.length} قارئ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
@@ -302,7 +302,7 @@ class _AudioScreenState extends State<AudioScreen> {
                         contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         filled: true,
-                        fillColor: Colors.grey.withOpacity(0.06),
+                        fillColor: Colors.grey.withValues(alpha: 0.06),
                       ),
                       onChanged: (val) {
                         setModalState(() {
@@ -322,7 +322,7 @@ class _AudioScreenState extends State<AudioScreen> {
                             child: FilterChip(
                               label: Text(cat),
                               selected: isSel,
-                              selectedColor: AppColors.accentGold.withOpacity(0.25),
+                              selectedColor: AppColors.accentGold.withValues(alpha: 0.25),
                               checkmarkColor: AppColors.primaryGreen,
                               onSelected: (_) {
                                 setModalState(() {
@@ -345,7 +345,7 @@ class _AudioScreenState extends State<AudioScreen> {
 
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: isSelected ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.1),
+                              backgroundColor: isSelected ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.record_voice_over,
                                 color: isSelected ? Colors.white : AppColors.primaryGreen,
@@ -369,6 +369,7 @@ class _AudioScreenState extends State<AudioScreen> {
                               setState(() {
                                 _currentReciter = reciter;
                               });
+                              if (!ctx.mounted) return;
                               Navigator.pop(ctx);
                               final targetSurah = _currentSurah ?? (_allSurahs.isNotEmpty ? _allSurahs.first : null);
                               if (targetSurah != null) {
@@ -558,12 +559,12 @@ class _AudioScreenState extends State<AudioScreen> {
                         : Colors.white,
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.2),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -638,7 +639,7 @@ class _AudioScreenState extends State<AudioScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.06),
+                  fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.06),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -668,12 +669,12 @@ class _AudioScreenState extends State<AudioScreen> {
 
                             return ListTile(
                               tileColor: isPlayingThis
-                                  ? (isDark ? AppColors.accentGold.withOpacity(0.15) : AppColors.accentGold.withOpacity(0.12))
+                                  ? (isDark ? AppColors.accentGold.withValues(alpha: 0.15) : AppColors.accentGold.withValues(alpha: 0.12))
                                   : null,
                               leading: CircleAvatar(
                                 backgroundColor: isPlayingThis
                                     ? AppColors.accentGold
-                                    : (isDark ? Colors.white12 : AppColors.primaryGreen.withOpacity(0.08)),
+                                    : (isDark ? Colors.white12 : AppColors.primaryGreen.withValues(alpha: 0.08)),
                                 child: Text(
                                   '${surah.id}',
                                   style: TextStyle(
@@ -701,7 +702,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.12),
+                                        color: Colors.green.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: const Row(
@@ -771,7 +772,8 @@ class _AudioScreenState extends State<AudioScreen> {
                                           surahId: surah.id,
                                           surahName: 'سورة ${surah.nameAr}',
                                         );
-                                        if (mounted && ok) {
+                                        if (!mounted) return;
+                                        if (ok) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
                                               content: Text('تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
@@ -808,7 +810,7 @@ class _AudioScreenState extends State<AudioScreen> {
                   color: isDark ? const Color(0xFF1E2522) : Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 10,
                       offset: const Offset(0, -3),
                     ),
@@ -844,7 +846,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                     ? _totalDuration.inSeconds.toDouble()
                                     : 1.0,
                                 activeColor: AppColors.accentGold,
-                                inactiveColor: AppColors.accentGold.withOpacity(0.3),
+                                inactiveColor: AppColors.accentGold.withValues(alpha: 0.3),
                                 onChanged: (val) {
                                   _audioPlayer.seek(Duration(seconds: val.toInt()));
                                 },

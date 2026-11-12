@@ -26,7 +26,7 @@ void showSettingsPreReminderModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -40,7 +40,7 @@ void showSettingsPreReminderModal(BuildContext context) {
               ...[5, 10, 15, 20, 30].map((mins) {
                 final isSelected = PrayerNotificationService.instance.preReminderMinutes == mins;
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -76,7 +76,7 @@ void showSettingsPreReminderModal(BuildContext context) {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
-                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -123,31 +123,31 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
       'name': 'الفجر',
       'icon': Icons.nights_stay_rounded,
       'spokenText': 'اقتربت صلاة الفجر، يرجى الاستعداد والتطهر',
-      'color': Color(0xFF1E293B),
+      'color': const Color(0xFF1E293B),
     },
     {
       'name': 'الظهر',
       'icon': Icons.wb_sunny_rounded,
       'spokenText': 'اقتربت صلاة الظهر، يرجى الاستعداد والتطهر',
-      'color': Color(0xFFEAB308),
+      'color': const Color(0xFFEAB308),
     },
     {
       'name': 'العصر',
       'icon': Icons.wb_twilight_rounded,
       'spokenText': 'اقتربت صلاة العصر، يرجى الاستعداد والتطهر',
-      'color': Color(0xFFF97316),
+      'color': const Color(0xFFF97316),
     },
     {
       'name': 'المغرب',
       'icon': Icons.mode_night_rounded,
       'spokenText': 'اقتربت صلاة المغرب، يرجى الاستعداد والتطهر',
-      'color': Color(0xFFDC2626),
+      'color': const Color(0xFFDC2626),
     },
     {
       'name': 'العشاء',
       'icon': Icons.dark_mode_rounded,
       'spokenText': 'اقتربت صلاة العشاء، يرجى الاستعداد والتطهر',
-      'color': Color(0xFF312E81),
+      'color': const Color(0xFF312E81),
     },
   ];
 
@@ -188,7 +188,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -205,7 +205,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                   width: 44,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.35),
+                    color: Colors.grey.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -221,12 +221,12 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.accentGold, AppColors.softGold.withOpacity(0.8)],
+                        colors: [AppColors.accentGold, AppColors.softGold.withValues(alpha: 0.8)],
                       ),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.accentGold.withOpacity(0.3),
+                          color: AppColors.accentGold.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -279,12 +279,12 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                   Container(
                     decoration: BoxDecoration(
                       color: notifService.preReminderVoiceEnabled
-                          ? AppColors.primaryGreen.withOpacity(0.08)
+                          ? AppColors.primaryGreen.withValues(alpha: 0.08)
                           : (isDark ? const Color(0xFF1C2720) : Colors.grey.shade50),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: notifService.preReminderVoiceEnabled
-                            ? AppColors.primaryGreen.withOpacity(0.3)
+                            ? AppColors.primaryGreen.withValues(alpha: 0.3)
                             : Colors.grey.shade300,
                         width: 1.2,
                       ),
@@ -310,7 +310,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                         'إطلاق نداء صوتي ينطق باسم الصلاة المقتربة للاستعداد',
                         style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
                       ),
-                      activeColor: AppColors.accentGold,
+                      activeThumbColor: AppColors.accentGold,
                       activeTrackColor: AppColors.primaryGreen,
                       value: notifService.preReminderVoiceEnabled,
                       onChanged: (val) async {
@@ -355,7 +355,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.primaryGreen.withOpacity(0.25),
+                                      color: AppColors.primaryGreen.withValues(alpha: 0.25),
                                       blurRadius: 6,
                                       offset: const Offset(0, 2),
                                     ),
@@ -410,12 +410,12 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isPrayerActive
-                              ? AppColors.primaryGreen.withOpacity(0.25)
+                              ? AppColors.primaryGreen.withValues(alpha: 0.25)
                               : Colors.grey.shade200,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -429,7 +429,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: (prayer['color'] as Color).withOpacity(0.12),
+                                  color: (prayer['color'] as Color).withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
@@ -460,7 +460,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                                 ),
                               ),
                               Switch(
-                                activeColor: AppColors.accentGold,
+                                activeThumbColor: AppColors.accentGold,
                                 activeTrackColor: AppColors.primaryGreen,
                                 value: isPrayerActive,
                                 onChanged: (val) async {
@@ -482,7 +482,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                                     foregroundColor: isPlaying ? Colors.white : AppColors.primaryGreen,
                                     backgroundColor: isPlaying ? AppColors.primaryGreen : Colors.transparent,
                                     side: BorderSide(
-                                      color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.3),
+                                      color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.3),
                                     ),
                                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -504,7 +504,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                                 child: OutlinedButton.icon(
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: AppColors.accentGold,
-                                    side: BorderSide(color: AppColors.accentGold.withOpacity(0.4)),
+                                    side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.4)),
                                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   ),
@@ -567,7 +567,7 @@ void showSettingsQiyamOffsetModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -586,7 +586,7 @@ void showSettingsQiyamOffsetModal(BuildContext context) {
               ].map((item) {
                 final isSelected = PrayerNotificationService.instance.qiyamOffsetMinutes == item['mins'];
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -622,7 +622,7 @@ void showSettingsQiyamOffsetModal(BuildContext context) {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
-                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -665,7 +665,7 @@ void showSettingsDuhaOffsetModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -684,7 +684,7 @@ void showSettingsDuhaOffsetModal(BuildContext context) {
               ].map((item) {
                 final isSelected = PrayerNotificationService.instance.duhaReminderMinutesAfterSunrise == item['mins'];
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -720,7 +720,7 @@ void showSettingsDuhaOffsetModal(BuildContext context) {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
-                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -763,7 +763,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -781,7 +781,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
               ].map((item) {
                 final isSelected = PrayerNotificationService.instance.postPrayerAdhkarMinutes == item['mins'];
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -817,7 +817,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
-                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -834,7 +834,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
               OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
-                  side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                  side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -913,7 +913,7 @@ void showSettingsSoundModeModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -927,7 +927,7 @@ void showSettingsSoundModeModal(BuildContext context) {
               ...modes.map((item) {
                 final isSelected = currentMode == item['mode'];
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),

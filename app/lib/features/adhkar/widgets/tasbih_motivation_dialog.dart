@@ -49,7 +49,7 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accentGold.withOpacity(0.45),
+                            color: AppColors.accentGold.withValues(alpha: 0.45),
                             blurRadius: 18,
                             spreadRadius: 2,
                           ),
@@ -89,7 +89,7 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isDark ? Colors.white12 : Colors.grey.shade300,
@@ -186,7 +186,7 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                         ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.primaryGreen.withOpacity(0.35),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.35),
                           width: 1,
                         ),
                       ),
@@ -254,7 +254,7 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                         color: isDark ? const Color(0xFF1B2A20) : const Color(0xFFFDFBF7),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.accentGold.withOpacity(0.4),
+                          color: AppColors.accentGold.withValues(alpha: 0.4),
                         ),
                       ),
                       child: Column(
@@ -293,7 +293,7 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                               decoration: BoxDecoration(
                                 color: amenClicked
                                     ? AppColors.primaryGreen
-                                    : AppColors.accentGold.withOpacity(0.18),
+                                    : AppColors.accentGold.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: AppColors.accentGold,

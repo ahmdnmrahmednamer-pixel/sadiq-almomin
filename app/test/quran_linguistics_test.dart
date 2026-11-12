@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/models/surah.dart';
 import 'package:almomin/core/models/ayah.dart';
-import 'package:almomin/core/services/quran_repository.dart';
 import 'package:almomin/core/services/quran_linguistics_service.dart';
 import 'package:almomin/features/mushaf/widgets/ayah_linguistics_sheet.dart';
 import 'package:almomin/features/mushaf/widgets/ayah_action_sheet.dart';

@@ -41,7 +41,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: topic.primaryColor.withOpacity(0.18)),
+        side: BorderSide(color: topic.primaryColor.withValues(alpha: 0.18)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -61,7 +61,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: topic.primaryColor.withOpacity(0.12),
+                  color: topic.primaryColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(topic.icon, color: topic.primaryColor, size: 28),
@@ -88,7 +88,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: topic.primaryColor.withOpacity(0.1),
+                            color: topic.primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -201,7 +201,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
                       selected: _selectedCategory == null,
                       label: Text('الكل (${QuranTopicService.instance.totalTopicsCount})'),
                       onSelected: (_) => setState(() => _selectedCategory = null),
-                      selectedColor: AppColors.primaryGreen.withOpacity(0.2),
+                      selectedColor: AppColors.primaryGreen.withValues(alpha: 0.2),
                       checkmarkColor: AppColors.primaryGreen,
                     ),
                   ),
@@ -215,7 +215,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
                         avatar: Icon(cat.icon, size: 16, color: isSelected ? AppColors.primaryGreen : Colors.grey),
                         label: Text('${cat.label} ($count)'),
                         onSelected: (_) => setState(() => _selectedCategory = isSelected ? null : cat),
-                        selectedColor: AppColors.primaryGreen.withOpacity(0.2),
+                        selectedColor: AppColors.primaryGreen.withValues(alpha: 0.2),
                         checkmarkColor: AppColors.primaryGreen,
                       ),
                     );
@@ -243,7 +243,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.wb_twilight_rounded, color: Colors.white, size: 22),
@@ -269,7 +269,7 @@ class _QuranTopicsScreenState extends State<QuranTopicsScreen> {
                       TextButton(
                         style: TextButton.styleFrom(
                           foregroundColor: AppColors.accentGold,
-                          backgroundColor: Colors.white.withOpacity(0.15),
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
                         child: const Text('تصفح الآيات'),

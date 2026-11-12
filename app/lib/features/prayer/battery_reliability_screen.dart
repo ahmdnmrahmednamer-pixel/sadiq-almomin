@@ -353,7 +353,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -448,11 +448,11 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
             const SizedBox(height: 24),
 
             // Section 2: OEM Specific Guides
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.phone_android, color: AppColors.primaryGreen, size: 22),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.phone_android, color: AppColors.primaryGreen, size: 22),
+                SizedBox(width: 8),
+                Text(
                   'دليل ضبط الهاتف حسب الشركة المصنعة',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                 ),
@@ -493,7 +493,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                     ),
                     selected: isSelected,
                     selectedColor: AppColors.primaryGreen,
-                    backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
+                    backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.08),
                     onSelected: (val) {
                       if (val) setState(() => _selectedOemId = guide.id);
                     },
@@ -508,7 +508,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: AppColors.accentGold.withOpacity(0.5), width: 1),
+                side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.5), width: 1),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -521,7 +521,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withOpacity(0.1),
+                            color: AppColors.primaryGreen.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.phone_android, color: AppColors.primaryGreen, size: 24),
@@ -545,7 +545,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.accentGold.withOpacity(0.2),
+                            color: AppColors.accentGold.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -595,10 +595,10 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: isDone ? AppColors.primaryGreen.withOpacity(0.05) : Colors.grey.shade50,
+                            color: isDone ? AppColors.primaryGreen.withValues(alpha: 0.05) : Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isDone ? AppColors.primaryGreen.withOpacity(0.3) : Colors.grey.shade300,
+                              color: isDone ? AppColors.primaryGreen.withValues(alpha: 0.3) : Colors.grey.shade300,
                             ),
                           ),
                           child: Row(
@@ -636,7 +636,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentGold.withOpacity(0.15),
+                                        color: AppColors.accentGold.withValues(alpha: 0.15),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -725,7 +725,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isGranted ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.15),
+                color: isGranted ? Colors.green.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(

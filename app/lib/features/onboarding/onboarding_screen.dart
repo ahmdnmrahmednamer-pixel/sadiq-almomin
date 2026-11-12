@@ -78,10 +78,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.mosque, color: AppColors.primaryGreen, size: 24),
-                        const SizedBox(width: 8),
+                        Icon(Icons.mosque, color: AppColors.primaryGreen, size: 24),
+                        SizedBox(width: 8),
                         Text(
                           'نور المؤمن',
                           style: TextStyle(
@@ -247,8 +247,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  AppColors.accentGold.withOpacity(0.3),
-                  AppColors.primaryGreen.withOpacity(0.1),
+                  AppColors.accentGold.withValues(alpha: 0.3),
+                  AppColors.primaryGreen.withValues(alpha: 0.1),
                 ],
               ),
             ),
@@ -278,10 +278,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               end: Alignment.bottomLeft,
             ),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.accentGold.withOpacity(0.7), width: 1.5),
+            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.7), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(0.35),
+                color: AppColors.primaryGreen.withValues(alpha: 0.35),
                 blurRadius: 14,
                 offset: const Offset(0, 5),
               ),
@@ -297,9 +297,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.2),
+                      color: AppColors.accentGold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                     ),
                     child: const Text(
                       'أهلاً بك في رحاب الإيمان 🕊️',
@@ -324,9 +324,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Colors.black.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.softGold.withOpacity(0.25)),
+                  border: Border.all(color: AppColors.softGold.withValues(alpha: 0.25)),
                 ),
                 child: const Column(
                   children: [
@@ -531,7 +531,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: SettingsService.availableReciters.any((r) => r.id == _selectedReciterId)
+                  initialValue: SettingsService.availableReciters.any((r) => r.id == _selectedReciterId)
                       ? _selectedReciterId
                       : SettingsService.availableReciters.first.id,
                   decoration: InputDecoration(
@@ -588,7 +588,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.06),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -631,7 +631,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             secondary: const Icon(Icons.notifications_active, color: AppColors.primaryGreen),
             title: const Text('تفعيل تنبيهات الأذان ومواقيت الصلاة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             subtitle: const Text('إطلاق الأذان عند دخول وقت الفريضة', style: TextStyle(fontSize: 12)),
-            activeColor: AppColors.primaryGreen,
+            activeThumbColor: AppColors.primaryGreen,
             value: _enableNotifications,
             onChanged: (val) => setState(() => _enableNotifications = val),
           ),
@@ -642,7 +642,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: AppColors.accentGold.withOpacity(0.12),
+            color: AppColors.accentGold.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.accentGold, width: 1.2),
           ),
@@ -695,7 +695,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(0.3),
+                color: AppColors.primaryGreen.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -736,7 +736,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.08),
+              color: AppColors.primaryGreen.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppColors.primaryGreen, size: 20),

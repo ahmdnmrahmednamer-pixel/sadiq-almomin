@@ -77,7 +77,7 @@ void main() {
     });
 
     test('Ramadan supplications list contains authentic verified Duas', () {
-      final duass = RamadanService.supplications;
+      const duass = RamadanService.supplications;
       expect(duass.length, greaterThanOrEqualTo(5));
 
       for (final d in duass) {

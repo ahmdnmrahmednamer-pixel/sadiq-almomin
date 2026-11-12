@@ -41,10 +41,10 @@ class MemorizationPlaybackBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

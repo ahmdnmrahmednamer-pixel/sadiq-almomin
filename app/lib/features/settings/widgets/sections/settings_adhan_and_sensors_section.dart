@@ -35,7 +35,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -57,7 +57,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Material(
-                    color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                    color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
                       decoration: BoxDecoration(
@@ -71,7 +71,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.accentGold.withOpacity(0.2) : AppColors.primaryGreen.withOpacity(0.08),
+                            color: isSelected ? AppColors.accentGold.withValues(alpha: 0.2) : AppColors.primaryGreen.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -92,7 +92,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                             ? Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
@@ -141,7 +141,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -165,7 +165,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Material(
-                    color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                    color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
                       decoration: BoxDecoration(
@@ -179,7 +179,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.accentGold.withOpacity(0.2) : AppColors.primaryGreen.withOpacity(0.08),
+                            color: isSelected ? AppColors.accentGold.withValues(alpha: 0.2) : AppColors.primaryGreen.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -200,7 +200,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                             ? Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withOpacity(0.2),
+                                  color: AppColors.accentGold.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
@@ -240,7 +240,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           secondary: const Icon(Icons.alarm_on_rounded, color: AppColors.primaryGreen),
           title: const Text('التنبيه المسبق قبل الأذان'),
           value: pn.preReminderEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => pn.togglePreReminder(val),
         ),
@@ -248,7 +248,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.10),
+              color: AppColors.primaryGreen.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.timer_rounded, color: AppColors.primaryGreen, size: 20),
@@ -262,7 +262,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           secondary: const Icon(Icons.nightlight_round, color: AppColors.accentGold),
           title: const Text('تنبيه قيام الليل والتهجد 🌙'),
           value: pn.qiyamReminderEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => pn.toggleQiyamReminder(val),
         ),
@@ -270,7 +270,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: AppColors.accentGold.withOpacity(0.12),
+              color: AppColors.accentGold.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.access_time_filled_rounded, color: AppColors.accentGold, size: 20),
@@ -284,12 +284,12 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           secondary: const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen),
           title: const Text('تذكير سنن يوم الجمعة المباركة 🕌'),
           value: pn.fridayReminderEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => pn.toggleFridayReminder(val),
         ),
 
-        SettingsSectionHeader(
+        const SettingsSectionHeader(
           title: 'إيماءات التحكم بالأذان ومستشعرات الحركة',
           icon: Icons.sensors_rounded,
         ),
@@ -297,7 +297,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           secondary: const Icon(Icons.picture_in_picture_alt_rounded, color: AppColors.primaryGreen),
           title: const Text('الظهور فوق التطبيقات وشاشة القفل'),
           value: AdhanSensorGestureService.instance.overlayWindowEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => AdhanSensorGestureService.instance.toggleOverlayWindow(val),
         ),
@@ -309,7 +309,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: pn.masterEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) {
             s.toggleAdhanAlerts(val);
@@ -513,7 +513,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           title: const Text('أذان الفجر المميز (الصلاة خير من النوم)',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: pn.fajrDistinctVoiceEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => pn.toggleFajrDistinctVoice(val),
         ),
@@ -527,7 +527,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               'سماع دعاء «اللهم رب هذه الدعوة التامة» بصوت إمام الدعاة الشيخ الشعراوي عقب كل أذان تلقائياً',
               style: TextStyle(fontSize: 12)),
           value: s.playSharawiDuaaAfterAdhan,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => s.togglePlaySharawiDuaaAfterAdhan(val),
         ),
@@ -541,7 +541,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               'تذكير بكتم الرنين لمدة ٢٠ دقيقة عقب الإقامة للخشوع في الصلاة',
               style: TextStyle(fontSize: 12)),
           value: s.autoSilentDuringPrayer,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => s.toggleAutoSilentDuringPrayer(val),
         ),
@@ -555,7 +555,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               'تذكير بسنن الفجر والظهر والمغرب والعشاء لبناء بيت في الجنة',
               style: TextStyle(fontSize: 12)),
           value: s.sunanRawatibReminderEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => s.toggleSunanRawatibReminder(val),
         ),
@@ -566,7 +566,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           title: const Text('إيقاف الأذان عند هز الهاتف 📳',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: AdhanSensorGestureService.instance.shakeToStopEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) =>
               AdhanSensorGestureService.instance.toggleShakeToStop(val),
@@ -578,7 +578,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           title: const Text('كتم الأذان عند قلب الهاتف على وجهه 📱',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: AdhanSensorGestureService.instance.flipToMuteEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) =>
               AdhanSensorGestureService.instance.toggleFlipToMute(val),
@@ -593,7 +593,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               'زيادة عداد السبحة وسليدر الحبات بمقدار (+١) مع كل ضغطة على زر رفع الصوت',
               style: TextStyle(fontSize: 12)),
           value: s.tasbihVolumeButtonEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => s.toggleTasbihVolumeButton(val),
         ),
@@ -607,7 +607,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               'شريط سحب تفاعلي يعرض تقدم التسبيحات ويتحرك مع زر رفع الصوت أو السحب اليدوي',
               style: TextStyle(fontSize: 12)),
           value: s.tasbihSliderEnabled,
-          activeColor: AppColors.accentGold,
+          activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           onChanged: (val) => s.toggleTasbihSlider(val),
         ),

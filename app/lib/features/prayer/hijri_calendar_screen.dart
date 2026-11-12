@@ -184,7 +184,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.25),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.25),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -237,7 +237,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
+                      color: Colors.white.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -344,7 +344,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                         decoration: BoxDecoration(
                           color: isCurrent
                               ? AppColors.accentGold
-                              : AppColors.primaryGreen.withOpacity(0.12),
+                              : AppColors.primaryGreen.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -374,7 +374,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.softGold.withOpacity(0.3),
+                                    color: AppColors.softGold.withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -497,7 +497,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.accentGold.withOpacity(0.2),
+                        color: AppColors.accentGold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

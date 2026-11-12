@@ -166,13 +166,13 @@ class HomeQuickSectionsGrid extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: item.color.withOpacity(isDark ? 0.35 : 0.2),
+                color: item.color.withValues(alpha: isDark ? 0.35 : 0.2),
                 width: 1.2,
               ),
               gradient: LinearGradient(
                 colors: isDark
                     ? [const Color(0xFF1E2823), const Color(0xFF17201C)]
-                    : [Colors.white, item.color.withOpacity(0.04)],
+                    : [Colors.white, item.color.withValues(alpha: 0.04)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -188,16 +188,16 @@ class HomeQuickSectionsGrid extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.12),
+                        color: item.color.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
-                        border: Border.all(color: item.color.withOpacity(0.25)),
+                        border: Border.all(color: item.color.withValues(alpha: 0.25)),
                       ),
                       child: Icon(item.icon, color: item.color, size: 20),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: item.color.withOpacity(0.1),
+                        color: item.color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

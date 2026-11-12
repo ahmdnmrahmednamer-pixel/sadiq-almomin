@@ -153,16 +153,18 @@ class VoiceSearchService extends ChangeNotifier {
             notifyListeners();
           }
         },
-        localeId: _preferredArabicLocale ?? 'ar-EG',
-        listenFor: const Duration(seconds: 25),
-        pauseFor: const Duration(seconds: 3),
+        listenOptions: SpeechListenOptions(
+          localeId: _preferredArabicLocale ?? 'ar-EG',
+          listenFor: const Duration(seconds: 25),
+          pauseFor: const Duration(seconds: 3),
+          cancelOnError: true,
+          partialResults: true,
+        ),
         onSoundLevelChange: (level) {
           _soundLevel = level;
           onSoundLevel?.call(level);
           notifyListeners();
         },
-        cancelOnError: true,
-        partialResults: true,
       );
     } catch (e) {
       _status = VoiceSearchStatus.error;

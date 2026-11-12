@@ -1,6 +1,5 @@
 import '../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/models/tajweed_rule.dart';
 import '../../core/services/tajweed_service.dart';
@@ -105,12 +104,12 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: rule.ruleColor.withOpacity(0.4),
+                    color: rule.ruleColor.withValues(alpha: 0.4),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: rule.ruleColor.withOpacity(0.08),
+                      color: rule.ruleColor.withValues(alpha: 0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 5),
                     ),
@@ -124,9 +123,9 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: rule.ruleColor.withOpacity(0.15),
+                            color: rule.ruleColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: rule.ruleColor.withOpacity(0.3)),
+                            border: Border.all(color: rule.ruleColor.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -148,7 +147,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: rule.ruleColor.withOpacity(0.12),
+                            color: rule.ruleColor.withValues(alpha: 0.12),
                           ),
                           child: Icon(Icons.menu_book, color: rule.ruleColor, size: 20),
                         ),
@@ -195,7 +194,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF1E2822) : const Color(0xFFE8F5E9),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: rule.ruleColor.withOpacity(0.3)),
+                        border: Border.all(color: rule.ruleColor.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         letter,
@@ -239,9 +238,9 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0288D1).withOpacity(isDark ? 0.12 : 0.06),
+                    color: const Color(0xFF0288D1).withValues(alpha: isDark ? 0.12 : 0.06),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF0288D1).withOpacity(0.2)),
+                    border: Border.all(color: const Color(0xFF0288D1).withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,9 +275,9 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(isDark ? 0.1 : 0.07),
+                      color: AppColors.accentGold.withValues(alpha: isDark ? 0.1 : 0.07),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.35)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
                     ),
                     child: Column(
                       children: [
@@ -336,7 +335,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: rule.ruleColor.withOpacity(0.12),
+                                  color: rule.ruleColor.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -392,9 +391,9 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.08),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.2)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
                   ),
                   child: const Text(
                     'تطبيق نور المؤمن — تعلّم أحكام التجويد وإتقان التلاوة',

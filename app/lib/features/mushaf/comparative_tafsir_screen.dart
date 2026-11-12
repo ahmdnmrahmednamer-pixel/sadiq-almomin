@@ -260,7 +260,7 @@ class _ComparativeTafsirScreenState extends State<ComparativeTafsirScreen> {
                 FilterChip(
                   label: const Text('إظهار الثالث'),
                   selected: _showThirdEdition,
-                  selectedColor: AppColors.accentGold.withOpacity(0.3),
+                  selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                   onSelected: (v) => setState(() => _showThirdEdition = v),
                 ),
               ],
@@ -384,7 +384,7 @@ class _ComparativeTafsirScreenState extends State<ComparativeTafsirScreen> {
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: accent.withOpacity(0.35), width: 1.2),
+          side: BorderSide(color: accent.withValues(alpha: 0.35), width: 1.2),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),

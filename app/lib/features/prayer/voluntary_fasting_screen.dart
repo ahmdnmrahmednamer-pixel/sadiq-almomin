@@ -140,7 +140,7 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                           fontWeight: FontWeight.w800, fontSize: 14)),
                   subtitle: const Text(VoluntaryFastingService.intentionNote,
                       style: TextStyle(fontSize: 11.5)),
-                  activeColor: AppColors.accentGold,
+                  activeThumbColor: AppColors.accentGold,
                   activeTrackColor: AppColors.primaryGreen,
                   value: service.suhoorReminderEnabled,
                   onChanged: (val) => service.toggleSuhoorReminder(val),
@@ -179,7 +179,7 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color:
-                                      AppColors.accentGold.withOpacity(0.15),
+                                      AppColors.accentGold.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -203,7 +203,7 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withOpacity(0.06),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -221,7 +221,7 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                             minHeight: 8,
                             borderRadius: BorderRadius.circular(6),
                             color: AppColors.primaryGreen,
-                            backgroundColor: Colors.grey.withOpacity(0.2),
+                            backgroundColor: Colors.grey.withValues(alpha: 0.2),
                           ),
                           const SizedBox(height: 8),
                           Row(

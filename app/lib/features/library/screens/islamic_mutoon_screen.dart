@@ -64,7 +64,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                       end: Alignment.bottomLeft,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.accentGold.withOpacity(0.5)),
+                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,7 +129,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
                         side: BorderSide(
-                          color: isMem ? AppColors.accentGold : Colors.grey.withOpacity(0.25),
+                          color: isMem ? AppColors.accentGold : Colors.grey.withValues(alpha: 0.25),
                           width: isMem ? 1.6 : 1.0,
                         ),
                       ),
@@ -153,7 +153,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                                 FilterChip(
                                   label: Text(isMem ? 'تم الحفظ ✓' : 'تحديد كمحفوظ'),
                                   selected: isMem,
-                                  selectedColor: AppColors.accentGold.withOpacity(0.35),
+                                  selectedColor: AppColors.accentGold.withValues(alpha: 0.35),
                                   onSelected: (_) => IslamicMutoonService.instance.toggleMemorized(sec.id),
                                 ),
                               ],
@@ -164,7 +164,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                               decoration: BoxDecoration(
                                 color: isDark ? const Color(0xFF16211C) : const Color(0xFFFBF9F2),
                                 borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.accentGold.withOpacity(0.45)),
+                                border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.45)),
                               ),
                               child: Text(
                                 sec.vocalizedText,
@@ -185,7 +185,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withOpacity(0.08),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(

@@ -113,7 +113,7 @@ class AudioDownloadService extends ChangeNotifier {
     if (!await dir.exists()) return;
 
     final entities = dir.listSync();
-    final reciters = SettingsService.availableReciters;
+    const reciters = SettingsService.availableReciters;
     Map<int, String> surahNames = {};
     try {
       final surahs = await QuranRepository.loadSurahs();
@@ -241,7 +241,7 @@ class AudioDownloadService extends ChangeNotifier {
       if (finalFile.existsSync()) finalFile.deleteSync();
       await File(tempFilePath).rename(filePath);
 
-      final reciters = SettingsService.availableReciters;
+      const reciters = SettingsService.availableReciters;
       final reciter = reciters.firstWhere(
         (r) => r.id == reciterId,
         orElse: () => reciters.first,

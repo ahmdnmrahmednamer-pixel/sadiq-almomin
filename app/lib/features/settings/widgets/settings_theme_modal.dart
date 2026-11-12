@@ -23,7 +23,7 @@ void showSettingsThemeModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -65,7 +65,7 @@ void showSettingsThemeModal(BuildContext context) {
                 }
 
                 return Material(
-                  color: isSelected ? AppColors.primaryGreen.withOpacity(0.08) : Colors.transparent,
+                  color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
                   borderRadius: BorderRadius.circular(14),
                   child: Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -109,7 +109,7 @@ void showSettingsThemeModal(BuildContext context) {
                           ? Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withOpacity(0.2),
+                                color: AppColors.accentGold.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),

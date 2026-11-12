@@ -79,14 +79,14 @@ class _AyahMarkerPainter extends CustomPainter {
     if (isPlaying) {
       // Glow background for currently playing ayah
       final glowPaint = Paint()
-        ..color = color.withOpacity(0.25)
+        ..color = color.withValues(alpha: 0.25)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(center, radius + 2, glowPaint);
     }
 
     // Outer subtle circle
     final outerRingPaint = Paint()
-      ..color = color.withOpacity(0.4)
+      ..color = color.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
     canvas.drawCircle(center, radius, outerRingPaint);
@@ -118,13 +118,13 @@ class _AyahMarkerPainter extends CustomPainter {
 
     // Inner background disk
     final innerBgPaint = Paint()
-      ..color = color.withOpacity(0.08)
+      ..color = color.withValues(alpha: 0.08)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, innerRadius - 0.5, innerBgPaint);
 
     // Inner circle border
     final innerCirclePaint = Paint()
-      ..color = color.withOpacity(0.85)
+      ..color = color.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
     canvas.drawCircle(center, innerRadius - 0.5, innerCirclePaint);
@@ -244,8 +244,8 @@ class IslamicSectionDivider extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    ornamentColor.withOpacity(0.0),
-                    ornamentColor.withOpacity(0.6),
+                    ornamentColor.withValues(alpha: 0.0),
+                    ornamentColor.withValues(alpha: 0.6),
                   ],
                 ),
               ),
@@ -271,8 +271,8 @@ class IslamicSectionDivider extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    ornamentColor.withOpacity(0.6),
-                    ornamentColor.withOpacity(0.0),
+                    ornamentColor.withValues(alpha: 0.6),
+                    ornamentColor.withValues(alpha: 0.0),
                   ],
                 ),
               ),

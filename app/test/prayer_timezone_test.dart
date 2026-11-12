@@ -4,7 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 void main() {
   test('adhan_dart utc vs local demonstration', () {
     final now = DateTime(2026, 10, 16);
-    final coords = Coordinates(30.0444, 31.2357); // Cairo
+    const coords = Coordinates(30.0444, 31.2357); // Cairo
     final params = CalculationMethodParameters.egyptian();
     final pt = PrayerTimes(
       coordinates: coords,

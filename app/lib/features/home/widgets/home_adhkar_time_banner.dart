@@ -28,8 +28,8 @@ class HomeAdhkarTimeBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               colors: isMorning
-                  ? [const Color(0xFFD4AF37).withOpacity(0.2), const Color(0xFFE9D8A6).withOpacity(0.3)]
-                  : [const Color(0xFF2C3E50).withOpacity(0.2), const Color(0xFF34495E).withOpacity(0.3)],
+                  ? [const Color(0xFFD4AF37).withValues(alpha: 0.2), const Color(0xFFE9D8A6).withValues(alpha: 0.3)]
+                  : [const Color(0xFF2C3E50).withValues(alpha: 0.2), const Color(0xFF34495E).withValues(alpha: 0.3)],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),

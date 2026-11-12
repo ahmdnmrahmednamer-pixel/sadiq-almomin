@@ -69,7 +69,7 @@ class TopicDetailScreen extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     topic.primaryColor,
-                    topic.primaryColor.withOpacity(0.8),
+                    topic.primaryColor.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
@@ -77,7 +77,7 @@ class TopicDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: topic.primaryColor.withOpacity(0.25),
+                    color: topic.primaryColor.withValues(alpha: 0.25),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -91,7 +91,7 @@ class TopicDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(topic.icon, color: Colors.white, size: 28),
@@ -104,7 +104,7 @@ class TopicDetailScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -131,7 +131,7 @@ class TopicDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -185,7 +185,7 @@ class TopicDetailScreen extends StatelessWidget {
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: topic.primaryColor.withOpacity(0.2)),
+                  side: BorderSide(color: topic.primaryColor.withValues(alpha: 0.2)),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(18.0),
@@ -199,7 +199,7 @@ class TopicDetailScreen extends StatelessWidget {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: topic.primaryColor.withOpacity(0.12),
+                              color: topic.primaryColor.withValues(alpha: 0.12),
                               shape: BoxShape.circle,
                             ),
                             alignment: Alignment.center,
@@ -240,7 +240,7 @@ class TopicDetailScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withOpacity(0.08),
+                              color: AppColors.primaryGreen.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -274,7 +274,7 @@ class TopicDetailScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.amber.shade50.withOpacity(0.6),
+                          color: Colors.amber.shade50.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.amber.shade200),
                         ),
@@ -307,7 +307,7 @@ class TopicDetailScreen extends StatelessWidget {
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primaryGreen,
-                              side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.4)),
+                              side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.4)),
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -343,9 +343,9 @@ class TopicDetailScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: AppColors.accentGold.withOpacity(0.08),
+                color: AppColors.accentGold.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,

@@ -109,7 +109,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -124,7 +124,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.35),
+                  color: Colors.grey.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -141,7 +141,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withOpacity(0.12),
+                          color: AppColors.primaryGreen.withValues(alpha: 0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 20),
@@ -250,7 +250,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                             decoration: BoxDecoration(
                               color: isDark ? const Color(0xFF232A26) : const Color(0xFFF9F7F1),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.accentGold.withOpacity(0.6), width: 1.2),
+                              border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.6), width: 1.2),
                             ),
                             child: Column(
                               children: [
@@ -339,7 +339,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E2522) : Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+                border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
               ),
               child: SafeArea(
                 child: Row(

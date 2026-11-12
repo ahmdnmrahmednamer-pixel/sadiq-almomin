@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:almomin/core/models/arab_countries.dart';
 import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/features/prayer/widgets/arab_city_picker_modal.dart';
@@ -17,7 +16,7 @@ void main() {
 
   group('Arab Countries & Cities Dataset Completeness Tests', () {
     test('Contains all 22 sovereign Arab League nations', () {
-      final countries = ArabCountriesData.countries;
+      const countries = ArabCountriesData.countries;
       expect(countries.length, 22);
 
       final countryNames = countries.map((c) => c.name).toList();

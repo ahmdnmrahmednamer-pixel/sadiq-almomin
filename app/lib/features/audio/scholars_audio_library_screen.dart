@@ -128,7 +128,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                         : const Color(0xFFF3F8F5),
                     border: Border(
                       bottom: BorderSide(
-                        color: AppColors.primaryGreen.withOpacity(0.2),
+                        color: AppColors.primaryGreen.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -158,7 +158,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: BorderSide(
-                                color: AppColors.primaryGreen.withOpacity(0.3)),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                           ),
                         ),
                         onChanged: (val) => setState(() => _searchQuery = val),
@@ -455,7 +455,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                         CircleAvatar(
                           radius: 22,
                           backgroundColor:
-                              AppColors.primaryGreen.withOpacity(0.12),
+                              AppColors.primaryGreen.withValues(alpha: 0.12),
                           child: const Icon(
                             Icons.record_voice_over_rounded,
                             color: AppColors.primaryGreen,
@@ -482,7 +482,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                                         horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryGreen
-                                          .withOpacity(0.1),
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
@@ -538,7 +538,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withOpacity(0.12),
+                              color: AppColors.accentGold.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -688,7 +688,7 @@ class _ScholarDetailLecturesScreenState
                           CircleAvatar(
                             radius: 26,
                             backgroundColor:
-                                AppColors.accentGold.withOpacity(0.2),
+                                AppColors.accentGold.withValues(alpha: 0.2),
                             child: const Icon(
                               Icons.mic_external_on_rounded,
                               color: AppColors.accentGold,
@@ -887,7 +887,7 @@ class _LectureCardWidget extends StatelessWidget {
         side: BorderSide(
           color: isPlaying
               ? AppColors.primaryGreen
-              : Colors.grey.withOpacity(0.2),
+              : Colors.grey.withValues(alpha: 0.2),
           width: isPlaying ? 2 : 1,
         ),
       ),
@@ -985,7 +985,7 @@ class _LectureCardWidget extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.1),
+                    color: AppColors.primaryGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

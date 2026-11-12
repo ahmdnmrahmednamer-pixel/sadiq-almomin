@@ -12,7 +12,7 @@ class SunanRawatibScreen extends StatefulWidget {
 }
 
 class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
   String _selectedFilter = 'all'; // 'all', 'rawatib', 'nawafil'
 
   @override
@@ -65,7 +65,7 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: houseBuilt ? AppColors.accentGold : AppColors.accentGold.withOpacity(0.4),
+                        color: houseBuilt ? AppColors.accentGold : AppColors.accentGold.withValues(alpha: 0.4),
                         width: houseBuilt ? 2.0 : 1.0,
                       ),
                     ),
@@ -76,7 +76,7 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withOpacity(0.22),
+                                color: AppColors.accentGold.withValues(alpha: 0.22),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -178,7 +178,7 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                          color: done ? AppColors.accentGold : Colors.grey.withOpacity(0.2),
+                          color: done ? AppColors.accentGold : Colors.grey.withValues(alpha: 0.2),
                           width: done ? 1.6 : 1.0,
                         ),
                       ),
@@ -202,8 +202,8 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: item.isRawatib12
-                                    ? AppColors.accentGold.withOpacity(0.22)
-                                    : AppColors.primaryGreen.withOpacity(0.12),
+                                    ? AppColors.accentGold.withValues(alpha: 0.22)
+                                    : AppColors.primaryGreen.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(

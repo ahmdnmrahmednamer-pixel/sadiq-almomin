@@ -104,7 +104,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
     final Color headerBg = isSepia
         ? const Color(0xFFEFE6D2)
-        : (isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.08));
+        : (isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.08));
 
     final Color headerBorder = isSepia
         ? const Color(0xFFC9A84D)
@@ -371,7 +371,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                                 fontSize: _fontSize,
                                 height: 2.2,
                                 color: isPlaying ? AppColors.accentGold : textColor,
-                                backgroundColor: isPlaying ? AppColors.accentGold.withOpacity(0.18) : Colors.transparent,
+                                backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : Colors.transparent,
                                 fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
                                 fontFamilyFallback: const [
                                   'Traditional Arabic',
@@ -431,9 +431,9 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
           return Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E2823) : AppColors.primaryGreen.withOpacity(0.08),
+              color: isDark ? const Color(0xFF1E2823) : AppColors.primaryGreen.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+              border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -482,7 +482,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -497,7 +497,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.12),
+                        color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -595,9 +595,9 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade50,
+                    color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -705,9 +705,9 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.08),
+                      color: AppColors.accentGold.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.accentGold.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

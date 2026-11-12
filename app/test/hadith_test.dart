@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:almomin/core/models/hadith.dart';
 import 'package:almomin/core/services/hadith_service.dart';
-import 'package:almomin/core/services/hadith_data.dart';
 import 'package:almomin/features/hadith/hadith_library_screen.dart';
 import 'package:almomin/features/hadith/hadith_detail_screen.dart';
 

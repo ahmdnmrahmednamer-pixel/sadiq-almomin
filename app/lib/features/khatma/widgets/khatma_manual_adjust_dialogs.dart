@@ -38,7 +38,7 @@ void showKhatmaManualPageAdjustDialog(BuildContext context, KhatmaPlan plan) {
               decoration: InputDecoration(
                 labelText: 'رقم الصفحة (من ١ إلى ٦٠٤)',
                 filled: true,
-                fillColor: AppColors.primaryGreen.withOpacity(0.05),
+                fillColor: AppColors.primaryGreen.withValues(alpha: 0.05),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.bookmark_border_rounded),
               ),
@@ -110,7 +110,7 @@ void showKhatmaReminderSettingsDialog(BuildContext context, KhatmaPlan plan) {
                   title: const Text('تفعيل التنبيه اليومي', style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text('تنبيه يومي لطيف بمستهدف ورد اليوم', style: TextStyle(fontSize: 12, color: AppColors.mutedText)),
                   value: enabled,
-                  activeColor: AppColors.primaryGreen,
+                  activeThumbColor: AppColors.primaryGreen,
                   onChanged: (val) {
                     setLocalState(() => enabled = val);
                   },
@@ -120,7 +120,7 @@ void showKhatmaReminderSettingsDialog(BuildContext context, KhatmaPlan plan) {
                   ListTile(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.3)),
+                      side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
                     ),
                     leading: const Icon(Icons.access_time_rounded, color: AppColors.primaryGreen),
                     title: const Text('وقت التنبيه المفضل', style: TextStyle(fontWeight: FontWeight.w600)),
@@ -220,7 +220,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('جزء كامل (٢٠ صفحة)'),
                         selected: !isCustom && selectedPace == 20,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -233,7 +233,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('نصف جزء (١٠ صفحات)'),
                         selected: !isCustom && selectedPace == 10,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -246,7 +246,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('حزب / ربع جزء (٥ صفحات)'),
                         selected: !isCustom && selectedPace == 5,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -259,7 +259,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('جزآن يومياً (٤٠ صفحة)'),
                         selected: !isCustom && selectedPace == 40,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -272,7 +272,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('صفحة بعد كل صلاة (٤ صفحات)'),
                         selected: !isCustom && selectedPace == 4,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -285,7 +285,7 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                       ChoiceChip(
                         label: const Text('مقدار مخصص...'),
                         selected: isCustom,
-                        selectedColor: AppColors.accentGold.withOpacity(0.3),
+                        selectedColor: AppColors.accentGold.withValues(alpha: 0.3),
                         onSelected: (val) {
                           if (val) {
                             setDialogState(() {
@@ -331,9 +331,9 @@ void showKhatmaDailyWirdAdjustDialog(BuildContext context, KhatmaPlan plan) {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.06),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       children: [

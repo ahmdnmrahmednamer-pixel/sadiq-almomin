@@ -31,12 +31,12 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.primaryGreen.withOpacity(0.16),
-                            AppColors.emeraldLight.withOpacity(0.12),
+                            AppColors.primaryGreen.withValues(alpha: 0.16),
+                            AppColors.emeraldLight.withValues(alpha: 0.12),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.primaryGreen.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                       ),
                       child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 26),
                     ),
@@ -76,7 +76,7 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.accentGold.withOpacity(0.35),
+                            color: AppColors.accentGold.withValues(alpha: 0.35),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),

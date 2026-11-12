@@ -56,7 +56,7 @@ class MemorizationControlsPanel extends StatelessWidget {
         color: isDark ? AppColors.darkSurface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -75,7 +75,7 @@ class MemorizationControlsPanel extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<int>(
@@ -207,7 +207,7 @@ class MemorizationControlsPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,10 +219,10 @@ class MemorizationControlsPanel extends StatelessWidget {
               isExpanded: true,
               isDense: true,
               value: value.clamp(1, max < 1 ? 1 : max),
-              items: List.generate(max < 1 ? 1 : max, (i) => i + 1).map((num) {
+              items: List.generate(max < 1 ? 1 : max, (i) => i + 1).map((n) {
                 return DropdownMenuItem<int>(
-                  value: num,
-                  child: Text('$num', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  value: n,
+                  child: Text('$n', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 );
               }).toList(),
               onChanged: (val) {
@@ -257,7 +257,7 @@ class MemorizationControlsPanel extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           decoration: BoxDecoration(
-            color: AppColors.primaryGreen.withOpacity(0.08),
+            color: AppColors.primaryGreen.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Column(

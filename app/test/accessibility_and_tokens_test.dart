@@ -32,11 +32,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.lightTheme,
-          home: MediaQuery(
-            data: const MediaQueryData(
+          home: const MediaQuery(
+            data: MediaQueryData(
               textScaler: TextScaler.linear(1.5),
             ),
-            child: const Scaffold(
+            child: Scaffold(
               drawer: AppNavigationDrawer(),
               body: Center(child: Text('Body')),
             ),
@@ -70,11 +70,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.darkTheme,
-          home: MediaQuery(
-            data: const MediaQueryData(
+          home: const MediaQuery(
+            data: MediaQueryData(
               textScaler: TextScaler.linear(1.5),
             ),
-            child: const Scaffold(
+            child: Scaffold(
               drawer: AppNavigationDrawer(),
               body: Center(child: Text('Body')),
             ),

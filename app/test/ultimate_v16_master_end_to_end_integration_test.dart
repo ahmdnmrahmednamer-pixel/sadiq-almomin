@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,7 +58,7 @@ void main() {
       await SettingsService.instance.setTasbihSliderEnabled(true);
 
       await AdhkarService.instance.setTasbihTarget(100);
-      await AdhkarService.instance.incrementTasbih(step: 42);
+      AdhkarService.instance.incrementTasbih(step: 42);
       expect(AdhkarService.instance.tasbihCount, equals(42));
       expect(AdhkarService.instance.tasbihTotalToday, equals(42));
 

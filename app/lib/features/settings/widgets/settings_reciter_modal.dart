@@ -37,7 +37,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
     final isDark = theme.brightness == Brightness.dark;
     final currentReciterId = SettingsService.instance.selectedReciterId;
 
-    final allReciters = SettingsService.availableReciters;
+    const allReciters = SettingsService.availableReciters;
     final normRecQ = ArabicNormalizer.normalize(_searchQuery, loose: true);
     final filteredReciters = allReciters.where((r) {
       final matchesQuery = _searchQuery.isEmpty ||
@@ -59,7 +59,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -75,7 +75,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                 height: 5,
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.35),
+                  color: Colors.grey.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -89,7 +89,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.12),
+                      color: AppColors.primaryGreen.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -125,7 +125,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.18),
+                      color: AppColors.accentGold.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -161,7 +161,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                         )
                       : null,
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withOpacity(0.06),
+                  fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.06),
                   contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -194,7 +194,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                       ),
                       selected: isCatSelected,
                       selectedColor: AppColors.primaryGreen,
-                      backgroundColor: isDark ? const Color(0xFF242A27) : AppColors.primaryGreen.withOpacity(0.08),
+                      backgroundColor: isDark ? const Color(0xFF242A27) : AppColors.primaryGreen.withValues(alpha: 0.08),
                       checkmarkColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       onSelected: (_) {
@@ -215,7 +215,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withOpacity(0.5)),
+                          Icon(Icons.search_off_rounded, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
                           const SizedBox(height: 10),
                           Text(
                             'لم يتم العثور على قارئ يطابق "$_searchQuery"',
@@ -236,7 +236,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.primaryGreen.withOpacity(0.10)
+                                ? AppColors.primaryGreen.withValues(alpha: 0.10)
                                 : (isDark ? const Color(0xFF1B221E) : Colors.white),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
@@ -248,7 +248,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                      color: AppColors.accentGold.withOpacity(0.18),
+                                      color: AppColors.accentGold.withValues(alpha: 0.18),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -273,7 +273,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                                       : null,
                                   color: isSelected
                                       ? null
-                                      : (isDark ? const Color(0xFF28342E) : AppColors.primaryGreen.withOpacity(0.08)),
+                                      : (isDark ? const Color(0xFF28342E) : AppColors.primaryGreen.withValues(alpha: 0.08)),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -299,7 +299,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                                       margin: const EdgeInsets.only(right: 6),
                                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppColors.accentGold.withOpacity(0.2),
+                                        color: AppColors.accentGold.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: const Text(
@@ -340,7 +340,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                                 ? Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                     decoration: BoxDecoration(
-                                      color: AppColors.accentGold.withOpacity(0.2),
+                                      color: AppColors.accentGold.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: const Text(

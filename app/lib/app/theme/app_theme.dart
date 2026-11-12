@@ -185,7 +185,7 @@ abstract final class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Radii.full),
-          borderSide: BorderSide(color: scheme.outlineVariant.withOpacity(0.5)),
+          borderSide: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Radii.full),

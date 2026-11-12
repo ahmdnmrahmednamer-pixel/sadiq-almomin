@@ -121,12 +121,12 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withOpacity(0.35),
+          color: _isPlaying ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.35),
           width: _isPlaying ? 1.8 : 1.2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryGreen.withOpacity(_isPlaying ? 0.25 : 0.08),
+            color: AppColors.primaryGreen.withValues(alpha: _isPlaying ? 0.25 : 0.08),
             blurRadius: _isPlaying ? 14 : 6,
             offset: const Offset(0, 4),
           ),
@@ -151,7 +151,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.accentGold.withOpacity(0.35),
+                        color: AppColors.accentGold.withValues(alpha: 0.35),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -195,9 +195,9 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.accentGold.withOpacity(0.18),
+                              color: AppColors.accentGold.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.accentGold.withOpacity(0.4)),
+                              border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
                             ),
                             child: const Text(
                               'مدمج 🎧',
@@ -232,11 +232,11 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: widget.isDark
-                  ? const Color(0xFF1B3D2F).withOpacity(0.7)
+                  ? const Color(0xFF1B3D2F).withValues(alpha: 0.7)
                   : Colors.white,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: AppColors.accentGold.withOpacity(0.3),
+                color: AppColors.accentGold.withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -295,7 +295,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                               overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                               activeTrackColor: AppColors.accentGold,
-                              inactiveTrackColor: AppColors.primaryGreen.withOpacity(0.2),
+                              inactiveTrackColor: AppColors.primaryGreen.withValues(alpha: 0.2),
                               thumbColor: AppColors.accentGold,
                             ),
                             child: Slider(
@@ -387,8 +387,8 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: widget.isDark
-                  ? const Color(0xFF0F1E17).withOpacity(0.8)
-                  : Colors.white.withOpacity(0.9),
+                  ? const Color(0xFF0F1E17).withValues(alpha: 0.8)
+                  : Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: widget.isDark ? Colors.white10 : Colors.grey.shade200,
@@ -419,7 +419,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        side: BorderSide(color: AppColors.accentGold.withOpacity(0.5)),
+                        side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.5)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       icon: const Icon(Icons.copy_rounded, size: 14, color: AppColors.accentGold),
@@ -435,7 +435,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.5)),
+                        side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.5)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       icon: const Icon(Icons.share_rounded, size: 14, color: AppColors.primaryGreen),
@@ -504,7 +504,7 @@ void showSharawiPostPrayerModal(BuildContext context) {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
+                    color: Colors.grey.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

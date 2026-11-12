@@ -28,7 +28,7 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accentGold.withOpacity(0.4),
+                  color: AppColors.accentGold.withValues(alpha: 0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -81,7 +81,7 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(0.3),
+                color: AppColors.primaryGreen.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -103,7 +103,7 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.accentGold.withOpacity(0.3),
+                      color: AppColors.accentGold.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -165,9 +165,9 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.12),
+              color: Colors.amber.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.shade700.withOpacity(0.4)),
+              border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -185,7 +185,7 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.25),
+                        color: Colors.amber.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(

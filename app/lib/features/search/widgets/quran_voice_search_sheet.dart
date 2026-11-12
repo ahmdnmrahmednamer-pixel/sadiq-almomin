@@ -136,7 +136,7 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
           borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -204,7 +204,8 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
               child: AnimatedBuilder(
                 animation: _pulseAnimation,
                 builder: (context, child) {
-                  final scale = _isListening ? _pulseAnimation.value : 1.0;
+                  final soundBoost = (_soundLevel.clamp(0.0, 10.0) / 50.0);
+                  final scale = _isListening ? (_pulseAnimation.value + soundBoost) : 1.0;
                   return Transform.scale(
                     scale: scale,
                     child: Container(
@@ -222,7 +223,7 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
                         boxShadow: [
                           BoxShadow(
                             color: (_isListening ? AppColors.accentGold : AppColors.primaryGreen)
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             blurRadius: _isListening ? 24 : 12,
                             spreadRadius: _isListening ? 6 : 2,
                           ),
@@ -245,11 +246,11 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _recognizedWords.isNotEmpty
-                      ? AppColors.accentGold.withOpacity(0.6)
+                      ? AppColors.accentGold.withValues(alpha: 0.6)
                       : (isDark ? Colors.white12 : Colors.grey.shade200),
                   width: _recognizedWords.isNotEmpty ? 1.5 : 1.0,
                 ),
@@ -366,8 +367,8 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
   Widget _buildExampleChip(String label) {
     return ActionChip(
       label: Text(label, style: const TextStyle(fontSize: 11)),
-      backgroundColor: AppColors.primaryGreen.withOpacity(0.08),
-      side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.2)),
+      backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.08),
+      side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
       onPressed: () {
         setState(() {
           _recognizedWords = label;

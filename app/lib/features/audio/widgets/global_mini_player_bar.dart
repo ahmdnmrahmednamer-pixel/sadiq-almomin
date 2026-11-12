@@ -91,7 +91,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
               color: isDark ? const Color(0xFF131D18) : const Color(0xFFFAFAF7),
               border: Border(
                 top: BorderSide(
-                  color: AppColors.accentGold.withOpacity(0.4),
+                  color: AppColors.accentGold.withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 bottom: BorderSide(
@@ -101,7 +101,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                   blurRadius: 10,
                   offset: const Offset(0, -3),
                 ),
@@ -144,7 +144,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryGreen.withOpacity(0.4),
+                                color: AppColors.primaryGreen.withValues(alpha: 0.4),
                                 blurRadius: 6,
                               ),
                             ],
@@ -214,7 +214,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.accentGold.withOpacity(0.3),
+                                  color: AppColors.accentGold.withValues(alpha: 0.3),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),

@@ -184,7 +184,7 @@ class _MawarithCalculatorScreenState extends State<MawarithCalculatorScreen> {
                             contentPadding: EdgeInsets.zero,
                             title: const Text('الأب على قيد الحياة', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                             value: _hasFather,
-                            activeColor: AppColors.primaryGreen,
+                            activeThumbColor: AppColors.primaryGreen,
                             onChanged: (v) => setState(() => _hasFather = v),
                           ),
                         ),
@@ -193,7 +193,7 @@ class _MawarithCalculatorScreenState extends State<MawarithCalculatorScreen> {
                             contentPadding: EdgeInsets.zero,
                             title: const Text('الأم على قيد الحياة', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                             value: _hasMother,
-                            activeColor: AppColors.primaryGreen,
+                            activeThumbColor: AppColors.primaryGreen,
                             onChanged: (v) => setState(() => _hasMother = v),
                           ),
                         ),
@@ -316,7 +316,7 @@ class _MawarithCalculatorScreenState extends State<MawarithCalculatorScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.25)),
+                    side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(14),
@@ -333,7 +333,7 @@ class _MawarithCalculatorScreenState extends State<MawarithCalculatorScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withOpacity(0.22),
+                                color: AppColors.accentGold.withValues(alpha: 0.22),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(

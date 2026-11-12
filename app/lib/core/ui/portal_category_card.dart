@@ -35,12 +35,12 @@ class PortalCategoryCard extends StatelessWidget {
           color: isDark ? const Color(0xFF14241C) : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: color.withOpacity(isDark ? 0.3 : 0.22),
+            color: color.withValues(alpha: isDark ? 0.3 : 0.22),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.25 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -60,10 +60,10 @@ class PortalCategoryCard extends StatelessWidget {
                     width: 52,
                     height: 52,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(isDark ? 0.18 : 0.1),
+                      color: color.withValues(alpha: isDark ? 0.18 : 0.1),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: color.withOpacity(0.35),
+                        color: color.withValues(alpha: 0.35),
                         width: 1.5,
                       ),
                     ),
@@ -86,7 +86,7 @@ class PortalCategoryCard extends StatelessWidget {
                                   horizontal: 6, vertical: 2),
                               margin: const EdgeInsets.only(left: 6),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.12),
+                                color: color.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -113,10 +113,10 @@ class PortalCategoryCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withOpacity(0.18),
+                                  color: AppColors.accentGold.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: AppColors.accentGold.withOpacity(0.4),
+                                    color: AppColors.accentGold.withValues(alpha: 0.4),
                                   ),
                                 ),
                                 child: Text(

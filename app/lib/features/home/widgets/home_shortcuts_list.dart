@@ -126,7 +126,7 @@ class HomeShortcutsList extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDark ? Colors.white10 : color.withOpacity(0.15),
+          color: isDark ? Colors.white10 : color.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -142,7 +142,7 @@ class HomeShortcutsList extends StatelessWidget {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.82)],
+                    colors: [color, color.withValues(alpha: 0.82)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -246,7 +246,7 @@ class HomeShortcutsList extends StatelessWidget {
       elevation: 1.5,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.accentGold.withOpacity(0.35)),
+        side: BorderSide(color: AppColors.accentGold.withValues(alpha: 0.35)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

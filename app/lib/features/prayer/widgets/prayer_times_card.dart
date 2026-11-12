@@ -72,13 +72,13 @@ class PrayerTimesCard extends StatelessWidget {
                           ? [const Color(0xFFD4AF37), const Color(0xFFB89628)]
                           : (isDark
                               ? [const Color(0xFF22362C), const Color(0xFF192821)]
-                              : [AppColors.primaryGreen.withOpacity(0.12), AppColors.emeraldLight.withOpacity(0.1)]),
+                              : [AppColors.primaryGreen.withValues(alpha: 0.12), AppColors.emeraldLight.withValues(alpha: 0.1)]),
                     ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: p.isNext
                         ? [
                             BoxShadow(
-                              color: AppColors.accentGold.withOpacity(0.35),
+                              color: AppColors.accentGold.withValues(alpha: 0.35),
                               blurRadius: 6,
                             ),
                           ]
@@ -135,7 +135,7 @@ class PrayerTimesCard extends StatelessWidget {
                     const SizedBox(width: 10),
                     Material(
                       color: isNotifOn
-                          ? AppColors.accentGold.withOpacity(0.18)
+                          ? AppColors.accentGold.withValues(alpha: 0.18)
                           : (isDark ? Colors.white10 : Colors.grey.shade100),
                       borderRadius: BorderRadius.circular(10),
                       child: InkWell(
