@@ -81,7 +81,7 @@ class QuranRepository {
     for (final s in surahs) {
       if (s.id == id) return s;
     }
-    return surahs.first;
+    return null;
   }
 
   /// Loads all ayahs map with try/catch safety
