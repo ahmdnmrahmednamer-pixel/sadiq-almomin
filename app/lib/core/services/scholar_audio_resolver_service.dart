@@ -93,8 +93,6 @@ class ScholarAudioResolverService extends ChangeNotifier {
 
   /// خوادم البث الصوتي المفتوح (Piped Audio API Mirrors) للدعاة المعاصرين
   static const List<String> _pipedApiMirrors = [
-    'https://pipedapi.kavin.rocks',
-    'https://pipedapi.tokhmi.xyz',
     'https://api.piped.private.coffee',
   ];
 
