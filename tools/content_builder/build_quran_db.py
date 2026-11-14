@@ -141,8 +141,20 @@ def init_database(db_path: str = DB_PATH):
     tree = ET.parse(XML_PATH)
     pages_el = tree.find('pages')
     juzs_el = tree.find('juzs')
+    hizbs_el = tree.find('hizbs')
+    sajdas_el = tree.find('sajdas')
     page_starts = [(int(p.attrib['index']), int(p.attrib['sura']), int(p.attrib['aya'])) for p in pages_el]
     juz_starts = [(int(j.attrib['index']), int(j.attrib['sura']), int(j.attrib['aya'])) for j in juzs_el]
+    quarter_starts = [(int(h.attrib['index']), int(h.attrib['sura']), int(h.attrib['aya'])) for h in hizbs_el]
+    sajda_positions = {(int(s.attrib['sura']), int(s.attrib['aya'])) for s in sajdas_el}
+
+    # Structural integrity constants (Section 7.1): refuse to build on bad source data
+    assert len(CANONICAL_SURAHS) == 114, f"expected 114 surahs, got {len(CANONICAL_SURAHS)}"
+    assert sum(s[5] for s in CANONICAL_SURAHS) == 6236, "ayah counts do not sum to 6236"
+    assert len(page_starts) == 604, f"expected 604 pages, got {len(page_starts)}"
+    assert len(juz_starts) == 30, f"expected 30 juz, got {len(juz_starts)}"
+    assert len(quarter_starts) == 240, f"expected 240 rub quarters, got {len(quarter_starts)}"
+    assert len(sajda_positions) == 15, f"expected 15 sajdah positions, got {len(sajda_positions)}"
 
     def get_page(sura, aya):
         p_num = 1
@@ -162,9 +174,21 @@ def init_database(db_path: str = DB_PATH):
                 break
         return j_num
 
+    def get_quarter(sura, aya):
+        # Rub' al-hizb quarter index (1..240) from the canonical Tanzil markers
+        q_num = 1
+        for q, s, a in quarter_starts:
+            if (sura > s) or (sura == s and aya >= a):
+                q_num = q
+            else:
+                break
+        return q_num
+
     # Load Uthmani texts
     with open(UTHMANI_PATH, encoding='utf-8') as f:
         uthmani_lines = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+    if len(uthmani_lines) != 6236:
+        raise ValueError(f"quran-uthmani.txt must contain exactly 6236 ayah lines, found {len(uthmani_lines)}")
 
     # Load Tafseer Al-Muyassar
     tafseer = {}
@@ -192,11 +216,13 @@ def init_database(db_path: str = DB_PATH):
             search_text = normalize_arabic(u_text, loose=True)
             pg = get_page(s_id, a_num)
             jz = get_juz(s_id, a_num)
-            hizb = (jz * 2) - (1 if pg % 2 != 0 else 0)
-            rub = 1
+            quarter = get_quarter(s_id, a_num)
+            hizb = (quarter + 3) // 4  # 4 quarters per hizb -> 1..60
+            rub = quarter              # 1..240 per Section 7.1
+            saj = 1 if (s_id, a_num) in sajda_positions else 0
 
             batch_ayah.append((
-                current_global_idx, s_id, a_num, jz, hizb, rub, pg, 0,
+                current_global_idx, s_id, a_num, jz, hizb, rub, pg, saj,
                 u_text, u_text, search_text, t_text
             ))
             batch_fts.append((current_global_idx, search_text))
