@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/services/audio_download_service.dart';
+import 'package:almomin/core/services/settings_service.dart';
 
 typedef HttpRequestHandler = Future<HttpClientResponse> Function(
     String method, Uri url, TestHttpClientRequest request);
@@ -179,6 +180,9 @@ void main() {
     );
 
     HttpOverrides.global = DynamicHttpOverrides();
+    SharedPreferences.setMockInitialValues({});
+    await SettingsService.instance.init();
+    await service.init();
   });
 
   tearDownAll(() {
@@ -198,16 +202,14 @@ void main() {
   });
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
     if (!audioDir.existsSync()) {
       audioDir.createSync(recursive: true);
     }
-    await service.init();
   });
 
   tearDown(() async {
     DynamicHttpOverrides.activeHandler = null;
-    for (final sid in [1, 2, 3, 4, 112, 113, 114]) {
+    for (final sid in [1, 2, 3, 4, 5, 112, 113, 114]) {
       if (service.isDownloading('mishari_alafasy', sid)) {
         service.cancelDownload('mishari_alafasy', sid);
       }
@@ -472,6 +474,117 @@ void main() {
         try {
           await failingDlFuture.timeout(const Duration(seconds: 1));
         } catch (_) {}
+      }
+    });
+
+    test('Control 5: Repeated cancel/retry properly targets new cancel token and cleans up state', () async {
+      const reciterId = 'mishari_alafasy';
+      const surahId = 5;
+      const surahName = 'المائدة';
+
+      final req1Started = Completer<void>();
+      final req1StreamController = createTestStreamController();
+      final req2Started = Completer<void>();
+      final req2StreamController = createTestStreamController();
+
+      int requestCount = 0;
+
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        requestCount++;
+        if (requestCount == 1) {
+          req.onAbort = () {
+            if (!req1StreamController.isClosed) {
+              req1StreamController.close();
+            }
+          };
+          req1Started.complete();
+          return TestHttpClientResponse(req1StreamController.stream, contentLength: 4000);
+        } else {
+          req.onAbort = () {
+            if (!req2StreamController.isClosed) {
+              req2StreamController.close();
+            }
+          };
+          req2Started.complete();
+          return TestHttpClientResponse(req2StreamController.stream, contentLength: 4000);
+        }
+      };
+
+      // 1. Start Request 1
+      final req1Future = service.downloadSurah(
+        reciterId: reciterId,
+        surahId: surahId,
+        surahName: surahName,
+      );
+      activeFutures.add(req1Future);
+
+      Future<bool>? req2Future;
+
+      try {
+        await req1Started.future.timeout(const Duration(seconds: 5));
+        req1StreamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(service.isDownloading(reciterId, surahId), isTrue);
+
+        // 2. Cancel Request 1
+        service.cancelDownload(reciterId, surahId);
+
+        // 3. Immediately start Request 2 (retry)
+        req2Future = service.downloadSurah(
+          reciterId: reciterId,
+          surahId: surahId,
+          surahName: surahName,
+        );
+        activeFutures.add(req2Future);
+
+        final req2Outcome = await Future.any([
+          req2Started.future.then((_) => 'started'),
+          req2Future.then((res) => 'failed_early: $res'),
+        ]).timeout(const Duration(seconds: 5));
+
+        expect(req2Outcome, 'started',
+            reason: 'Retry request must not fail early due to shared temp file lock collision');
+
+        req2StreamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        // 4. Await Request 1 settling
+        final req1Result = await req1Future.timeout(const Duration(seconds: 5));
+        expect(req1Result, isFalse);
+
+        // 5. Verify Request 2 is actively downloading
+        expect(service.isDownloading(reciterId, surahId), isTrue);
+
+        // 6. Cancel Request 2 - verify it targets new cancel token
+        service.cancelDownload(reciterId, surahId);
+
+        final req2Result = await req2Future.timeout(const Duration(seconds: 5));
+        expect(req2Result, isFalse);
+
+        // 7. Verify both requests settled with clean state
+        expect(service.isDownloading(reciterId, surahId), isFalse);
+        expect(service.isDownloaded(reciterId, surahId), isFalse);
+        expect(getLingeringTempFiles(audioDir, reciterId, surahId), isEmpty,
+            reason: 'No attempt temp files must remain after repeated cancel/retry');
+      } finally {
+        if (!req1StreamController.isClosed) {
+          try {
+            await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        if (!req2StreamController.isClosed) {
+          try {
+            await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        try {
+          await req1Future.timeout(const Duration(seconds: 1));
+        } catch (_) {}
+        if (req2Future != null) {
+          try {
+            await req2Future.timeout(const Duration(seconds: 1));
+          } catch (_) {}
+        }
       }
     });
   });
