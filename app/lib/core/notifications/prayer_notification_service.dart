@@ -1186,84 +1186,87 @@ class PrayerNotificationService extends ChangeNotifier {
       int notificationId = 100;
       for (final prayer in data.prayers) {
         if (!isPrayerEnabled(prayer.name)) continue;
-        if (prayer.time.isBefore(now)) continue;
         if (isTemporarilyMuted && prayer.time.isBefore(_muteUntil!)) continue;
 
-        // Schedule Main Adhan / Prayer Time Notification
-        final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
-
         if (prayer.name.contains('الشروق')) {
-          final sunriseDetails = AndroidNotificationDetails(
-            'prayer_sunrise_channel',
-            'تنبيه شروق الشمس',
-            channelDescription: 'تنبيه بحلول وقت شروق الشمس وانتهاء وقت الفجر',
-            importance: Importance.high,
-            priority: Priority.high,
-            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-            sound: const RawResourceAndroidNotificationSound('reminder_sunrise'),
-            enableVibration: _soundMode != AdhanSoundMode.silent,
-          );
-          await _localNotifications.zonedSchedule(
-            notificationId++,
-            'شروق الشمس 🌅',
-            'أشرقت الشمس.. تقبل الله طاعاتكم وصالح أعمالكم',
-            scheduledTz,
-            NotificationDetails(android: sunriseDetails),
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-          );
+          if (prayer.time.isAfter(now)) {
+            final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
+            final sunriseDetails = AndroidNotificationDetails(
+              'prayer_sunrise_channel',
+              'تنبيه شروق الشمس',
+              channelDescription: 'تنبيه بحلول وقت شروق الشمس وانتهاء وقت الفجر',
+              importance: Importance.high,
+              priority: Priority.high,
+              playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+              sound: const RawResourceAndroidNotificationSound('reminder_sunrise'),
+              enableVibration: _soundMode != AdhanSoundMode.silent,
+            );
+            await _localNotifications.zonedSchedule(
+              notificationId++,
+              'شروق الشمس 🌅',
+              'أشرقت الشمس.. تقبل الله طاعاتكم وصالح أعمالكم',
+              scheduledTz,
+              NotificationDetails(android: sunriseDetails),
+              androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+              uiLocalNotificationDateInterpretation:
+                  UILocalNotificationDateInterpretation.absoluteTime,
+            );
+          }
           continue;
         }
 
-        final isFajr = prayer.name.contains('الفجر');
-        final prayerVoice = getPrayerVoice(prayer.name);
-        final channelId = _resolveChannelIdForVoice(prayerVoice, isFajr: isFajr);
-        final sound = _resolveSoundForVoice(prayerVoice, isFajr: isFajr);
+        // Schedule Main Adhan / Prayer Time Notification only if prayer time is in the future
+        if (prayer.time.isAfter(now)) {
+          final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
+          final isFajr = prayer.name.contains('الفجر');
+          final prayerVoice = getPrayerVoice(prayer.name);
+          final channelId = _resolveChannelIdForVoice(prayerVoice, isFajr: isFajr);
+          final sound = _resolveSoundForVoice(prayerVoice, isFajr: isFajr);
 
-        final androidDetails = AndroidNotificationDetails(
-          channelId,
-          isFajr ? 'أذان الفجر المبارك' : 'مواقيت الصلاة والأذان',
-          channelDescription: 'تنبيهات دخول أوقات الصلوات المفروضة ونداء الحق',
-          importance: Importance.max,
-          priority: Priority.high,
-          playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-          sound: sound,
-          enableVibration: _soundMode != AdhanSoundMode.silent,
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-          actions: const [
-            AndroidNotificationAction(
-              'stop_adhan',
-              'إيقاف الأذان ⏹️',
-              showsUserInterface: false,
-              cancelNotification: true,
-            ),
-            AndroidNotificationAction(
-              'snooze_5',
-              'غفوة ٥ دقائق ⏰',
-              showsUserInterface: false,
-              cancelNotification: true,
-            ),
-            AndroidNotificationAction(
-              'open_interactive',
-              'فتح الشاشة التفاعلية 🕌',
-              showsUserInterface: true,
-            ),
-          ],
-        );
+          final androidDetails = AndroidNotificationDetails(
+            channelId,
+            isFajr ? 'أذان الفجر المبارك' : 'مواقيت الصلاة والأذان',
+            channelDescription: 'تنبيهات دخول أوقات الصلوات المفروضة ونداء الحق',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+            sound: sound,
+            enableVibration: _soundMode != AdhanSoundMode.silent,
+            fullScreenIntent: true,
+            category: AndroidNotificationCategory.alarm,
+            actions: const [
+              AndroidNotificationAction(
+                'stop_adhan',
+                'إيقاف الأذان ⏹️',
+                showsUserInterface: false,
+                cancelNotification: true,
+              ),
+              AndroidNotificationAction(
+                'snooze_5',
+                'غفوة ٥ دقائق ⏰',
+                showsUserInterface: false,
+                cancelNotification: true,
+              ),
+              AndroidNotificationAction(
+                'open_interactive',
+                'فتح الشاشة التفاعلية 🕌',
+                showsUserInterface: true,
+              ),
+            ],
+          );
 
-        await _localNotifications.zonedSchedule(
-          notificationId++,
-          'حان الآن موعد صلاة ${prayer.name} 🕌',
-          'الله أكبر الله أكبر — حي على الصلاة، حي على الفلاح (${data.locationName})',
-          scheduledTz,
-          NotificationDetails(android: androidDetails),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          payload: 'type=adhan&prayer=${prayer.name}',
-        );
+          await _localNotifications.zonedSchedule(
+            notificationId++,
+            'حان الآن موعد صلاة ${prayer.name} 🕌',
+            'الله أكبر الله أكبر — حي على الصلاة، حي على الفلاح (${data.locationName})',
+            scheduledTz,
+            NotificationDetails(android: androidDetails),
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            payload: 'type=adhan&prayer=${prayer.name}',
+          );
+        }
 
         // Schedule Pre-reminder if enabled
         if (_preReminderEnabled && _preReminderMinutes > 0 && isPreReminderPrayerEnabled(prayer.name) && prayer.name != 'الشروق') {
