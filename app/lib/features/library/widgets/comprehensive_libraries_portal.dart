@@ -80,7 +80,7 @@ class _ComprehensiveLibrariesPortalState
         id: 'lib_egypt_heritage',
         title: context.tr('egypt_heritage'),
         subtitle:
-            'إذاعة القرآن 98.2 FM • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
+            'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
         badgeText: 'إذاعة القاهرة',
         category: gScholars,
         icon: Icons.radio_rounded,

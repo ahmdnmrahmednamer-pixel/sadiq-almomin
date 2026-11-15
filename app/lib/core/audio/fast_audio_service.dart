@@ -13,7 +13,9 @@ import 'package:dio/dio.dart';
 /// - Never substitutes a different Sheikh's audio as a fallback.
 class FastAudioService {
   static final FastAudioService instance = FastAudioService._internal();
-  FastAudioService._internal();
+  FastAudioService._internal() {
+    _setupSharedPlayerListener();
+  }
 
   /// Builds a collision-resistant isolated cache key bound to both track ID and exact URL
   static String buildIsolatedCacheKey(String trackId, String url) =>
@@ -23,37 +25,121 @@ class FastAudioService {
   bool _isInitialized = false;
   AudioPlayer? _activePlayer;
   final AudioPlayer _sharedPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _sharedPlayerStateSub;
   Future<void> Function()? _activeCustomStopCallback;
+  int _activeCallbackToken = 0;
 
   /// Shared AudioPlayer instance for direct service playback
   AudioPlayer get player => _sharedPlayer;
 
-  /// Stops whichever player is currently active across the app
+  @visibleForTesting
+  Stream<PlayerState>? playerStateStreamOverride;
+
+  /// Stream of player states for observing shared playback
+  Stream<PlayerState> get playerStateStream =>
+      playerStateStreamOverride ?? _sharedPlayer.playerStateStream;
+
+  int _activePlaybackToken = 0;
+
+  /// Returns current monotonic playback request token
+  int get activePlaybackToken => _activePlaybackToken;
+
+  void _setupSharedPlayerListener() {
+    _sharedPlayerStateSub?.cancel();
+    _sharedPlayerStateSub = _sharedPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        if (_activePlayer == _sharedPlayer) {
+          _activePlayer = null;
+          _activeCustomStopCallback = null;
+        }
+      }
+    });
+  }
+
+  @visibleForTesting
+  Future<AudioSource> Function(
+    String url, {
+    required String cacheKey,
+    String? localDownloadedPath,
+    bool isLiveStream,
+  })? getFastAudioSourceOverride;
+
+  @visibleForTesting
+  Future<void> Function(int token, String url)? onBeforePlayCallback;
+
+  @visibleForTesting
+  Future<void> Function(AudioPlayer player, AudioSource source)? setAudioSourceOverride;
+
+  @visibleForTesting
+  Directory? get cacheDir => _cacheDir;
+
+  @visibleForTesting
+  bool get isInitialized => _isInitialized;
+
+  @visibleForTesting
+  void resetForTesting() {
+    _activePlaybackToken = 0;
+    _activeCallbackToken = 0;
+    _activeCustomStopCallback = null;
+    _activePlayer = null;
+    getFastAudioSourceOverride = null;
+    onBeforePlayCallback = null;
+    setAudioSourceOverride = null;
+    playerStateStreamOverride = null;
+    _isInitialized = false;
+    _cacheDir = null;
+    _setupSharedPlayerListener();
+  }
+
+  /// Stops whichever player is currently active across the app and releases callbacks
   Future<void> stop() async {
+    _activePlaybackToken++;
+    _activeCallbackToken = 0;
+    final cb = _activeCustomStopCallback;
+    _activeCustomStopCallback = null;
+    final ap = _activePlayer;
+    _activePlayer = null;
     try {
       if (_sharedPlayer.playing) {
         await _sharedPlayer.stop();
       }
     } catch (_) {}
-    if (_activePlayer != null) {
+    if (ap != null && ap != _sharedPlayer) {
       try {
-        if (_activePlayer!.playing) {
-          await _activePlayer!.stop();
+        if (ap.playing) {
+          await ap.stop();
         }
       } catch (_) {}
     }
-    if (_activeCustomStopCallback != null) {
+    if (cb != null) {
       try {
-        await _activeCustomStopCallback!();
+        await cb();
       } catch (_) {}
     }
   }
 
-  /// Coordinates audio players across the app so only one audio stream plays at a time
-  Future<void> claimAudioFocus({
+  /// Synchronously registers audio focus ownership and returns the newly assigned session token.
+  int registerAudioFocus({
+    AudioPlayer? player,
+    Future<void> Function()? onStopOther,
+  }) {
+    final token = ++_activePlaybackToken;
+    _activeCustomStopCallback = onStopOther;
+    _activeCallbackToken = token;
+    _activePlayer = player ?? _sharedPlayer;
+    return token;
+  }
+
+  /// Coordinates audio players across the app so only one audio stream plays at a time.
+  /// Synchronously registers focus and returns the assigned token after stopping prior audio.
+  Future<int> claimAudioFocus({
     AudioPlayer? player,
     Future<void> Function()? onStopOther,
   }) async {
+    final priorCallback = _activeCustomStopCallback;
+    final priorPlayer = _activePlayer;
+    final sessionToken = registerAudioFocus(player: player, onStopOther: onStopOther);
+
     if (player != null) {
       try {
         if (player.playing) {
@@ -68,21 +154,20 @@ class FastAudioService {
         }
       } catch (_) {}
     }
-    if (_activePlayer != null && _activePlayer != player) {
+    if (priorPlayer != null && priorPlayer != player && priorPlayer != _sharedPlayer) {
       try {
-        if (_activePlayer!.playing) {
-          await _activePlayer!.stop();
+        if (priorPlayer.playing) {
+          await priorPlayer.stop();
         }
       } catch (_) {}
     }
-    if (_activeCustomStopCallback != null &&
-        _activeCustomStopCallback != onStopOther) {
+    if (priorCallback != null && priorCallback != onStopOther) {
       try {
-        await _activeCustomStopCallback!();
+        await priorCallback();
       } catch (_) {}
     }
-    _activePlayer = player ?? _sharedPlayer;
-    _activeCustomStopCallback = onStopOther;
+
+    return sessionToken;
   }
 
   final Dio _dio = Dio(BaseOptions(
@@ -156,8 +241,23 @@ class FastAudioService {
     required String cacheKey,
     String? localDownloadedPath,
     List<String> fallbackUrls = const [],
+    bool isLiveStream = false,
   }) async {
     await init();
+
+    // 0. Live stream bypass: NEVER serve or lookup cached file for live broadcast streams
+    if (isLiveStream) {
+      if (!kIsWeb && _cacheDir != null) {
+        try {
+          final urlBoundKey = buildUrlBoundCacheKey(cacheKey, url);
+          final staleFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
+          if (staleFile.existsSync()) {
+            staleFile.deleteSync();
+          }
+        } catch (_) {}
+      }
+      return AudioSource.uri(Uri.parse(url), headers: fastStreamingHeaders);
+    }
 
     // 1. Explicitly downloaded user offline file
     if (localDownloadedPath != null) {
@@ -191,6 +291,7 @@ class FastAudioService {
     List<String> fallbackUrls = const [],
     String? cacheKey,
     String? localDownloadedPath,
+    bool isLiveStream = false,
     Future<void> Function()? onStopCallback,
   }) async {
     final targetPlayer = player ?? _sharedPlayer;
@@ -199,11 +300,29 @@ class FastAudioService {
       return false;
     }
 
-    await claimAudioFocus(player: targetPlayer, onStopOther: onStopCallback);
+    // Android disallows cleartext HTTP traffic. This known Cairo relay redirects to cleartext HTTP.
+    // Note: iOS App Transport Security (ATS) carries inferred cleartext risk for this relay unless exception is set.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (mainUrl.contains('radiojar.com/8s5u5tpdtwzuv') || mainUrl.contains('8s5u5tpdtwzuv')) {
+        return false;
+      }
+    }
+
+    // 1. Explicitly claim audio focus, returning the assigned session token
+    final sessionToken = await claimAudioFocus(
+      player: targetPlayer,
+      onStopOther: onStopCallback,
+    );
+    if (sessionToken != _activePlaybackToken) {
+      return false;
+    }
 
     try {
       await targetPlayer.stop();
     } catch (_) {}
+    if (sessionToken != _activePlaybackToken) {
+      return false;
+    }
 
     final effectiveCacheKey =
         cacheKey ?? 'stream_${mainUrl.hashCode.abs()}';
@@ -214,12 +333,18 @@ class FastAudioService {
     ];
 
     for (int i = 0; i < candidateUrls.length; i++) {
+      if (sessionToken != _activePlaybackToken) {
+        return false;
+      }
       final targetUrl = candidateUrls[i].trim();
       if (targetUrl.isEmpty) continue;
 
       if (targetUrl.startsWith('assets/')) {
         try {
           await targetPlayer.setAsset(targetUrl);
+          if (sessionToken != _activePlaybackToken) {
+            return false;
+          }
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
@@ -232,30 +357,68 @@ class FastAudioService {
 
       // Tier 1: Fast cached local file or direct native URI streaming (supports 302 redirects & m4a/mp3/ogg)
       try {
-        final source = await getFastAudioSource(
-          targetUrl,
-          cacheKey: effectiveCacheKey,
-          localDownloadedPath: i == 0 ? localDownloadedPath : null,
-        );
-        await targetPlayer.setAudioSource(source);
+        final source = getFastAudioSourceOverride != null
+            ? await getFastAudioSourceOverride!(
+                targetUrl,
+                cacheKey: effectiveCacheKey,
+                localDownloadedPath: i == 0 ? localDownloadedPath : null,
+                isLiveStream: isLiveStream,
+              )
+            : await getFastAudioSource(
+                targetUrl,
+                cacheKey: effectiveCacheKey,
+                localDownloadedPath: i == 0 ? localDownloadedPath : null,
+                isLiveStream: isLiveStream,
+              );
+        if (sessionToken != _activePlaybackToken) {
+          return false;
+        }
+
+        if (setAudioSourceOverride != null) {
+          await setAudioSourceOverride!(targetPlayer, source);
+        } else {
+          await targetPlayer.setAudioSource(source);
+        }
+        if (sessionToken != _activePlaybackToken) {
+          return false;
+        }
+
+        if (onBeforePlayCallback != null) {
+          await onBeforePlayCallback!(sessionToken, targetUrl);
+        }
+        if (sessionToken != _activePlaybackToken) {
+          return false;
+        }
+
         unawaited(targetPlayer.play());
-        // Prefetch in background for offline reuse
-        unawaited(prefetchAudio(targetUrl, urlBoundKey));
+        // Prefetch in background for offline reuse (NEVER for live streams)
+        if (!isLiveStream) {
+          unawaited(prefetchAudio(targetUrl, urlBoundKey));
+        }
         return true;
       } catch (e) {
         debugPrint('Tier 1 playback failed for URL $i ($targetUrl): $e');
       }
 
-      // Tier 2: LockCachingAudioSource fallback if direct URI source threw
-      if (!kIsWeb && _cacheDir != null) {
+      // Tier 2: LockCachingAudioSource fallback if direct URI source threw (ONLY for static tracks, NOT for live streams)
+      if (!isLiveStream && !kIsWeb && _cacheDir != null) {
         try {
+          if (sessionToken != _activePlaybackToken) {
+            return false;
+          }
           final targetCacheFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
           final lockSource = LockCachingAudioSource(
             Uri.parse(targetUrl),
             cacheFile: targetCacheFile,
             headers: fastStreamingHeaders,
           );
+          if (sessionToken != _activePlaybackToken) {
+            return false;
+          }
           await targetPlayer.setAudioSource(lockSource);
+          if (sessionToken != _activePlaybackToken) {
+            return false;
+          }
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
@@ -264,7 +427,27 @@ class FastAudioService {
       }
     }
 
+    if (sessionToken == _activePlaybackToken && sessionToken == _activeCallbackToken) {
+      _activeCustomStopCallback = null;
+    }
     return false;
+  }
+
+  /// Specialized zero-latency player for 24/7 Islamic Live Radios & Maspero broadcasts
+  /// Strictly guarantees no disk caching, no lock freezing, and resilient multi-mirror switching.
+  Future<bool> playLiveRadio({
+    required String primaryUrl,
+    List<String> fallbackUrls = const [],
+    String? cacheKey,
+    Future<void> Function()? onStopCallback,
+  }) async {
+    return playResilient(
+      primaryUrl,
+      fallbackUrls: fallbackUrls,
+      cacheKey: cacheKey,
+      isLiveStream: true,
+      onStopCallback: onStopCallback,
+    );
   }
 
   /// Pre-warms/prefetches an audio track in background

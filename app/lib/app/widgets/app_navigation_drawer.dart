@@ -214,6 +214,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
+        title: 'إذاعات القرآن الكريم (MP3Quran) 📻',
+        subtitle: 'بث إذاعي متواصل لكبار القراء، التفسير، الفتاوى، والأذكار والرقية',
+        semanticLabel: 'إذاعات القرآن الكريم',
+        icon: Icons.podcasts_rounded,
+        color: const Color(0xFF0F5B45),
+        categoryKey: 'scholars',
+        keywords: ['إذاعات', 'راديو', 'بث', 'قرآن', 'قراء', 'تفسير', 'فتاوى'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/islamic-radio');
+        },
+      ),
+      _DrawerItemData(
         title: 'إذاعة وتراث القرآن الكريم بمصر 📻',
         subtitle: 'تسجيلات نادرة وعبق التلاوة المصرية الخالدة',
         semanticLabel: 'إذاعة وتراث القرآن الكريم',

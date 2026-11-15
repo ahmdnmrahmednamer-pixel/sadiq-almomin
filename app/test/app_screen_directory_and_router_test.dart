@@ -28,7 +28,7 @@ void main() {
 
       // Verify Category Chips
       expect(find.byType(ChoiceChip), findsAtLeastNWidgets(5));
-      expect(find.widgetWithText(ChoiceChip, 'الكل (63)'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'الكل (64)'), findsOneWidget);
       expect(find.textContaining('إشراقة اليوم'), findsAtLeastNWidgets(1));
       expect(find.textContaining('رحاب القرآن'), findsAtLeastNWidgets(1));
       expect(find.textContaining('محراب الصلاة'), findsAtLeastNWidgets(1));

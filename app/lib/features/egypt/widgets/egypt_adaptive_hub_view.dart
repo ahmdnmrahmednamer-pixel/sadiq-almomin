@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/egyptian_heritage_service.dart';
 import '../../../core/theme/app_theme.dart';
@@ -17,14 +18,19 @@ class EgyptAdaptiveHubView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final service = EgyptianHeritageService.instance;
+    final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final liveStationsCount = isAndroid
+        ? service.radioStations.where((s) => s.id != 'eqr_cairo_main').length
+        : service.radioStations.length;
 
     final items = [
       StructuredScreenItem(
         id: 'eg_hub_radio',
-        title: 'إذاعة القرآن الكريم من القاهرة (98.2 FM)',
-        subtitle:
-            '${service.radioStations.length} محطات بث مباشر تشمل إذاعة القاهرة والخريطة البرامجية اليومية وأعلام التلاوة',
-        badgeText: '98.2 FM',
+        title: 'إذاعة القرآن الكريم من القاهرة',
+        subtitle: isAndroid
+            ? '$liveStationsCount محطات إذاعية لتراث كبار القراء (إذاعة القاهرة غير متاحة على أندرويد لعدم التشفير)'
+            : '$liveStationsCount محطات إذاعية تشمل إذاعة القاهرة وتراث أعلام دولة التلاوة',
+        badgeText: isAndroid ? 'تراث القراء' : 'تراث القاهرة',
         category: 'البث الإذاعي الحي',
         icon: Icons.radio_rounded,
         accentColor: AppColors.primaryGreen,
