@@ -11,7 +11,7 @@ class AboutDeveloperScreen extends StatelessWidget {
   const AboutDeveloperScreen({super.key});
 
   static const String githubRepoUrl =
-      'https://github.com/ahmdnmrahmednamer-pixel/almomin-..git';
+      'https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin';
   static const String developerEmail = 'ahmdnmrahmednamer@gmail.com';
 
   Future<void> _openGithub(BuildContext context) async {

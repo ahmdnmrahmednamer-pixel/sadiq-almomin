@@ -49,7 +49,7 @@ class BatteryReliabilityScreen extends StatefulWidget {
       steps: [
         OemStep(
           title: '١. تفعيل البدء التلقائي (Autostart)',
-          description: 'الإعدادات > التطبيقات > إدارة التطبيقات > اختر "المؤمن" > فعّل خيار "البدء التلقائي" (Autostart).',
+          description: 'الإعدادات > التطبيقات > إدارة التطبيقات > اختر "صديق المؤمن" > فعّل خيار "البدء التلقائي" (Autostart).',
           recommendedSetting: 'مفعّل دائمًا',
           icon: Icons.power_settings_new,
         ),
@@ -103,7 +103,7 @@ class BatteryReliabilityScreen extends StatefulWidget {
       steps: [
         OemStep(
           title: '١. ضبط إدارة بدء التشغيل يدوياً (App Launch)',
-          description: 'الإعدادات > البطارية > تشغيل التطبيقات (App Launch) > ابحث عن "المؤمن" وأوقف التشغيل التلقائي للدخول في "الإدارة اليدوية".',
+          description: 'الإعدادات > البطارية > تشغيل التطبيقات (App Launch) > ابحث عن "صديق المؤمن" وأوقف التشغيل التلقائي للدخول في "الإدارة اليدوية".',
           recommendedSetting: 'إدارة يدوية (Manage manually)',
           icon: Icons.tune,
         ),
