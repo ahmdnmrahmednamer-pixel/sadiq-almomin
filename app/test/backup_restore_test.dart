@@ -561,6 +561,35 @@ void main() {
       }
     }
 
+    Future<void> Function() setupFullPrefsSnapshot(SharedPreferences prefs) {
+      final snapshot = <String, Object?>{};
+      for (final k in prefs.getKeys()) {
+        snapshot[k] = prefs.get(k);
+      }
+      return () async {
+        final currentKeys = prefs.getKeys().toList();
+        for (final k in currentKeys) {
+          if (!snapshot.containsKey(k)) {
+            await prefs.remove(k);
+          }
+        }
+        for (final entry in snapshot.entries) {
+          if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          } else if (entry.value is int) {
+            await prefs.setInt(entry.key, entry.value as int);
+          } else if (entry.value is double) {
+            await prefs.setDouble(entry.key, entry.value as double);
+          } else if (entry.value is List<String>) {
+            await prefs.setStringList(entry.key, entry.value as List<String>);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+      };
+    }
+
     void assertLiveGetters(
       SettingsService s,
       Map<String, Object> expected,
@@ -900,6 +929,196 @@ void main() {
             reason: 'replaceMode with legacy backup must preserve existing ${entry.key}');
       }
       assertLiveGetters(SettingsService.instance, nonDefault13);
+    });
+
+    test('Fresh backup roundtrip fallback: absent theme_mode preserves runtime default (system)', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      await prefs.remove('theme_mode');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.themeMode, equals('system'));
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue, reason: 'Checksum must be valid');
+
+      final restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+
+      expect(SettingsService.instance.themeMode, equals('system'),
+          reason: 'After restore, themeMode must remain system');
+    });
+
+    test('Fresh backup roundtrip fallback: absent fiqh_madhhab preserves runtime default (shafii_egypt)', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      await prefs.remove('fiqh_madhhab');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.fiqhMadhhab, equals('shafii_egypt'));
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue, reason: 'Checksum must be valid');
+
+      final restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+
+      expect(SettingsService.instance.fiqhMadhhab, equals('shafii_egypt'),
+          reason: 'After restore, fiqhMadhhab must remain shafii_egypt');
+    });
+
+    test('Fresh backup roundtrip fallback: absent mushaf_default_mode preserves runtime default (page)', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      await prefs.remove('mushaf_default_mode');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.mushafDefaultMode, equals('page'));
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue, reason: 'Checksum must be valid');
+
+      final restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+
+      expect(SettingsService.instance.mushafDefaultMode, equals('page'),
+          reason: 'After restore, mushafDefaultMode must remain page');
+    });
+
+    test('Fresh backup roundtrip fallback: absent screen_layout_mode preserves runtime default (classic)', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      await prefs.remove('screen_layout_mode');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.screenLayoutMode, equals('classic'));
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue, reason: 'Checksum must be valid');
+
+      final restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+
+      expect(SettingsService.instance.screenLayoutMode, equals('classic'),
+          reason: 'After restore, screenLayoutMode must remain classic');
+    });
+
+    test('Fresh backup roundtrip fallback: bilingual_display_enabled aligns with AppLanguage normalization and explicit preferences', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      // Case 1: Arabic ('ar') language with absent bilingual_display_enabled -> runtime default false
+      await prefs.setString('app_language', 'ar');
+      await prefs.remove('bilingual_display_enabled');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse);
+
+      var backup = await BackupRestoreService.instance.exportBackupData();
+      var validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+      var restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse,
+          reason: 'Arabic with absent bilingual preference must remain false after restore');
+
+      // Case 2: English ('en') language with absent bilingual_display_enabled -> runtime default true
+      await prefs.setString('app_language', 'en');
+      await prefs.remove('bilingual_display_enabled');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isTrue);
+
+      backup = await BackupRestoreService.instance.exportBackupData();
+      validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+      restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isTrue,
+          reason: 'English with absent bilingual preference must remain true after restore');
+
+      // Case 3: Invalid language code ('invalid_xyz') normalized via AppLanguage.fromCode -> falls back to Arabic (false)
+      await prefs.setString('app_language', 'invalid_xyz');
+      await prefs.remove('bilingual_display_enabled');
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse);
+
+      backup = await BackupRestoreService.instance.exportBackupData();
+      validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+      restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse,
+          reason: 'Invalid language code normalized to Arabic must remain false after restore');
+
+      // Case 4: Explicit stored bilingual_display_enabled = true on Arabic
+      await prefs.setString('app_language', 'ar');
+      await prefs.setBool('bilingual_display_enabled', true);
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isTrue);
+
+      backup = await BackupRestoreService.instance.exportBackupData();
+      validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+      restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isTrue,
+          reason: 'Explicit true must be preserved across restore regardless of language');
+
+      // Case 5: Explicit stored bilingual_display_enabled = false on English
+      await prefs.setString('app_language', 'en');
+      await prefs.setBool('bilingual_display_enabled', false);
+      await SettingsService.instance.init(forceReload: true);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse);
+
+      backup = await BackupRestoreService.instance.exportBackupData();
+      validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+      restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+      expect(SettingsService.instance.bilingualDisplayEnabled, isFalse,
+          reason: 'Explicit false must be preserved across restore regardless of language');
+    });
+
+    test('Explicit stored values control: user-customized preferences are preserved across export/restore', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(cleanup);
+
+      // Explicit stored non-default preferences
+      await prefs.setString('theme_mode', 'dark');
+      await prefs.setString('fiqh_madhhab', 'hanafi');
+      await prefs.setString('mushaf_default_mode', 'surah');
+      await prefs.setString('screen_layout_mode', 'comfortable');
+      await prefs.setBool('bilingual_display_enabled', true);
+      await SettingsService.instance.init(forceReload: true);
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue);
+
+      final exportedSettings = (backup['data'] as Map<String, dynamic>)['settings'] as Map<String, dynamic>;
+      expect(exportedSettings['theme_mode'], equals('dark'));
+      expect(exportedSettings['fiqh_madhhab'], equals('hanafi'));
+      expect(exportedSettings['mushaf_default_mode'], equals('surah'));
+      expect(exportedSettings['screen_layout_mode'], equals('comfortable'));
+      expect(exportedSettings['bilingual_display_enabled'], isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(backup, replaceMode: true);
+      expect(restored, isTrue);
+
+      expect(SettingsService.instance.themeMode, equals('dark'));
+      expect(SettingsService.instance.fiqhMadhhab, equals('hanafi'));
+      expect(SettingsService.instance.mushafDefaultMode, equals('surah'));
+      expect(SettingsService.instance.screenLayoutMode, equals('comfortable'));
+      expect(SettingsService.instance.bilingualDisplayEnabled, isTrue);
     });
   });
 }
