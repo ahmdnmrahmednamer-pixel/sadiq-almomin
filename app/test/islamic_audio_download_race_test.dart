@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -201,7 +200,14 @@ void main() {
 
   tearDown(() async {
     DynamicHttpOverrides.activeHandler = null;
-    for (final id in ['adhan_makkah', 'adhan_madinah', 'adhan_cairo', 'adhan_aqsa']) {
+    for (final id in [
+      'adhan_makkah',
+      'adhan_madinah',
+      'adhan_essam_bukhari',
+      'adhan_cairo',
+      'adhan_aqsa',
+      'adhan_farooq_hadrawi'
+    ]) {
       if (service.isDownloading(id)) {
         service.cancelDownload(id);
       }
@@ -292,6 +298,73 @@ void main() {
         }
         try {
           await downloadFuture.timeout(const Duration(seconds: 1));
+        } catch (_) {}
+      }
+    });
+
+    test('Control 3: Existing downloaded track is preserved on subsequent canceled re-download attempt', () async {
+      const trackId = 'adhan_essam_bukhari';
+      final initialData = Uint8List(3000);
+
+      // 1. Initially download the track successfully
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        return TestHttpClientResponse(Stream.value(initialData), contentLength: initialData.length);
+      };
+
+      final dlSuccess = await service.downloadTrack(trackId).timeout(const Duration(seconds: 5));
+      expect(dlSuccess, isTrue);
+      expect(service.isDownloaded(trackId), isTrue);
+      final initialPath = service.getLocalAudioPath(trackId);
+      expect(initialPath, isNotNull);
+      final initialFile = File(initialPath!);
+      expect(initialFile.existsSync(), isTrue);
+      expect(initialFile.lengthSync(), 3000);
+
+      // 2. Start a second download (e.g. re-download) and cancel it
+      final reqStarted = Completer<void>();
+      final streamController = createTestStreamController();
+
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        req.onAbort = () {
+          if (!streamController.isClosed) {
+            streamController.close();
+          }
+        };
+        reqStarted.complete();
+        return TestHttpClientResponse(streamController.stream, contentLength: 5000);
+      };
+
+      final secondDlFuture = service.downloadTrack(trackId);
+      activeFutures.add(secondDlFuture);
+
+      try {
+        await reqStarted.future.timeout(const Duration(seconds: 5));
+        streamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(service.isDownloading(trackId), isTrue);
+
+        // Cancel second download
+        service.cancelDownload(trackId);
+
+        final secondResult = await secondDlFuture.timeout(const Duration(seconds: 5));
+        expect(secondResult, isFalse);
+
+        // Crucial: Original downloaded file must remain valid and intact
+        expect(service.isDownloaded(trackId), isTrue);
+        expect(service.isDownloading(trackId), isFalse);
+        expect(initialFile.existsSync(), isTrue);
+        expect(initialFile.lengthSync(), 3000,
+            reason: 'Existing downloaded file content and size must not be corrupted by cancelled retry');
+
+        await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
+      } finally {
+        if (!streamController.isClosed) {
+          try {
+            await streamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        try {
+          await secondDlFuture.timeout(const Duration(seconds: 1));
         } catch (_) {}
       }
     });
@@ -474,6 +547,98 @@ void main() {
             reason: 'Final downloaded file size must match exact content length');
 
         await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
+      } finally {
+        if (!req1StreamController.isClosed) {
+          try {
+            await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        if (!req2StreamController.isClosed) {
+          try {
+            await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        try {
+          await req1Future.timeout(const Duration(seconds: 1));
+        } catch (_) {}
+        if (req2Future != null) {
+          try {
+            await req2Future.timeout(const Duration(seconds: 1));
+          } catch (_) {}
+        }
+      }
+    });
+
+    test('Control 4: Repeated cancel/retry properly targets new cancel token and cleans up state', () async {
+      final req1Started = Completer<void>();
+      final req1StreamController = createTestStreamController();
+      final req2Started = Completer<void>();
+      final req2StreamController = createTestStreamController();
+
+      int requestCount = 0;
+
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        requestCount++;
+        if (requestCount == 1) {
+          req.onAbort = () {
+            if (!req1StreamController.isClosed) {
+              req1StreamController.close();
+            }
+          };
+          req1Started.complete();
+          return TestHttpClientResponse(req1StreamController.stream, contentLength: 4000);
+        } else {
+          req.onAbort = () {
+            if (!req2StreamController.isClosed) {
+              req2StreamController.close();
+            }
+          };
+          req2Started.complete();
+          return TestHttpClientResponse(req2StreamController.stream, contentLength: 4000);
+        }
+      };
+
+      const trackId = 'adhan_farooq_hadrawi';
+
+      // 1. Start Request 1
+      final req1Future = service.downloadTrack(trackId);
+      activeFutures.add(req1Future);
+
+      Future<bool>? req2Future;
+
+      try {
+        await req1Started.future.timeout(const Duration(seconds: 5));
+        req1StreamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(service.isDownloading(trackId), isTrue);
+
+        // 2. Cancel Request 1
+        service.cancelDownload(trackId);
+
+        // 3. Immediately start Request 2 (retry)
+        req2Future = service.downloadTrack(trackId);
+        activeFutures.add(req2Future);
+
+        await req2Started.future.timeout(const Duration(seconds: 5));
+        req2StreamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        // 4. Await Request 1 settling
+        final req1Result = await req1Future.timeout(const Duration(seconds: 5));
+        expect(req1Result, isFalse);
+
+        // 5. Verify Request 2 is actively downloading
+        expect(service.isDownloading(trackId), isTrue);
+
+        // 6. Cancel Request 2 - verify it targets new cancel token
+        service.cancelDownload(trackId);
+
+        final req2Result = await req2Future.timeout(const Duration(seconds: 5));
+        expect(req2Result, isFalse);
+
+        // 7. Verify both requests settled with clean state
+        expect(service.isDownloading(trackId), isFalse);
+        expect(service.isDownloaded(trackId), isFalse);
       } finally {
         if (!req1StreamController.isClosed) {
           try {
