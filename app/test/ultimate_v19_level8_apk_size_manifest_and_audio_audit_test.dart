@@ -46,6 +46,16 @@ void main() {
 
       expect(File('android/app/src/main/res/raw/adhan_aqsa.mp3').lengthSync(), greaterThan(700 * 1024));
       expect(File('android/app/src/main/res/raw/adhan_hussary.mp3').lengthSync(), greaterThan(700 * 1024));
+
+      // Regression guard: canonical iqamah audio exists and duplicate iqamah_short is eliminated
+      final canonicalIqamah = File('assets/audio/iqamah.mp3');
+      final duplicateIqamahShort = File('assets/audio/iqamah_short.mp3');
+      final androidRawIqamah = File('android/app/src/main/res/raw/iqamah.mp3');
+      expect(canonicalIqamah.existsSync(), isTrue, reason: 'assets/audio/iqamah.mp3 must exist');
+      expect(canonicalIqamah.lengthSync(), equals(123308));
+      expect(androidRawIqamah.existsSync(), isTrue, reason: 'android/app/src/main/res/raw/iqamah.mp3 must exist');
+      expect(androidRawIqamah.lengthSync(), equals(123308));
+      expect(duplicateIqamahShort.existsSync(), isFalse, reason: 'assets/audio/iqamah_short.mp3 duplicate must be eliminated');
     });
 
     test('3. All 117 Quran JSON files in assets/data/ are minified and valid UTF-8 JSON', () {
@@ -70,6 +80,8 @@ void main() {
       expect(hussary.rawNotificationSound, equals('adhan_hussary'));
       expect(iqMadinah.rawNotificationSound, equals('iqamah'));
       expect(iqShort.rawNotificationSound, equals('iqamah'));
+      expect(iqShort.assetPath, equals('assets/audio/iqamah.mp3'));
+      expect(iqShort.fileSizeBytes, equals(123308));
     });
 
     test('5. Android res/raw/keep.xml protects notification sounds and AndroidManifest.xml declares https, http, tel, and mailto <queries>', () {
