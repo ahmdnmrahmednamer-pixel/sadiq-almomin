@@ -266,6 +266,17 @@ void main() {
       expect(finalFile.lengthSync(), fakeData.length);
       expect(getLingeringTempFiles(audioDir, reciterId, surahId), isEmpty);
 
+      // Success metadata assertions
+      final info = service.downloadedSurahs['${reciterId}_$surahId'];
+      expect(info, isNotNull);
+      expect(info!.reciterId, reciterId);
+      expect(info.reciterName, isNotEmpty);
+      expect(info.surahId, surahId);
+      expect(info.surahName, surahName);
+      expect(info.localPath, localPath);
+      expect(info.fileSizeBytes, fakeData.length);
+      expect(info.downloadedAt, isNotNull);
+
       await service.deleteDownloadedSurah(reciterId, surahId).timeout(const Duration(seconds: 5));
     });
 
@@ -321,6 +332,9 @@ void main() {
       const surahId = 3;
       const surahName = 'آل عمران';
       final initialData = Uint8List(3000);
+      for (int i = 0; i < initialData.length; i++) {
+        initialData[i] = (i * 7 + 13) % 251 + 1;
+      }
 
       // Initial successful download
       DynamicHttpOverrides.activeHandler = (method, url, req) async {
@@ -380,6 +394,8 @@ void main() {
         expect(initialFile.existsSync(), isTrue);
         expect(initialFile.lengthSync(), 3000,
             reason: 'Existing downloaded file content and size must not be corrupted by cancelled retry');
+        expect(initialFile.readAsBytesSync(), equals(initialData),
+            reason: 'Existing downloaded file bytes must remain bitwise identical after cancelled retry');
         expect(getLingeringTempFiles(audioDir, reciterId, surahId), isEmpty,
             reason: 'Cancelled re-download must clean up temp files without leaving .tmp files');
 
@@ -401,6 +417,9 @@ void main() {
       const surahId = 4;
       const surahName = 'النساء';
       final initialData = Uint8List(3500);
+      for (int i = 0; i < initialData.length; i++) {
+        initialData[i] = (i * 11 + 17) % 251 + 1;
+      }
 
       // 1. Initial download
       DynamicHttpOverrides.activeHandler = (method, url, req) async {
@@ -461,6 +480,8 @@ void main() {
         expect(initialFile.existsSync(), isTrue);
         expect(initialFile.lengthSync(), 3500,
             reason: 'Existing downloaded file content and size must not be corrupted by network failure');
+        expect(initialFile.readAsBytesSync(), equals(initialData),
+            reason: 'Existing downloaded file bytes must remain bitwise identical after network failure');
         expect(getLingeringTempFiles(audioDir, reciterId, surahId), isEmpty,
             reason: 'Failed re-download must clean up its temp file');
 
@@ -791,6 +812,17 @@ void main() {
             reason: 'Final downloaded file size must match exact content length');
         expect(getLingeringTempFiles(audioDir, reciterId, surahId), isEmpty,
             reason: 'No attempt temp files must remain after cancel and successful retry');
+
+        // Success metadata assertions
+        final info = service.downloadedSurahs['${reciterId}_$surahId'];
+        expect(info, isNotNull);
+        expect(info!.reciterId, reciterId);
+        expect(info.reciterName, isNotEmpty);
+        expect(info.surahId, surahId);
+        expect(info.surahName, surahName);
+        expect(info.localPath, localPath);
+        expect(info.fileSizeBytes, 5000);
+        expect(info.downloadedAt, isNotNull);
 
         await service.deleteDownloadedSurah(reciterId, surahId).timeout(const Duration(seconds: 5));
       } finally {
