@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/models/arab_countries.dart';
+import 'package:almomin/core/models/egyptian_heritage.dart';
 import 'package:almomin/core/services/egyptian_heritage_service.dart';
 import 'package:almomin/features/egypt/egyptian_heritage_screen.dart';
 import 'package:almomin/features/zakat/zakat_screen.dart';
@@ -135,6 +137,72 @@ void main() {
 
       expect(find.text('+ جنيه ذهب (8 جم عيار 21)'), findsOneWidget);
       expect(find.text('+ أونصة ذهب (31.1 جم عيار 24)'), findsOneWidget);
+    });
+
+    testWidgets('Cairo station on Android is disabled with unsupported label (Qualifier D)',
+        (WidgetTester tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: EgyptianHeritageScreen(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('إذاعة القرآن الكريم من القاهرة'), findsWidgets);
+        expect(find.text('غير مدعوم على أندرويد'), findsOneWidget);
+
+        final cairoElevatedBtn = tester.widget<ElevatedButton>(
+          find.ancestor(
+            of: find.text('غير مدعوم على أندرويد'),
+            matching: find.byType(ElevatedButton),
+          ),
+        );
+        expect(cairoElevatedBtn.onPressed, isNull);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    testWidgets('Empty heritage schedule renders no header and no section (Qualifier G)',
+        (WidgetTester tester) async {
+      final service = EgyptianHeritageService.instance;
+      service.radioStationsOverride = [
+        const EgyptianRadioStation(
+          id: 'test_empty_schedule_station',
+          name: 'محطة تجريبية بدون جدول',
+          subtitle: 'وصف تجريبي',
+          frequencyOrBadge: 'تجريبي',
+          streamUrl: 'https://test.stream/live',
+          icon: Icons.radio_rounded,
+          accentColor: Colors.teal,
+          dailyScheduleHighlights: [],
+        ),
+      ];
+      addTearDown(() {
+        service.radioStationsOverride = null;
+      });
+
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: EgyptianHeritageScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('محطة تجريبية بدون جدول'), findsOneWidget);
+      expect(find.text('محتويات البث والتسجيلات:'), findsNothing);
     });
   });
 }

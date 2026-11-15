@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
@@ -264,6 +265,8 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
   Widget _buildRadioStationCard(EgyptianRadioStation station, bool isDark) {
     final isPlaying = _playingId == station.id;
     final isFav = _service.isFavorite(station.id);
+    final isCairoUnsupported = station.id == 'eqr_cairo_main' &&
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
@@ -332,37 +335,54 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                   ),
                   onPressed: () => _service.toggleFavorite(station.id),
                 ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
-                    foregroundColor: isPlaying ? Colors.black87 : Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Semantics(
+                  label: isCairoUnsupported
+                      ? '${station.name} غير متاح على أجهزة أندرويد لعدم التشفير'
+                      : (isPlaying ? 'إيقاف ${station.name}' : 'استماع ${station.name}'),
+                  button: !isCairoUnsupported,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isCairoUnsupported
+                          ? Colors.grey.shade400
+                          : (isPlaying ? AppColors.accentGold : AppColors.primaryGreen),
+                      foregroundColor: isCairoUnsupported
+                          ? Colors.grey.shade800
+                          : (isPlaying ? Colors.black87 : Colors.white),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: isCairoUnsupported
+                        ? null
+                        : () => _toggleAudioPlay(
+                              id: station.id,
+                              title: station.name,
+                              primaryUrl: station.streamUrl,
+                              fallbackUrls: station.fallbackStreamUrls,
+                              isLiveStream: true,
+                            ),
+                    icon: isCairoUnsupported
+                        ? const Icon(Icons.block_rounded, size: 16)
+                        : (_isBuffering && isPlaying
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.black87,
+                                ),
+                              )
+                            : Icon(
+                                isPlaying
+                                    ? Icons.stop_rounded
+                                    : Icons.play_arrow_rounded,
+                              )),
+                    label: Text(
+                      isCairoUnsupported
+                          ? 'غير مدعوم على أندرويد'
+                          : (isPlaying ? 'إيقاف' : 'استماع'),
                     ),
                   ),
-                  onPressed: () => _toggleAudioPlay(
-                    id: station.id,
-                    title: station.name,
-                    primaryUrl: station.streamUrl,
-                    fallbackUrls: station.fallbackStreamUrls,
-                    isLiveStream: true,
-                  ),
-                  icon: _isBuffering && isPlaying
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.black87,
-                          ),
-                        )
-                      : Icon(
-                          isPlaying
-                              ? Icons.stop_rounded
-                              : Icons.play_arrow_rounded,
-                        ),
-                  label: Text(isPlaying ? 'إيقاف' : 'استماع'),
                 ),
               ],
             ),
@@ -375,12 +395,12 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                 color: isDark ? Colors.white70 : Colors.black87,
               ),
             ),
-            if (station.dailySchedule.isNotEmpty) ...[
+            if (station.dailySchedule.any((s) => s.trim().isNotEmpty)) ...[
               const SizedBox(height: 12),
               const Divider(height: 1),
               const SizedBox(height: 10),
               const Text(
-                'الخريطة البرامجية اليومية من القاهرة:',
+                'محتويات البث والتسجيلات:',
                 style: TextStyle(
                   fontFamily: 'Amiri',
                   fontWeight: FontWeight.bold,
@@ -389,7 +409,9 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                 ),
               ),
               const SizedBox(height: 8),
-              ...station.dailySchedule.map(
+              ...station.dailySchedule
+                  .where((s) => s.trim().isNotEmpty)
+                  .map(
                 (slot) {
                   final parts = slot.split(' — ');
                   final timeText = parts.isNotEmpty ? parts.first : '';
@@ -400,32 +422,34 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                AppColors.primaryGreen.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            timeText,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryGreen,
+                        if (parts.length > 1) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.primaryGreen.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              timeText,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryGreen,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
+                          const SizedBox(width: 8),
+                        ],
                         Expanded(
                           child: Text(
                             progText,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: isDark ? Colors.white70 : Colors.black87,
                             ),
                           ),
                         ),

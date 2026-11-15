@@ -62,5 +62,48 @@ void main() {
       // Check Daily Spotlight Card
       expect(find.text('قبس من قصص الوحي اليوم'), findsOneWidget);
     });
+
+    testWidgets('Home banners have explicit button semantics and excluded decorative emojis', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(
+            body: SingleChildScrollView(
+              child: HomeShortcutsList(prayerData: null),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check radio banner semantics
+      final radioSemantics = tester.widget<Semantics>(
+        find.ancestor(
+          of: find.text('إذاعات القرآن الكريم والتسجيلات'),
+          matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
+        ),
+      );
+      expect(radioSemantics.properties.button, isTrue);
+
+      // Check Egyptian heritage banner semantics
+      final egyptSemantics = tester.widget<Semantics>(
+        find.ancestor(
+          of: find.textContaining('نسائم القاهرة'),
+          matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
+        ),
+      );
+      expect(egyptSemantics.properties.button, isTrue);
+
+      // Verify decorative emoji is wrapped in ExcludeSemantics
+      final emojiFinder = find.text('🇪🇬');
+      expect(emojiFinder, findsOneWidget);
+      final excludeEmoji = tester.widget<ExcludeSemantics>(
+        find.ancestor(of: emojiFinder, matching: find.byType(ExcludeSemantics)).first,
+      );
+      expect(excludeEmoji.excluding, isTrue);
+    });
   });
 }

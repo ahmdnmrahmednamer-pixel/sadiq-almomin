@@ -174,171 +174,189 @@ class HomeShortcutsList extends StatelessWidget {
   }
 
   Widget _buildIslamicRadioBanner(BuildContext context, bool isDark) {
-    return InkWell(
-      onTap: () => context.push('/islamic-radio'),
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [const Color(0xFF1E3A2F), const Color(0xFF132720)]
-                : [const Color(0xFF0F5B45), const Color(0xFF197157)],
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+    return Semantics(
+      button: true,
+      label: 'إذاعات القرآن الكريم والتسجيلات الإسلامية، تلاوات كبار القراء، التفسير وعلوم القرآن، الأذكار والرقية الشرعية',
+      hint: 'الانتقال إلى إذاعات وتلاوات القرآن الكريم',
+      child: InkWell(
+        onTap: () => context.push('/islamic-radio'),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [const Color(0xFF1E3A2F), const Color(0xFF132720)]
+                  : [const Color(0xFF0F5B45), const Color(0xFF197157)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(13),
-              ),
-              child: const Icon(
-                Icons.radio_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text(
-                        'الإذاعات الإسلامية والبث المباشر',
-                        style: TextStyle(
-                          fontFamily: 'Amiri',
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'مباشر 🔴',
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: const Icon(
+                    Icons.radio_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'إذاعات القرآن الكريم والتسجيلات',
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
+                            fontFamily: 'Amiri',
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'إذاعات كبار القراء • تلاوات الحرمين • التفسير والأذكار ٢٤ ساعة',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white70,
-                      height: 1.3,
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'تسجيلات صوتية',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    const Text(
+                      'تلاوات كبار القراء • التفسير وعلوم القرآن • الأذكار والرقية الشرعية',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white70,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Icon(
-              Icons.play_circle_fill_rounded,
-              size: 28,
-              color: Colors.amberAccent,
-            ),
-          ],
+              const ExcludeSemantics(
+                child: Icon(
+                  Icons.play_circle_fill_rounded,
+                  size: 28,
+                  color: Colors.amberAccent,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildEgyptianHeritageBanner(BuildContext context, bool isDark) {
-    return InkWell(
-      onTap: () => context.push('/egypt-heritage'),
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isDark
-                ? [AppColors.emerald900, AppColors.night900]
-                : [AppColors.emerald700, AppColors.emerald900],
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
+    return Semantics(
+      button: true,
+      label: '${context.tr('egypt_heritage')}، إذاعة القرآن الكريم، ابتهالات النقشبندي وطوبار، خواطر الشعراوي',
+      hint: 'الانتقال إلى واحة التراث المصري',
+      child: InkWell(
+        onTap: () => context.push('/egypt-heritage'),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark
+                  ? [AppColors.emerald900, AppColors.night900]
+                  : [AppColors.emerald700, AppColors.emerald900],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.accentGold.withValues(alpha: 0.45),
+              width: 1.2,
+            ),
           ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppColors.accentGold.withValues(alpha: 0.45),
-            width: 1.2,
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGold.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Center(
+                    child: Text('🇪🇬', style: TextStyle(fontSize: 23)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.tr('egypt_heritage'),
+                      style: const TextStyle(
+                        fontFamily: 'Amiri',
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    const Text(
+                      'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: Colors.white70,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const ExcludeSemantics(
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 15,
+                  color: AppColors.accentGold,
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: AppColors.accentGold.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Center(
-                child: Text('🇪🇬', style: TextStyle(fontSize: 23)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.tr('egypt_heritage'),
-                    style: const TextStyle(
-                      fontFamily: 'Amiri',
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Text(
-                    'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: Colors.white70,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 15,
-              color: AppColors.accentGold,
-            ),
-          ],
         ),
       ),
     );

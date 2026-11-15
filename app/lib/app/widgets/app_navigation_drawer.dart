@@ -206,7 +206,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         semanticLabel: 'مكتبة كبار العلماء والدروس الإسلامية',
         icon: Icons.mic_external_on_rounded,
         color: const Color(0xFF7C3AED),
-        categoryKey: 'scholars',
+        categoryKey: 'library',
         keywords: ['علماء', 'دروس', 'شعراوي', 'كشك', 'عثيمين', 'محاضرات'],
         onTap: () {
           Navigator.pop(context);
@@ -214,13 +214,13 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'الإذاعات الإسلامية والبث المباشر 📻',
-        subtitle: 'إذاعات كبار القراء، تلاوات الحرمين الشريفين، الفتاوى والتفسير ٢٤ ساعة',
-        semanticLabel: 'الإذاعات الإسلامية والبث المباشر',
+        title: 'إذاعات القرآن الكريم والتسجيلات الإسلامية 📻',
+        subtitle: 'تلاوات كبار القراء، التفسير وعلوم القرآن، الفتاوى والأحكام، الأذكار والرقية الشرعية',
+        semanticLabel: 'إذاعات القرآن الكريم والتسجيلات الإسلامية',
         icon: Icons.podcasts_rounded,
         color: const Color(0xFF0F5B45),
-        categoryKey: 'scholars',
-        keywords: ['إذاعات', 'راديو', 'بث مباشر', 'الحرمين', 'تفسير', 'فتاوى', 'قراء', 'إذاعة'],
+        categoryKey: 'library',
+        keywords: ['إذاعات', 'راديو', 'تلاوات', 'تفسير', 'فتاوى', 'قراء', 'قرآن'],
         onTap: () {
           Navigator.pop(context);
           context.push('/islamic-radio');
@@ -232,7 +232,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         semanticLabel: 'إذاعة وتراث القرآن الكريم',
         icon: Icons.radio_rounded,
         color: const Color(0xFF8B5CF6),
-        categoryKey: 'scholars',
+        categoryKey: 'library',
         keywords: ['تراث', 'إذاعة', 'مصر', 'تسجيلات', 'نادرة'],
         onTap: () {
           Navigator.pop(context);
@@ -615,11 +615,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             const SizedBox(width: 6),
                             _buildFilterChip('🕌 الصلاة', 'prayer'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('🎙️ العلماء', 'scholars'),
-                            const SizedBox(width: 6),
                             _buildFilterChip('🤲 الأذكار', 'adhkar'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('📚 المكتبة', 'library'),
+                            _buildFilterChip('📚 رياض العلم والمكتبة', 'library'),
                             const SizedBox(width: 6),
                             _buildFilterChip('⚙️ الإعدادات والمطور', 'settings'),
                           ],

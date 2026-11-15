@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
@@ -461,6 +462,68 @@ void main() {
       await audioService.stop();
       expect(audioService.player, isNotNull);
     });
+
+    test('C same callback A/B delayed A exits must NOT clear B callback; later other owner must invoke B', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final completerA = Completer<AudioSource>();
+      bool callbackInvoked = false;
+
+      // Shared callback tear-off for both sessions
+      Future<void> sharedStopCallback() async {
+        callbackInvoked = true;
+      }
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        if (url == 'https://test/streamA') {
+          return completerA.future;
+        }
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      // 1. Session A starts with shared callback
+      final futureA = audioService.playLiveRadio(
+        primaryUrl: 'https://test/streamA',
+        onStopCallback: sharedStopCallback,
+      );
+
+      // 2. While A is suspended in-flight, Session B starts with THE SAME CALLBACK
+      final futureB = audioService.playLiveRadio(
+        primaryUrl: 'https://test/streamB',
+        onStopCallback: sharedStopCallback,
+      );
+      final resultB = await futureB;
+      expect(resultB, isTrue, reason: 'Session B must succeed');
+
+      // 3. Delayed Session A finally completes and detects itself as stale
+      completerA.complete(AudioSource.uri(Uri.parse('https://test/streamA')));
+      final resultA = await futureA;
+      expect(resultA, isFalse, reason: 'Session A is stale');
+
+      // 4. Session A's exit must NOT have cleared Session B's callback
+      callbackInvoked = false;
+      await audioService.claimAudioFocus(onStopOther: () async {});
+
+      // 5. Assert: Session B's callback was invoked by the newer owner
+      expect(callbackInvoked, isTrue, reason: 'Session B callback must remain intact and be invoked');
+    });
+
+    test('D Cairo direct play request returns false on Android without network calls', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        final audioService = FastAudioService.instance;
+        audioService.resetForTesting();
+
+        final ok = await audioService.playLiveRadio(
+          primaryUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
+        );
+        expect(ok, isFalse, reason: 'Cairo stream on Android must be rejected immediately');
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
   });
 
   group('IslamicRadioScreen Widget, Semantics & Dispose Tests', () {
@@ -477,7 +540,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('الإذاعات الإسلامية والبث المباشر'), findsOneWidget);
+      expect(find.text('إذاعات القرآن الكريم والتسجيلات'), findsOneWidget);
       expect(find.text('إذاعة القرآن الكريم من القاهرة'), findsWidgets);
       expect(find.text('جميع الإذاعات'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
@@ -525,7 +588,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(playedUrls, contains('https://backup.qurango.net/radio/mohammed_siddiq_alminshawi'));
-      expect(find.text('جاري البث المباشر: إذاعة الشيخ محمد صديق المنشاوي'), findsOneWidget);
+      expect(find.text('جاري الاستماع: إذاعة الشيخ محمد صديق المنشاوي'), findsOneWidget);
 
       // 2. Switch to Station B (Husary)
       final husaryCard = find.descendant(
@@ -542,7 +605,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(playedUrls, contains('https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad'));
-      expect(find.text('جاري البث المباشر: إذاعة الشيخ محمود خليل الحصري'), findsOneWidget);
+      expect(find.text('جاري الاستماع: إذاعة الشيخ محمود خليل الحصري'), findsOneWidget);
 
       // 3. Assert NO error SnackBar appeared during station transition
       expect(find.textContaining('تعذر تشغيل'), findsNothing);
@@ -712,6 +775,108 @@ void main() {
       // IslamicRadioScreen should not indicate active playback
       expect(find.text('إيقاف مؤقت'), findsNothing);
       expect(find.byIcon(Icons.pause_circle_filled_rounded), findsNothing);
+    });
+
+    testWidgets('B inject idle during B connecting then buffering->ready: assert B card + miniplayer survive, real idle after playing clears', (tester) async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final stateController = StreamController<PlayerState>.broadcast();
+      addTearDown(stateController.close);
+
+      final completerB = Completer<AudioSource>();
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        if (url.contains('alhussary_mojawwad')) {
+          return completerB.future;
+        }
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(
+              playerStateStreamOverride: stateController.stream,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Tap Station B (Husary) to start connecting
+      final husaryCard = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمود خليل الحصري'),
+      );
+      await tester.scrollUntilVisible(
+        husaryCard,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(husaryCard);
+      await tester.pump(); // enters buffering/connecting
+
+      // 2. Inject transient IDLE while B is connecting (from previous stop or source preparation)
+      stateController.add(PlayerState(false, ProcessingState.idle));
+      await tester.pump();
+
+      // Miniplayer and buffering state must still survive for Husary!
+      expect(find.text('إذاعة الشيخ محمود خليل الحصري'), findsWidgets);
+
+      // 3. Complete connection and inject buffering -> ready
+      completerB.complete(AudioSource.uri(Uri.parse('https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad')));
+      stateController.add(PlayerState(true, ProcessingState.buffering));
+      await tester.pump();
+
+      stateController.add(PlayerState(true, ProcessingState.ready));
+      await tester.pumpAndSettle();
+
+      // 4. Assert: B card is in playing state AND miniplayer survives!
+      expect(find.text('إذاعة الشيخ محمود خليل الحصري'), findsWidgets);
+      expect(find.byIcon(Icons.pause_circle_filled_rounded), findsWidgets);
+      expect(find.text('استماع متواصل'), findsOneWidget); // in miniplayer
+
+      // 5. Inject REAL idle after playing (stream ended or player stopped)
+      stateController.add(PlayerState(false, ProcessingState.idle));
+      await tester.pumpAndSettle();
+
+      // 6. Assert: Real idle clears state and dismisses miniplayer
+      expect(find.byIcon(Icons.pause_circle_filled_rounded), findsNothing);
+      expect(find.text('استماع متواصل'), findsNothing);
+    });
+
+    testWidgets('D Cairo is disabled/unsupported on Android in IslamicRadioScreen', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        await tester.binding.setSurfaceSize(const Size(800, 1400));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: IslamicRadioScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // In Cairo featured card:
+        expect(find.text('غير مدعوم على أندرويد (غير مشفر)'), findsOneWidget);
+        expect(find.text('غير مدعوم على أندرويد'), findsWidgets);
+
+        // Find button with 'غير مدعوم على أندرويد (غير مشفر)' and verify onPressed is null
+        final cairoBtn = tester.widget<ElevatedButton>(
+          find.widgetWithText(ElevatedButton, 'غير مدعوم على أندرويد (غير مشفر)'),
+        );
+        expect(cairoBtn.onPressed, isNull, reason: 'Cairo play button must be disabled on Android');
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     });
   });
 }

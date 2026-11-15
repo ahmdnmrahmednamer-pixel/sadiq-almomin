@@ -27,9 +27,17 @@ class FastAudioService {
   final AudioPlayer _sharedPlayer = AudioPlayer();
   StreamSubscription<PlayerState>? _sharedPlayerStateSub;
   Future<void> Function()? _activeCustomStopCallback;
+  int _activeCallbackToken = 0;
 
-  /// Active AudioPlayer instance for direct service playback
-  AudioPlayer get player => _activePlayer ?? _sharedPlayer;
+  /// Shared AudioPlayer instance for direct service playback
+  AudioPlayer get player => _sharedPlayer;
+
+  @visibleForTesting
+  Stream<PlayerState>? playerStateStreamOverride;
+
+  /// Stream of player states for observing shared playback
+  Stream<PlayerState> get playerStateStream =>
+      playerStateStreamOverride ?? _sharedPlayer.playerStateStream;
 
   int _activePlaybackToken = 0;
 
@@ -65,17 +73,20 @@ class FastAudioService {
   @visibleForTesting
   void resetForTesting() {
     _activePlaybackToken = 0;
+    _activeCallbackToken = 0;
     _activeCustomStopCallback = null;
     _activePlayer = null;
     getFastAudioSourceOverride = null;
     onBeforePlayCallback = null;
     setAudioSourceOverride = null;
+    playerStateStreamOverride = null;
     _setupSharedPlayerListener();
   }
 
   /// Stops whichever player is currently active across the app and releases callbacks
   Future<void> stop() async {
     _activePlaybackToken++;
+    _activeCallbackToken = 0;
     final cb = _activeCustomStopCallback;
     _activeCustomStopCallback = null;
     final ap = _activePlayer;
@@ -106,6 +117,7 @@ class FastAudioService {
   }) {
     final token = ++_activePlaybackToken;
     _activeCustomStopCallback = onStopOther;
+    _activeCallbackToken = token;
     _activePlayer = player ?? _sharedPlayer;
     return token;
   }
@@ -280,15 +292,19 @@ class FastAudioService {
       return false;
     }
 
+    // Android disallows cleartext HTTP traffic. This known Cairo relay redirects to cleartext HTTP.
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      if (mainUrl.contains('radiojar.com/8s5u5tpdtwzuv') || mainUrl.contains('8s5u5tpdtwzuv')) {
+        return false;
+      }
+    }
+
     // 1. Explicitly claim audio focus, returning the assigned session token
     final sessionToken = await claimAudioFocus(
       player: targetPlayer,
       onStopOther: onStopCallback,
     );
     if (sessionToken != _activePlaybackToken) {
-      if (_activeCustomStopCallback == onStopCallback) {
-        _activeCustomStopCallback = null;
-      }
       return false;
     }
 
@@ -296,9 +312,6 @@ class FastAudioService {
       await targetPlayer.stop();
     } catch (_) {}
     if (sessionToken != _activePlaybackToken) {
-      if (_activeCustomStopCallback == onStopCallback) {
-        _activeCustomStopCallback = null;
-      }
       return false;
     }
 
@@ -312,9 +325,6 @@ class FastAudioService {
 
     for (int i = 0; i < candidateUrls.length; i++) {
       if (sessionToken != _activePlaybackToken) {
-        if (_activeCustomStopCallback == onStopCallback) {
-          _activeCustomStopCallback = null;
-        }
         return false;
       }
       final targetUrl = candidateUrls[i].trim();
@@ -324,9 +334,6 @@ class FastAudioService {
         try {
           await targetPlayer.setAsset(targetUrl);
           if (sessionToken != _activePlaybackToken) {
-            if (_activeCustomStopCallback == onStopCallback) {
-              _activeCustomStopCallback = null;
-            }
             return false;
           }
           unawaited(targetPlayer.play());
@@ -355,9 +362,6 @@ class FastAudioService {
                 isLiveStream: isLiveStream,
               );
         if (sessionToken != _activePlaybackToken) {
-          if (_activeCustomStopCallback == onStopCallback) {
-            _activeCustomStopCallback = null;
-          }
           return false;
         }
 
@@ -367,9 +371,6 @@ class FastAudioService {
           await targetPlayer.setAudioSource(source);
         }
         if (sessionToken != _activePlaybackToken) {
-          if (_activeCustomStopCallback == onStopCallback) {
-            _activeCustomStopCallback = null;
-          }
           return false;
         }
 
@@ -377,9 +378,6 @@ class FastAudioService {
           await onBeforePlayCallback!(sessionToken, targetUrl);
         }
         if (sessionToken != _activePlaybackToken) {
-          if (_activeCustomStopCallback == onStopCallback) {
-            _activeCustomStopCallback = null;
-          }
           return false;
         }
 
@@ -397,9 +395,6 @@ class FastAudioService {
       if (!isLiveStream && !kIsWeb && _cacheDir != null) {
         try {
           if (sessionToken != _activePlaybackToken) {
-            if (_activeCustomStopCallback == onStopCallback) {
-              _activeCustomStopCallback = null;
-            }
             return false;
           }
           final targetCacheFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
@@ -409,16 +404,10 @@ class FastAudioService {
             headers: fastStreamingHeaders,
           );
           if (sessionToken != _activePlaybackToken) {
-            if (_activeCustomStopCallback == onStopCallback) {
-              _activeCustomStopCallback = null;
-            }
             return false;
           }
           await targetPlayer.setAudioSource(lockSource);
           if (sessionToken != _activePlaybackToken) {
-            if (_activeCustomStopCallback == onStopCallback) {
-              _activeCustomStopCallback = null;
-            }
             return false;
           }
           unawaited(targetPlayer.play());
@@ -429,7 +418,7 @@ class FastAudioService {
       }
     }
 
-    if (_activeCustomStopCallback == onStopCallback) {
+    if (sessionToken == _activePlaybackToken && sessionToken == _activeCallbackToken) {
       _activeCustomStopCallback = null;
     }
     return false;

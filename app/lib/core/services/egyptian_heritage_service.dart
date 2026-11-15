@@ -18,7 +18,15 @@ class EgyptianHeritageService extends ChangeNotifier {
   Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
   String get selectedGoldKarat => _selectedGoldKarat;
 
-  List<EgyptianRadioStation> get radioStations => defaultRadioStations;
+  List<EgyptianRadioStation>? _radioStationsOverride;
+  List<EgyptianRadioStation> get radioStations =>
+      _radioStationsOverride ?? defaultRadioStations;
+
+  @visibleForTesting
+  set radioStationsOverride(List<EgyptianRadioStation>? override) {
+    _radioStationsOverride = override;
+    notifyListeners();
+  }
   List<ShaarawiReflectionItem> get shaarawiReflections => defaultShaarawiReflections;
   List<EgyptianHistoricMosque> get historicMosques => defaultHistoricMosques;
   List<String> get mubtahileenList => ['الكل', ...ibtihalatCatalog.map((e) => e.mubtahilName).toSet()];
@@ -163,7 +171,7 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_minshawi',
       name: 'أثير الشيخ محمد صديق المنشاوي',
-      subtitle: 'الصوت الباكي الخاشع — بث مباشر مستمر على مدار ٢٤ ساعة',
+      subtitle: 'الصوت الباكي الخاشع — تسجيلات المصحف المرتل والمجود',
       frequencyOrBadge: 'تراث الإذاعة',
       streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
       fallbackUrls: [
@@ -179,7 +187,7 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_husary',
       name: 'أثير الشيخ محمود خليل الحصري',
-      subtitle: 'شيخ عموم المقارئ المصرية — بث مباشر مستمر للمصحف المرتل والمجود',
+      subtitle: 'شيخ عموم المقارئ المصرية — تسجيلات المصحف المرتل والمجود',
       frequencyOrBadge: 'المصحف المعلم',
       streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
@@ -194,7 +202,7 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_abdulbasit',
       name: 'أثير الشيخ عبد الباسط عبد الصمد',
-      subtitle: 'صوت مكة والحنجرة الذهبية — بث مباشر لأعذب تلاوات الشيخ',
+      subtitle: 'الحنجرة الذهبية وسفير القرآن — تسجيلات المصحف المرتل والمجود',
       frequencyOrBadge: 'الحنجرة الذهبية',
       streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
       fallbackUrls: [
@@ -203,13 +211,13 @@ class EgyptianHeritageService extends ChangeNotifier {
       icon: Icons.mic_external_on_rounded,
       accentColor: Color(0xFF8B6508),
       dailyScheduleHighlights: [
-        'تلاوات المسجد الحرام ومسجد الإمام الشافعي ومسجد الحسين بالقاهرة',
+        'روائع التلاوات المجودة والمحافل القرآنية الخالدة',
       ],
     ),
     EgyptianRadioStation(
       id: 'radio_egypt_mustafa_ismail',
       name: 'أثير الشيخ مصطفى إسماعيل',
-      subtitle: 'عبقري النغم القرآني وقارئ الجامع الأزهر — بث مباشر مستمر',
+      subtitle: 'عبقري الأداء القرآني وقارئ الجامع الأزهر — تسجيلات المصحف المرتل والمجود',
       frequencyOrBadge: 'مدرسة المقامات',
       streamUrl: 'https://qurango.net/radio/mustafa_ismail',
       fallbackUrls: [

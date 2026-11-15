@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../core/audio/fast_audio_service.dart';
@@ -10,10 +11,12 @@ import '../../core/theme/app_theme.dart';
 /// شاشة الإذاعات الإسلامية والبث المباشر (راديو القرآن الكريم والعالم الإسلامي)
 class IslamicRadioScreen extends StatefulWidget {
   final IslamicRadioCategoryType initialCategory;
+  final Stream<PlayerState>? playerStateStreamOverride;
 
   const IslamicRadioScreen({
     super.key,
     this.initialCategory = IslamicRadioCategoryType.all,
+    this.playerStateStreamOverride,
   });
 
   @override
@@ -42,7 +45,8 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     _radioService.init();
 
     // الاستماع لحالة مشغل الصوت المركزي مع التأكد من ملكية الجلسة للإذاعة
-    _playerStateSubscription = _audioService.player.playerStateStream.listen((state) {
+    final stream = widget.playerStateStreamOverride ?? _audioService.playerStateStream;
+    _playerStateSubscription = stream.listen((state) {
       if (!mounted) return;
       // لا يتم وسم الإذاعة بالتشغيل إذا كان المشغل يعزف مقطعاً من خدمة أو شاشة أخرى
       if (_currentStation == null || !_isRadioActive) {
@@ -55,17 +59,28 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
         return;
       }
       setState(() {
-        _isPlaying = state.playing;
-        _isBuffering = state.processingState == ProcessingState.buffering ||
-            state.processingState == ProcessingState.loading;
-        if (state.processingState == ProcessingState.completed ||
-            state.processingState == ProcessingState.idle) {
+        if (state.processingState == ProcessingState.idle) {
+          // B injectidle duringBconnecting thenbuffering->ready; assertBcard+miniplayer survive, realidleafterplayingclears.
+          if (!_isBuffering && !state.playing) {
+            _isPlaying = false;
+            _isBuffering = false;
+            _isRadioActive = false;
+            _currentStation = null;
+          }
+        } else if (state.processingState == ProcessingState.completed) {
           if (!state.playing) {
             _isPlaying = false;
             _isBuffering = false;
             _isRadioActive = false;
             _currentStation = null;
           }
+        } else if (state.processingState == ProcessingState.buffering ||
+            state.processingState == ProcessingState.loading) {
+          _isBuffering = true;
+          _isPlaying = state.playing;
+        } else if (state.processingState == ProcessingState.ready) {
+          _isBuffering = false;
+          _isPlaying = state.playing;
         }
       });
     });
@@ -132,9 +147,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
       _isBuffering = false;
       _isPlaying = ok;
       _isRadioActive = ok;
-      if (!ok) {
-        _currentStation = null;
-      }
+      _currentStation = ok ? station : null;
     });
 
     final messenger = ScaffoldMessenger.of(context);
@@ -152,7 +165,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
             Expanded(
               child: Text(
                 ok
-                    ? 'جاري البث المباشر: ${station.name}'
+                    ? 'جاري الاستماع: ${station.name}'
                     : 'تعذر تشغيل إذاعة ${station.name} حالياً',
                 style: const TextStyle(fontFamily: 'Amiri', fontSize: 14),
               ),
@@ -280,7 +293,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
               Text('📻 ', style: TextStyle(fontSize: 20)),
               Expanded(
                 child: Text(
-                  'الإذاعات الإسلامية والبث المباشر',
+                  'إذاعات القرآن الكريم والتسجيلات',
                   style: TextStyle(
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
@@ -499,6 +512,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   Widget _buildCairoFeaturedCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
+    final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
     return Container(
       decoration: BoxDecoration(
@@ -536,36 +550,22 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // شارة البث المباشر وتاريخ التأسيس
+                // شارة ترحيل الإنترنت وتنبيه أندرويد
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent.withValues(alpha: 0.9),
+                        color: isAndroid ? Colors.grey.shade700 : AppColors.primaryGreen,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          const Text(
-                            'بث مباشر الآن 🔴',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        isAndroid ? 'غير مدعوم على أندرويد' : 'تسجيلات إذاعية',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -635,45 +635,51 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                 Row(
                   children: [
                     Semantics(
-                      label: isThisBuffering
-                          ? 'جاري الاتصال بإذاعة ${station.name}'
-                          : (isThisPlaying ? 'إيقاف بث ${station.name}' : 'تشغيل بث ${station.name}'),
-                      button: true,
+                      label: isAndroid
+                          ? 'إذاعة القرآن الكريم من القاهرة غير مدعومة على أندرويد لعدم التشفير'
+                          : (isThisBuffering
+                              ? 'جاري الاتصال بإذاعة ${station.name}'
+                              : (isThisPlaying ? 'إيقاف ${station.name}' : 'تشغيل ${station.name}')),
+                      button: !isAndroid,
                       liveRegion: isThisBuffering || isThisPlaying,
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isThisPlaying
-                              ? Colors.amberAccent
-                              : Colors.white,
-                          foregroundColor: isThisPlaying
-                              ? Colors.black87
-                              : AppColors.primaryGreen,
+                          backgroundColor: isAndroid
+                              ? Colors.grey.shade400
+                              : (isThisPlaying ? Colors.amberAccent : Colors.white),
+                          foregroundColor: isAndroid
+                              ? Colors.grey.shade800
+                              : (isThisPlaying ? Colors.black87 : AppColors.primaryGreen),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           elevation: 2,
                         ),
-                        onPressed: () => _toggleStation(station),
-                        icon: isThisBuffering
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                                ),
-                              )
-                            : Icon(
-                                isThisPlaying
-                                    ? Icons.pause_circle_filled_rounded
-                                    : Icons.play_arrow_rounded,
-                                size: 22,
-                              ),
+                        onPressed: isAndroid ? null : () => _toggleStation(station),
+                        icon: isAndroid
+                            ? const Icon(Icons.block_rounded, size: 20)
+                            : (isThisBuffering
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                                    ),
+                                  )
+                                : Icon(
+                                    isThisPlaying
+                                        ? Icons.pause_circle_filled_rounded
+                                        : Icons.play_arrow_rounded,
+                                    size: 22,
+                                  )),
                         label: Text(
-                          isThisBuffering
-                              ? 'جاري الاتصال بالبث...'
-                              : (isThisPlaying ? 'إيقاف مؤقت' : 'استمع للبث المباشر الآن'),
+                          isAndroid
+                              ? 'غير مدعوم على أندرويد (غير مشفر)'
+                              : (isThisBuffering
+                                  ? 'جاري الاتصال بالتسجيل...'
+                                  : (isThisPlaying ? 'إيقاف مؤقت' : 'استماع للتسجيل')),
                           style: const TextStyle(
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.bold,
@@ -703,6 +709,8 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   Widget _buildStationCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
+    final isCairoUnsupported = station.id == 'radio_cairo_live' &&
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
@@ -748,11 +756,15 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => _toggleStation(station),
+                onTap: isCairoUnsupported ? null : () => _toggleStation(station),
                 child: Semantics(
-                  label: '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}',
-                  hint: isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء البث المباشر',
-                  button: true,
+                  label: isCairoUnsupported
+                      ? '${station.name}، غير متاح على أجهزة أندرويد لعدم التشفير'
+                      : '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}',
+                  hint: isCairoUnsupported
+                      ? 'غير مدعوم على أندرويد'
+                      : (isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء الاستماع'),
+                  button: !isCairoUnsupported,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -837,38 +849,48 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                   },
                 ),
                 Semantics(
-                  label: isThisBuffering
-                      ? 'جاري الاتصال بإذاعة ${station.name}'
-                      : (isThisPlaying
-                          ? 'إيقاف بث ${station.name}'
-                          : 'تشغيل بث ${station.name}'),
-                  button: true,
+                  label: isCairoUnsupported
+                      ? '${station.name} غير متاح على أجهزة أندرويد لعدم التشفير'
+                      : (isThisBuffering
+                          ? 'جاري الاتصال بإذاعة ${station.name}'
+                          : (isThisPlaying
+                              ? 'إيقاف بث ${station.name}'
+                              : 'تشغيل بث ${station.name}')),
+                  button: !isCairoUnsupported,
                   liveRegion: isThisBuffering || isThisPlaying,
                   child: IconButton(
                     iconSize: 32,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                    tooltip: isThisPlaying
-                        ? 'إيقاف بث ${station.name}'
-                        : 'تشغيل بث ${station.name}',
-                    icon: isThisBuffering
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                            ),
+                    tooltip: isCairoUnsupported
+                        ? 'غير مدعوم على أندرويد لعدم التشفير'
+                        : (isThisPlaying
+                            ? 'إيقاف بث ${station.name}'
+                            : 'تشغيل بث ${station.name}'),
+                    icon: isCairoUnsupported
+                        ? const Icon(
+                            Icons.block_rounded,
+                            size: 24,
+                            color: Colors.grey,
                           )
-                        : Icon(
-                            isThisPlaying
-                                ? Icons.pause_circle_filled_rounded
-                                : Icons.play_circle_fill_rounded,
-                            color: isThisPlaying
-                                ? AppColors.accentGold
-                                : AppColors.primaryGreen,
-                          ),
-                    onPressed: () => _toggleStation(station),
+                        : (isThisBuffering
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                                ),
+                              )
+                            : Icon(
+                                isThisPlaying
+                                    ? Icons.pause_circle_filled_rounded
+                                    : Icons.play_circle_fill_rounded,
+                                color: isThisPlaying
+                                    ? AppColors.accentGold
+                                    : AppColors.primaryGreen,
+                              )),
+                    onPressed: isCairoUnsupported ? null : () => _toggleStation(station),
                   ),
                 ),
               ],
@@ -937,11 +959,11 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        _isPlaying ? 'مباشر 🔴' : 'متوقف مؤقتاً',
+                        _isPlaying ? 'استماع متواصل' : 'متوقف مؤقتاً',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.bold,
-                          color: _isPlaying ? Colors.redAccent : Colors.grey,
+                          color: _isPlaying ? AppColors.primaryGreen : Colors.grey,
                         ),
                       ),
                       const SizedBox(width: 6),

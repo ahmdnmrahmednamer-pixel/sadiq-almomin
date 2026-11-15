@@ -651,14 +651,14 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       ),
       const AppDirectoryItem(
         id: 'islamic_radio',
-        title: 'الإذاعات الإسلامية والبث المباشر',
-        subtitle: 'إذاعات كبار القراء، تلاوات الحرمين الشريفين، الفتاوى والتفسير ٢٤ ساعة',
+        title: 'إذاعات القرآن الكريم والتسجيلات الإسلامية',
+        subtitle: 'تلاوات كبار القراء، التفسير وعلوم القرآن، الفتاوى والأحكام، الأذكار والرقية الشرعية',
         category: 'رياض العلم',
         categoryKey: 'library',
         route: '/islamic-radio',
         icon: Icons.podcasts_rounded,
         color: Color(0xFF0F5B45),
-        keywords: ['إذاعات', 'راديو', 'بث مباشر', 'الحرمين', 'تفسير', 'فتاوى', 'قراء', 'قرآن'],
+        keywords: ['إذاعات', 'راديو', 'تلاوات', 'تفسير', 'فتاوى', 'قراء', 'قرآن'],
       ),
       AppDirectoryItem(
         id: 'egypt_heritage',
