@@ -31,6 +31,7 @@ import 'riyad_alsalihin_service.dart';
 import 'islamic_mutoon_service.dart';
 import 'gharib_quran_service.dart';
 import 'tajweed_service.dart';
+import 'islamic_radio_service.dart';
 
 /// Result of validating a backup JSON payload
 class BackupValidationResult {
@@ -267,6 +268,8 @@ class BackupRestoreService {
           prefs.getInt('hadith_last_read_id'),
       'quran_search_history_v1':
           prefs.getStringList('quran_search_history_v1') ?? const <String>[],
+      'radio_favorites':
+          prefs.getStringList('islamic_radio_favorites') ?? const <String>[],
       'sensor_gestures': {
         'notif_shake_to_stop': prefs.getBool('notif_shake_to_stop') ?? true,
         'notif_flip_to_mute': prefs.getBool('notif_flip_to_mute') ?? true,
@@ -844,6 +847,10 @@ class BackupRestoreService {
           await restoreOrMergeList('quran_search_history_v1',
               extData['quran_search_history_v1'] as List);
         }
+        if (extData['radio_favorites'] is List) {
+          await restoreOrMergeList('islamic_radio_favorites',
+              extData['radio_favorites'] as List);
+        }
         if (extData['sensor_gestures'] is Map) {
           final sg = extData['sensor_gestures'] as Map;
           if (sg['notif_shake_to_stop'] is bool) {
@@ -929,6 +936,7 @@ class BackupRestoreService {
       await StoriesService.instance.init(forceReload: true);
       await AdhanSensorGestureService.instance.init(forceReload: true);
       await TajweedService.instance.init(forceReload: true);
+      await IslamicRadioService.instance.init(forceReload: true);
       await PrayerNotificationService.instance.init(forceReload: true);
 
       return true;
