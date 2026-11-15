@@ -235,7 +235,40 @@ void main() {
       expect(vf.isWhiteDay(14), isTrue);
       expect(vf.isWhiteDay(15), isTrue);
       expect(vf.isWhiteDay(16), isFalse);
-      expect(vf.getTodayHijriFastRecommendation(), isNotEmpty);
+
+      // Isolate Hijri adjustment prefs to ensure deterministic Hijri calculations
+      final originalHijriAdj = SettingsService.instance.hijriAdjustmentDays;
+      try {
+        await SettingsService.instance.setHijriAdjustmentDays(0);
+
+        // Positive recommendation: deterministic Monday
+        final mondayDate = DateTime(2026, 11, 16);
+        expect(mondayDate.weekday, equals(DateTime.monday));
+        final mondayRec = vf.getTodayHijriFastRecommendation(mondayDate);
+        expect(mondayRec, isNotNull);
+        expect(mondayRec, isNotEmpty);
+        expect(mondayRec, contains('الإثنين'));
+
+        // Positive recommendation: deterministic Hijri White Day (13 Jumada al-Akhirah 1448)
+        final whiteDayDate = DateTime(2026, 11, 24);
+        final whiteHijri = HijriDateHelper.toHijri(whiteDayDate);
+        expect(whiteHijri['day'], equals(13));
+        expect(vf.isWhiteDay(whiteHijri['day']!), isTrue);
+        final whiteDayRec = vf.getTodayHijriFastRecommendation(whiteDayDate);
+        expect(whiteDayRec, isNotNull);
+        expect(whiteDayRec, isNotEmpty);
+        expect(whiteDayRec, contains('الأيام البيض'));
+
+        // Ordinary non-fasting day: deterministic Tuesday (6 Jumada al-Akhirah 1448) -> null contract
+        final ordinaryDate = DateTime(2026, 11, 17);
+        expect(ordinaryDate.weekday, equals(DateTime.tuesday));
+        final ordHijri = HijriDateHelper.toHijri(ordinaryDate);
+        expect(ordHijri['day'], equals(6));
+        expect(vf.isWhiteDay(ordHijri['day']!), isFalse);
+        expect(vf.getTodayHijriFastRecommendation(ordinaryDate), isNull);
+      } finally {
+        await SettingsService.instance.setHijriAdjustmentDays(originalHijriAdj);
+      }
 
       // Unified Library 14 filters (all + 13 encyclopedias)
       expect(UnifiedLibrarySearchService.libraryFilters.length, equals(14));
