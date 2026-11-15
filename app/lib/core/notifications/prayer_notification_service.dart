@@ -1304,7 +1304,11 @@ class PrayerNotificationService extends ChangeNotifier {
           final iqamahTime = prayer.time.add(Duration(minutes: _iqamahOffsetMinutes));
           if (iqamahTime.isAfter(now)) {
             final iqamahTz = tz.TZDateTime.from(iqamahTime, tz.local);
-            final iqamahRawSound = _selectedIqamahVoice == 'iqamah_short' ? 'takbeerat' : 'iqamah';
+            final iqamahRawSound = IslamicAudioService.allTracks
+                    .where((t) => t.id == _selectedIqamahVoice)
+                    .map((t) => t.rawNotificationSound)
+                    .firstOrNull ??
+                'iqamah';
             final iqamahDetails = AndroidNotificationDetails(
               'prayer_iqamah_channel',
               'تنبيه إقامة الصلاة',
