@@ -144,17 +144,28 @@ StreamController<List<int>> createTestStreamController() {
   return controller;
 }
 
+List<File> getLingeringTempFiles(Directory dir, String trackId) {
+  if (!dir.existsSync()) return [];
+  return dir
+      .listSync()
+      .whereType<File>()
+      .where((f) => f.path.contains('$trackId.') && f.path.endsWith('.tmp'))
+      .toList();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   HttpOverrides? priorHttpOverrides;
   late Directory isolatedTempDir;
+  late Directory audioDir;
   final service = IslamicAudioService.instance;
   bool priorDisableNative = false;
 
   setUpAll(() {
     priorHttpOverrides = HttpOverrides.current;
     isolatedTempDir = Directory.systemTemp.createTempSync('almomin_audio_dl_race_test_');
+    audioDir = Directory('${isolatedTempDir.path}/adhkar_audio');
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
@@ -189,7 +200,6 @@ void main() {
   setUp(() async {
     priorDisableNative = service.disableNativePlayerForTesting;
     SharedPreferences.setMockInitialValues({});
-    final audioDir = Directory('${isolatedTempDir.path}/adhkar_audio');
     if (!audioDir.existsSync()) {
       audioDir.createSync(recursive: true);
     }
@@ -204,6 +214,7 @@ void main() {
       'adhan_makkah',
       'adhan_madinah',
       'adhan_essam_bukhari',
+      'adhan_naif_feeda',
       'adhan_cairo',
       'adhan_aqsa',
       'adhan_farooq_hadrawi'
@@ -253,6 +264,7 @@ void main() {
       final localFile = File(service.getLocalAudioPath(trackId)!);
       expect(localFile.existsSync(), isTrue);
       expect(localFile.lengthSync(), 2048);
+      expect(getLingeringTempFiles(audioDir, trackId), isEmpty);
 
       // Clean up downloaded track
       await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
@@ -290,6 +302,8 @@ void main() {
         expect(result, isFalse);
         expect(service.isDownloaded(trackId), isFalse);
         expect(service.isDownloading(trackId), isFalse);
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'Standalone cancel must clean up attempt temp file');
       } finally {
         if (!streamController.isClosed) {
           try {
@@ -355,6 +369,8 @@ void main() {
         expect(initialFile.existsSync(), isTrue);
         expect(initialFile.lengthSync(), 3000,
             reason: 'Existing downloaded file content and size must not be corrupted by cancelled retry');
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'Cancelled re-download must clean up its attempt temp file without leaving .tmp files');
 
         await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
       } finally {
@@ -365,6 +381,76 @@ void main() {
         }
         try {
           await secondDlFuture.timeout(const Duration(seconds: 1));
+        } catch (_) {}
+      }
+    });
+
+    test('Control 5: Network failure during re-download preserves existing valid download and cleans temp files', () async {
+      const trackId = 'adhan_naif_feeda';
+      final initialData = Uint8List(3500);
+
+      // 1. Initially download the track successfully
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        return TestHttpClientResponse(Stream.value(initialData), contentLength: initialData.length);
+      };
+
+      final dlSuccess = await service.downloadTrack(trackId).timeout(const Duration(seconds: 5));
+      expect(dlSuccess, isTrue);
+      expect(service.isDownloaded(trackId), isTrue);
+      final initialPath = service.getLocalAudioPath(trackId);
+      expect(initialPath, isNotNull);
+      final initialFile = File(initialPath!);
+      expect(initialFile.existsSync(), isTrue);
+      expect(initialFile.lengthSync(), 3500);
+
+      // 2. Start re-download that fails due to network/socket error
+      final reqStarted = Completer<void>();
+      final streamController = createTestStreamController();
+
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        req.onAbort = () {
+          if (!streamController.isClosed) {
+            streamController.close();
+          }
+        };
+        reqStarted.complete();
+        return TestHttpClientResponse(streamController.stream, contentLength: 5000);
+      };
+
+      final failingDlFuture = service.downloadTrack(trackId);
+      activeFutures.add(failingDlFuture);
+
+      try {
+        await reqStarted.future.timeout(const Duration(seconds: 5));
+        streamController.add(Uint8List(100));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(service.isDownloading(trackId), isTrue);
+
+        // Inject network error
+        streamController.addError(const SocketException('Connection reset by peer'));
+
+        final failureResult = await failingDlFuture.timeout(const Duration(seconds: 5));
+        expect(failureResult, isFalse);
+
+        // Existing file and state remain valid
+        expect(service.isDownloaded(trackId), isTrue,
+            reason: 'Track must remain marked downloaded after network failure on re-download');
+        expect(service.isDownloading(trackId), isFalse);
+        expect(initialFile.existsSync(), isTrue);
+        expect(initialFile.lengthSync(), 3500,
+            reason: 'Existing downloaded file content and size must not be corrupted by network failure');
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'Failed re-download must clean up its attempt temp file');
+
+        await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
+      } finally {
+        if (!streamController.isClosed) {
+          try {
+            await streamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+        try {
+          await failingDlFuture.timeout(const Duration(seconds: 1));
         } catch (_) {}
       }
     });
@@ -438,6 +524,9 @@ void main() {
         req2StreamController.add(Uint8List(10000));
         await req2StreamController.close().timeout(const Duration(milliseconds: 500));
         await req2Future.timeout(const Duration(seconds: 5));
+
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'No attempt temp files must remain after cancel and retry complete');
       } finally {
         if (!req1StreamController.isClosed) {
           try {
@@ -545,6 +634,8 @@ void main() {
         expect(finalFile.existsSync(), isTrue);
         expect(finalFile.lengthSync(), 5000,
             reason: 'Final downloaded file size must match exact content length');
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'No attempt temp files must remain after cancel and successful retry');
 
         await service.deleteDownloadedTrack(trackId).timeout(const Duration(seconds: 5));
       } finally {
@@ -639,6 +730,8 @@ void main() {
         // 7. Verify both requests settled with clean state
         expect(service.isDownloading(trackId), isFalse);
         expect(service.isDownloaded(trackId), isFalse);
+        expect(getLingeringTempFiles(audioDir, trackId), isEmpty,
+            reason: 'No attempt temp files must remain after repeated cancel/retry');
       } finally {
         if (!req1StreamController.isClosed) {
           try {

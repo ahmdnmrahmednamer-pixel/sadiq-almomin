@@ -1603,15 +1603,10 @@ class IslamicAudioService extends ChangeNotifier {
         final tempFile = File(tempFilePath);
         if (tempFile.existsSync()) {
           try {
-            final finalFile = File(filePath);
-            if (finalFile.existsSync()) {
-              try {
-                finalFile.deleteSync();
-              } catch (_) {}
-            }
+            final fileSize = tempFile.lengthSync();
             tempFile.renameSync(filePath);
             _downloadedLocalPaths[id] = filePath;
-            _downloadedFileSizes[id] = finalFile.lengthSync();
+            _downloadedFileSizes[id] = fileSize;
             _activeProgress.remove(id);
             _cancelTokens.remove(id);
             notifyListeners();
@@ -1632,9 +1627,16 @@ class IslamicAudioService extends ChangeNotifier {
       } else {
         final tempFile = File(tempFilePath);
         if (tempFile.existsSync()) {
-          try {
-            tempFile.deleteSync();
-          } catch (_) {}
+          for (int i = 0; i < 5; i++) {
+            try {
+              tempFile.deleteSync();
+              break;
+            } catch (_) {
+              if (i < 4) {
+                await Future<void>.delayed(const Duration(milliseconds: 50));
+              }
+            }
+          }
         }
         return false;
       }
@@ -1647,9 +1649,16 @@ class IslamicAudioService extends ChangeNotifier {
       }
       final tempFile = File(tempFilePath);
       if (tempFile.existsSync()) {
-        try {
-          tempFile.deleteSync();
-        } catch (_) {}
+        for (int i = 0; i < 5; i++) {
+          try {
+            tempFile.deleteSync();
+            break;
+          } catch (_) {
+            if (i < 4) {
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+            }
+          }
+        }
       }
       return false;
     }
