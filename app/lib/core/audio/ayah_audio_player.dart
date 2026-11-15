@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import '../models/surah.dart';
 import '../services/quran_repository.dart';
 import '../services/settings_service.dart';
 import 'fast_audio_service.dart';
@@ -15,6 +16,9 @@ typedef PlayResilientFn = Future<bool> Function(
   Future<void> Function()? onStopCallback,
 });
 
+typedef LoadSurahsFn = Future<List<Surah>> Function();
+typedef PrefetchAudioFn = void Function(String url, String cacheKey);
+
 class AyahAudioPlayer {
   static final AyahAudioPlayer instance = AyahAudioPlayer._internal();
   StreamSubscription<PlayerState>? _playerStateSub;
@@ -28,6 +32,12 @@ class AyahAudioPlayer {
 
   @visibleForTesting
   bool Function()? isPlayerPlayingOverride;
+
+  @visibleForTesting
+  LoadSurahsFn? loadSurahsRunner;
+
+  @visibleForTesting
+  PrefetchAudioFn? prefetchAudioRunner;
 
   bool get _isPlayerPlaying => isPlayerPlayingOverride != null
       ? isPlayerPlayingOverride!()
@@ -73,6 +83,8 @@ class AyahAudioPlayer {
     playResilientRunner = null;
     stopPlayerRunner = null;
     isPlayerPlayingOverride = null;
+    loadSurahsRunner = null;
+    prefetchAudioRunner = null;
     _playerStateStreamOverride = null;
     currentPlayingKey.value = null;
     isPlaying.value = false;
@@ -93,15 +105,18 @@ class AyahAudioPlayer {
   String? _playingReciterId;
 
   Future<void> _advanceToNextAyahIfPossible(String finishedKey, int sessionId) async {
+    int currentSessionToken = sessionId;
     try {
-      if (sessionId != _activePlaySessionId) return;
+      if (currentSessionToken != _activePlaySessionId) return;
       final parts = finishedKey.split(':');
       if (parts.length != 2) return;
       final surahId = int.tryParse(parts[0]);
       final ayahNumber = int.tryParse(parts[1]);
       if (surahId == null || ayahNumber == null) return;
 
-      final surahs = await QuranRepository.loadSurahs();
+      final surahs = await (loadSurahsRunner ?? QuranRepository.loadSurahs)();
+      if (currentSessionToken != _activePlaySessionId) return;
+
       final surah = surahs.where((s) => s.id == surahId).firstOrNull;
       if (surah != null && ayahNumber < surah.ayahCount) {
         final nextAyah = ayahNumber + 1;
@@ -115,7 +130,7 @@ class AyahAudioPlayer {
           'https://everyayah.com/data/Alafasy_128kbps/$sStr$aStr.mp3',
         ].where((u) => u != primaryUrl).toList();
 
-        final nextSessionId = ++_activePlaySessionId;
+        currentSessionToken = ++_activePlaySessionId;
         currentPlayingKey.value = '$surahId:$nextAyah';
         _playingReciterId = reciter.id;
         isPlaying.value = true;
@@ -130,7 +145,7 @@ class AyahAudioPlayer {
           onStopCallback: stop,
         );
 
-        if (nextSessionId != _activePlaySessionId) return;
+        if (currentSessionToken != _activePlaySessionId) return;
 
         if (!ok) {
           currentPlayingKey.value = null;
@@ -141,12 +156,18 @@ class AyahAudioPlayer {
         if (nextAyah < surah.ayahCount) {
           final prefetchUrl = SettingsService.instance.getAyahAudioUrl(surahId, nextAyah + 1);
           final prefetchKey = 'ayah_${reciter.id}_${surahId}_${nextAyah + 1}';
-          unawaited(FastAudioService.instance.prefetchAudio(prefetchUrl, prefetchKey));
+          if (prefetchAudioRunner != null) {
+            prefetchAudioRunner!(prefetchUrl, prefetchKey);
+          } else {
+            unawaited(FastAudioService.instance.prefetchAudio(prefetchUrl, prefetchKey));
+          }
         }
       }
     } catch (_) {
-      currentPlayingKey.value = null;
-      isPlaying.value = false;
+      if (currentSessionToken == _activePlaySessionId) {
+        currentPlayingKey.value = null;
+        isPlaying.value = false;
+      }
     }
   }
 
@@ -223,12 +244,16 @@ class AyahAudioPlayer {
         throw Exception('Could not stream reciter ${reciter.id}');
       }
 
-      final surahs = await QuranRepository.loadSurahs();
+      final surahs = await (loadSurahsRunner ?? QuranRepository.loadSurahs)();
       final surah = surahs.where((s) => s.id == surahId).firstOrNull;
       if (surah == null || ayahNumber < surah.ayahCount) {
         final nextUrl = SettingsService.instance.getAyahAudioUrl(surahId, ayahNumber + 1);
         final nextCacheKey = 'ayah_${reciter.id}_${surahId}_${ayahNumber + 1}';
-        unawaited(FastAudioService.instance.prefetchAudio(nextUrl, nextCacheKey));
+        if (prefetchAudioRunner != null) {
+          prefetchAudioRunner!(nextUrl, nextCacheKey);
+        } else {
+          unawaited(FastAudioService.instance.prefetchAudio(nextUrl, nextCacheKey));
+        }
       }
     } catch (e) {
       if (sessionId == _activePlaySessionId) {
