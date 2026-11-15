@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:almomin/core/services/islamic_audio_service.dart';
+import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
 import 'package:almomin/features/settings/widgets/settings_adhan_voice_modal.dart';
 
@@ -10,6 +13,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    tz.initializeTimeZones();
   });
 
   group('Adhan & Iqamah Studio Unit & Preferences Tests', () {
@@ -80,6 +84,115 @@ void main() {
         'iqamah_cairo',
         'iqamah_short',
       ]));
+    });
+
+    test('PrayerNotificationService iqamah scheduling and test notification pass consistent raw sound (short, known, nullraw, unknown, test vs schedule)', () async {
+      const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+      final calls = <MethodCall>[];
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall call) async {
+        calls.add(call);
+        return true;
+      });
+
+      final notifService = PrayerNotificationService.instance;
+      final originalVoice = notifService.selectedIqamahVoice;
+      final originalIqamahEnabled = notifService.iqamahReminderEnabled;
+      final originalOffset = notifService.iqamahOffsetMinutes;
+      final prefs = await SharedPreferences.getInstance();
+      final originalPrefVoice = prefs.getString('notif_selected_iqamah');
+      final originalPrefEnabled = prefs.getBool('notif_iqamah_enabled');
+      final originalPrefOffset = prefs.getInt('notif_iqamah_offset');
+
+      addTearDown(() async {
+        // Restore state while mock handler is active to safely handle any async reschedule calls
+        await notifService.setSelectedIqamahVoice(originalVoice);
+        await notifService.toggleIqamahReminder(originalIqamahEnabled);
+        await notifService.setIqamahOffset(originalOffset);
+
+        if (originalPrefVoice == null) {
+          await prefs.remove('notif_selected_iqamah');
+        } else {
+          await prefs.setString('notif_selected_iqamah', originalPrefVoice);
+        }
+        if (originalPrefEnabled == null) {
+          await prefs.remove('notif_iqamah_enabled');
+        } else {
+          await prefs.setBool('notif_iqamah_enabled', originalPrefEnabled);
+        }
+        if (originalPrefOffset == null) {
+          await prefs.remove('notif_iqamah_offset');
+        } else {
+          await prefs.setInt('notif_iqamah_offset', originalPrefOffset);
+        }
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null);
+      });
+
+      await notifService.init();
+      await notifService.toggleIqamahReminder(true);
+      await notifService.setIqamahOffset(15);
+
+      Future<String?> getScheduledIqamahSound(String voiceKey) async {
+        await notifService.setSelectedIqamahVoice(voiceKey);
+        calls.clear();
+
+        final testPrayerData = PrayerData(
+          latitude: 30.0,
+          longitude: 31.0,
+          locationName: 'القاهرة',
+          prayers: [
+            PrayerInfo(
+              name: 'الظهر',
+              time: DateTime.now().add(const Duration(hours: 1)),
+              formattedTime: '01:00 PM',
+            ),
+          ],
+          qiblaDegrees: 135.0,
+          lastUpdated: DateTime.now(),
+        );
+
+        await notifService.schedulePrayerNotifications(testPrayerData);
+
+        final iqamahCall = calls.firstWhere(
+          (c) => c.method == 'zonedSchedule' &&
+              ((c.arguments as Map)['payload'] as String? ?? '').startsWith('type=iqamah'),
+        );
+        final platformSpecifics = (iqamahCall.arguments as Map)['platformSpecifics'] as Map;
+        return platformSpecifics['sound'] as String?;
+      }
+
+      Future<String?> getTestIqamahSound(String voiceKey) async {
+        calls.clear();
+        await notifService.sendTestIqamahNotification(customVoice: voiceKey);
+        final testCall = calls.firstWhere(
+          (c) => c.method == 'show' &&
+              ((c.arguments as Map)['payload'] as String? ?? '').startsWith('type=iqamah'),
+        );
+        final platformSpecifics = (testCall.arguments as Map)['platformSpecifics'] as Map;
+        return platformSpecifics['sound'] as String?;
+      }
+
+      // 1. short: iqamah_short must schedule 'iqamah' (not 'takbeerat')
+      expect(await getScheduledIqamahSound('iqamah_short'), equals('iqamah'));
+
+      // 2. known: iqamah_madinah / iqamah_full
+      expect(await getScheduledIqamahSound('iqamah_madinah'), equals('iqamah'));
+      expect(await getScheduledIqamahSound('iqamah_full'), equals('iqamah'));
+
+      // 3. nullraw: remote streaming track with null rawNotificationSound (e.g. iqamah_afasy)
+      expect(await getScheduledIqamahSound('iqamah_afasy'), equals('iqamah'));
+
+      // 4. unknown: unlisted voice key falls back to 'iqamah'
+      expect(await getScheduledIqamahSound('unknown_voice_key'), equals('iqamah'));
+
+      // 5. test vs schedule consistency: both must use 'iqamah'
+      final testSound = await getTestIqamahSound('iqamah_short');
+      final schedSound = await getScheduledIqamahSound('iqamah_short');
+      expect(testSound, equals('iqamah'));
+      expect(schedSound, equals(testSound));
     });
   });
 
