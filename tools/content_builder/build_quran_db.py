@@ -114,131 +114,133 @@ def init_database(db_path: str = DB_PATH):
         os.remove(db_path)
 
     conn = sqlite3.connect(db_path)
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    cur.executescript(SCHEMA_SQL)
+        cur.executescript(SCHEMA_SQL)
 
-    # Insert Riwaya (Hafs)
-    cur.execute("INSERT INTO riwaya (id, code, name_ar) VALUES (1, 'hafs', 'حفص عن عاصم')")
+        # Insert Riwaya (Hafs)
+        cur.execute("INSERT INTO riwaya (id, code, name_ar) VALUES (1, 'hafs', 'حفص عن عاصم')")
 
-    # Insert all 114 Canonical Surahs
-    for s in CANONICAL_SURAHS:
-        cur.execute(
-            """INSERT INTO surah (id, name_ar, name_simple, revelation_place, revelation_order, ayah_count, has_basmala, page_start, page_end)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            s
+        # Insert all 114 Canonical Surahs
+        for s in CANONICAL_SURAHS:
+            cur.execute(
+                """INSERT INTO surah (id, name_ar, name_simple, revelation_place, revelation_order, ayah_count, has_basmala, page_start, page_end)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                s
+            )
+
+        # Insert all 35 Canonical Reciters per Appendix B
+        for r in RECITERS_35:
+            cur.execute(
+                """INSERT INTO reciter (id, name_ar, style_ar, sort_order, bitrate_kbps, has_ayah_files, has_surah_file, has_timings, ayah_url_template, surah_url_template, source_note)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                r
+            )
+
+        # Load XML metadata for pages and juzs
+        tree = ET.parse(XML_PATH)
+        pages_el = tree.find('pages')
+        juzs_el = tree.find('juzs')
+        hizbs_el = tree.find('hizbs')
+        sajdas_el = tree.find('sajdas')
+        page_starts = [(int(p.attrib['index']), int(p.attrib['sura']), int(p.attrib['aya'])) for p in pages_el]
+        juz_starts = [(int(j.attrib['index']), int(j.attrib['sura']), int(j.attrib['aya'])) for j in juzs_el]
+        quarter_starts = [(int(h.attrib['index']), int(h.attrib['sura']), int(h.attrib['aya'])) for h in hizbs_el]
+        sajda_positions = {(int(s.attrib['sura']), int(s.attrib['aya'])) for s in sajdas_el}
+
+        # Structural integrity constants (Section 7.1): refuse to build on bad source data
+        assert len(CANONICAL_SURAHS) == 114, f"expected 114 surahs, got {len(CANONICAL_SURAHS)}"
+        assert sum(s[5] for s in CANONICAL_SURAHS) == 6236, "ayah counts do not sum to 6236"
+        assert len(page_starts) == 604, f"expected 604 pages, got {len(page_starts)}"
+        assert len(juz_starts) == 30, f"expected 30 juz, got {len(juz_starts)}"
+        assert len(quarter_starts) == 240, f"expected 240 rub quarters, got {len(quarter_starts)}"
+        assert len(sajda_positions) == 15, f"expected 15 sajdah positions, got {len(sajda_positions)}"
+
+        def get_page(sura, aya):
+            p_num = 1
+            for p, s, a in page_starts:
+                if (sura > s) or (sura == s and aya >= a):
+                    p_num = p
+                else:
+                    break
+            return p_num
+
+        def get_juz(sura, aya):
+            j_num = 1
+            for j, s, a in juz_starts:
+                if (sura > s) or (sura == s and aya >= a):
+                    j_num = j
+                else:
+                    break
+            return j_num
+
+        def get_quarter(sura, aya):
+            # Rub' al-hizb quarter index (1..240) from the canonical Tanzil markers
+            q_num = 1
+            for q, s, a in quarter_starts:
+                if (sura > s) or (sura == s and aya >= a):
+                    q_num = q
+                else:
+                    break
+            return q_num
+
+        # Load Uthmani texts
+        with open(UTHMANI_PATH, encoding='utf-8') as f:
+            uthmani_lines = [l.strip() for l in f if l.strip() and not l.startswith('#')]
+        if len(uthmani_lines) != 6236:
+            raise ValueError(f"quran-uthmani.txt must contain exactly 6236 ayah lines, found {len(uthmani_lines)}")
+
+        # Load Tafseer Al-Muyassar
+        tafseer = {}
+        with open(TAFSEER_PATH, encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                parts = line.split('|', 2)
+                if len(parts) == 3:
+                    tafseer[(int(parts[0]), int(parts[1]))] = parts[2]
+
+        # Insert all 6236 Canonical Ayahs
+        current_global_idx = 0
+        batch_ayah = []
+        batch_fts = []
+
+        for s in CANONICAL_SURAHS:
+            s_id = s[0]
+            count = s[5]
+            for a_num in range(1, count + 1):
+                current_global_idx += 1
+                u_text = uthmani_lines[current_global_idx - 1]
+                t_text = tafseer.get((s_id, a_num), '')
+                search_text = normalize_arabic(u_text, loose=True)
+                pg = get_page(s_id, a_num)
+                jz = get_juz(s_id, a_num)
+                quarter = get_quarter(s_id, a_num)
+                hizb = (quarter + 3) // 4  # 4 quarters per hizb -> 1..60
+                rub = quarter              # 1..240 per Section 7.1
+                saj = 1 if (s_id, a_num) in sajda_positions else 0
+
+                batch_ayah.append((
+                    current_global_idx, s_id, a_num, jz, hizb, rub, pg, saj,
+                    u_text, u_text, search_text, t_text
+                ))
+                batch_fts.append((current_global_idx, search_text))
+
+        cur.executemany(
+            """INSERT INTO ayah (id, surah_id, ayah_number, juz, hizb, rub, page, sajdah, text_uthmani, text_imlaei, text_search, tafseer)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            batch_ayah
+        )
+        cur.executemany(
+            "INSERT INTO ayah_fts (rowid, text_search) VALUES (?, ?)",
+            batch_fts
         )
 
-    # Insert all 35 Canonical Reciters per Appendix B
-    for r in RECITERS_35:
-        cur.execute(
-            """INSERT INTO reciter (id, name_ar, style_ar, sort_order, bitrate_kbps, has_ayah_files, has_surah_file, has_timings, ayah_url_template, surah_url_template, source_note)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            r
-        )
-
-    # Load XML metadata for pages and juzs
-    tree = ET.parse(XML_PATH)
-    pages_el = tree.find('pages')
-    juzs_el = tree.find('juzs')
-    hizbs_el = tree.find('hizbs')
-    sajdas_el = tree.find('sajdas')
-    page_starts = [(int(p.attrib['index']), int(p.attrib['sura']), int(p.attrib['aya'])) for p in pages_el]
-    juz_starts = [(int(j.attrib['index']), int(j.attrib['sura']), int(j.attrib['aya'])) for j in juzs_el]
-    quarter_starts = [(int(h.attrib['index']), int(h.attrib['sura']), int(h.attrib['aya'])) for h in hizbs_el]
-    sajda_positions = {(int(s.attrib['sura']), int(s.attrib['aya'])) for s in sajdas_el}
-
-    # Structural integrity constants (Section 7.1): refuse to build on bad source data
-    assert len(CANONICAL_SURAHS) == 114, f"expected 114 surahs, got {len(CANONICAL_SURAHS)}"
-    assert sum(s[5] for s in CANONICAL_SURAHS) == 6236, "ayah counts do not sum to 6236"
-    assert len(page_starts) == 604, f"expected 604 pages, got {len(page_starts)}"
-    assert len(juz_starts) == 30, f"expected 30 juz, got {len(juz_starts)}"
-    assert len(quarter_starts) == 240, f"expected 240 rub quarters, got {len(quarter_starts)}"
-    assert len(sajda_positions) == 15, f"expected 15 sajdah positions, got {len(sajda_positions)}"
-
-    def get_page(sura, aya):
-        p_num = 1
-        for p, s, a in page_starts:
-            if (sura > s) or (sura == s and aya >= a):
-                p_num = p
-            else:
-                break
-        return p_num
-
-    def get_juz(sura, aya):
-        j_num = 1
-        for j, s, a in juz_starts:
-            if (sura > s) or (sura == s and aya >= a):
-                j_num = j
-            else:
-                break
-        return j_num
-
-    def get_quarter(sura, aya):
-        # Rub' al-hizb quarter index (1..240) from the canonical Tanzil markers
-        q_num = 1
-        for q, s, a in quarter_starts:
-            if (sura > s) or (sura == s and aya >= a):
-                q_num = q
-            else:
-                break
-        return q_num
-
-    # Load Uthmani texts
-    with open(UTHMANI_PATH, encoding='utf-8') as f:
-        uthmani_lines = [l.strip() for l in f if l.strip() and not l.startswith('#')]
-    if len(uthmani_lines) != 6236:
-        raise ValueError(f"quran-uthmani.txt must contain exactly 6236 ayah lines, found {len(uthmani_lines)}")
-
-    # Load Tafseer Al-Muyassar
-    tafseer = {}
-    with open(TAFSEER_PATH, encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            parts = line.split('|', 2)
-            if len(parts) == 3:
-                tafseer[(int(parts[0]), int(parts[1]))] = parts[2]
-
-    # Insert all 6236 Canonical Ayahs
-    current_global_idx = 0
-    batch_ayah = []
-    batch_fts = []
-
-    for s in CANONICAL_SURAHS:
-        s_id = s[0]
-        count = s[5]
-        for a_num in range(1, count + 1):
-            current_global_idx += 1
-            u_text = uthmani_lines[current_global_idx - 1]
-            t_text = tafseer.get((s_id, a_num), '')
-            search_text = normalize_arabic(u_text, loose=True)
-            pg = get_page(s_id, a_num)
-            jz = get_juz(s_id, a_num)
-            quarter = get_quarter(s_id, a_num)
-            hizb = (quarter + 3) // 4  # 4 quarters per hizb -> 1..60
-            rub = quarter              # 1..240 per Section 7.1
-            saj = 1 if (s_id, a_num) in sajda_positions else 0
-
-            batch_ayah.append((
-                current_global_idx, s_id, a_num, jz, hizb, rub, pg, saj,
-                u_text, u_text, search_text, t_text
-            ))
-            batch_fts.append((current_global_idx, search_text))
-
-    cur.executemany(
-        """INSERT INTO ayah (id, surah_id, ayah_number, juz, hizb, rub, page, sajdah, text_uthmani, text_imlaei, text_search, tafseer)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-        batch_ayah
-    )
-    cur.executemany(
-        "INSERT INTO ayah_fts (rowid, text_search) VALUES (?, ?)",
-        batch_fts
-    )
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
     print(f"✅ تم بناء قاعدة بيانات المصحف الشريف الكاملة ({current_global_idx} آية) بنجاح في: {db_path}")
 
 
