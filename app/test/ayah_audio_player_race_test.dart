@@ -368,43 +368,61 @@ void main() {
       player.playerStateStreamOverride = playerStateController.stream;
 
       final stopCompleter = Completer<void>();
-      int stopCallCount = 0;
-      player.stopPlayerRunner = () async {
-        stopCallCount++;
-        if (stopCallCount == 1) {
-          await stopCompleter.future;
+      Future<bool>? futureA;
+      Future<bool>? futureB;
+
+      try {
+        int stopCallCount = 0;
+        player.stopPlayerRunner = () async {
+          stopCallCount++;
+          if (stopCallCount == 1) {
+            await stopCompleter.future;
+          }
+        };
+
+        player.playResilientRunner = (url, {player, primaryUrl, fallbackUrls = const [], cacheKey, localDownloadedPath, onStopCallback}) async {
+          return true;
+        };
+
+        final reciterA = SettingsService.availableReciters[0];
+        final reciterB = SettingsService.availableReciters[1];
+
+        // 1. Preview A starts, its _stopPlayer is delayed
+        futureA = player.playReciterPreview(reciterA);
+        await tester.pump();
+        // Has not set currentPlayingKey yet because it is awaiting _stopPlayer
+        expect(player.currentPlayingKey.value, isNull);
+
+        // 2. While Preview A is stopped, user starts Preview B
+        futureB = player.playReciterPreview(reciterB);
+        await tester.pump();
+        expect(player.currentPlayingKey.value, equals('preview_${reciterB.id}'));
+
+        // 3. Preview A's stop finally finishes
+        stopCompleter.complete();
+        final resultA = await futureA;
+        await tester.pump();
+
+        // Preview A detects (sessionId != _activePlaySessionId) right after _stopPlayer and exits early
+        expect(resultA, isFalse);
+        expect(player.currentPlayingKey.value, equals('preview_${reciterB.id}'));
+
+        final resultB = await futureB;
+        expect(resultB, isTrue);
+      } finally {
+        if (!stopCompleter.isCompleted) stopCompleter.complete();
+        if (futureA != null) {
+          try {
+            await futureA;
+          } catch (_) {}
         }
-      };
-
-      player.playResilientRunner = (url, {player, primaryUrl, fallbackUrls = const [], cacheKey, localDownloadedPath, onStopCallback}) async {
-        return true;
-      };
-
-      final reciterA = SettingsService.availableReciters[0];
-      final reciterB = SettingsService.availableReciters[1];
-
-      // 1. Preview A starts, its _stopPlayer is delayed
-      final futureA = player.playReciterPreview(reciterA);
-      await tester.pump();
-      // Has not set currentPlayingKey yet because it is awaiting _stopPlayer
-      expect(player.currentPlayingKey.value, isNull);
-
-      // 2. While Preview A is stopped, user starts Preview B
-      final futureB = player.playReciterPreview(reciterB);
-      await tester.pump();
-      expect(player.currentPlayingKey.value, equals('preview_${reciterB.id}'));
-
-      // 3. Preview A's stop finally finishes
-      stopCompleter.complete();
-      final resultA = await futureA;
-      await tester.pump();
-
-      // Preview A detects (sessionId != _activePlaySessionId) right after _stopPlayer and exits early
-      expect(resultA, isFalse);
-      expect(player.currentPlayingKey.value, equals('preview_${reciterB.id}'));
-
-      final resultB = await futureB;
-      expect(resultB, isTrue);
+        if (futureB != null) {
+          try {
+            await futureB;
+          } catch (_) {}
+        }
+        await tester.pump();
+      }
     });
 
     testWidgets('Test G (preserve toggle): calling preview while playing the same reciter preview toggles it off', (tester) async {
