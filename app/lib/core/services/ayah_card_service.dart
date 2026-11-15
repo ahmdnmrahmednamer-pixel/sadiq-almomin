@@ -219,7 +219,7 @@ class AyahCardService {
     }
 
     buffer.writeln('');
-    buffer.write('— تطبيق نور المؤمن (بدون إعلانات وبدون إنترنت)');
+    buffer.write('— تطبيق صديق المؤمن (بدون إعلانات وبدون إنترنت)');
     return buffer.toString();
   }
 

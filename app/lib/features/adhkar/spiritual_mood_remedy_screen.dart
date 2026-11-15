@@ -36,7 +36,7 @@ class SpiritualMoodRemedyScreen extends StatelessWidget {
                       '${remedy.emoji} ${remedy.moodTitle}\n\n'
                       '📖 الآية الشافية: ${remedy.quranAyah} (${remedy.surahReference})\n\n'
                       '🤲 الدعاء النبوي: ${remedy.propheticDua}\n'
-                      '— تطبيق نور المؤمن',
+                      '— تطبيق صديق المؤمن',
                     );
                     } catch (_) {}
                   },

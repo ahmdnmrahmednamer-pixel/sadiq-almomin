@@ -338,7 +338,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       ),
       _DrawerItemData(
         title: 'عن التطبيق',
-        subtitle: 'رؤية مشروع نور المؤمن، الوقفية، ورسالة التطبيق',
+        subtitle: 'رؤية مشروع صديق المؤمن، الوقفية، ورسالة التطبيق',
         semanticLabel: 'عن التطبيق',
         icon: Icons.info_outline_rounded,
         color: AppColors.primaryGreen,

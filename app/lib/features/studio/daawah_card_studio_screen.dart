@@ -55,7 +55,7 @@ class _DaawahCardStudioScreenState extends State<DaawahCardStudioScreen> {
     _quoteController = TextEditingController(text: _presets[0]['quote']);
     _sourceController = TextEditingController(text: _presets[0]['source']);
     _dedicationController = TextEditingController(
-      text: 'تطبيق نور المؤمن · لوجه الله تعالى',
+      text: 'تطبيق صديق المؤمن · لوجه الله تعالى',
     );
   }
 
@@ -76,7 +76,7 @@ class _DaawahCardStudioScreenState extends State<DaawahCardStudioScreen> {
   }
 
   String _composeCardText() {
-    return '''✨ بطاقة نور المؤمن الدعوية ✨
+    return '''✨ بطاقة صديق المؤمن الدعوية ✨
 
 ${_quoteController.text.trim()}
 

@@ -83,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Icon(Icons.mosque, color: AppColors.primaryGreen, size: 24),
                         SizedBox(width: 8),
                         Text(
-                          'نور المؤمن',
+                          'صديق المؤمن',
                           style: TextStyle(
                             color: AppColors.primaryGreen,
                             fontWeight: FontWeight.bold,
@@ -258,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const SizedBox(height: 16),
 
         const Text(
-          'مرحباً بك في تطبيق نور المؤمن',
+          'مرحباً بك في تطبيق صديق المؤمن',
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -310,7 +310,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'تطبيق «نور المؤمن»\nرفيقك اليومي للقرآن والصلاة والذكر',
+                'تطبيق «صديق المؤمن»\nرفيقك اليومي للقرآن والصلاة والذكر',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 17,
@@ -709,7 +709,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text(
-              'ابدأ استخدام تطبيق نور المؤمن 🕌',
+              'ابدأ استخدام تطبيق صديق المؤمن 🕌',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),

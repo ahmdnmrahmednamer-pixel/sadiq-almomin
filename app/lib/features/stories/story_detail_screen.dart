@@ -27,7 +27,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     final story = widget.story;
     final text = '''
 🎙️ ${story.title}
-✨ من سلسلة قصص الأنبياء الصوتية في تطبيق نور المؤمن
+✨ من سلسلة قصص الأنبياء الصوتية في تطبيق صديق المؤمن
 🔊 بصوت: ${story.narrator} (المدة: ${story.duration})
 
 📜 ملخص القصة:
@@ -38,7 +38,7 @@ ${story.keyLessons.map((l) => '• $l').join('\n')}
 
 ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.propheticDuaa}» (${story.duaaReference ?? ""})\n' : ''}
 ---
-تطبيق نور المؤمن — قصص الأنبياء والسيرة النبوية
+تطبيق صديق المؤمن — قصص الأنبياء والسيرة النبوية
 ''';
     try {
       Share.share(text);

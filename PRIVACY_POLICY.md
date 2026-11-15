@@ -1,14 +1,14 @@
-# سياسة الخصوصية — تطبيق نور المؤمن (Noor Al-Momin Privacy Policy)
+# سياسة الخصوصية — تطبيق صديق المؤمن
 
 **تاريخ السريان**: 16 أكتوبر 2026  
 **الإصدار**: 1.2.0  
 **الغرض**: صدقة جارية عن روح المرحوم بإذن الله تعالى: **مؤمن إبراهيم رحمه الله**  
-**المستودع الرسمي**: [https://github.com/ahmdnmrahmednamer-pixel/almomin-..git](https://github.com/ahmdnmrahmednamer-pixel/almomin-..git)
+**المستودع الرسمي**: [https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin.git](https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin.git)
 
 ---
 
 ## 1. التزام الخصوصية والشفافية التامة (Zero-Tracking Commitment)
-تطبيق **نور المؤمن (Noor Al-Momin)** هو تطبيق إسلامي مفتوح المصدر تم تطويره ابتغاء الأجر والثواب كصدقة جارية، وهو مجاني بالكامل وخالٍ تماماً من أي شكل من أشكال الربح المادي.
+تطبيق **صديق المؤمن** هو تطبيق إسلامي مفتوح المصدر تم تطويره ابتغاء الأجر والثواب كصدقة جارية، وهو مجاني بالكامل وخالٍ تماماً من أي شكل من أشكال الربح المادي.
 * **خالٍ تماماً من الإعلانات (Zero Ads)**: لا يحتوي التطبيق على أي شبكات إعلانية أو إعلانات تجارية بأي شكل.
 * **خالٍ تماماً من التتبع والتحليلات (Zero Analytics / Zero Telemetry)**: لا نستخدم أي حزم تتبع، أو أدوات تحليل سلوك المستخدم (مثل Google Firebase Analytics, Mixpanel, AppsFlyer)، ولا نجمع أي معرفات فريدة للهاتف (Advertising ID).
 * **يعمل 100% بدون خوادم خارجية (Serverless & Offline-First)**: تتم كافة الحسابات (مواقيت الصلاة، القبلة، البحث القرآني، حفظ التدبرات والختمات) محلياً داخل جهازك دون إرسال أي معلومة إلى أي خادم خارجي.
@@ -48,7 +48,7 @@
 
 ## 5. التواصل والإبلاغ عن أخطاء المحتوى (Contact & Content Corrections)
 إن وجدت أي ملاحظة في النصوص أو رغبت في الاستفسار عن سياسة الخصوصية، يسعدنا تواصلكم عبر المستودع الرسمي للمشروع على GitHub:
-- **صفحة الإبلاغ عن المسائل**: [https://github.com/ahmdnmrahmednamer-pixel/almomin-..git/issues](https://github.com/ahmdnmrahmednamer-pixel/almomin-..git/issues)
+- **صفحة الإبلاغ عن المسائل**: [https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin/issues](https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin/issues)
 
 ---
 

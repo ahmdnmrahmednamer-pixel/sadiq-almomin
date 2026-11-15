@@ -77,7 +77,7 @@ class _MawarithCalculatorScreenState extends State<MawarithCalculatorScreen> {
                     .join('\n');
                 try {
                   Share.share(
-                  '⚖️ بيان تقسيم التركة الشرعي (تطبيق نور المؤمن):\n'
+                  '⚖️ بيان تقسيم التركة الشرعي (تطبيق صديق المؤمن):\n'
                   'صافي التركة القابلة للتوزيع: ${summary.netDistributableEstate.toStringAsFixed(2)}\n\n'
                   '$lines\n\n﴿فَرِيضَةً مِّنَ اللَّهِ إِنَّ اللَّهَ كَانَ عَلِيمًا حَكِيمًا﴾',
                 );

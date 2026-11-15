@@ -61,7 +61,7 @@ class BatteryReliabilityScreen extends StatefulWidget {
         ),
         OemStep(
           title: '٣. قفل التطبيق في قائمة التطبيقات الأخيرة',
-          description: 'افتح قائمة المهام الأخيرة (Recent Apps)، اضغط مطولاً على نافذة تطبيق نور المؤمن ثم اضغط على أيقونة "القفل 🔒" حتى لا يتم إغلاقه عند تنظيف الذاكرة.',
+          description: 'افتح قائمة المهام الأخيرة (Recent Apps)، اضغط مطولاً على نافذة تطبيق صديق المؤمن ثم اضغط على أيقونة "القفل 🔒" حتى لا يتم إغلاقه عند تنظيف الذاكرة.',
           recommendedSetting: 'مقفل برمز القفل 🔒',
           icon: Icons.lock_outline,
         ),
@@ -115,7 +115,7 @@ class BatteryReliabilityScreen extends StatefulWidget {
         ),
         OemStep(
           title: '٣. تجاهل تحسينات البطارية',
-          description: 'الإعدادات > التطبيقات > الوصول الخاص > تحسين البطارية > غير المسموح بها > اختر "السماح" لتطبيق نور المؤمن.',
+          description: 'الإعدادات > التطبيقات > الوصول الخاص > تحسين البطارية > غير المسموح بها > اختر "السماح" لتطبيق صديق المؤمن.',
           recommendedSetting: 'مسموح دائماً',
           icon: Icons.battery_saver,
         ),
@@ -157,13 +157,13 @@ class BatteryReliabilityScreen extends StatefulWidget {
       steps: [
         OemStep(
           title: '١. السماح باستهلاك الطاقة العالي في الخلفية',
-          description: 'الإعدادات > البطارية > استهلاك طاقة عالي في الخلفية (High background power consumption) > فعّل تطبيق نور المؤمن.',
+          description: 'الإعدادات > البطارية > استهلاك طاقة عالي في الخلفية (High background power consumption) > فعّل تطبيق صديق المؤمن.',
           recommendedSetting: 'مسموح',
           icon: Icons.flash_on,
         ),
         OemStep(
           title: '٢. تفعيل البدء التلقائي',
-          description: 'الإعدادات > التطبيقات والأذونات > إدارة الأذونات > البدء التلقائي > السماح لتطبيق نور المؤمن بالبدء التلقائي.',
+          description: 'الإعدادات > التطبيقات والأذونات > إدارة الأذونات > البدء التلقائي > السماح لتطبيق صديق المؤمن بالبدء التلقائي.',
           recommendedSetting: 'مفعّل',
           icon: Icons.power_settings_new,
         ),
@@ -178,13 +178,13 @@ class BatteryReliabilityScreen extends StatefulWidget {
       steps: [
         OemStep(
           title: '١. فتح Phone Master والبدء التلقائي',
-          description: 'افتح تطبيق Phone Master المثبت مسبقاً > صندوق الأدوات (Toolbox) > إدارة البدء التلقائي (Auto-start) > فعّل تطبيق نور المؤمن.',
+          description: 'افتح تطبيق Phone Master المثبت مسبقاً > صندوق الأدوات (Toolbox) > إدارة البدء التلقائي (Auto-start) > فعّل تطبيق صديق المؤمن.',
           recommendedSetting: 'مفعّل في Phone Master',
           icon: Icons.shield_outlined,
         ),
         OemStep(
           title: '٢. استثناء من منظف الذاكرة العشوائية',
-          description: 'في مدير تسريع الهاتف (Phone Boost)، أضف تطبيق نور المؤمن إلى القائمة البيضاء (Whitelist) حتى لا يتم إغلاقه عند تنظيف الرام.',
+          description: 'في مدير تسريع الهاتف (Phone Boost)، أضف تطبيق صديق المؤمن إلى القائمة البيضاء (Whitelist) حتى لا يتم إغلاقه عند تنظيف الرام.',
           recommendedSetting: 'في القائمة البيضاء',
           icon: Icons.cleaning_services_outlined,
         ),
@@ -199,7 +199,7 @@ class BatteryReliabilityScreen extends StatefulWidget {
       steps: [
         OemStep(
           title: '١. تعيين استخدام البطارية إلى "غير مقيد"',
-          description: 'الإعدادات > التطبيقات > تطبيق نور المؤمن > البطارية > اختر "غير مقيد" (Unrestricted) لتسمح بعمل الأذان في أي وقت.',
+          description: 'الإعدادات > التطبيقات > تطبيق صديق المؤمن > البطارية > اختر "غير مقيد" (Unrestricted) لتسمح بعمل الأذان في أي وقت.',
           recommendedSetting: 'غير مقيد (Unrestricted)',
           icon: Icons.battery_std,
         ),
@@ -436,7 +436,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
               onPressed: () => openAppSettings(),
               icon: const Icon(Icons.settings_suggest, color: AppColors.primaryGreen),
               label: const Text(
-                'فتح صفحة إعدادات تطبيق نور المؤمن بالنظام مباشرة',
+                'فتح صفحة إعدادات تطبيق صديق المؤمن بالنظام مباشرة',
                 style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
               ),
               style: OutlinedButton.styleFrom(
@@ -688,7 +688,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                       style: TextStyle(fontSize: 12, height: 1.5),
                     ),
                     Text(
-                      '• في حال تفعيل وضع "عدم الإزعاج" (Do Not Disturb)، يرجى استثناء تطبيق نور المؤمن ليصدح الأذان في أوقاته.',
+                      '• في حال تفعيل وضع "عدم الإزعاج" (Do Not Disturb)، يرجى استثناء تطبيق صديق المؤمن ليصدح الأذان في أوقاته.',
                       style: TextStyle(fontSize: 12, height: 1.5),
                     ),
                   ],

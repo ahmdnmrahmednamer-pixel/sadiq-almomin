@@ -145,7 +145,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
     final status = _calc.isNisabReached ? 'بلغ النصاب الشرعي وتجب فيه الزكاة (2.5%)' : 'لم يبلغ النصاب بعد';
 
     final text = '''
-🕌 حساب الزكاة الشرعية — تطبيق نور المؤمن
+🕌 حساب الزكاة الشرعية — تطبيق صديق المؤمن
 حساب دقيق ومطابق للمعايير الفقهية المعتمدة
 
 • وعاء الزكاة الصافي: $totalWealth $currency
@@ -154,7 +154,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
 • مقدار الزكاة الواجبة (2.5%): $zakat $currency
 
 ﴿وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ﴾
-— تم الحساب بواسطة تطبيق نور المؤمن (بدون إعلانات وبدون تتبع)
+— تم الحساب بواسطة تطبيق صديق المؤمن (بدون إعلانات وبدون تتبع)
 ''';
 
     try {
@@ -772,7 +772,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'الزكاة ركن الإسلام الثالث، طهارة للأموال ونماء وبركة في الرزق، وتطبيق نور المؤمن متاح مجاناً لوجه الله تعالى دون أي إعلانات.',
+                'الزكاة ركن الإسلام الثالث، طهارة للأموال ونماء وبركة في الرزق، وتطبيق صديق المؤمن متاح مجاناً لوجه الله تعالى دون أي إعلانات.',
                 style: TextStyle(height: 1.6, fontSize: 14),
               ),
               SizedBox(height: 12),

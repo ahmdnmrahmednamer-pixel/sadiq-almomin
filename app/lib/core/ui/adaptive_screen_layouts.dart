@@ -3,7 +3,7 @@ import '../theme/app_theme.dart';
 import '../services/settings_service.dart';
 import 'app_dropdown_field.dart';
 
-/// أنماط هيكلة وعرض الشاشات المتعددة في الإصدار النهائي لتطبيق نور المؤمن
+/// أنماط هيكلة وعرض الشاشات المتعددة في الإصدار النهائي لتطبيق صديق المؤمن
 enum ScreenStructureMode {
   classic('classic', 'التخطيط الكلاسيكي', Icons.view_agenda_outlined),
   bentoGrid('bento', 'شبكة البطاقات الذكية', Icons.grid_view_rounded),

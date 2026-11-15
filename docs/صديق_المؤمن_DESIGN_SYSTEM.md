@@ -1,6 +1,6 @@
-# Noor Noor Al-Momin (نور المؤمن) — Design System
+# صديق المؤمن — Design System
 
-> Version: **1.0 (draft)** · Companion to `NOOR_ALMOMIN_ENGINEERING_SPEC.md` (§9) and `ALMOMIN_IMAGE_PROMPTS.md`
+> Version: **1.0 (draft)** · Companion to `صديق_المؤمن_ENGINEERING_SPEC.md` (§9) and `ALMOMIN_IMAGE_PROMPTS.md`
 > Platform: Android / Flutter · Language: Arabic only, RTL · Themes: Light, Sepia, Dark, True Black (OLED)
 
 ---

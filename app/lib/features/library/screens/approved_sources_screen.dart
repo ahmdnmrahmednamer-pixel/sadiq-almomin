@@ -5,7 +5,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// شاشة «المصادر والمراجع القرآنية المعتمدة»
-/// مستخرجة ومحققة من المجلد المعتمد: «D:\برمجة\نور المؤمن\app\مصادر»
+/// مستخرجة ومحققة من المجلد المعتمد: «D:\برمجة\صديق المؤمن\app\مصادر»
 class ApprovedSourcesScreen extends StatelessWidget {
   const ApprovedSourcesScreen({super.key});
 

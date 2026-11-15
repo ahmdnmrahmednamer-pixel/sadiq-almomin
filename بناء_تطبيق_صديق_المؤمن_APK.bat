@@ -1,6 +1,6 @@
 ﻿@echo off
 chcp 65001 > nul
-title بناء تطبيق نور المؤمن (Noor Al-Momin) - حزم Release رسمية فائقة الصغر
+title بناء تطبيق صديق المؤمن - حزم Release رسمية فائقة الصغر
 cd /d "%~dp0"
 echo ======================================================================
 echo 🕌 المؤسسة البرمجية المستقلة: خط أنابيب بناء حزم الـ Release الرسمية
@@ -56,18 +56,18 @@ del /q "%~dp0*v1.2.0*.apk" 2>nul
 del /q "%~dp0app-*.apk" 2>nul
 
 if exist "build\app\outputs\flutter-apk\app-release.apk" (
-    copy /y "build\app\outputs\flutter-apk\app-release.apk" "%~dp0نور_المؤمن_Noor_AlMomin_Latest.apk" > nul
+    copy /y "build\app\outputs\flutter-apk\app-release.apk" "%~dp0صديق_المؤمن_Latest.apk" > nul
 ) else (
-    copy /y "build\app\outputs\flutter-apk\app-arm64-v8a-release.apk" "%~dp0نور_المؤمن_Noor_AlMomin_Latest.apk" > nul
+    copy /y "build\app\outputs\flutter-apk\app-arm64-v8a-release.apk" "%~dp0صديق_المؤمن_Latest.apk" > nul
 )
 
 subst X: /D > nul 2>&1
 
 echo.
 echo ======================================================================
-echo 🎉 اكتمل بناء أحدث نسخة من تطبيق نور المؤمن بنجاح!
+echo 🎉 اكتمل بناء أحدث نسخة من تطبيق صديق المؤمن بنجاح!
 echo 📱 مسار النسخة الأحدث المعتمدة المباشرة للتثبيت:
-echo    %~dp0نور_المؤمن_Noor_AlMomin_Latest.apk
+echo    %~dp0صديق_المؤمن_Latest.apk
 echo 💡 تم تنظيف وحذف كافة الإصدارات القديمة لضمان عدم تثبيت أي نسخة سابقة.
 echo ======================================================================
 pause

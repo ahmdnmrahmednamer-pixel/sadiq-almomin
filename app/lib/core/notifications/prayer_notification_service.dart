@@ -987,7 +987,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
     await _localNotifications.show(
       999,
-      'تجربة نداء الأذان 🕌 — تطبيق نور المؤمن',
+      'تجربة نداء الأذان 🕌 — تطبيق صديق المؤمن',
       'الله أكبر، الله أكبر.. خدمة الأذان والتنبيهات تعمل بأعلى كفاءة وجاهزية',
       NotificationDetails(android: androidDetails),
       payload: 'type=adhan&prayer=الظهر',
@@ -1030,7 +1030,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
     await _localNotifications.show(
       998,
-      'تجربة إقامة الصلاة 🕌 — تطبيق نور المؤمن',
+      'تجربة إقامة الصلاة 🕌 — تطبيق صديق المؤمن',
       'قد قامت الصلاة، قد قامت الصلاة.. استعد للوقوف بين يدي الله بسكينة وخشوع',
       NotificationDetails(android: androidDetails),
       payload: 'type=iqamah&prayer=الظهر',

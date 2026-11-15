@@ -48,8 +48,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       // 1. Verify App Title and Welcome Banner
-      expect(find.text('نور المؤمن'), findsOneWidget);
-      expect(find.text('مرحباً بك في تطبيق نور المؤمن'), findsOneWidget);
+      expect(find.text('صديق المؤمن'), findsOneWidget);
+      expect(find.text('مرحباً بك في تطبيق صديق المؤمن'), findsOneWidget);
       expect(find.textContaining('أهلاً بك في رحاب الإيمان'), findsOneWidget);
       expect(find.textContaining('رفيقك اليومي للقرآن والصلاة والذكر'), findsOneWidget);
 

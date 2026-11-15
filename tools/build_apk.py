@@ -1,5 +1,5 @@
 """
-Automated Android APK Build Pipeline for Noor Al-Momin (نور المؤمن)
+Automated Android APK Build Pipeline for Sadiq Al-Momin (صديق المؤمن)
 Orchestrated by the Global Autonomous Software Conglomerate
 (mobile_app_engineer, devops_release_engineer, and lead_architect).
 """
@@ -79,7 +79,7 @@ def find_android_sdk():
 
 def main():
     print("=" * 70)
-    print("🕌 خط أنابيب بناء حزمة الأندرويد (APK) لتطبيق نور المؤمن")
+    print("🕌 خط أنابيب بناء حزمة الأندرويد (APK) لتطبيق صديق المؤمن")
     print("=" * 70)
 
     # 1. Java check

@@ -1,5 +1,5 @@
 """
-Reciter Shortlist (35, all Hafs) according to Appendix B of NOOR_ALMOMIN_ENGINEERING_SPEC.md.
+Reciter Shortlist (35, all Hafs) according to Appendix B of صديق_المؤمن_ENGINEERING_SPEC.md.
 Provides metadata, server endpoints, and capability flags (ayah-files, surah-file, timings).
 """
 

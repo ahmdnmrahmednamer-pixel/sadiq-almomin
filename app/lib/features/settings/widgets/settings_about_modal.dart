@@ -29,7 +29,7 @@ void showSettingsAboutModal(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'عن تطبيق نور المؤمن',
+                    'عن تطبيق صديق المؤمن',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                   ),
                   SizedBox(height: 2),

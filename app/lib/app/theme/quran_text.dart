@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Quran typography scale and text styling per Noor Noor Al-Momin Design System §3.3 & §13.3.
+/// Quran typography scale and text styling per صديق المؤمن Design System §3.3 & §13.3.
 abstract final class QuranText {
   static const String fontFamily = 'KFGQPCHafs';
   static const String uiFontFamily = 'IBMPlexSansArabic';

@@ -38,7 +38,7 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
   void _shareNote(AyahNote note) {
     final text = '﴿${note.ayahText}﴾\n[سورة ${note.surahName} - آية ${note.ayahNumber}]\n\n'
         'خاطرة وتدبر:\n${note.noteText}\n\n'
-        '— تطبيق نور المؤمن للقرآن الكريم والعبادات';
+        '— تطبيق صديق المؤمن للقرآن الكريم والعبادات';
     try {
       Share.share(text);
     } catch (_) {}

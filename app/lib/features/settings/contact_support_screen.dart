@@ -203,7 +203,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'تطبيق نور المؤمن — في خدمتكم دوماً لوجه الله تعالى',
+                              'تطبيق صديق المؤمن — في خدمتكم دوماً لوجه الله تعالى',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primaryGreen,
@@ -215,7 +215,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'تطبيق نور المؤمن مجاني تماماً وبدون أي إعلانات. يسعدنا ويشرفنا استقبال مقترحاتكم، ملاحظاتكم، أو الإبلاغ عن أي خطأ لتحسين التطبيق وخدمة المسلمين.',
+                        'تطبيق صديق المؤمن مجاني تماماً وبدون أي إعلانات. يسعدنا ويشرفنا استقبال مقترحاتكم، ملاحظاتكم، أو الإبلاغ عن أي خطأ لتحسين التطبيق وخدمة المسلمين.',
                         style: TextStyle(
                           fontSize: 12.5,
                           height: 1.5,

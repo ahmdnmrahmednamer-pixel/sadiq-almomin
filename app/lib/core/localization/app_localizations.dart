@@ -172,7 +172,7 @@ class AppLocalizations {
 
   static final Map<String, Map<String, String>> _localizedValues = {
     'ar': {
-      'app_name': 'نور المؤمن',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'رحاب القرآن وسكينة القلوب',
       'app_tagline': 'رفيقك الإيماني اليومي لوجه الله تعالى',
       'version': 'الإصدار',
@@ -346,7 +346,7 @@ class AppLocalizations {
       'reset': 'إعادة البدء',
     },
     'en': {
-      'app_name': 'Noor Al-Momin',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'Sanctuary of Quran & Serenity',
       'app_tagline': 'Your daily spiritual companion for the sake of Allah',
       'version': 'Version',
@@ -520,7 +520,7 @@ class AppLocalizations {
       'reset': 'Reset',
     },
     'fr': {
-      'app_name': 'Noor Al-Momin',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'Jardin du Coran & Paix des Cœurs',
       'app_tagline': 'Votre compagnon spirituel quotidien pour l\'amour d\'Allah',
       'version': 'Version',
@@ -694,7 +694,7 @@ class AppLocalizations {
       'reset': 'Réinitialiser',
     },
     'tr': {
-      'app_name': 'Nûr el-Mümin',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'Kur\'ân İklimi ve Kalplerin Huzuru',
       'app_tagline': 'Allah rızası için günlük manevi yol arkadaşınız',
       'version': 'Sürüm',
@@ -868,7 +868,7 @@ class AppLocalizations {
       'reset': 'Sıfırla',
     },
     'ur': {
-      'app_name': 'نور المؤمن',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'رحابِ قرآن اور دلوں کا سکون',
       'app_tagline': 'اللہ کی رضا کے لیے آپ کا روزمرہ روحانی رفیق',
       'version': 'ورژن',
@@ -1042,7 +1042,7 @@ class AppLocalizations {
       'reset': 'دوبارہ شروع کریں',
     },
     'id': {
-      'app_name': 'Noor Al-Momin',
+      'app_name': 'صديق المؤمن',
       'app_subtitle': 'Taman Al-Qur\'an & Ketenteraman Hati',
       'app_tagline': 'Sahabat spiritual harian Anda karena Allah Ta\'ala',
       'version': 'Versi',

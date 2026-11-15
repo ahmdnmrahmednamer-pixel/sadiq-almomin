@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'tokens.dart';
 
-/// Available canonical themes per Noor Noor Al-Momin Design System §2.2
+/// Available canonical themes per صديق المؤمن Design System §2.2
 enum AppThemeMode { light, sepia, dark, black }
 
 abstract final class AppColors {

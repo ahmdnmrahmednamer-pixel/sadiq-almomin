@@ -356,7 +356,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
 
   void _shareCurrentTrack(IslamicAudioTrack track) {
     final text =
-        'استمع الآن إلى ${track.title} (${track.subtitle}) عبر تطبيق «نور المؤمن» مجاناً وبدون إعلانات.\nhttps://almomin.app';
+        'استمع الآن إلى ${track.title} (${track.subtitle}) عبر تطبيق «صديق المؤمن» مجاناً وبدون إعلانات.\nhttps://almomin.app';
     try {
       Share.share(text, subject: track.title);
     } catch (_) {}
@@ -459,7 +459,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Text(
-                                      'تطبيق نور المؤمن — استماع بدون إنترنت',
+                                      'تطبيق صديق المؤمن — استماع بدون إنترنت',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         color: Color(0xFFD4AF37),

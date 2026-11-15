@@ -57,7 +57,7 @@ void main() {
       expect(shareText.contains('سورة الإخلاص'), isTrue);
       expect(shareText.contains('سبب النزول'), isTrue);
       expect(shareText.contains('الإعراب والدلالة النحوية'), isTrue);
-      expect(shareText.contains('تطبيق نور المؤمن'), isTrue);
+      expect(shareText.contains('تطبيق صديق المؤمن'), isTrue);
     });
   });
 
