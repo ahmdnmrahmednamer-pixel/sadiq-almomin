@@ -142,7 +142,7 @@ void main() {
       expect(find.text('كيفية الأداء والتطبيق العملي'), findsOneWidget);
       expect(find.text('الشاهد من المنظومة'), findsOneWidget);
       expect(find.text('أمثلة من القرآن الكريم'), findsOneWidget);
-      expect(find.text('تطبيق نور المؤمن — تعلّم أحكام التجويد وإتقان التلاوة'), findsOneWidget);
+      expect(find.text('تطبيق صديق المؤمن — تعلّم أحكام التجويد وإتقان التلاوة'), findsOneWidget);
     });
   });
 }

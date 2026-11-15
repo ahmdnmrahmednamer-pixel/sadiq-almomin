@@ -208,7 +208,7 @@ void main() {
       expect(shareText.contains('سورة الفاتحة'), isTrue);
       expect(shareText.contains('تفسير السعدي'), isTrue);
       expect(shareText.contains('الشيخ عبد الرحمن السعدي'), isTrue);
-      expect(shareText.contains('تطبيق نور المؤمن'), isTrue);
+      expect(shareText.contains('تطبيق صديق المؤمن'), isTrue);
     });
   });
 }

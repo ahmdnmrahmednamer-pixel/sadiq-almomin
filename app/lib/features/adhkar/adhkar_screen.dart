@@ -61,7 +61,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     if (item.virtue != null) {
       buffer.writeln('الفضل: ${item.virtue}');
     }
-    buffer.writeln('\nتمت المشاركة من تطبيق نور المؤمن 🕌');
+    buffer.writeln('\nتمت المشاركة من تطبيق صديق المؤمن 🕌');
     try {
       Share.share(buffer.toString());
     } catch (_) {}

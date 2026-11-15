@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 import 'tokens.dart';
 
-/// Noor Al-Momin Theme Builder per Noor Noor Al-Momin Design System §13.4
+/// صديق المؤمن Theme Builder per صديق المؤمن Design System §13.4
 abstract final class AppTheme {
   static const String uiFont = 'Cairo';
   static const Color emerald = AppColors.emerald700;

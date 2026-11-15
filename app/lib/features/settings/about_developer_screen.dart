@@ -11,7 +11,7 @@ class AboutDeveloperScreen extends StatelessWidget {
   const AboutDeveloperScreen({super.key});
 
   static const String githubRepoUrl =
-      'https://github.com/ahmdnmrahmednamer-pixel/almomin-..git';
+      'https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin';
   static const String developerEmail = 'ahmdnmrahmednamer@gmail.com';
 
   Future<void> _openGithub(BuildContext context) async {
@@ -429,7 +429,7 @@ class AboutDeveloperScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'تم تطوير تطبيق «نور المؤمن» ليكون رفيقاً إيمانياً متكاملاً للمسلم، يجمع بين دقة العلوم الشرعية وجمال التصميم وسرعة الأداء:\n\n'
+                      'تم تطوير تطبيق «صديق المؤمن» ليكون رفيقاً إيمانياً متكاملاً للمسلم، يجمع بين دقة العلوم الشرعية وجمال التصميم وسرعة الأداء:\n\n'
                       '• بني باستخدام أحدث تقنيات Flutter و Dart.\n'
                       '• تصميم يعمل بنمط غير متصل تماماً (Offline-First).\n'
                       '• خالٍ 100% من الإعلانات ومن أي أدوات تتبع.\n'

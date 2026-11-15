@@ -54,7 +54,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
 
   void _shareAyah() {
     Navigator.pop(context);
-    final textToShare = '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾\n[سورة ${widget.surah.nameAr}]\n\n— تطبيق نور المؤمن (بدون إنترنت وبدون إعلانات)';
+    final textToShare = '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾\n[سورة ${widget.surah.nameAr}]\n\n— تطبيق صديق المؤمن (بدون إنترنت وبدون إعلانات)';
     try {
       Share.share(textToShare);
     } catch (_) {}

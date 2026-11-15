@@ -210,7 +210,7 @@ void showKhatmaCompletionDuaaSheet(BuildContext context) {
                                   label: const Text('نسخ الدعاء'),
                                   onPressed: () {
                                     const text = 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً وَهُدًى وَرَحْمَةً...\n'
-                                        'ختمة قرآنية مباركة — تطبيق نور المؤمن للقرآن الكريم';
+                                        'ختمة قرآنية مباركة — تطبيق صديق المؤمن للقرآن الكريم';
                                     Clipboard.setData(const ClipboardData(text: text)).catchError((_) {});
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(

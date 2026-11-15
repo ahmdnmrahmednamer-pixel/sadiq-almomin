@@ -143,7 +143,7 @@ void main() {
       expect(text, contains(h.matn));
       expect(text, contains(h.source));
       expect(text, contains(h.grading));
-      expect(text, contains('تطبيق نور المؤمن'));
+      expect(text, contains('تطبيق صديق المؤمن'));
     });
   });
 

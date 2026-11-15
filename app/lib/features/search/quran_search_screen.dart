@@ -163,7 +163,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   void _shareAyah(Ayah ayah, Surah surah) {
-    final text = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾\n[سورة ${surah.nameAr} · صفحة ${ayah.page}]\n\nتمت المشاركة من تطبيق نور المؤمن';
+    final text = '${ayah.cleanTextUthmani} ﴿${ayah.ayahNumber}﴾\n[سورة ${surah.nameAr} · صفحة ${ayah.page}]\n\nتمت المشاركة من تطبيق صديق المؤمن';
     try {
       Share.share(text);
     } catch (_) {}

@@ -216,7 +216,7 @@ class AyahIslamicCardWidget extends StatelessWidget {
                   border: Border.all(color: theme.accentColor.withValues(alpha: 0.35)),
                 ),
                 child: Text(
-                  'تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت',
+                  'تطبيق صديق المؤمن · بدون إعلانات وبدون إنترنت',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 10.5,

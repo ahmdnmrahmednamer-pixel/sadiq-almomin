@@ -32,7 +32,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
               color: AppColors.accentGold),
           title: const Text('دليل وفهرس الشاشات الشامل',
               style: TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: const Text('خريطة لكافة أبواب وخدمات نور المؤمن (٥٨ شاشة)',
+          subtitle: const Text('خريطة لكافة أبواب وخدمات صديق المؤمن (٥٨ شاشة)',
               style: TextStyle(fontSize: 12)),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(

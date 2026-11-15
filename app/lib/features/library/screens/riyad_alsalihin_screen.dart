@@ -458,7 +458,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                     icon: const Icon(Icons.copy_rounded, size: 17),
                     label: const Text('نسخ', style: TextStyle(fontSize: 12.5)),
                     onPressed: () {
-                      final shareText = '${entry.chapterTitle}\n\n${entry.arabicMatn}\n[${entry.sourceAndGrade}]\n\n💡 الفوائد: ${entry.sharhAndBenefits}\n— تطبيق نور المؤمن';
+                      final shareText = '${entry.chapterTitle}\n\n${entry.arabicMatn}\n[${entry.sourceAndGrade}]\n\n💡 الفوائد: ${entry.sharhAndBenefits}\n— تطبيق صديق المؤمن';
                       Clipboard.setData(ClipboardData(text: shareText)).catchError((_) {});
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('تم نسخ الحديث والفوائد إلى الحافظة')),
@@ -469,7 +469,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                     icon: const Icon(Icons.share_rounded, size: 17),
                     label: const Text('مشاركة', style: TextStyle(fontSize: 12.5)),
                     onPressed: () {
-                      final shareText = '${entry.chapterTitle}\n\n${entry.arabicMatn}\n[${entry.sourceAndGrade}]\n\n💡 الفوائد: ${entry.sharhAndBenefits}\n— تطبيق نور المؤمن';
+                      final shareText = '${entry.chapterTitle}\n\n${entry.arabicMatn}\n[${entry.sourceAndGrade}]\n\n💡 الفوائد: ${entry.sharhAndBenefits}\n— تطبيق صديق المؤمن';
                       try {
                         Share.share(shareText);
                       } catch (_) {}

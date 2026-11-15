@@ -109,7 +109,7 @@ class _ComparativeTafsirScreenState extends State<ComparativeTafsirScreen> {
       b.writeln(_thirdResult!.tafsirText);
       b.writeln();
     }
-    b.writeln('— مقارن التفاسير في تطبيق نور المؤمن');
+    b.writeln('— مقارن التفاسير في تطبيق صديق المؤمن');
     return b.toString();
   }
 

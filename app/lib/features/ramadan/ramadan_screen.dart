@@ -605,7 +605,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                             tooltip: 'مشاركة الدعاء',
                             onPressed: () {
                               try {
-                                Share.share('🤲 ${duaa.title}\n\n«${duaa.arabicText}»\n\n📌 المرجع: ${duaa.source}\n---\nتطبيق نور المؤمن للقرآن الكريم والعبادات');
+                                Share.share('🤲 ${duaa.title}\n\n«${duaa.arabicText}»\n\n📌 المرجع: ${duaa.source}\n---\nتطبيق صديق المؤمن للقرآن الكريم والعبادات');
                               } catch (_) {}
                             },
                           ),

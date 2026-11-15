@@ -1,4 +1,4 @@
-/// Type-safe paths to canonical app assets per Noor Noor Al-Momin Design System §14 & assets-provenance.csv.
+/// Type-safe paths to canonical app assets per صديق المؤمن Design System §14 & assets-provenance.csv.
 abstract final class AppAssets {
   // -------------------------------------------------------------
   // BACKGROUNDS

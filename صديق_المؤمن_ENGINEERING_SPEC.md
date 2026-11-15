@@ -1,4 +1,4 @@
-# Noor Noor Al-Momin (نور المؤمن) — Full Engineering Specification
+# صديق المؤمن — Full Engineering Specification
 
 > Status: **Draft v1.0** · Platform: **Android (Google Play)** · UI language: **Arabic only (RTL)** · Documentation/code language: **English**
 > Project type: **Sadaqa Jariya (charitable endowment), free, no ads, no tracking, open source**

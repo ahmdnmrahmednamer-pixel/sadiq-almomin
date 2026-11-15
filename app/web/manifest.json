@@ -1,11 +1,11 @@
 {
-    "name": "نور المؤمن",
-    "short_name": "نور المؤمن",
+    "name": "صديق المؤمن",
+    "short_name": "صديق المؤمن",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0B1E19",
     "theme_color": "#0F5132",
-    "description": "تطبيق نور المؤمن — تطبيق إسلامي شامل، موثوق، مجاني، بدون إعلانات وبدون تتبع.",
+    "description": "تطبيق صديق المؤمن — تطبيق إسلامي شامل، موثوق، مجاني، بدون إعلانات وبدون تتبع.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
