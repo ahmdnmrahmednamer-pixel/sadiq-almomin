@@ -572,53 +572,54 @@ void main() {
       expect(ayahStopped, isTrue, reason: 'Ayah player stop tear-off must be called when Radio resumes');
     });
 
-    test('Direct Ayah same-stop tear-off: Delayed stale session exit does NOT wipe active session callback', () async {
+    test('playResilient real ayah path: A/B with identical sameAudioPlayer.stop tearoff, delayed stale A exit preserves active callback for B', () async {
       final audioService = FastAudioService.instance;
       audioService.resetForTesting();
 
-      final dummyAyahPlayerA = AudioPlayer();
-      final dummyAyahPlayerB = AudioPlayer();
-      addTearDown(() async {
-        await dummyAyahPlayerA.dispose();
-        await dummyAyahPlayerB.dispose();
-      });
+      final sameAudioPlayer = AudioPlayer();
+      addTearDown(() async => await sameAudioPlayer.dispose());
+
+      int stopTearoffCallCount = 0;
+      Future<void> sameAudioPlayerStopTearoff() async {
+        stopTearoffCallCount++;
+        await sameAudioPlayer.stop();
+      }
 
       final completerA = Completer<AudioSource>();
       audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
-        if (url == 'https://test/streamA') {
+        if (url == 'https://everyayah.com/data/Minshawy/001001.mp3') {
           return completerA.future;
         }
         return Future.value(AudioSource.uri(Uri.parse(url)));
       };
       audioService.setAudioSourceOverride = (player, source) async {};
 
-      bool stopBInvoked = false;
-
-      // 1. Session A starts with dummyAyahPlayerA.stop tear-off
-      final futureA = audioService.playLiveRadio(
-        primaryUrl: 'https://test/streamA',
-        onStopCallback: dummyAyahPlayerA.stop,
+      // 1. Session A starts real ayah playback with sameAudioPlayer and its stop tearoff
+      final futureA = audioService.playResilient(
+        'https://everyayah.com/data/Minshawy/001001.mp3',
+        player: sameAudioPlayer,
+        onStopCallback: sameAudioPlayerStopTearoff,
       );
 
-      // 2. While A is in-flight, Session B starts with dummyAyahPlayerB.stop
-      final futureB = audioService.playLiveRadio(
-        primaryUrl: 'https://test/streamB',
-        onStopCallback: () async {
-          stopBInvoked = true;
-          await dummyAyahPlayerB.stop();
-        },
+      // 2. While Session A is in-flight, Session B starts for next ayah with the EXACT SAME tearoff
+      final futureB = audioService.playResilient(
+        'https://everyayah.com/data/Minshawy/001002.mp3',
+        player: sameAudioPlayer,
+        onStopCallback: sameAudioPlayerStopTearoff,
       );
       final resultB = await futureB;
-      expect(resultB, isTrue);
+      expect(resultB, isTrue, reason: 'Session B must succeed');
 
-      // 3. Stale delayed session A completes
-      completerA.complete(AudioSource.uri(Uri.parse('https://test/streamA')));
+      // 3. Stale delayed session A completes and exits
+      completerA.complete(AudioSource.uri(Uri.parse('https://everyayah.com/data/Minshawy/001001.mp3')));
       final resultA = await futureA;
-      expect(resultA, isFalse, reason: 'Session A is stale');
+      expect(resultA, isFalse, reason: 'Session A is stale and aborted by token guard');
 
-      // 4. Session A must not have wiped B's callback. External stop triggers Session B
+      // 4. Session A delayed exit must NOT have cleared Session B callback
+      // When external owner stops audio focus:
+      stopTearoffCallCount = 0;
       await audioService.stop();
-      expect(stopBInvoked, isTrue, reason: 'Session B callback must be preserved and invoked');
+      expect(stopTearoffCallCount, equals(1), reason: 'Identical stop tearoff for active Session B must be invoked on stop');
     });
 
     test('Heritage null callback: Playing stream with null onStopCallback handles cross-audio focus safely', () async {

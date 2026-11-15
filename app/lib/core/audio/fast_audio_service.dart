@@ -71,6 +71,12 @@ class FastAudioService {
   Future<void> Function(AudioPlayer player, AudioSource source)? setAudioSourceOverride;
 
   @visibleForTesting
+  Directory? get cacheDir => _cacheDir;
+
+  @visibleForTesting
+  bool get isInitialized => _isInitialized;
+
+  @visibleForTesting
   void resetForTesting() {
     _activePlaybackToken = 0;
     _activeCallbackToken = 0;
@@ -80,6 +86,8 @@ class FastAudioService {
     onBeforePlayCallback = null;
     setAudioSourceOverride = null;
     playerStateStreamOverride = null;
+    _isInitialized = false;
+    _cacheDir = null;
     _setupSharedPlayerListener();
   }
 

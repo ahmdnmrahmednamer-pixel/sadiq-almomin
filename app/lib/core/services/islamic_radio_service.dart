@@ -106,7 +106,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ محمد صديق المنشاوي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'الصوت الباكي الخاشع — بث متواصل لتلاوات الشيخ المرتلة من المصحف المرتل',
+      subtitle: 'تلاوات مرتلة من المصحف المرتل بصوت الشيخ محمد صديق المنشاوي',
       streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
       fallbackUrls: [
         'https://qurango.net/radio/mohammed_siddiq_alminshawi',
@@ -121,7 +121,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ محمود خليل الحصري',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'شيخ عموم المقارئ المصرية — تلاوات مجودة مباركة بصوت الشيخ الحصري',
+      subtitle: 'تلاوات مجودة بصوت الشيخ محمود خليل الحصري',
       streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
         'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
@@ -136,7 +136,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ عبد الباسط عبد الصمد',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'الحنجرة الذهبية — روائع التلاوات المرتلة بصوت الشيخ عبد الباسط',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ عبد الباسط عبد الصمد',
       streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
       fallbackUrls: [
         'https://qurango.net/radio/abdulbasit_abdulsamad',
@@ -151,7 +151,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ مصطفى إسماعيل',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'عبقري التلاوة ومقرئ الملوك والرؤساء — روعة المقامات وتصوير المعاني القرآنية',
+      subtitle: 'تلاوات قرآنية مجودة بصوت الشيخ مصطفى إسماعيل',
       streamUrl: 'https://qurango.net/radio/mustafa_ismail',
       fallbackUrls: [
         'https://backup.qurango.net/radio/mustafa_ismail',
@@ -159,14 +159,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFF4A7C59),
       icon: Icons.record_voice_over_rounded,
-      tags: ['مصطفى إسماعيل', 'عبقري التلاوة', 'مقامات', 'تجويد'],
+      tags: ['مصطفى إسماعيل', 'تلاوات خاشعة', 'مقامات', 'تجويد'],
     ),
     IslamicRadioStation(
       id: 'radio_tablaway',
       name: 'إذاعة الشيخ محمد محمود الطبلاوي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'نقيب القراء وأحد ألمع أصوات دولة التلاوة المصرية بنبرته الشجية الفريدة',
+      subtitle: 'تلاوات قرآنية بصوت الشيخ محمد محمود الطبلاوي',
       streamUrl: 'https://backup.qurango.net/radio/mohammad_altablaway',
       fallbackUrls: [
         'https://qurango.net/radio/mohammad_altablaway',
@@ -174,14 +174,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFFBC6C25),
       icon: Icons.record_voice_over_rounded,
-      tags: ['الطبلاوي', 'نقيب القراء', 'مصر', 'تلاوة'],
+      tags: ['الطبلاوي', 'تلاوات خاشعة', 'مصر', 'تلاوة'],
     ),
     IslamicRadioStation(
       id: 'radio_banna',
       name: 'إذاعة الشيخ محمود علي البنا',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'صوت الفجر والخشوع الرباني بروعة الأداء والتلاوة المتقنة',
+      subtitle: 'تلاوات قرآنية بصوت الشيخ محمود علي البنا',
       streamUrl: 'https://backup.qurango.net/radio/mahmoud_ali__albanna',
       fallbackUrls: [
         'https://backup.qurango.net/radio/mahmoud_ali__albanna_mojawwad',
@@ -196,7 +196,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ مشاري بن راشد العفاسي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'المصحف المرتل ونفحات إيمانية عذبة بصوت الشيخ مشاري العفاسي',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ مشاري العفاسي',
       streamUrl: 'https://backup.qurango.net/radio/mishary_alafasi',
       fallbackUrls: [
         'https://qurango.net/radio/mishary_alafasi',
@@ -271,7 +271,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ فارس عباد',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'التلاوة الندية العذبة المتواصلة على مدار الساعة التي تأسر القلوب بصفائها',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ فارس عباد',
       streamUrl: 'https://backup.qurango.net/radio/fares_abbad',
       fallbackUrls: [
         'https://qurango.net/radio/fares_abbad',
@@ -316,7 +316,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ ناصر القطامي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات خاشعة ومؤثرة من صلوات القيام والتهجد والتراويح بنبرة بكائية محببة',
+      subtitle: 'تلاوات من صلوات التراويح والقيام بصوت الشيخ ناصر القطامي',
       streamUrl: 'https://backup.qurango.net/radio/nasser_alqatami',
       fallbackUrls: [
         'https://qurango.net/radio/nasser_alqatami',
@@ -346,7 +346,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ أحمد بن علي العجمي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'المصحف المرتل كاملاً بصوت الشيخ أحمد العجمي وتلاوته الإيقاعية المحبوبة في العالم',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ أحمد العجمي',
       streamUrl: 'https://qurango.net/radio/ahmad_alajmy',
       fallbackUrls: [
         'https://backup.qurango.net/radio/ahmad_alajmy',
@@ -361,7 +361,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ أبو بكر الشاطري',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات شجية بطريقة الشيخ الشاطري المتميزة التي تبث السكينة والطمأنينة',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ أبي بكر الشاطري',
       streamUrl: 'https://qurango.net/radio/shaik_abu_bakr_al_shatri',
       fallbackUrls: [
         'https://backup.qurango.net/radio/shaik_abu_bakr_al_shatri',
@@ -376,7 +376,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ إدريس أبكر',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات خاشعة باكية وأدعية مؤثرة تمس الوجدان من صلوات التهجد والقيام',
+      subtitle: 'تلاوات وأدعية بصوت الشيخ إدريس أبكر',
       streamUrl: 'https://qurango.net/radio/idrees_abkr',
       fallbackUrls: [
         'https://backup.qurango.net/radio/idrees_abkr',
@@ -384,14 +384,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'الإمارات 🇦🇪',
       accentColor: Color(0xFFAACC00),
       icon: Icons.record_voice_over_rounded,
-      tags: ['إدريس أبكر', 'أبكر', 'دعاء', 'قيام الليل', 'باكي'],
+      tags: ['إدريس أبكر', 'أبكر', 'دعاء', 'قيام الليل', 'تلاوات خاشعة'],
     ),
     IslamicRadioStation(
       id: 'radio_hazza_albalushi',
       name: 'إذاعة الشيخ هزاع البلوشي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات هادئة عذبة تأسر القلوب وتريح النفوس بصوت الشيخ هزاع البلوشي',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ هزاع البلوشي',
       streamUrl: 'https://backup.qurango.net/radio/hazza',
       fallbackUrls: [
         'https://qurango.net/radio/hazza',
@@ -421,7 +421,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ خليفة الطنيجي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوة متقنة بالأحكام وصوت رصين خاشع بصوت الشيخ خليفة الطنيجي',
+      subtitle: 'تلاوات مرتلة بصوت الشيخ خليفة الطنيجي',
       streamUrl: 'https://backup.qurango.net/radio/khalifa_altunaiji',
       fallbackUrls: [
         'https://qurango.net/radio/khalifa_altunaiji',
@@ -436,7 +436,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ هاني الرفاعي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'التلاوات الباكية والتضرع في آيات القرآن الحكيم بصوت الشيخ هاني الرفاعي',
+      subtitle: 'تلاوات مرتلة وأدعية بصوت الشيخ هاني الرفاعي',
       streamUrl: 'https://backup.qurango.net/radio/hani_arrifai',
       fallbackUrls: [
         'https://qurango.net/radio/hani_arrifai',
@@ -444,7 +444,7 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'السعودية 🇸🇦',
       accentColor: Color(0xFF9F86C0),
       icon: Icons.record_voice_over_rounded,
-      tags: ['هاني الرفاعي', 'باكي', 'تضرع', 'تلاوات'],
+      tags: ['هاني الرفاعي', 'تلاوات خاشعة', 'تضرع', 'تلاوات'],
     ),
 
     // -------------------------------------------------------------
@@ -679,7 +679,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة سورة البقرة المستمرة',
       category: IslamicRadioCategoryType.khushooSurahs,
       categoryName: 'تلاوات خاشعة وسور مختارة',
-      subtitle: 'تلاوة سورة البقرة كاملة بأعذب أصوات القراء لطرد الشياطين وبركة البيوت',
+      subtitle: 'تلاوة سورة البقرة كاملة بصوت عدد من كبار القراء',
       streamUrl: 'https://qurango.net/radio/albaqarah',
       fallbackUrls: [
         'https://backup.qurango.net/radio/albaqarah',
@@ -694,7 +694,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة سورة الملك المانعة',
       category: IslamicRadioCategoryType.khushooSurahs,
       categoryName: 'تلاوات خاشعة وسور مختارة',
-      subtitle: 'تلاوات متكررة لسورة تبارك المانعة والمنجية من عذاب القبر بأعذب الأصوات',
+      subtitle: 'تلاوات متكررة لسورة الملك بصوت عدد من كبار القراء',
       streamUrl: 'https://qurango.net/radio/Surah_Al-Mulk',
       fallbackUrls: [
         'https://backup.qurango.net/radio/Surah_Al-Mulk',
@@ -709,7 +709,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة التلاوات الخاشعة والآيات المؤثرة',
       category: IslamicRadioCategoryType.khushooSurahs,
       categoryName: 'تلاوات خاشعة وسور مختارة',
-      subtitle: 'مقاطع وتلاوات تأخذ بالألباب وتزيد الإيمان والسكينة وتريح الروح',
+      subtitle: 'باقة من التلاوات القرآنية الخاشعة المتنوعة',
       streamUrl: 'https://backup.qurango.net/radio/salma',
       fallbackUrls: [
         'https://qurango.net/radio/salma',
@@ -724,7 +724,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة تراتيل الفجر وقيام الليل',
       category: IslamicRadioCategoryType.khushooSurahs,
       categoryName: 'تلاوات خاشعة وسور مختارة',
-      subtitle: 'ترتيل هادئ ندي يبعث الطمأنينة لأوقات السحر والخلوة مع الله',
+      subtitle: 'ترتيل هادئ وتلاوات مرتلة لمختلف القراء',
       streamUrl: 'https://backup.qurango.net/radio/tarateel',
       fallbackUrls: [
         'https://qurango.net/radio/tarateel',

@@ -82,22 +82,23 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Scoped radio banner Semantics assertion
-      final radioSemanticsWidget = tester.widget<Semantics>(
-        find.ancestor(
-          of: find.text('إذاعات القرآن الكريم'),
-          matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
-        ),
-      );
+      // Scoped radio banner Semantics assertion using dedicated Key
+      final radioSemanticsFinder = find.byKey(const Key('home_islamic_radio_banner_semantics'));
+      expect(radioSemanticsFinder, findsOneWidget);
+
+      final radioSemanticsWidget = tester.widget<Semantics>(radioSemanticsFinder);
       expect(radioSemanticsWidget.properties.button, isTrue);
       expect(radioSemanticsWidget.properties.label, contains('إذاعات القرآن الكريم'));
       expect(radioSemanticsWidget.properties.hint, equals('الانتقال إلى إذاعات وتلاوات القرآن الكريم'));
 
-      // Verify radio icon is explicitly excluded from semantics tree
-      final radioIconFinder = find.byIcon(Icons.radio_rounded);
-      expect(radioIconFinder, findsWidgets);
+      // Verify radio icon is explicitly excluded from semantics tree within the banner
+      final bannerRadioIconFinder = find.descendant(
+        of: radioSemanticsFinder,
+        matching: find.byIcon(Icons.radio_rounded),
+      );
+      expect(bannerRadioIconFinder, findsOneWidget);
       final excludedRadioIcon = tester.widget<ExcludeSemantics>(
-        find.ancestor(of: radioIconFinder.first, matching: find.byType(ExcludeSemantics)).first,
+        find.ancestor(of: bannerRadioIconFinder, matching: find.byType(ExcludeSemantics)).first,
       );
       expect(excludedRadioIcon.excluding, isTrue);
 

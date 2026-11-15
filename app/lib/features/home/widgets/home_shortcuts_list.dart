@@ -175,6 +175,7 @@ class HomeShortcutsList extends StatelessWidget {
 
   Widget _buildIslamicRadioBanner(BuildContext context, bool isDark) {
     return Semantics(
+      key: const Key('home_islamic_radio_banner_semantics'),
       button: true,
       label: 'إذاعات القرآن الكريم، بث إذاعي متواصل لكبار القراء، التفسير وعلوم القرآن، الأذكار والرقية الشرعية',
       hint: 'الانتقال إلى إذاعات وتلاوات القرآن الكريم',
