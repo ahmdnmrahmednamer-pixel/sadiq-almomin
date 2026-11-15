@@ -524,6 +524,131 @@ void main() {
         debugDefaultTargetPlatformOverride = null;
       }
     });
+
+    test('Actual cross-audio focus: Radio <-> Ayah bidirectional interruption with direct stop tear-off', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final ayahPlayer = AudioPlayer();
+      addTearDown(() async => await ayahPlayer.dispose());
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      bool radioStopped = false;
+      bool ayahStopped = false;
+
+      // 1. Radio starts playback
+      final okRadio = await audioService.playLiveRadio(
+        primaryUrl: 'https://backup.qurango.net/radio/mix',
+        onStopCallback: () async {
+          radioStopped = true;
+        },
+      );
+      expect(okRadio, isTrue);
+
+      // 2. Ayah Audio starts and claims audio focus with its direct player stop tear-off
+      final sessionTokenAyah = await audioService.claimAudioFocus(
+        player: ayahPlayer,
+        onStopOther: () async {
+          ayahStopped = true;
+          await ayahPlayer.stop();
+        },
+      );
+      expect(sessionTokenAyah, equals(audioService.activePlaybackToken));
+      expect(radioStopped, isTrue, reason: 'Radio stop callback must be called when Ayah claims focus');
+
+      // 3. User taps Radio again, claiming focus back
+      radioStopped = false;
+      final okRadio2 = await audioService.playLiveRadio(
+        primaryUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
+        onStopCallback: () async {
+          radioStopped = true;
+        },
+      );
+      expect(okRadio2, isTrue);
+      expect(ayahStopped, isTrue, reason: 'Ayah player stop tear-off must be called when Radio resumes');
+    });
+
+    test('Direct Ayah same-stop tear-off: Delayed stale session exit does NOT wipe active session callback', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final dummyAyahPlayerA = AudioPlayer();
+      final dummyAyahPlayerB = AudioPlayer();
+      addTearDown(() async {
+        await dummyAyahPlayerA.dispose();
+        await dummyAyahPlayerB.dispose();
+      });
+
+      final completerA = Completer<AudioSource>();
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        if (url == 'https://test/streamA') {
+          return completerA.future;
+        }
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      bool stopBInvoked = false;
+
+      // 1. Session A starts with dummyAyahPlayerA.stop tear-off
+      final futureA = audioService.playLiveRadio(
+        primaryUrl: 'https://test/streamA',
+        onStopCallback: dummyAyahPlayerA.stop,
+      );
+
+      // 2. While A is in-flight, Session B starts with dummyAyahPlayerB.stop
+      final futureB = audioService.playLiveRadio(
+        primaryUrl: 'https://test/streamB',
+        onStopCallback: () async {
+          stopBInvoked = true;
+          await dummyAyahPlayerB.stop();
+        },
+      );
+      final resultB = await futureB;
+      expect(resultB, isTrue);
+
+      // 3. Stale delayed session A completes
+      completerA.complete(AudioSource.uri(Uri.parse('https://test/streamA')));
+      final resultA = await futureA;
+      expect(resultA, isFalse, reason: 'Session A is stale');
+
+      // 4. Session A must not have wiped B's callback. External stop triggers Session B
+      await audioService.stop();
+      expect(stopBInvoked, isTrue, reason: 'Session B callback must be preserved and invoked');
+    });
+
+    test('Heritage null callback: Playing stream with null onStopCallback handles cross-audio focus safely', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      // 1. Play with explicit null callback (Egyptian Heritage style)
+      final ok = await audioService.playResilient(
+        'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
+        isLiveStream: true,
+        onStopCallback: null,
+      );
+      expect(ok, isTrue);
+
+      // 2. Another service claims focus with null prior callback without throwing
+      bool newOwnerCalled = false;
+      await audioService.claimAudioFocus(
+        onStopOther: () async {
+          newOwnerCalled = true;
+        },
+      );
+
+      await audioService.stop();
+      expect(newOwnerCalled, isTrue);
+    });
   });
 
   group('IslamicRadioScreen Widget, Semantics & Dispose Tests', () {
@@ -540,7 +665,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('إذاعات القرآن الكريم والتسجيلات'), findsOneWidget);
+      expect(find.text('إذاعات القرآن الكريم'), findsWidgets);
       expect(find.text('إذاعة القرآن الكريم من القاهرة'), findsWidgets);
       expect(find.text('جميع الإذاعات'), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
@@ -664,6 +789,59 @@ void main() {
 
       expect(didPlay, isFalse, reason: 'Playback must be cancelled and not play after repeat buffering tap');
       expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('Widget stop while connecting: Tapping stop or repeat tap while buffering cleanly aborts connection', (tester) async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final completer = Completer<AudioSource>();
+      bool didPlay = false;
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return completer.future;
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+      audioService.onBeforePlayCallback = (token, url) async {
+        didPlay = true;
+      };
+
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Start connecting station
+      final husaryCard = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمود خليل الحصري'),
+      );
+      await tester.scrollUntilVisible(
+        husaryCard,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(husaryCard);
+      await tester.pump(); // Enter buffering
+
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+
+      // Stop while connecting
+      await audioService.stop();
+      await tester.pump();
+
+      // Resolve delayed source
+      completer.complete(AudioSource.uri(Uri.parse('https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad')));
+      await tester.pumpAndSettle();
+
+      expect(didPlay, isFalse);
     });
 
     testWidgets('Actual dispose test: Disposing screen during connection guarantees NO post-dispose play on target station', (tester) async {

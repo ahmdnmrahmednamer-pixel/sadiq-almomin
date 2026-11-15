@@ -293,7 +293,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
               Text('📻 ', style: TextStyle(fontSize: 20)),
               Expanded(
                 child: Text(
-                  'إذاعات القرآن الكريم والتسجيلات',
+                  'إذاعات القرآن الكريم',
                   style: TextStyle(
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
@@ -560,7 +560,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        isAndroid ? 'غير مدعوم على أندرويد' : 'تسجيلات إذاعية',
+                        isAndroid ? 'غير مدعوم على أندرويد' : 'بث إذاعي',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,

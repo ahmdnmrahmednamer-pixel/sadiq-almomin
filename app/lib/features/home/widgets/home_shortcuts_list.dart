@@ -176,7 +176,7 @@ class HomeShortcutsList extends StatelessWidget {
   Widget _buildIslamicRadioBanner(BuildContext context, bool isDark) {
     return Semantics(
       button: true,
-      label: 'إذاعات القرآن الكريم والتسجيلات الإسلامية، تلاوات كبار القراء، التفسير وعلوم القرآن، الأذكار والرقية الشرعية',
+      label: 'إذاعات القرآن الكريم، بث إذاعي متواصل لكبار القراء، التفسير وعلوم القرآن، الأذكار والرقية الشرعية',
       hint: 'الانتقال إلى إذاعات وتلاوات القرآن الكريم',
       child: InkWell(
         onTap: () => context.push('/islamic-radio'),
@@ -229,7 +229,7 @@ class HomeShortcutsList extends StatelessWidget {
                     Row(
                       children: [
                         const Text(
-                          'إذاعات القرآن الكريم والتسجيلات',
+                          'إذاعات القرآن الكريم',
                           style: TextStyle(
                             fontFamily: 'Amiri',
                             fontSize: 16,
@@ -245,7 +245,7 @@ class HomeShortcutsList extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
-                            'تسجيلات صوتية',
+                            'بث متواصل',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 10,
@@ -257,7 +257,7 @@ class HomeShortcutsList extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'تلاوات كبار القراء • التفسير وعلوم القرآن • الأذكار والرقية الشرعية',
+                      'بث إذاعي لكبار القراء • التفسير وعلوم القرآن • الأذكار والرقية',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.white70,

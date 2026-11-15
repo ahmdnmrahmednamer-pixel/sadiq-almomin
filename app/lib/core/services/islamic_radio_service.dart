@@ -23,7 +23,7 @@ class IslamicRadioService extends ChangeNotifier {
     ),
     IslamicRadioCategory(
       type: IslamicRadioCategoryType.generalLive,
-      title: 'إذاعات وتلاوات القرآن',
+      title: 'إذاعات القرآن الكريم',
       icon: Icons.radio_rounded,
     ),
     IslamicRadioCategory(
@@ -61,7 +61,7 @@ class IslamicRadioService extends ChangeNotifier {
   /// تعيد خوادم منصة Radiojar (مثل stream.radiojar.com و n0c.radiojar.com) توجيه طلبات HTTPS عبر
   /// إعادة توجيه (HTTP 302) إلى بروتوكول HTTP غير مشفر (Cleartext HTTP: Mini2's Broadcast).
   /// وحفاظاً على المعايير الأمنية الصارمة للتطبيق وعدم إضعاف أمان نظام أندرويد عبر تمكين Cleartext Traffic،
-  /// فإن هذا البث غير متاح على أجهزة أندرويد الحديثة لحين توفر بث رسمي مشفر (HTTPS).
+  /// فإن هذا البث غير متاح على أجهزة أندرويد، ومعرض للحجب لمتطلبات App Transport Security (ATS) على iOS، لحين توفر بث رسمي مشفر (HTTPS).
   static const List<IslamicRadioStation> defaultStations = [
     // -------------------------------------------------------------
     // ١. إذاعات القرآن العامة والبث المباشر
@@ -70,7 +70,7 @@ class IslamicRadioService extends ChangeNotifier {
       id: 'radio_cairo_live',
       name: 'إذاعة القرآن الكريم من القاهرة (غير مدعوم على أندرويد)',
       category: IslamicRadioCategoryType.generalLive,
-      categoryName: 'إذاعات وتلاوات القرآن',
+      categoryName: 'إذاعات القرآن الكريم',
       subtitle: 'بث ترحيلي يعيد التوجيه لبروتوكول غير مشفر HTTP — غير مدعوم على أندرويد التزاماً بسياسات الأمان',
       streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
       fallbackUrls: [
@@ -86,7 +86,7 @@ class IslamicRadioService extends ChangeNotifier {
       id: 'radio_general_recitations',
       name: 'الإذاعة العامة — تلاوات متنوعة لمختلف القراء',
       category: IslamicRadioCategoryType.generalLive,
-      categoryName: 'إذاعات وتلاوات القرآن',
+      categoryName: 'إذاعات القرآن الكريم',
       subtitle: 'بث متواصل يجمع أعذب وأجمل التلاوات القرآنية لمختلف أئمة وقراء الأمة',
       streamUrl: 'https://backup.qurango.net/radio/mix',
       fallbackUrls: [
@@ -121,7 +121,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ محمود خليل الحصري',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'شيخ عموم المقارئ المصرية — تلاوات مجودة مباركة برواية حفص عن عاصم',
+      subtitle: 'شيخ عموم المقارئ المصرية — تلاوات مجودة مباركة بصوت الشيخ الحصري',
       streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
         'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
@@ -129,14 +129,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFF2D6A4F),
       icon: Icons.record_voice_over_rounded,
-      tags: ['الحصري', 'مجود', 'حفص', 'المقارئ', 'مصر'],
+      tags: ['الحصري', 'مجود', 'المقارئ', 'مصر'],
     ),
     IslamicRadioStation(
       id: 'radio_abdulbasit',
       name: 'إذاعة الشيخ عبد الباسط عبد الصمد',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'الحنجرة الذهبية — روائع التلاوات المرتلة برواية حفص عن عاصم',
+      subtitle: 'الحنجرة الذهبية — روائع التلاوات المرتلة بصوت الشيخ عبد الباسط',
       streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
       fallbackUrls: [
         'https://qurango.net/radio/abdulbasit_abdulsamad',
@@ -144,7 +144,7 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFFD4A373),
       icon: Icons.record_voice_over_rounded,
-      tags: ['عبد الباسط', 'حفص عن عاصم', 'مرتل', 'روائع', 'مصر'],
+      tags: ['عبد الباسط', 'مرتل', 'روائع', 'مصر'],
     ),
     IslamicRadioStation(
       id: 'radio_mustafa_ismail',
@@ -196,7 +196,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ مشاري بن راشد العفاسي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'المصحف المرتل برواية حفص عن عاصم ونفحات إيمانية عذبة بصوت الشيخ مشاري',
+      subtitle: 'المصحف المرتل ونفحات إيمانية عذبة بصوت الشيخ مشاري العفاسي',
       streamUrl: 'https://backup.qurango.net/radio/mishary_alafasi',
       fallbackUrls: [
         'https://qurango.net/radio/mishary_alafasi',
@@ -211,7 +211,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ ماهر المعيقلي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ ماهر المعيقلي',
+      subtitle: 'تلاوات مرتلة خاشعة بصوت القارئ الشيخ ماهر المعيقلي',
       streamUrl: 'https://backup.qurango.net/radio/maher',
       fallbackUrls: [
         'https://qurango.net/radio/maher',
@@ -219,14 +219,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'قراء وأئمة',
       accentColor: Color(0xFF0077B6),
       icon: Icons.record_voice_over_rounded,
-      tags: ['ماهر المعيقلي', 'المصحف المرتل', 'حفص عن عاصم', 'تلاوات خاشعة'],
+      tags: ['ماهر المعيقلي', 'المصحف المرتل', 'تلاوات خاشعة'],
     ),
     IslamicRadioStation(
       id: 'radio_sudais',
       name: 'إذاعة الشيخ عبد الرحمن السديس',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ عبد الرحمن السديس',
+      subtitle: 'تلاوات مرتلة خاشعة بصوت القارئ الشيخ عبد الرحمن السديس',
       streamUrl: 'https://qurango.net/radio/abdulrahman_alsudaes',
       fallbackUrls: [
         'https://backup.qurango.net/radio/abdulrahman_alsudaes',
@@ -234,14 +234,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'قراء وأئمة',
       accentColor: Color(0xFF8338EC),
       icon: Icons.record_voice_over_rounded,
-      tags: ['السديس', 'عبد الرحمن السديس', 'المصحف المرتل', 'حفص عن عاصم'],
+      tags: ['السديس', 'عبد الرحمن السديس', 'المصحف المرتل'],
     ),
     IslamicRadioStation(
       id: 'radio_shuraim',
       name: 'إذاعة الشيخ سعود الشريم',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ سعود الشريم',
+      subtitle: 'تلاوات مرتلة خاشعة بصوت القارئ الشيخ سعود الشريم',
       streamUrl: 'https://qurango.net/radio/saud_alshuraim',
       fallbackUrls: [
         'https://backup.qurango.net/radio/saud_alshuraim',
@@ -249,14 +249,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'قراء وأئمة',
       accentColor: Color(0xFF023E8A),
       icon: Icons.record_voice_over_rounded,
-      tags: ['سعود الشريم', 'الشريم', 'المصحف المرتل', 'حفص عن عاصم'],
+      tags: ['سعود الشريم', 'الشريم', 'المصحف المرتل'],
     ),
     IslamicRadioStation(
       id: 'radio_ali_jaber',
       name: 'إذاعة الشيخ علي جابر',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة خاشعة بصوت القارئ الشيخ علي عبد الله جابر رحمه الله',
+      subtitle: 'تلاوات مرتلة خاشعة بصوت القارئ الشيخ علي جابر',
       streamUrl: 'https://backup.qurango.net/radio/ali_jaber',
       fallbackUrls: [
         'https://qurango.net/radio/ali_jaber',
@@ -286,7 +286,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ صلاح البدير',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ صلاح البدير',
+      subtitle: 'تلاوات مرتلة بصوت القارئ الشيخ صلاح البدير',
       streamUrl: 'https://qurango.net/radio/salah_albudair',
       fallbackUrls: [
         'https://backup.qurango.net/radio/salah_albudair',
@@ -301,7 +301,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ عبد الله عواد الجهني',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ عبد الله عواد الجهني',
+      subtitle: 'تلاوات مرتلة بصوت القارئ الشيخ عبد الله عواد الجهني',
       streamUrl: 'https://backup.qurango.net/radio/abdullah_aljohany',
       fallbackUrls: [
         'https://qurango.net/radio/abdullah_aljohany',
@@ -331,7 +331,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ ياسر الدوسري',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ ياسر الدوسري',
+      subtitle: 'تلاوات مرتلة بصوت القارئ الشيخ ياسر الدوسري',
       streamUrl: 'https://backup.qurango.net/radio/yasser_aldosari',
       fallbackUrls: [
         'https://qurango.net/radio/yasser_aldosari',
@@ -406,7 +406,7 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ عبد المحسن القاسم',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوات مرتلة برواية حفص عن عاصم بصوت القارئ الشيخ عبد المحسن القاسم',
+      subtitle: 'تلاوات مرتلة بصوت القارئ الشيخ عبد المحسن القاسم',
       streamUrl: 'https://backup.qurango.net/radio/abdulmohsen_alqasim',
       fallbackUrls: [
         'https://qurango.net/radio/abdulmohsen_alqasim',
@@ -414,14 +414,14 @@ class IslamicRadioService extends ChangeNotifier {
       countryOrOrigin: 'قراء وأئمة',
       accentColor: Color(0xFF62B6CB),
       icon: Icons.record_voice_over_rounded,
-      tags: ['عبد المحسن القاسم', 'المصحف المرتل', 'حفص عن عاصم'],
+      tags: ['عبد المحسن القاسم', 'المصحف المرتل', 'تلاوات خاشعة'],
     ),
     IslamicRadioStation(
       id: 'radio_khalifa_altunaiji',
       name: 'إذاعة الشيخ خليفة الطنيجي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'تلاوات كبار القراء',
-      subtitle: 'تلاوة متقنة بالأحكام وصوت رصين خاشع برواية حفص عن عاصم',
+      subtitle: 'تلاوة متقنة بالأحكام وصوت رصين خاشع بصوت الشيخ خليفة الطنيجي',
       streamUrl: 'https://backup.qurango.net/radio/khalifa_altunaiji',
       fallbackUrls: [
         'https://qurango.net/radio/khalifa_altunaiji',

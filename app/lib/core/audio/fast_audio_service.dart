@@ -293,6 +293,7 @@ class FastAudioService {
     }
 
     // Android disallows cleartext HTTP traffic. This known Cairo relay redirects to cleartext HTTP.
+    // Note: iOS App Transport Security (ATS) carries inferred cleartext risk for this relay unless exception is set.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       if (mainUrl.contains('radiojar.com/8s5u5tpdtwzuv') || mainUrl.contains('8s5u5tpdtwzuv')) {
         return false;
