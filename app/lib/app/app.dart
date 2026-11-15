@@ -74,7 +74,7 @@ class _AlMominAppState extends ConsumerState<AlMominApp> with WidgetsBindingObse
         }
 
         return MaterialApp.router(
-          title: s.isArabic ? 'نور المؤمن' : 'Noor Al-Momin',
+          title: 'صديق المؤمن',
           debugShowCheckedModeBanner: false,
           theme: lightThemeData,
           darkTheme: darkThemeData,

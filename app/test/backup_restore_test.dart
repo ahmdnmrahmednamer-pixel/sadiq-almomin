@@ -38,7 +38,7 @@ void main() {
       final backup = await BackupRestoreService.instance.exportBackupData();
       expect(backup['app'], equals('AlMomin'));
       expect(backup['schema_version'], equals(1));
-      expect(backup['dedicated_to'], contains('تطبيق نور المؤمن'));
+      expect(backup['dedicated_to'], contains('تطبيق صديق المؤمن'));
       expect(backup['checksum'], isNotEmpty);
 
       final data = backup['data'] as Map<String, dynamic>;
@@ -59,7 +59,7 @@ void main() {
       // 3. Foreign app
       final resForeign = BackupRestoreService.instance.validateBackup('{"app": "OtherApp", "schema_version": 1, "data": {}}');
       expect(resForeign.isValid, isFalse);
-      expect(resForeign.errorMessage, contains('لا ينتمي لتطبيق نور المؤمن'));
+      expect(resForeign.errorMessage, contains('لا ينتمي لتطبيق صديق المؤمن'));
 
       // 4. Valid payload
       final validEnvelope = {

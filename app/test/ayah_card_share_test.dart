@@ -70,7 +70,7 @@ void main() {
       expect(caption.contains('سورة الإخلاص'), isTrue);
       expect(caption.contains('الآية 1'), isTrue);
       expect(caption.contains('التفسير الميسر'), isTrue);
-      expect(caption.contains('تطبيق نور المؤمن'), isTrue);
+      expect(caption.contains('تطبيق صديق المؤمن'), isTrue);
     });
 
     test('saveCardImageFile writes PNG bytes to temp file safely', () async {
@@ -116,7 +116,7 @@ void main() {
       expect(find.text('${testAyah.cleanTextUthmani} ﴿${testAyah.ayahNumber}﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsOneWidget);
       expect(find.text('الله واحد أحد لا شريك له.'), findsOneWidget);
-      expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsOneWidget);
+      expect(find.text('تطبيق صديق المؤمن · بدون إعلانات وبدون إنترنت'), findsOneWidget);
     });
 
     testWidgets('Respects toggles to hide tafsir, header, or dedication', (tester) async {
@@ -145,7 +145,7 @@ void main() {
       expect(find.text('سورة الإخلاص'), findsNothing);
       expect(find.text('${testAyah.cleanTextUthmani} ﴿${testAyah.ayahNumber}﴾'), findsOneWidget);
       expect(find.text('التفسير الميسر'), findsNothing);
-      expect(find.text('تطبيق نور المؤمن · بدون إعلانات وبدون إنترنت'), findsNothing);
+      expect(find.text('تطبيق صديق المؤمن · بدون إعلانات وبدون إنترنت'), findsNothing);
     });
   });
 

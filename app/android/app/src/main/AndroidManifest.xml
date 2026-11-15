@@ -41,7 +41,7 @@
     </queries>
 
     <application
-        android:label="نور المؤمن"
+        android:label="صديق المؤمن"
         android:name="${applicationName}"
         android:icon="@drawable/ic_launcher"
         android:supportsRtl="true"

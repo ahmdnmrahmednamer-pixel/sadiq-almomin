@@ -66,7 +66,7 @@ class BackupRestoreService {
 
   static const int currentSchemaVersion = 1;
   static const String dedicationNote =
-      'تطبيق نور المؤمن - النسخ الاحتياطي الآمن للبيانات';
+      'تطبيق صديق المؤمن - النسخ الاحتياطي الآمن للبيانات';
 
   /// Deterministic 64-bit FNV-1a checksum for backup integrity verification
   static String calculateChecksum(String data) {
@@ -324,7 +324,7 @@ class BackupRestoreService {
       if (kIsWeb) {
         await Share.share(
           jsonString,
-          subject: 'نسخة احتياطية - تطبيق نور المؤمن',
+          subject: 'نسخة احتياطية - تطبيق صديق المؤمن',
         );
         return true;
       }
@@ -339,8 +339,8 @@ class BackupRestoreService {
 
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'application/json', name: fileName)],
-        text: 'نسخة احتياطية لتطبيق نور المؤمن 🕌\n$dedicationNote',
-        subject: 'نسخة احتياطية لتطبيق نور المؤمن',
+        text: 'نسخة احتياطية لتطبيق صديق المؤمن 🕌\n$dedicationNote',
+        subject: 'نسخة احتياطية لتطبيق صديق المؤمن',
       );
       return true;
     } catch (e) {
@@ -371,7 +371,7 @@ class BackupRestoreService {
       if (app != 'AlMomin') {
         return const BackupValidationResult(
           isValid: false,
-          errorMessage: 'هذا الملف لا ينتمي لتطبيق نور المؤمن',
+          errorMessage: 'هذا الملف لا ينتمي لتطبيق صديق المؤمن',
         );
       }
 

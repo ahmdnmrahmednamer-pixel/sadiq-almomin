@@ -307,8 +307,8 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
                             const Divider(height: 1),
                             SwitchListTile(
                               dense: true,
-                              title: const Text('إظهار توقيع تطبيق نور المؤمن أسفل البطاقة', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
-                              subtitle: const Text('تطبيق نور المؤمن بدون إعلانات وبدون إنترنت', style: TextStyle(fontSize: 11.5)),
+                              title: const Text('إظهار توقيع تطبيق صديق المؤمن أسفل البطاقة', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                              subtitle: const Text('تطبيق صديق المؤمن بدون إعلانات وبدون إنترنت', style: TextStyle(fontSize: 11.5)),
                               value: _includeDedication,
                               activeThumbColor: AppColors.primaryGreen,
                               onChanged: (val) => setState(() => _includeDedication = val),

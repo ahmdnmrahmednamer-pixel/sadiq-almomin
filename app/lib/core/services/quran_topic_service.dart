@@ -80,6 +80,6 @@ class QuranTopicService extends ChangeNotifier {
 ${ayah.significance}
 
 ──────────────
-📱 من تطبيق نور المؤمن — رفيق المسلم اليومي''';
+📱 من تطبيق صديق المؤمن — رفيق المسلم اليومي''';
   }
 }

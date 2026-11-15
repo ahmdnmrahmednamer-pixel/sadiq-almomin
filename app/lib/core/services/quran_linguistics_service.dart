@@ -100,7 +100,7 @@ class QuranLinguisticsResult {
       buffer.writeln('\n✨ البلاغة والبيان القرآني:');
       buffer.writeln(grammar.rhetoricSummary);
     }
-    buffer.writeln('\n— تطبيق نور المؤمن (بدون إنترنت وبدون إعلانات)');
+    buffer.writeln('\n— تطبيق صديق المؤمن (بدون إنترنت وبدون إعلانات)');
 
     return buffer.toString();
   }

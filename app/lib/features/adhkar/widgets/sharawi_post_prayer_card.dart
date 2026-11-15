@@ -82,7 +82,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
   void _copyDuaa() {
     final text = _selectedTab == 0 ? duaaAudioText : duaaKhatmText;
     final title = _selectedTab == 0 ? 'دعاء ما بعد الأذان والصلاة' : 'دعاء ختام الصلاة والمناجاة';
-    Clipboard.setData(ClipboardData(text: '$title للشيخ الشعراوي رحمه الله:\n\n$text\n\nتطبيق نور المؤمن 🕌')).catchError((_) {});
+    Clipboard.setData(ClipboardData(text: '$title للشيخ الشعراوي رحمه الله:\n\n$text\n\nتطبيق صديق المؤمن 🕌')).catchError((_) {});
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('تم نسخ الدعاء المبارك بنجاح'),
@@ -96,7 +96,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
     final title = _selectedTab == 0 ? 'دعاء ما بعد الأذان والصلاة' : 'دعاء ختام الصلاة والمناجاة';
     try {
       Share.share(
-      '﴿ $title ﴾\nفضيلة الشيخ محمد متولي الشعراوي رحمه الله\n\n$text\n\nتطبيق نور المؤمن 🕌',
+      '﴿ $title ﴾\nفضيلة الشيخ محمد متولي الشعراوي رحمه الله\n\n$text\n\nتطبيق صديق المؤمن 🕌',
     );
     } catch (_) {}
   }

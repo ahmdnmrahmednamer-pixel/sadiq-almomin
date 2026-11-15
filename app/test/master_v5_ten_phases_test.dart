@@ -11,7 +11,7 @@ import 'package:almomin/core/ui/app_dropdown_field.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Noor Al-Momin Master v5.0 — 10-Phase Engineering Suite', () {
+  group('صديق المؤمن Master v5.0 — 10-Phase Engineering Suite', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

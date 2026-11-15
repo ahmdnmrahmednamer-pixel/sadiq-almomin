@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Spacing scale (4 dp base) per Noor Noor Al-Momin Design System §4.1
+/// Spacing scale (4 dp base) per صديق المؤمن Design System §4.1
 abstract final class Space {
   static const double x1 = 4;
   static const double x2 = 8;
@@ -14,7 +14,7 @@ abstract final class Space {
   static const double x16 = 64;
 }
 
-/// Corner radii tokens per Noor Noor Al-Momin Design System §5
+/// Corner radii tokens per صديق المؤمن Design System §5
 abstract final class Radii {
   static const double sm = 8;
   static const double md = 12;
@@ -29,7 +29,7 @@ abstract final class Radii {
   static const BorderRadius fullAll = BorderRadius.all(Radius.circular(full));
 }
 
-/// Motion and duration tokens per Noor Noor Al-Momin Design System §8
+/// Motion and duration tokens per صديق المؤمن Design System §8
 abstract final class Motion {
   static const Duration fast = Duration(milliseconds: 120);
   static const Duration base = Duration(milliseconds: 200);
@@ -37,7 +37,7 @@ abstract final class Motion {
   static const Curve easeBase = Curves.easeOutCubic;
 }
 
-/// Extra tokens that do not exist in Material 3 ColorScheme per Noor Noor Al-Momin Design System §2.2 & §2.3.
+/// Extra tokens that do not exist in Material 3 ColorScheme per صديق المؤمن Design System §2.2 & §2.3.
 @immutable
 class AlMominTokens extends ThemeExtension<AlMominTokens> {
   const AlMominTokens({

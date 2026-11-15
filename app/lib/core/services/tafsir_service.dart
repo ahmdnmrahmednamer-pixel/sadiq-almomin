@@ -38,7 +38,7 @@ class TafsirResult {
     return '﴿$ayahText﴾\n[سورة $surahName — الآية $ayahNumber]\n\n'
         '📖 من $editionName ($author):\n'
         '$tafsirText\n\n'
-        '— تطبيق نور المؤمن (بدون إنترنت وبدون إعلانات)';
+        '— تطبيق صديق المؤمن (بدون إنترنت وبدون إعلانات)';
   }
 }
 

@@ -7,7 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/text/arabic_normalizer.dart';
 import '../../settings/widgets/settings_about_modal.dart';
 
-/// نموذج بيانات عنصر دليل وفهرس شاشات تطبيق نور المؤمن
+/// نموذج بيانات عنصر دليل وفهرس شاشات تطبيق صديق المؤمن
 class AppDirectoryItem {
   final String id;
   final String title;
@@ -34,7 +34,7 @@ class AppDirectoryItem {
   });
 }
 
-/// شاشة «دليل وفهرس شاشات وأبواب تطبيق نور المؤمن الشامل» (AppScreenDirectoryScreen)
+/// شاشة «دليل وفهرس شاشات وأبواب تطبيق صديق المؤمن الشامل» (AppScreenDirectoryScreen)
 /// توفر فهرسة هيكلية كاملة لجميع شاشات وخدمات التطبيق (٦٣ شاشة وباباً إيمانياً)
 class AppScreenDirectoryScreen extends StatefulWidget {
   const AppScreenDirectoryScreen({super.key});
@@ -105,7 +105,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       const AppDirectoryItem(
         id: 'onboarding',
         title: 'دليل البداية والتعريف بالمعالم',
-        subtitle: 'جولة استكشافية لمعالم وخصائص تطبيق نور المؤمن',
+        subtitle: 'جولة استكشافية لمعالم وخصائص تطبيق صديق المؤمن',
         category: 'إشراقة اليوم',
         categoryKey: 'home',
         route: '/onboarding',
@@ -730,14 +730,14 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       ),
       AppDirectoryItem(
         id: 'about_app',
-        title: 'عن تطبيق نور المؤمن (الإصدار السابع v7.0)',
+        title: 'عن تطبيق صديق المؤمن (الإصدار السابع v7.0)',
         subtitle: 'الرؤية الوقفية، المعالم الكبرى، وخلوه التام من الإعلانات والتتبع',
         category: 'العناية والإعدادات',
         categoryKey: 'settings',
         route: '/settings',
         icon: Icons.info_rounded,
         color: AppColors.accentGold,
-        keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقفي', 'بدون إعلانات', 'v7.0', 'نور المؤمن'],
+        keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقفي', 'بدون إعلانات', 'v7.0', 'صديق المؤمن'],
         onAction: (ctx) => showSettingsAboutModal(ctx),
       ),
       const AppDirectoryItem(

@@ -54,7 +54,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
     for (var ex in widget.rule.examples) {
       buffer.writeln('• ${ex.targetWord} في قوله تعالى: ﴿${ex.ayahSnippet}﴾ [سورة ${ex.surahName}: ${ex.ayahNumber}]');
     }
-    buffer.writeln('\n(تطبيق نور المؤمن - أحكام التجويد والقرآن الكريم)');
+    buffer.writeln('\n(تطبيق صديق المؤمن - أحكام التجويد والقرآن الكريم)');
     try {
       Share.share(buffer.toString());
     } catch (_) {}
@@ -396,7 +396,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
                     border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.2)),
                   ),
                   child: const Text(
-                    'تطبيق نور المؤمن — تعلّم أحكام التجويد وإتقان التلاوة',
+                    'تطبيق صديق المؤمن — تعلّم أحكام التجويد وإتقان التلاوة',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,

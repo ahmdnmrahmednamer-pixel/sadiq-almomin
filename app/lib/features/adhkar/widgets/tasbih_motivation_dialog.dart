@@ -391,8 +391,8 @@ void showTasbihMotivationDialog(BuildContext context, {VoidCallback? onDismissed
                             onPressed: () {
                               try {
                                 Share.share(
-                                'أتممت بفضل الله $target تسبيحة من ذكر ($phrase) عبر تطبيق نور المؤمن.\n\n«${quote.hadithOrAyah}»\n\n— تطبيق نور المؤمن للقرآن الكريم والعبادات',
-                                subject: 'تطبيق نور المؤمن - إتمام ورد التسبيح',
+                                'أتممت بفضل الله $target تسبيحة من ذكر ($phrase) عبر تطبيق صديق المؤمن.\n\n«${quote.hadithOrAyah}»\n\n— تطبيق صديق المؤمن للقرآن الكريم والعبادات',
+                                subject: 'تطبيق صديق المؤمن - إتمام ورد التسبيح',
                               );
                               } catch (_) {}
                             },

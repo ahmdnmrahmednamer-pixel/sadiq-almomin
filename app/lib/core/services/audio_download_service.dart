@@ -141,16 +141,15 @@ class AudioDownloadService extends ChangeNotifier {
           final surahId = int.tryParse(surahNumStr);
 
           if (surahId != null && surahId >= 1 && surahId <= 114) {
-            final reciter = reciters.firstWhere(
-              (r) => r.id == reciterId,
-              orElse: () => reciters.first,
-            );
+            final reciter = reciters
+                .where((r) => r.id == reciterId)
+                .firstOrNull;
             final length = entity.lengthSync();
             final key = _key(reciterId, surahId);
 
             _downloadedSurahs[key] = DownloadedSurahInfo(
               reciterId: reciterId,
-              reciterName: reciter.nameAr,
+              reciterName: reciter?.nameAr ?? reciterId,
               surahId: surahId,
               surahName: surahNames[surahId] ?? 'سورة رقم $surahId',
               localPath: entity.path,

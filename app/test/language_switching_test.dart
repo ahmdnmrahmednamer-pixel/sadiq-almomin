@@ -36,7 +36,7 @@ void main() {
       expect(locAr.isArabic, isTrue);
       expect(locAr.isEnglish, isFalse);
       expect(locAr.textDirection, equals(TextDirection.rtl));
-      expect(locAr.tr('app_name'), equals('نور المؤمن'));
+      expect(locAr.tr('app_name'), equals('صديق المؤمن'));
       expect(locAr.tr('nav_home'), equals('إشراقة اليوم'));
       expect(locAr.tr('nav_quran'), equals('رحاب القرآن'));
       expect(locAr.tr('nav_prayer'), equals('محراب الصلاة'));
@@ -58,7 +58,7 @@ void main() {
       expect(locEn.isArabic, isFalse);
       expect(locEn.isEnglish, isTrue);
       expect(locEn.textDirection, equals(TextDirection.ltr));
-      expect(locEn.tr('app_name'), equals('Noor Al-Momin'));
+      expect(locEn.tr('app_name'), equals('صديق المؤمن'));
       expect(locEn.tr('nav_home'), equals('Serenity'));
       expect(locEn.tr('nav_quran'), equals('Noble Quran'));
       expect(locEn.tr('nav_prayer'), equals('Mihrab'));

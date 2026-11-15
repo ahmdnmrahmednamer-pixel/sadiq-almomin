@@ -11,7 +11,7 @@ import 'package:almomin/core/services/khatma_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Noor Al-Momin Ultimate v6.0 — Full Audit & 5 New Features Verification Suite', () {
+  group('صديق المؤمن Ultimate v6.0 — Full Audit & 5 New Features Verification Suite', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

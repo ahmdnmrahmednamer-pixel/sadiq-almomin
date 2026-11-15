@@ -16,7 +16,7 @@ void main() {
         subject: 'إضافة تذكير قيام الليل',
         category: SupportCategory.suggestion,
       );
-      expect(subject, '[تطبيق نور المؤمن - اقتراح تطوير ميزة] إضافة تذكير قيام الليل');
+      expect(subject, '[تطبيق صديق المؤمن - اقتراح تطوير ميزة] إضافة تذكير قيام الليل');
     });
 
     test('buildEmailBody includes message, diagnostics, and Momin Ibrahim dedication', () {
@@ -32,8 +32,8 @@ void main() {
       expect(body, contains('• التصنيف: استفسار عام أو ملاحظة'));
       expect(body, contains('• اسم الراسل: عبد الرحمن'));
       expect(body, contains('• وسيلة التواصل: abdurrahman@example.com'));
-      expect(body, contains('• إصدار تطبيق نور المؤمن: v${SupportService.appVersion}'));
-      expect(body, contains('تطبيق «نور المؤمن»'));
+      expect(body, contains('• إصدار تطبيق صديق المؤمن: v${SupportService.appVersion}'));
+      expect(body, contains('تطبيق «صديق المؤمن»'));
     });
 
     test('createMailtoUri constructs valid RFC mailto URI with query params', () {
@@ -103,7 +103,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('الدعم والتواصل مع المطور'), findsOneWidget);
-      expect(find.textContaining('تطبيق نور المؤمن — في خدمتكم دوماً لوجه الله تعالى'), findsOneWidget);
+      expect(find.textContaining('تطبيق صديق المؤمن — في خدمتكم دوماً لوجه الله تعالى'), findsOneWidget);
       expect(find.text('ahmdnmrahmednamer@gmail.com'), findsOneWidget);
       expect(find.text('نوع الرسالة:'), findsOneWidget);
       expect(find.text('اقتراح تطوير ميزة'), findsOneWidget);

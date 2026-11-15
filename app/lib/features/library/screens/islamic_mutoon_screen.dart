@@ -217,7 +217,7 @@ class _IslamicMutoonScreenState extends State<IslamicMutoonScreen> {
                                   label: const Text('مشاركة'),
                                   onPressed: () {
                                     try {
-                                      Share.share('${sec.chapterTitle}\n\n${sec.vocalizedText}\n\nالشرح: ${sec.sharhAndExplanation}\n— تطبيق نور المؤمن');
+                                      Share.share('${sec.chapterTitle}\n\n${sec.vocalizedText}\n\nالشرح: ${sec.sharhAndExplanation}\n— تطبيق صديق المؤمن');
                                     } catch (_) {}
                                   },
                                 ),

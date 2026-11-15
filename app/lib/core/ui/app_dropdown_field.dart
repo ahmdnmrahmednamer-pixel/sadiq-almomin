@@ -16,7 +16,7 @@ class AppDropdownOption<T> {
   });
 }
 
-/// Unified, accessible Dropdown selector component used across Noor Al-Momin
+/// Unified, accessible Dropdown selector component used across تطبيق صديق المؤمن
 /// whenever a control has multiple options. Built with full native Semantics
 /// for screen readers without requiring any accessibility toggle.
 class AppDropdownField<T> extends StatelessWidget {

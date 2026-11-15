@@ -112,7 +112,7 @@ void main() {
       expect(text, contains('سورة ${ayah.surahName}'));
       expect(text, contains('صفحة ${ayah.page}'));
       expect(text, contains(ayah.significance));
-      expect(text, contains('تطبيق نور المؤمن'));
+      expect(text, contains('تطبيق صديق المؤمن'));
     });
   });
 

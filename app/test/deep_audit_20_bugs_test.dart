@@ -13,7 +13,7 @@ import 'package:almomin/core/services/backup_restore_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Noor Al-Momin v4.0 Deep Engineering Audit — 20 Bugs Regression Suite', () {
+  group('صديق المؤمن v4.0 Deep Engineering Audit — 20 Bugs Regression Suite', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });

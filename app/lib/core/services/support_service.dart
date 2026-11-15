@@ -20,7 +20,7 @@ class SupportService {
   static const String appVersion = '1.3.0';
   static const String appBuild = '12';
   static const String githubRepoUrl =
-      'https://github.com/ahmdnmrahmednamer-pixel/almomin-..git';
+      'https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin.git';
   static const String developerPlayStoreUrl =
       'https://play.google.com/store/apps/developer?id=Ahmed+Ibrahim';
   static const String developerPlayStoreMarketUri =
@@ -89,7 +89,7 @@ class SupportService {
     required SupportCategory category,
   }) {
     final cleanSubject = subject.trim();
-    return '[تطبيق نور المؤمن - ${category.titleAr}] $cleanSubject';
+    return '[تطبيق صديق المؤمن - ${category.titleAr}] $cleanSubject';
   }
 
   /// Builds a rich, structured email body including dedication and diagnostics
@@ -113,7 +113,7 @@ class SupportService {
     if (senderContact != null && senderContact.trim().isNotEmpty) {
       buffer.writeln('• وسيلة التواصل: ${senderContact.trim()}');
     }
-    buffer.writeln('• إصدار تطبيق نور المؤمن: v$appVersion (Build $appBuild)');
+    buffer.writeln('• إصدار تطبيق صديق المؤمن: v$appVersion (Build $appBuild)');
     try {
       buffer.writeln('• نظام التشغيل: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
     } catch (_) {
@@ -121,7 +121,7 @@ class SupportService {
     }
     buffer.writeln('• تاريخ الإرسال: ${DateTime.now().toString().split('.').first}');
     buffer.writeln('--------------------------------------------------');
-    buffer.writeln('تطبيق «نور المؤمن» — رفيقك اليومي للقرآن والعبادات');
+    buffer.writeln('تطبيق «صديق المؤمن» — رفيقك اليومي للقرآن والعبادات');
 
     return buffer.toString();
   }

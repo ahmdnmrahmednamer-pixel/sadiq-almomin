@@ -1,7 +1,7 @@
 """
 Arabic Search Normalization (Appendix A Reference Algorithm)
 Implements normalized string extraction for Quranic search and FTS indexing.
-Matches canonical specifications in NOOR_ALMOMIN_ENGINEERING_SPEC.md.
+Matches canonical specifications in صديق_المؤمن_ENGINEERING_SPEC.md.
 """
 
 import re
