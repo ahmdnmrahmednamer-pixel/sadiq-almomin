@@ -161,6 +161,24 @@ class BackupRestoreService {
           prefs.getBool('tasbih_vibration') ?? true,
       'scholar_audio_source_pref_v11':
           prefs.getString('scholar_audio_source_pref_v11') ?? 'auto_multi',
+      'keep_screen_on': prefs.getBool('keep_screen_on') ?? true,
+      'auto_play_next_ayah': prefs.getBool('auto_play_next_ayah') ?? true,
+      'download_wifi_only': prefs.getBool('download_wifi_only') ?? false,
+      'auto_silent_prayer': prefs.getBool('auto_silent_prayer') ?? false,
+      'sunan_rawatib_reminder':
+          prefs.getBool('sunan_rawatib_reminder') ?? true,
+      'quran_numbering_style':
+          prefs.getString('quran_numbering_style') ?? 'arabic',
+      'show_juz_overlay': prefs.getBool('show_juz_overlay') ?? true,
+      'audio_quality_preset':
+          prefs.getString('audio_quality_preset') ?? 'studio_hd',
+      'play_sharawi_duaa_after_adhan':
+          prefs.getBool('play_sharawi_duaa_after_adhan') ?? true,
+      'pre_adhan_alert': prefs.getBool('pre_adhan_alert') ?? true,
+      'iqamah_alert': prefs.getBool('iqamah_alert') ?? true,
+      'tasbih_cycle_alert': prefs.getBool('tasbih_cycle_alert') ?? true,
+      'screen_reader_optimized':
+          prefs.getBool('screen_reader_optimized') ?? false,
     };
 
     final readingPosition = {
@@ -540,6 +558,84 @@ class BackupRestoreService {
         if (settings['scholar_audio_source_pref_v11'] != null) {
           await prefs.setString('scholar_audio_source_pref_v11',
               settings['scholar_audio_source_pref_v11'].toString());
+        }
+        if (replaceMode || !prefs.containsKey('keep_screen_on')) {
+          if (settings['keep_screen_on'] is bool) {
+            await prefs.setBool(
+                'keep_screen_on', settings['keep_screen_on'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('auto_play_next_ayah')) {
+          if (settings['auto_play_next_ayah'] is bool) {
+            await prefs.setBool(
+                'auto_play_next_ayah', settings['auto_play_next_ayah'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('download_wifi_only')) {
+          if (settings['download_wifi_only'] is bool) {
+            await prefs.setBool(
+                'download_wifi_only', settings['download_wifi_only'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('auto_silent_prayer')) {
+          if (settings['auto_silent_prayer'] is bool) {
+            await prefs.setBool(
+                'auto_silent_prayer', settings['auto_silent_prayer'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('sunan_rawatib_reminder')) {
+          if (settings['sunan_rawatib_reminder'] is bool) {
+            await prefs.setBool('sunan_rawatib_reminder',
+                settings['sunan_rawatib_reminder'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('quran_numbering_style')) {
+          if (settings['quran_numbering_style'] != null) {
+            await prefs.setString('quran_numbering_style',
+                settings['quran_numbering_style'].toString());
+          }
+        }
+        if (replaceMode || !prefs.containsKey('show_juz_overlay')) {
+          if (settings['show_juz_overlay'] is bool) {
+            await prefs.setBool(
+                'show_juz_overlay', settings['show_juz_overlay'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('audio_quality_preset')) {
+          if (settings['audio_quality_preset'] != null) {
+            await prefs.setString('audio_quality_preset',
+                settings['audio_quality_preset'].toString());
+          }
+        }
+        if (replaceMode || !prefs.containsKey('play_sharawi_duaa_after_adhan')) {
+          if (settings['play_sharawi_duaa_after_adhan'] is bool) {
+            await prefs.setBool('play_sharawi_duaa_after_adhan',
+                settings['play_sharawi_duaa_after_adhan'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('pre_adhan_alert')) {
+          if (settings['pre_adhan_alert'] is bool) {
+            await prefs.setBool(
+                'pre_adhan_alert', settings['pre_adhan_alert'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('iqamah_alert')) {
+          if (settings['iqamah_alert'] is bool) {
+            await prefs.setBool(
+                'iqamah_alert', settings['iqamah_alert'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('tasbih_cycle_alert')) {
+          if (settings['tasbih_cycle_alert'] is bool) {
+            await prefs.setBool(
+                'tasbih_cycle_alert', settings['tasbih_cycle_alert'] as bool);
+          }
+        }
+        if (replaceMode || !prefs.containsKey('screen_reader_optimized')) {
+          if (settings['screen_reader_optimized'] is bool) {
+            await prefs.setBool('screen_reader_optimized',
+                settings['screen_reader_optimized'] as bool);
+          }
         }
       }
 
