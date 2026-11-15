@@ -54,18 +54,22 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
 
   @override
   void dispose() {
+    _activeSessionToken++;
     _playerStateSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
-  /// تشغيل أو إيقاف المحطة الإذاعية
+  int _activeSessionToken = 0;
+
+  /// تشغيل أو إيقاف المحطة الإذاعية مع حراسة التزامن برمز الجلسة التصاعدي
   Future<void> _toggleStation(IslamicRadioStation station) async {
+    final currentSession = ++_activeSessionToken;
     final isSameStation = _currentStation?.id == station.id;
 
     if (isSameStation && _isPlaying) {
       await _audioService.stop();
-      if (mounted) {
+      if (mounted && currentSession == _activeSessionToken) {
         setState(() {
           _isPlaying = false;
           _isBuffering = false;
@@ -83,9 +87,17 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
       primaryUrl: station.streamUrl,
       fallbackUrls: station.fallbackUrls,
       cacheKey: 'live_radio_${station.id}',
+      onStopCallback: () async {
+        if (mounted) {
+          setState(() {
+            _isPlaying = false;
+            _isBuffering = false;
+          });
+        }
+      },
     );
 
-    if (!mounted) return;
+    if (!mounted || currentSession != _activeSessionToken) return;
 
     setState(() {
       _isBuffering = false;
@@ -401,6 +413,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
           final isSelected = _selectedCategory == cat.type;
 
           return ChoiceChip(
+            tooltip: cat.title,
             label: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -642,150 +655,164 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   Widget _buildStationCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
+    final semanticsLabel = '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}. '
+        '${isThisPlaying ? "قيد التشغيل حالياً" : "متوقف"}';
+    final semanticsHint = isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء البث المباشر';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: isThisPlaying
-              ? AppColors.primaryGreen
-              : (isDark ? Colors.white12 : Colors.grey.shade200),
-          width: isThisPlaying ? 1.5 : 1,
+    return Semantics(
+      label: semanticsLabel,
+      hint: semanticsHint,
+      button: true,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: isThisPlaying
+                ? AppColors.primaryGreen
+                : (isDark ? Colors.white12 : Colors.grey.shade200),
+            width: isThisPlaying ? 1.5 : 1,
+          ),
         ),
-      ),
-      color: isDark ? AppTheme.darkCard : Colors.white,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => _toggleStation(station),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // أيقونة الإذاعة مع التدرج اللوني
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      station.accentColor,
-                      station.accentColor.withValues(alpha: 0.75),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isThisPlaying ? Icons.graphic_eq_rounded : station.icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // التفاصيل
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            station.name,
-                            style: TextStyle(
-                              fontFamily: 'Amiri',
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.bold,
-                              color: isThisPlaying
-                                  ? AppColors.primaryGreen
-                                  : (isDark ? Colors.white : Colors.black87),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withValues(alpha: 0.08)
-                                : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            station.countryOrOrigin,
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+        color: isDark ? AppTheme.darkCard : Colors.white,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => _toggleStation(station),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // أيقونة الإذاعة مع التدرج اللوني
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        station.accentColor,
+                        station.accentColor.withValues(alpha: 0.75),
                       ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      station.subtitle,
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 12,
-                        color: isDark ? Colors.white54 : Colors.grey.shade600,
-                        height: 1.3,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isThisPlaying ? Icons.graphic_eq_rounded : station.icon,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // التفاصيل
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              station.name,
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: 15.5,
+                                fontWeight: FontWeight.bold,
+                                color: isThisPlaying
+                                    ? AppColors.primaryGreen
+                                    : (isDark ? Colors.white : Colors.black87),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              station.countryOrOrigin,
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: 3),
+                      Text(
+                        station.subtitle,
+                        style: TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: 12,
+                          color: isDark ? Colors.white54 : Colors.grey.shade600,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // أزرار المفضلة والتشغيل
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedBuilder(
+                      animation: _radioService,
+                      builder: (context, _) {
+                        final isFav = _radioService.isFavorite(station.id);
+                        return IconButton(
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          tooltip: isFav
+                              ? 'إزالة ${station.name} من المفضلة'
+                              : 'إضافة ${station.name} إلى المفضلة',
+                          icon: Icon(
+                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                            color: isFav ? Colors.redAccent : Colors.grey.shade400,
+                          ),
+                          onPressed: () => _radioService.toggleFavorite(station.id),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      iconSize: 32,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      tooltip: isThisPlaying
+                          ? 'إيقاف بث ${station.name}'
+                          : 'تشغيل بث ${station.name}',
+                      icon: isThisBuffering
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                              ),
+                            )
+                          : Icon(
+                              isThisPlaying
+                                  ? Icons.pause_circle_filled_rounded
+                                  : Icons.play_circle_fill_rounded,
+                              color: isThisPlaying
+                                  ? AppColors.accentGold
+                                  : AppColors.primaryGreen,
+                            ),
+                      onPressed: () => _toggleStation(station),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-
-              // أزرار المفضلة والتشغيل
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedBuilder(
-                    animation: _radioService,
-                    builder: (context, _) {
-                      final isFav = _radioService.isFavorite(station.id);
-                      return IconButton(
-                        iconSize: 20,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                        icon: Icon(
-                          isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: isFav ? Colors.redAccent : Colors.grey.shade400,
-                        ),
-                        onPressed: () => _radioService.toggleFavorite(station.id),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    iconSize: 32,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                    icon: isThisBuffering
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                            ),
-                          )
-                        : Icon(
-                            isThisPlaying
-                                ? Icons.pause_circle_filled_rounded
-                                : Icons.play_circle_fill_rounded,
-                            color: isThisPlaying
-                                ? AppColors.accentGold
-                                : AppColors.primaryGreen,
-                          ),
-                    onPressed: () => _toggleStation(station),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

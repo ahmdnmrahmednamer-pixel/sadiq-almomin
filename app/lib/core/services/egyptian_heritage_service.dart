@@ -144,16 +144,16 @@ class EgyptianHeritageService extends ChangeNotifier {
   // 1. إذاعة القرآن الكريم من القاهرة والإذاعات المصرية الأصيلة
   // ---------------------------------------------------------------------------
   static const List<EgyptianRadioStation> defaultRadioStations = [
+    // هوية البث: ترحيل مجتمعي على منصة Radiojar (Mini2's Broadcast) — غير معتمد رسمياً من ماسبيرو
     EgyptianRadioStation(
       id: 'eqr_cairo_main',
       name: 'إذاعة القرآن الكريم من القاهرة',
-      subtitle: 'البث المباشر لأعرق إذاعة قرآنية في العالم (تأسست ٢٥ مارس ١٩٦٤م)',
-      frequencyOrBadge: '98.2 FM القاهرة',
+      subtitle: 'تتابع بث 98.2 FM عبر ترحيل مجتمعي (Radiojar Mini2 — غير معتمد رسمياً من ماسبيرو)',
+      frequencyOrBadge: '98.2 FM • ترحيل مجتمعي',
       streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
       fallbackUrls: [
         'https://n0c.radiojar.com/8s5u5tpdtwzuv',
         'http://n12.radiojar.com/8s5u5tpdtwzuv',
-        'https://backup.qurango.net/radio/mix',
       ],
       icon: Icons.radio_rounded,
       accentColor: Color(0xFF0F5B45),
@@ -190,10 +190,10 @@ class EgyptianHeritageService extends ChangeNotifier {
       name: 'أثير الشيخ محمود خليل الحصري',
       subtitle: 'شيخ عموم المقارئ المصرية — بث مباشر مستمر للمصحف المرتل والمجود',
       frequencyOrBadge: 'المصحف المعلم',
-      streamUrl: 'https://backup.qurango.net/radio/mahmoud_khalil_alhussary',
+      streamUrl: 'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
         'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_warsh',
+        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary',
       ],
       icon: Icons.menu_book_rounded,
       accentColor: Color(0xFF1E6F5C),
@@ -222,10 +222,9 @@ class EgyptianHeritageService extends ChangeNotifier {
       name: 'أثير الشيخ مصطفى إسماعيل',
       subtitle: 'عبقري النغم القرآني وقارئ الجامع الأزهر — بث مباشر مستمر',
       frequencyOrBadge: 'مدرسة المقامات',
-      streamUrl: 'https://backup.qurango.net/radio/mustafa_ismail',
+      streamUrl: 'https://qurango.net/radio/mustafa_ismail',
       fallbackUrls: [
-        'https://qurango.net/radio/mustafa_ismail',
-        'https://backup.qurango.net/radio/mix',
+        'https://backup.qurango.net/radio/mustafa_ismail',
       ],
       icon: Icons.graphic_eq_rounded,
       accentColor: Color(0xFF2C5E43),

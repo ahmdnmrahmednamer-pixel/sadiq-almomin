@@ -5,6 +5,7 @@ enum IslamicRadioCategoryType {
   all,
   generalLive,
   reciters,
+  sunnahHadith,
   tafseerFatwa,
   adhkarRoqyah,
   khushooSurahs,

@@ -28,8 +28,37 @@ class FastAudioService {
   /// Shared AudioPlayer instance for direct service playback
   AudioPlayer get player => _sharedPlayer;
 
+  int _activePlaybackToken = 0;
+
+  /// Returns current monotonic playback request token
+  int get activePlaybackToken => _activePlaybackToken;
+
+  @visibleForTesting
+  Future<AudioSource> Function(
+    String url, {
+    required String cacheKey,
+    String? localDownloadedPath,
+    bool isLiveStream,
+  })? getFastAudioSourceOverride;
+
+  @visibleForTesting
+  Future<void> Function(int token, String url)? onBeforePlayCallback;
+
+  @visibleForTesting
+  Future<void> Function(AudioPlayer player, AudioSource source)? setAudioSourceOverride;
+
+  @visibleForTesting
+  void resetForTesting() {
+    _activePlaybackToken = 0;
+    _activeCustomStopCallback = null;
+    getFastAudioSourceOverride = null;
+    onBeforePlayCallback = null;
+    setAudioSourceOverride = null;
+  }
+
   /// Stops whichever player is currently active across the app
   Future<void> stop() async {
+    _activePlaybackToken++;
     try {
       if (_sharedPlayer.playing) {
         await _sharedPlayer.stop();
@@ -77,6 +106,7 @@ class FastAudioService {
     }
     if (_activeCustomStopCallback != null &&
         _activeCustomStopCallback != onStopOther) {
+      _activePlaybackToken++;
       try {
         await _activeCustomStopCallback!();
       } catch (_) {}
@@ -209,6 +239,7 @@ class FastAudioService {
     bool isLiveStream = false,
     Future<void> Function()? onStopCallback,
   }) async {
+    final sessionToken = ++_activePlaybackToken;
     final targetPlayer = player ?? _sharedPlayer;
     final mainUrl = (primaryUrl ?? positionalPrimaryUrl ?? '').trim();
     if (mainUrl.isEmpty && fallbackUrls.isEmpty && localDownloadedPath == null) {
@@ -216,10 +247,12 @@ class FastAudioService {
     }
 
     await claimAudioFocus(player: targetPlayer, onStopOther: onStopCallback);
+    if (sessionToken != _activePlaybackToken) return false;
 
     try {
       await targetPlayer.stop();
     } catch (_) {}
+    if (sessionToken != _activePlaybackToken) return false;
 
     final effectiveCacheKey =
         cacheKey ?? 'stream_${mainUrl.hashCode.abs()}';
@@ -230,12 +263,14 @@ class FastAudioService {
     ];
 
     for (int i = 0; i < candidateUrls.length; i++) {
+      if (sessionToken != _activePlaybackToken) return false;
       final targetUrl = candidateUrls[i].trim();
       if (targetUrl.isEmpty) continue;
 
       if (targetUrl.startsWith('assets/')) {
         try {
           await targetPlayer.setAsset(targetUrl);
+          if (sessionToken != _activePlaybackToken) return false;
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
@@ -248,13 +283,33 @@ class FastAudioService {
 
       // Tier 1: Fast cached local file or direct native URI streaming (supports 302 redirects & m4a/mp3/ogg)
       try {
-        final source = await getFastAudioSource(
-          targetUrl,
-          cacheKey: effectiveCacheKey,
-          localDownloadedPath: i == 0 ? localDownloadedPath : null,
-          isLiveStream: isLiveStream,
-        );
-        await targetPlayer.setAudioSource(source);
+        final source = getFastAudioSourceOverride != null
+            ? await getFastAudioSourceOverride!(
+                targetUrl,
+                cacheKey: effectiveCacheKey,
+                localDownloadedPath: i == 0 ? localDownloadedPath : null,
+                isLiveStream: isLiveStream,
+              )
+            : await getFastAudioSource(
+                targetUrl,
+                cacheKey: effectiveCacheKey,
+                localDownloadedPath: i == 0 ? localDownloadedPath : null,
+                isLiveStream: isLiveStream,
+              );
+        if (sessionToken != _activePlaybackToken) return false;
+
+        if (setAudioSourceOverride != null) {
+          await setAudioSourceOverride!(targetPlayer, source);
+        } else {
+          await targetPlayer.setAudioSource(source);
+        }
+        if (sessionToken != _activePlaybackToken) return false;
+
+        if (onBeforePlayCallback != null) {
+          await onBeforePlayCallback!(sessionToken, targetUrl);
+        }
+        if (sessionToken != _activePlaybackToken) return false;
+
         unawaited(targetPlayer.play());
         // Prefetch in background for offline reuse (NEVER for live streams)
         if (!isLiveStream) {
@@ -268,13 +323,16 @@ class FastAudioService {
       // Tier 2: LockCachingAudioSource fallback if direct URI source threw (ONLY for static tracks, NOT for live streams)
       if (!isLiveStream && !kIsWeb && _cacheDir != null) {
         try {
+          if (sessionToken != _activePlaybackToken) return false;
           final targetCacheFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
           final lockSource = LockCachingAudioSource(
             Uri.parse(targetUrl),
             cacheFile: targetCacheFile,
             headers: fastStreamingHeaders,
           );
+          if (sessionToken != _activePlaybackToken) return false;
           await targetPlayer.setAudioSource(lockSource);
+          if (sessionToken != _activePlaybackToken) return false;
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
