@@ -7,6 +7,7 @@ import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/services/khatma_service.dart';
 import 'package:almomin/core/services/adhkar_service.dart';
 import 'package:almomin/core/services/prayer_service.dart';
+import 'package:almomin/core/services/islamic_radio_service.dart';
 import 'package:almomin/features/backup/backup_restore_screen.dart';
 
 void main() {
@@ -183,6 +184,318 @@ void main() {
       expect(find.text('استعادة نسخة سابقة'), findsOneWidget);
       expect(find.text('استبدال كامل'), findsOneWidget);
       expect(find.text('دمج ذكي'), findsOneWidget);
+    });
+  });
+
+  group('BackupRestoreService Radio Favorites Integration & Regression Tests', () {
+    const cairoId = 'radio_cairo_live';
+    const husaryId = 'radio_husary';
+    const minshawiId = 'radio_minshawi';
+
+    setUp(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('islamic_radio_favorites');
+      await IslamicRadioService.instance.init(forceReload: true);
+    });
+
+    tearDown(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('islamic_radio_favorites');
+      await IslamicRadioService.instance.init(forceReload: true);
+    });
+
+    test('exportBackupData includes radio_favorites from SharedPreferences in extended_features', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final initialFavs = prefs.getStringList('islamic_radio_favorites');
+      addTearDown(() async {
+        if (initialFavs != null) {
+          await prefs.setStringList('islamic_radio_favorites', initialFavs);
+        } else {
+          await prefs.remove('islamic_radio_favorites');
+        }
+        await IslamicRadioService.instance.init(forceReload: true);
+        if (initialFavs != null) {
+          expect(prefs.getStringList('islamic_radio_favorites'), equals(initialFavs));
+          expect(IslamicRadioService.instance.favoriteIds, equals(initialFavs.toSet()));
+        } else {
+          expect(prefs.getStringList('islamic_radio_favorites'), isNull);
+          expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+        }
+      });
+
+      await prefs.setStringList('islamic_radio_favorites', [cairoId, husaryId]);
+      await IslamicRadioService.instance.init(forceReload: true);
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      expect(backup['checksum'], isNotEmpty);
+
+      final data = backup['data'] as Map<String, dynamic>;
+      final ext = data['extended_features'] as Map<String, dynamic>?;
+      expect(ext, isNotNull);
+      expect(ext!['radio_favorites'], isNotNull);
+      final exportedFavs = (ext['radio_favorites'] as List<dynamic>).cast<String>();
+      expect(exportedFavs, containsAll([cairoId, husaryId]));
+    });
+
+    test('restoreBackup in replaceMode restores radio_favorites, updates live cache and notifies listeners', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final initialFavs = prefs.getStringList('islamic_radio_favorites');
+      addTearDown(() async {
+        if (initialFavs != null) {
+          await prefs.setStringList('islamic_radio_favorites', initialFavs);
+        } else {
+          await prefs.remove('islamic_radio_favorites');
+        }
+        await IslamicRadioService.instance.init(forceReload: true);
+        if (initialFavs != null) {
+          expect(prefs.getStringList('islamic_radio_favorites'), equals(initialFavs));
+          expect(IslamicRadioService.instance.favoriteIds, equals(initialFavs.toSet()));
+        } else {
+          expect(prefs.getStringList('islamic_radio_favorites'), isNull);
+          expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+        }
+      });
+
+      // Baseline initial state
+      await prefs.setStringList('islamic_radio_favorites', [cairoId]);
+      await IslamicRadioService.instance.init(forceReload: true);
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isTrue);
+
+      var listenerNotified = false;
+      void listener() => listenerNotified = true;
+      IslamicRadioService.instance.addListener(listener);
+      addTearDown(() {
+        IslamicRadioService.instance.removeListener(listener);
+      });
+
+      final dataPayload = {
+        'extended_features': {
+          'radio_favorites': [husaryId, minshawiId],
+        },
+      };
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(dataPayload),
+      );
+      final envelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': dataPayload,
+      };
+
+      // Verify payload is valid
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(
+        envelope,
+        replaceMode: true,
+      );
+      expect(restored, isTrue);
+
+      // Verify SharedPreferences persistence
+      final storedPrefs = prefs.getStringList('islamic_radio_favorites');
+      expect(storedPrefs, containsAll([husaryId, minshawiId]));
+      expect(storedPrefs?.contains(cairoId), isFalse);
+
+      // Verify in-memory live cache sync
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isFalse);
+      expect(IslamicRadioService.instance.isFavorite(husaryId), isTrue);
+      expect(IslamicRadioService.instance.isFavorite(minshawiId), isTrue);
+      expect(IslamicRadioService.instance.favoriteIds, equals({husaryId, minshawiId}));
+
+      // Verify listener notification
+      expect(listenerNotified, isTrue);
+    });
+
+    test('restoreBackup with explicit empty radio_favorites: replaceMode clears, mergeMode preserves', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final initialFavs = prefs.getStringList('islamic_radio_favorites');
+      addTearDown(() async {
+        if (initialFavs != null) {
+          await prefs.setStringList('islamic_radio_favorites', initialFavs);
+        } else {
+          await prefs.remove('islamic_radio_favorites');
+        }
+        await IslamicRadioService.instance.init(forceReload: true);
+        if (initialFavs != null) {
+          expect(prefs.getStringList('islamic_radio_favorites'), equals(initialFavs));
+          expect(IslamicRadioService.instance.favoriteIds, equals(initialFavs.toSet()));
+        } else {
+          expect(prefs.getStringList('islamic_radio_favorites'), isNull);
+          expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+        }
+      });
+
+      // 1. mergeMode preserves existing favorites when payload has []
+      await prefs.setStringList('islamic_radio_favorites', [cairoId]);
+      await IslamicRadioService.instance.init(forceReload: true);
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isTrue);
+
+      final emptyDataPayload = {
+        'extended_features': {
+          'radio_favorites': <String>[],
+        },
+      };
+      final emptyChecksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(emptyDataPayload),
+      );
+      final emptyEnvelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': emptyChecksum,
+        'data': emptyDataPayload,
+      };
+
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(emptyEnvelope));
+      expect(validation.isValid, isTrue);
+
+      final restoredMerge = await BackupRestoreService.instance.restoreBackup(
+        emptyEnvelope,
+        replaceMode: false,
+      );
+      expect(restoredMerge, isTrue);
+      // Verify preserved
+      expect(prefs.getStringList('islamic_radio_favorites'), equals([cairoId]));
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isTrue);
+      expect(IslamicRadioService.instance.favoriteIds, equals({cairoId}));
+
+      // 2. replaceMode clears existing favorites when payload has []
+      final restoredReplace = await BackupRestoreService.instance.restoreBackup(
+        emptyEnvelope,
+        replaceMode: true,
+      );
+      expect(restoredReplace, isTrue);
+      // Verify cleared
+      expect(prefs.getStringList('islamic_radio_favorites'), isEmpty);
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isFalse);
+      expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+    });
+
+    test('restoreBackup in mergeMode non-destructively unites radio_favorites and updates live cache', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final initialFavs = prefs.getStringList('islamic_radio_favorites');
+      addTearDown(() async {
+        if (initialFavs != null) {
+          await prefs.setStringList('islamic_radio_favorites', initialFavs);
+        } else {
+          await prefs.remove('islamic_radio_favorites');
+        }
+        await IslamicRadioService.instance.init(forceReload: true);
+        if (initialFavs != null) {
+          expect(prefs.getStringList('islamic_radio_favorites'), equals(initialFavs));
+          expect(IslamicRadioService.instance.favoriteIds, equals(initialFavs.toSet()));
+        } else {
+          expect(prefs.getStringList('islamic_radio_favorites'), isNull);
+          expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+        }
+      });
+
+      // Baseline initial state has Cairo
+      await prefs.setStringList('islamic_radio_favorites', [cairoId]);
+      await IslamicRadioService.instance.init(forceReload: true);
+
+      final dataPayload = {
+        'extended_features': {
+          'radio_favorites': [husaryId],
+        },
+      };
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(dataPayload),
+      );
+      final envelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': dataPayload,
+      };
+
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(
+        envelope,
+        replaceMode: false,
+      );
+      expect(restored, isTrue);
+
+      // Verify SharedPreferences contains union [cairoId, husaryId]
+      final storedPrefs = prefs.getStringList('islamic_radio_favorites');
+      expect(storedPrefs, isNotNull);
+      expect(storedPrefs!.length, equals(2));
+      expect(storedPrefs, containsAll([cairoId, husaryId]));
+
+      // Verify in-memory live cache sync
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isTrue);
+      expect(IslamicRadioService.instance.isFavorite(husaryId), isTrue);
+      expect(IslamicRadioService.instance.favoriteIds, equals({cairoId, husaryId}));
+    });
+
+    test('Old backup control: missing radio_favorites in extended_features passes validation and preserves existing state', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final initialFavs = prefs.getStringList('islamic_radio_favorites');
+      addTearDown(() async {
+        if (initialFavs != null) {
+          await prefs.setStringList('islamic_radio_favorites', initialFavs);
+        } else {
+          await prefs.remove('islamic_radio_favorites');
+        }
+        await IslamicRadioService.instance.init(forceReload: true);
+        if (initialFavs != null) {
+          expect(prefs.getStringList('islamic_radio_favorites'), equals(initialFavs));
+          expect(IslamicRadioService.instance.favoriteIds, equals(initialFavs.toSet()));
+        } else {
+          expect(prefs.getStringList('islamic_radio_favorites'), isNull);
+          expect(IslamicRadioService.instance.favoriteIds, isEmpty);
+        }
+      });
+
+      await prefs.setStringList('islamic_radio_favorites', [cairoId]);
+      await IslamicRadioService.instance.init(forceReload: true);
+
+      // An old v1 backup with extended_features but omitting radio_favorites
+      final dataPayload = {
+        'bookmarks': ['2:255'],
+        'extended_features': {
+          'sunan_rawatib': 'some_data',
+        },
+      };
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(dataPayload),
+      );
+      final oldEnvelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': dataPayload,
+      };
+
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(oldEnvelope));
+      expect(validation.isValid, isTrue);
+
+      // In mergeMode: existing radio favorites must remain untouched
+      final restoredMerge = await BackupRestoreService.instance.restoreBackup(
+        oldEnvelope,
+        replaceMode: false,
+      );
+      expect(restoredMerge, isTrue);
+      expect(prefs.getStringList('islamic_radio_favorites'), equals([cairoId]));
+      expect(IslamicRadioService.instance.isFavorite(cairoId), isTrue);
+
+      // In replaceMode: safe execution without crash
+      final restoredReplace = await BackupRestoreService.instance.restoreBackup(
+        oldEnvelope,
+        replaceMode: true,
+      );
+      expect(restoredReplace, isTrue);
     });
   });
 }
