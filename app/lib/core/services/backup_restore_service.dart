@@ -3,6 +3,7 @@ import 'adhan_sensor_gesture_service.dart';
 import 'ramadan_service.dart';
 import 'hajj_umrah_service.dart';
 import '../notifications/prayer_notification_service.dart';
+import '../localization/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -128,12 +129,15 @@ class BackupRestoreService {
       await HajjUmrahService.instance.init(forceReload: true);
     await TadabburJournalService.instance.init();
 
+    final savedLang = prefs.getString('app_language') ?? 'ar';
+    final normalizedLangCode = AppLanguage.fromCode(savedLang).code;
+
     final settings = {
       'mushaf_font_size': prefs.getDouble('mushaf_font_size') ?? 24.0,
       'selected_reciter_id':
           prefs.getString('selected_reciter_id') ?? 'minshawi_murattal',
       'calculation_method': prefs.getString('calculation_method') ?? 'egyptian',
-      'theme_mode': prefs.getString('theme_mode') ?? 'light',
+      'theme_mode': prefs.getString('theme_mode') ?? 'system',
       'adhan_alerts': prefs.getBool('adhan_alerts') ?? true,
       'has_completed_onboarding':
           prefs.getBool('has_completed_onboarding') ?? false,
@@ -142,7 +146,8 @@ class BackupRestoreService {
       'quran_translation_edition':
           prefs.getString('quran_translation_edition') ?? 'en_saheeh',
       'bilingual_display_enabled':
-          prefs.getBool('bilingual_display_enabled') ?? false,
+          prefs.getBool('bilingual_display_enabled') ??
+          (normalizedLangCode != 'ar'),
       'hijri_adjustment_days':
           prefs.getInt('hijri_adjustment_days') ?? 0,
       'default_playback_speed':
@@ -152,11 +157,11 @@ class BackupRestoreService {
       'default_tafsir_edition':
           prefs.getString('default_tafsir_edition') ?? 'muyassar',
       'fiqh_madhhab':
-          prefs.getString('fiqh_madhhab') ?? 'shafii',
+          prefs.getString('fiqh_madhhab') ?? 'shafii_egypt',
       'mushaf_default_mode':
-          prefs.getString('mushaf_default_mode') ?? 'surah',
+          prefs.getString('mushaf_default_mode') ?? 'page',
       'screen_layout_mode':
-          prefs.getString('screen_layout_mode') ?? 'comfortable',
+          prefs.getString('screen_layout_mode') ?? 'classic',
       'tasbih_vibration':
           prefs.getBool('tasbih_vibration') ?? true,
       'scholar_audio_source_pref_v11':
