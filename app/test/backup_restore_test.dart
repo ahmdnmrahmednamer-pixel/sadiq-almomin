@@ -498,4 +498,408 @@ void main() {
       expect(restoredReplace, isTrue);
     });
   });
+
+  group('BackupRestoreService Core Settings Coverage & Regression Tests', () {
+    const coreKeys13 = [
+      'keep_screen_on',
+      'auto_play_next_ayah',
+      'download_wifi_only',
+      'auto_silent_prayer',
+      'sunan_rawatib_reminder',
+      'quran_numbering_style',
+      'show_juz_overlay',
+      'audio_quality_preset',
+      'play_sharawi_duaa_after_adhan',
+      'pre_adhan_alert',
+      'iqamah_alert',
+      'tasbih_cycle_alert',
+      'screen_reader_optimized',
+    ];
+
+    const default13 = <String, Object>{
+      'keep_screen_on': true,
+      'auto_play_next_ayah': true,
+      'download_wifi_only': false,
+      'auto_silent_prayer': false,
+      'sunan_rawatib_reminder': true,
+      'quran_numbering_style': 'arabic',
+      'show_juz_overlay': true,
+      'audio_quality_preset': 'studio_hd',
+      'play_sharawi_duaa_after_adhan': true,
+      'pre_adhan_alert': true,
+      'iqamah_alert': true,
+      'tasbih_cycle_alert': true,
+      'screen_reader_optimized': false,
+    };
+
+    const nonDefault13 = <String, Object>{
+      'keep_screen_on': false,
+      'auto_play_next_ayah': false,
+      'download_wifi_only': true,
+      'auto_silent_prayer': true,
+      'sunan_rawatib_reminder': false,
+      'quran_numbering_style': 'indic',
+      'show_juz_overlay': false,
+      'audio_quality_preset': 'mosque_echo',
+      'play_sharawi_duaa_after_adhan': false,
+      'pre_adhan_alert': false,
+      'iqamah_alert': false,
+      'tasbih_cycle_alert': false,
+      'screen_reader_optimized': true,
+    };
+
+    Future<void> writeValuesToPrefs(
+      SharedPreferences prefs,
+      Map<String, Object> map,
+    ) async {
+      for (final entry in map.entries) {
+        if (entry.value is bool) {
+          await prefs.setBool(entry.key, entry.value as bool);
+        } else if (entry.value is String) {
+          await prefs.setString(entry.key, entry.value as String);
+        }
+      }
+    }
+
+    void assertLiveGetters(
+      SettingsService s,
+      Map<String, Object> expected,
+    ) {
+      if (expected.containsKey('keep_screen_on')) {
+        expect(s.keepScreenOn, equals(expected['keep_screen_on']),
+            reason: 'keepScreenOn getter mismatch');
+      }
+      if (expected.containsKey('auto_play_next_ayah')) {
+        expect(s.autoPlayNextAyah, equals(expected['auto_play_next_ayah']),
+            reason: 'autoPlayNextAyah getter mismatch');
+      }
+      if (expected.containsKey('download_wifi_only')) {
+        expect(s.downloadOverWifiOnly, equals(expected['download_wifi_only']),
+            reason: 'downloadOverWifiOnly getter mismatch');
+      }
+      if (expected.containsKey('auto_silent_prayer')) {
+        expect(s.autoSilentDuringPrayer, equals(expected['auto_silent_prayer']),
+            reason: 'autoSilentDuringPrayer getter mismatch');
+      }
+      if (expected.containsKey('sunan_rawatib_reminder')) {
+        expect(s.sunanRawatibReminderEnabled,
+            equals(expected['sunan_rawatib_reminder']),
+            reason: 'sunanRawatibReminderEnabled getter mismatch');
+      }
+      if (expected.containsKey('quran_numbering_style')) {
+        expect(s.quranNumberingStyle, equals(expected['quran_numbering_style']),
+            reason: 'quranNumberingStyle getter mismatch');
+      }
+      if (expected.containsKey('show_juz_overlay')) {
+        expect(s.showJuzOverlay, equals(expected['show_juz_overlay']),
+            reason: 'showJuzOverlay getter mismatch');
+      }
+      if (expected.containsKey('audio_quality_preset')) {
+        expect(s.audioQualityPreset, equals(expected['audio_quality_preset']),
+            reason: 'audioQualityPreset getter mismatch');
+      }
+      if (expected.containsKey('play_sharawi_duaa_after_adhan')) {
+        expect(s.playSharawiDuaaAfterAdhan,
+            equals(expected['play_sharawi_duaa_after_adhan']),
+            reason: 'playSharawiDuaaAfterAdhan getter mismatch');
+      }
+      if (expected.containsKey('pre_adhan_alert')) {
+        expect(s.preAdhanAlertEnabled, equals(expected['pre_adhan_alert']),
+            reason: 'preAdhanAlertEnabled getter mismatch');
+      }
+      if (expected.containsKey('iqamah_alert')) {
+        expect(s.iqamahAlertEnabled, equals(expected['iqamah_alert']),
+            reason: 'iqamahAlertEnabled getter mismatch');
+      }
+      if (expected.containsKey('tasbih_cycle_alert')) {
+        expect(s.tasbihCycleAlertEnabled,
+            equals(expected['tasbih_cycle_alert']),
+            reason: 'tasbihCycleAlertEnabled getter mismatch');
+      }
+      if (expected.containsKey('screen_reader_optimized')) {
+        expect(s.screenReaderOptimized,
+            equals(expected['screen_reader_optimized']),
+            reason: 'screenReaderOptimized getter mismatch');
+      }
+    }
+
+    test('exportBackupData includes all 13 non-default settings and produces valid checksum', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final snapshot = <String, Object?>{};
+      for (final k in coreKeys13) {
+        snapshot[k] = prefs.get(k);
+      }
+      addTearDown(() async {
+        for (final entry in snapshot.entries) {
+          if (entry.value == null) {
+            await prefs.remove(entry.key);
+          } else if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+        for (final entry in snapshot.entries) {
+          expect(prefs.get(entry.key), equals(entry.value));
+        }
+      });
+
+      await writeValuesToPrefs(prefs, nonDefault13);
+      await SettingsService.instance.init(forceReload: true);
+
+      final backup = await BackupRestoreService.instance.exportBackupData();
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(backup));
+      expect(validation.isValid, isTrue, reason: 'Exported backup envelope must pass checksum validation');
+
+      final data = backup['data'] as Map<String, dynamic>;
+      final settings = data['settings'] as Map<String, dynamic>;
+
+      for (final entry in nonDefault13.entries) {
+        expect(settings[entry.key], equals(entry.value),
+            reason: 'Exported settings map must contain non-default ${entry.key}');
+      }
+    });
+
+    test('restoreBackup in replaceMode restores all 13 settings and updates live getters', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final snapshot = <String, Object?>{};
+      for (final k in coreKeys13) {
+        snapshot[k] = prefs.get(k);
+      }
+
+      var listenerNotified = false;
+      void listener() {
+        listenerNotified = true;
+      }
+
+      SettingsService.instance.addListener(listener);
+
+      addTearDown(() async {
+        SettingsService.instance.removeListener(listener);
+        for (final entry in snapshot.entries) {
+          if (entry.value == null) {
+            await prefs.remove(entry.key);
+          } else if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+        for (final entry in snapshot.entries) {
+          expect(prefs.get(entry.key), equals(entry.value));
+        }
+      });
+
+      // Clear any prior custom preferences to simulate fresh/clean state
+      for (final k in coreKeys13) {
+        await prefs.remove(k);
+      }
+      await SettingsService.instance.init(forceReload: true);
+
+      // Reset listener flag immediately before restoreBackup to eliminate setup false positives
+      listenerNotified = false;
+
+      final payload = {
+        'settings': nonDefault13,
+      };
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(payload),
+      );
+      final envelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': payload,
+      };
+
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(
+        envelope,
+        replaceMode: true,
+      );
+      expect(restored, isTrue);
+
+      // Verify SharedPreferences persistence for all 13 keys
+      for (final entry in nonDefault13.entries) {
+        expect(prefs.get(entry.key), equals(entry.value),
+            reason: 'SharedPreferences must have restored value for ${entry.key}');
+      }
+
+      // Verify live getters on singleton
+      assertLiveGetters(SettingsService.instance, nonDefault13);
+      expect(listenerNotified, isTrue, reason: 'SettingsService listeners must be notified on reload');
+    });
+
+    test('restoreBackup in mergeMode: all 13 absent keys fill from backup, all 13 existing keys are preserved', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final snapshot = <String, Object?>{};
+      for (final k in coreKeys13) {
+        snapshot[k] = prefs.get(k);
+      }
+      addTearDown(() async {
+        for (final entry in snapshot.entries) {
+          if (entry.value == null) {
+            await prefs.remove(entry.key);
+          } else if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+        for (final entry in snapshot.entries) {
+          expect(prefs.get(entry.key), equals(entry.value));
+        }
+      });
+
+      // Part A: All 13 absent keys on device must be filled from backup
+      for (final k in coreKeys13) {
+        await prefs.remove(k);
+      }
+      await SettingsService.instance.init(forceReload: true);
+
+      final payloadNonDefault = {
+        'settings': nonDefault13,
+      };
+      final checksumA = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(payloadNonDefault),
+      );
+      final envelopeA = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksumA,
+        'data': payloadNonDefault,
+      };
+
+      final restoredA = await BackupRestoreService.instance.restoreBackup(
+        envelopeA,
+        replaceMode: false,
+      );
+      expect(restoredA, isTrue);
+
+      // Verify all 13 absent keys were filled from payload into SharedPreferences
+      for (final entry in nonDefault13.entries) {
+        expect(prefs.get(entry.key), equals(entry.value),
+            reason: 'Absent ${entry.key} must be filled from backup in mergeMode');
+      }
+      assertLiveGetters(SettingsService.instance, nonDefault13);
+
+      // Part B: All 13 existing keys on device must be preserved against conflicting backup
+      // Device currently has nonDefault13. Conflicting backup has default13.
+      final payloadDefault = {
+        'settings': default13,
+      };
+      final checksumB = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(payloadDefault),
+      );
+      final envelopeB = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksumB,
+        'data': payloadDefault,
+      };
+
+      final restoredB = await BackupRestoreService.instance.restoreBackup(
+        envelopeB,
+        replaceMode: false,
+      );
+      expect(restoredB, isTrue);
+
+      // Verify all 13 existing keys remained unchanged as nonDefault13
+      for (final entry in nonDefault13.entries) {
+        expect(prefs.get(entry.key), equals(entry.value),
+            reason: 'Existing ${entry.key} on device must be preserved in mergeMode');
+      }
+      assertLiveGetters(SettingsService.instance, nonDefault13);
+    });
+
+    test('Old backup control: missing core keys in settings preserves existing device state in both modes', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final keysToWatch = ['theme_mode', 'mushaf_font_size', ...coreKeys13];
+      final snapshot = <String, Object?>{};
+      for (final k in keysToWatch) {
+        snapshot[k] = prefs.get(k);
+      }
+      addTearDown(() async {
+        for (final entry in snapshot.entries) {
+          if (entry.value == null) {
+            await prefs.remove(entry.key);
+          } else if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          } else if (entry.value is double) {
+            await prefs.setDouble(entry.key, entry.value as double);
+          } else if (entry.value is int) {
+            await prefs.setInt(entry.key, entry.value as int);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+        for (final entry in snapshot.entries) {
+          expect(prefs.get(entry.key), equals(entry.value),
+              reason: 'Teardown failed to restore legacy control key ${entry.key}');
+        }
+      });
+
+      // Device starts with customized non-default settings
+      await writeValuesToPrefs(prefs, nonDefault13);
+      await SettingsService.instance.init(forceReload: true);
+
+      // A legacy backup envelope whose settings map only contains legacy keys
+      final legacyPayload = {
+        'settings': {
+          'theme_mode': 'dark',
+          'mushaf_font_size': 26.0,
+        },
+      };
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(legacyPayload),
+      );
+      final legacyEnvelope = {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': legacyPayload,
+      };
+
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(legacyEnvelope));
+      expect(validation.isValid, isTrue);
+
+      // 1. In mergeMode: all 13 customized keys remain preserved
+      final restoredMerge = await BackupRestoreService.instance.restoreBackup(
+        legacyEnvelope,
+        replaceMode: false,
+      );
+      expect(restoredMerge, isTrue);
+      for (final entry in nonDefault13.entries) {
+        expect(prefs.get(entry.key), equals(entry.value),
+            reason: 'mergeMode with legacy backup must preserve existing ${entry.key}');
+      }
+      assertLiveGetters(SettingsService.instance, nonDefault13);
+
+      // 2. In replaceMode: omitted keys in payload do NOT clear or wipe existing customized keys
+      final restoredReplace = await BackupRestoreService.instance.restoreBackup(
+        legacyEnvelope,
+        replaceMode: true,
+      );
+      expect(restoredReplace, isTrue);
+      for (final entry in nonDefault13.entries) {
+        expect(prefs.get(entry.key), equals(entry.value),
+            reason: 'replaceMode with legacy backup must preserve existing ${entry.key}');
+      }
+      assertLiveGetters(SettingsService.instance, nonDefault13);
+    });
+  });
 }
