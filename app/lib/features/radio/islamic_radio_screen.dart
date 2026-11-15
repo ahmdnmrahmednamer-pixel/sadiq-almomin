@@ -88,7 +88,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
       fallbackUrls: station.fallbackUrls,
       cacheKey: 'live_radio_${station.id}',
       onStopCallback: () async {
-        if (mounted) {
+        if (mounted && currentSession == _activeSessionToken) {
           setState(() {
             _isPlaying = false;
             _isBuffering = false;

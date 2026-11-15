@@ -247,6 +247,143 @@ void main() {
       expect(result, isFalse);
       expect(didPlay, isFalse);
     });
+
+    test('Completed Station A -> B with distinct UI callbacks: B succeeds and notifies A stop callback', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      bool callbackAFired = false;
+      bool callbackBFired = false;
+      final playedUrls = <String>[];
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+      audioService.onBeforePlayCallback = (token, url) async {
+        playedUrls.add(url);
+      };
+
+      // 1. Station A plays completely
+      final resultA = await audioService.playLiveRadio(
+        primaryUrl: 'https://test/stationA',
+        onStopCallback: () async {
+          callbackAFired = true;
+        },
+      );
+      expect(resultA, isTrue, reason: 'Station A must succeed');
+      expect(playedUrls, contains('https://test/stationA'));
+      expect(callbackAFired, isFalse, reason: 'Callback A must not fire while Station A is active');
+
+      // 2. User plays Station B (normal completed transition)
+      final resultB = await audioService.playLiveRadio(
+        primaryUrl: 'https://test/stationB',
+        onStopCallback: () async {
+          callbackBFired = true;
+        },
+      );
+
+      // 3. Station B must succeed and NOT invalidate itself
+      expect(resultB, isTrue, reason: 'Station B must succeed and not be invalidated by prior callback A');
+      expect(playedUrls, contains('https://test/stationB'));
+      expect(callbackAFired, isTrue, reason: 'Station A stop callback must be called when B claims focus');
+      expect(callbackBFired, isFalse, reason: 'Callback B must not fire while Station B is active');
+    });
+
+    test('Delayed setAudioSource race: Request A delayed in setAudioSource is dropped when B arrives', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final completerSetSourceA = Completer<void>();
+      final playedUrls = <String>[];
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+
+      audioService.setAudioSourceOverride = (player, source) async {
+        if (source is UriAudioSource && source.uri.toString().contains('stream_slow_set_source')) {
+          await completerSetSourceA.future;
+        }
+      };
+
+      audioService.onBeforePlayCallback = (token, url) async {
+        playedUrls.add(url);
+      };
+
+      // 1. Start Request A which hangs in setAudioSource
+      final futureA = audioService.playLiveRadio(
+        primaryUrl: 'https://test/stream_slow_set_source',
+      );
+
+      // Yield event loop so A enters setAudioSource
+      await Future<void>.delayed(Duration.zero);
+
+      // 2. Request B starts and completes immediately
+      final futureB = audioService.playLiveRadio(
+        primaryUrl: 'https://test/stream_fast_b',
+      );
+      final resultB = await futureB;
+      expect(resultB, isTrue, reason: 'Request B should succeed');
+      expect(playedUrls, contains('https://test/stream_fast_b'));
+
+      // 3. Request A finally completes setAudioSource
+      completerSetSourceA.complete();
+      final resultA = await futureA;
+
+      // 4. Request A must be dropped due to token mismatch after setAudioSource
+      expect(resultA, isFalse, reason: 'Request A must abort after setAudioSource due to token mismatch');
+      expect(playedUrls, isNot(contains('https://test/stream_slow_set_source')), reason: 'Request A must never call play()');
+    });
+
+    test('Stale callbacks guard: Prior station callbacks do not clobber active station state', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final activeStationLog = <String>[];
+      int activeUiSession = 0;
+
+      Future<void> simulateUserTap(String stationId, String url) async {
+        final sessionToken = ++activeUiSession;
+        activeStationLog.add('START_$stationId');
+
+        await audioService.playLiveRadio(
+          primaryUrl: url,
+          onStopCallback: () async {
+            if (sessionToken == activeUiSession) {
+              activeStationLog.add('STOP_ACTIVE_$stationId');
+            } else {
+              activeStationLog.add('DROPPED_STALE_CALLBACK_$stationId');
+            }
+          },
+        );
+
+        if (sessionToken == activeUiSession) {
+          activeStationLog.add('PLAYING_$stationId');
+        }
+      }
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      // 1. Play station 1
+      await simulateUserTap('station1', 'https://test/s1');
+      expect(activeStationLog, contains('PLAYING_station1'));
+
+      // 2. Switch to station 2
+      await simulateUserTap('station2', 'https://test/s2');
+      expect(activeStationLog, contains('DROPPED_STALE_CALLBACK_station1'));
+      expect(activeStationLog, contains('PLAYING_station2'));
+
+      // 3. Switch to station 3
+      await simulateUserTap('station3', 'https://test/s3');
+      expect(activeStationLog, contains('DROPPED_STALE_CALLBACK_station2'));
+      expect(activeStationLog, contains('PLAYING_station3'));
+      expect(activeStationLog, isNot(contains('STOP_ACTIVE_station1')));
+      expect(activeStationLog, isNot(contains('STOP_ACTIVE_station2')));
+    });
   });
 
   group('IslamicRadioScreen Widget, Semantics & Dispose Tests', () {

@@ -83,6 +83,12 @@ class FastAudioService {
     AudioPlayer? player,
     Future<void> Function()? onStopOther,
   }) async {
+    _activePlaybackToken++;
+    final priorCallback = _activeCustomStopCallback;
+    _activeCustomStopCallback = onStopOther;
+    final priorPlayer = _activePlayer;
+    _activePlayer = player ?? _sharedPlayer;
+
     if (player != null) {
       try {
         if (player.playing) {
@@ -97,22 +103,18 @@ class FastAudioService {
         }
       } catch (_) {}
     }
-    if (_activePlayer != null && _activePlayer != player) {
+    if (priorPlayer != null && priorPlayer != player && priorPlayer != _sharedPlayer) {
       try {
-        if (_activePlayer!.playing) {
-          await _activePlayer!.stop();
+        if (priorPlayer.playing) {
+          await priorPlayer.stop();
         }
       } catch (_) {}
     }
-    if (_activeCustomStopCallback != null &&
-        _activeCustomStopCallback != onStopOther) {
-      _activePlaybackToken++;
+    if (priorCallback != null && priorCallback != onStopOther) {
       try {
-        await _activeCustomStopCallback!();
+        await priorCallback();
       } catch (_) {}
     }
-    _activePlayer = player ?? _sharedPlayer;
-    _activeCustomStopCallback = onStopOther;
   }
 
   final Dio _dio = Dio(BaseOptions(
@@ -239,14 +241,16 @@ class FastAudioService {
     bool isLiveStream = false,
     Future<void> Function()? onStopCallback,
   }) async {
-    final sessionToken = ++_activePlaybackToken;
     final targetPlayer = player ?? _sharedPlayer;
     final mainUrl = (primaryUrl ?? positionalPrimaryUrl ?? '').trim();
     if (mainUrl.isEmpty && fallbackUrls.isEmpty && localDownloadedPath == null) {
       return false;
     }
 
-    await claimAudioFocus(player: targetPlayer, onStopOther: onStopCallback);
+    // 1. Claim audio focus synchronously registering the new player and stop callback
+    final focusFuture = claimAudioFocus(player: targetPlayer, onStopOther: onStopCallback);
+    final sessionToken = _activePlaybackToken;
+    await focusFuture;
     if (sessionToken != _activePlaybackToken) return false;
 
     try {
