@@ -21,10 +21,10 @@ class EgyptAdaptiveHubView extends StatelessWidget {
     final items = [
       StructuredScreenItem(
         id: 'eg_hub_radio',
-        title: 'إذاعة القرآن الكريم من القاهرة (98.2 FM)',
+        title: 'إذاعة القرآن الكريم من القاهرة',
         subtitle:
-            '${service.radioStations.length} محطات بث مباشر تشمل إذاعة القاهرة والخريطة البرامجية اليومية وأعلام التلاوة',
-        badgeText: '98.2 FM',
+            '${service.radioStations.length} محطات بث مباشر تشمل إذاعة القاهرة وتراث أعلام دولة التلاوة',
+        badgeText: 'تراث القاهرة',
         category: 'البث الإذاعي الحي',
         icon: Icons.radio_rounded,
         accentColor: AppColors.primaryGreen,

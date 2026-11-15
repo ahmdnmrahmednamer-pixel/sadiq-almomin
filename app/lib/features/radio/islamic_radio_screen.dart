@@ -31,6 +31,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   IslamicRadioStation? _currentStation;
   bool _isPlaying = false;
   bool _isBuffering = false;
+  bool _isRadioActive = false;
   StreamSubscription? _playerStateSubscription;
   final TextEditingController _searchController = TextEditingController();
 
@@ -40,15 +41,33 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     _selectedCategory = widget.initialCategory;
     _radioService.init();
 
-    // الاستماع لحالة مشغل الصوت المركزي
+    // الاستماع لحالة مشغل الصوت المركزي مع التأكد من ملكية الجلسة للإذاعة
     _playerStateSubscription = _audioService.player.playerStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state.playing;
-          _isBuffering = state.processingState == ProcessingState.buffering ||
-              state.processingState == ProcessingState.loading;
-        });
+      if (!mounted) return;
+      // لا يتم وسم الإذاعة بالتشغيل إذا كان المشغل يعزف مقطعاً من خدمة أو شاشة أخرى
+      if (_currentStation == null || !_isRadioActive) {
+        if (_isPlaying || _isBuffering) {
+          setState(() {
+            _isPlaying = false;
+            _isBuffering = false;
+          });
+        }
+        return;
       }
+      setState(() {
+        _isPlaying = state.playing;
+        _isBuffering = state.processingState == ProcessingState.buffering ||
+            state.processingState == ProcessingState.loading;
+        if (state.processingState == ProcessingState.completed ||
+            state.processingState == ProcessingState.idle) {
+          if (!state.playing) {
+            _isPlaying = false;
+            _isBuffering = false;
+            _isRadioActive = false;
+            _currentStation = null;
+          }
+        }
+      });
     });
   }
 
@@ -57,6 +76,10 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     _activeSessionToken++;
     _playerStateSubscription?.cancel();
     _searchController.dispose();
+    if (_isPlaying || _isBuffering) {
+      _isRadioActive = false;
+      _audioService.stop();
+    }
     super.dispose();
   }
 
@@ -67,12 +90,15 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     final currentSession = ++_activeSessionToken;
     final isSameStation = _currentStation?.id == station.id;
 
-    if (isSameStation && _isPlaying) {
+    // النقر المتكرر أثناء التشغيل أو جاري الاتصال (Buffering) يلغي الاتصال ويوقف البث فوراً
+    if (isSameStation && (_isPlaying || _isBuffering)) {
+      _isRadioActive = false;
       await _audioService.stop();
       if (mounted && currentSession == _activeSessionToken) {
         setState(() {
           _isPlaying = false;
           _isBuffering = false;
+          _currentStation = null;
         });
       }
       return;
@@ -81,6 +107,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     setState(() {
       _currentStation = station;
       _isBuffering = true;
+      _isRadioActive = true;
     });
 
     final ok = await _audioService.playLiveRadio(
@@ -90,8 +117,10 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
       onStopCallback: () async {
         if (mounted && currentSession == _activeSessionToken) {
           setState(() {
+            _isRadioActive = false;
             _isPlaying = false;
             _isBuffering = false;
+            _currentStation = null;
           });
         }
       },
@@ -102,12 +131,15 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     setState(() {
       _isBuffering = false;
       _isPlaying = ok;
+      _isRadioActive = ok;
       if (!ok) {
         _currentStation = null;
       }
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
@@ -121,7 +153,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
               child: Text(
                 ok
                     ? 'جاري البث المباشر: ${station.name}'
-                    : 'تعذر الاتصال ببث ${station.name}، جاري المحاولة من خادم بديل...',
+                    : 'تعذر تشغيل إذاعة ${station.name} حالياً',
                 style: const TextStyle(fontFamily: 'Amiri', fontSize: 14),
               ),
             ),
@@ -544,7 +576,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
-                        '98.2 FM • ماسبيرو القاهرة',
+                        'ترحيل إنترنت غير رسمي',
                         style: TextStyle(color: Colors.white70, fontSize: 11),
                       ),
                     ),
@@ -553,12 +585,21 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                       animation: _radioService,
                       builder: (context, _) {
                         final isFav = _radioService.isFavorite(station.id);
-                        return IconButton(
-                          icon: Icon(
-                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                            color: isFav ? Colors.amberAccent : Colors.white70,
+                        return Semantics(
+                          label: isFav
+                              ? 'إزالة ${station.name} من المفضلة'
+                              : 'إضافة ${station.name} إلى المفضلة',
+                          button: true,
+                          child: IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isFav ? Colors.amberAccent : Colors.white70,
+                            ),
+                            tooltip: isFav
+                                ? 'إزالة ${station.name} من المفضلة'
+                                : 'إضافة ${station.name} إلى المفضلة',
+                            onPressed: () => _radioService.toggleFavorite(station.id),
                           ),
-                          onPressed: () => _radioService.toggleFavorite(station.id),
                         );
                       },
                     ),
@@ -593,44 +634,51 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                 // زر التشغيل والتحكم
                 Row(
                   children: [
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isThisPlaying
-                            ? Colors.amberAccent
-                            : Colors.white,
-                        foregroundColor: isThisPlaying
-                            ? Colors.black87
-                            : AppColors.primaryGreen,
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Semantics(
+                      label: isThisBuffering
+                          ? 'جاري الاتصال بإذاعة ${station.name}'
+                          : (isThisPlaying ? 'إيقاف بث ${station.name}' : 'تشغيل بث ${station.name}'),
+                      button: true,
+                      liveRegion: isThisBuffering || isThisPlaying,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isThisPlaying
+                              ? Colors.amberAccent
+                              : Colors.white,
+                          foregroundColor: isThisPlaying
+                              ? Colors.black87
+                              : AppColors.primaryGreen,
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
                         ),
-                        elevation: 2,
-                      ),
-                      onPressed: () => _toggleStation(station),
-                      icon: isThisBuffering
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                        onPressed: () => _toggleStation(station),
+                        icon: isThisBuffering
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                                ),
+                              )
+                            : Icon(
+                                isThisPlaying
+                                    ? Icons.pause_circle_filled_rounded
+                                    : Icons.play_arrow_rounded,
+                                size: 22,
                               ),
-                            )
-                          : Icon(
-                              isThisPlaying
-                                  ? Icons.pause_circle_filled_rounded
-                                  : Icons.play_arrow_rounded,
-                              size: 22,
-                            ),
-                      label: Text(
-                        isThisBuffering
-                            ? 'جاري الاتصال بالبث...'
-                            : (isThisPlaying ? 'إيقاف مؤقت' : 'استمع للبث المباشر الآن'),
-                        style: const TextStyle(
-                          fontFamily: 'Amiri',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                        label: Text(
+                          isThisBuffering
+                              ? 'جاري الاتصال بالبث...'
+                              : (isThisPlaying ? 'إيقاف مؤقت' : 'استمع للبث المباشر الآن'),
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -655,59 +703,56 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   Widget _buildStationCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
-    final semanticsLabel = '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}. '
-        '${isThisPlaying ? "قيد التشغيل حالياً" : "متوقف"}';
-    final semanticsHint = isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء البث المباشر';
 
-    return Semantics(
-      label: semanticsLabel,
-      hint: semanticsHint,
-      button: true,
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 10),
-        elevation: 1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-            color: isThisPlaying
-                ? AppColors.primaryGreen
-                : (isDark ? Colors.white12 : Colors.grey.shade200),
-            width: isThisPlaying ? 1.5 : 1,
-          ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(
+          color: isThisPlaying
+              ? AppColors.primaryGreen
+              : (isDark ? Colors.white12 : Colors.grey.shade200),
+          width: isThisPlaying ? 1.5 : 1,
         ),
-        color: isDark ? AppTheme.darkCard : Colors.white,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () => _toggleStation(station),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                // أيقونة الإذاعة مع التدرج اللوني
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        station.accentColor,
-                        station.accentColor.withValues(alpha: 0.75),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isThisPlaying ? Icons.graphic_eq_rounded : station.icon,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+      ),
+      color: isDark ? AppTheme.darkCard : Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // أيقونة الإذاعة مع التدرج اللوني
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    station.accentColor,
+                    station.accentColor.withValues(alpha: 0.75),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isThisPlaying ? Icons.graphic_eq_rounded : station.icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
 
-                // التفاصيل
-                Expanded(
+            // التفاصيل (منطقة نقر مستقلة دلالياً)
+            Expanded(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => _toggleStation(station),
+                child: Semantics(
+                  label: '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}',
+                  hint: isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء البث المباشر',
+                  button: true,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -758,62 +803,77 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+              ),
+            ),
+            const SizedBox(width: 8),
 
-                // أزرار المفضلة والتشغيل
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _radioService,
-                      builder: (context, _) {
-                        final isFav = _radioService.isFavorite(station.id);
-                        return IconButton(
-                          iconSize: 20,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          tooltip: isFav
-                              ? 'إزالة ${station.name} من المفضلة'
-                              : 'إضافة ${station.name} إلى المفضلة',
-                          icon: Icon(
-                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                            color: isFav ? Colors.redAccent : Colors.grey.shade400,
-                          ),
-                          onPressed: () => _radioService.toggleFavorite(station.id),
-                        );
-                      },
-                    ),
-                    IconButton(
-                      iconSize: 32,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                      tooltip: isThisPlaying
+            // أزرار المفضلة والتشغيل (مستقلة بدون تداخل أزرار في شجرة الدلالات)
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedBuilder(
+                  animation: _radioService,
+                  builder: (context, _) {
+                    final isFav = _radioService.isFavorite(station.id);
+                    return Semantics(
+                      label: isFav
+                          ? 'إزالة ${station.name} من المفضلة'
+                          : 'إضافة ${station.name} إلى المفضلة',
+                      button: true,
+                      child: IconButton(
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        tooltip: isFav
+                            ? 'إزالة ${station.name} من المفضلة'
+                            : 'إضافة ${station.name} إلى المفضلة',
+                        icon: Icon(
+                          isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                          color: isFav ? Colors.redAccent : Colors.grey.shade400,
+                        ),
+                        onPressed: () => _radioService.toggleFavorite(station.id),
+                      ),
+                    );
+                  },
+                ),
+                Semantics(
+                  label: isThisBuffering
+                      ? 'جاري الاتصال بإذاعة ${station.name}'
+                      : (isThisPlaying
                           ? 'إيقاف بث ${station.name}'
-                          : 'تشغيل بث ${station.name}',
-                      icon: isThisBuffering
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                              ),
-                            )
-                          : Icon(
-                              isThisPlaying
-                                  ? Icons.pause_circle_filled_rounded
-                                  : Icons.play_circle_fill_rounded,
-                              color: isThisPlaying
-                                  ? AppColors.accentGold
-                                  : AppColors.primaryGreen,
+                          : 'تشغيل بث ${station.name}'),
+                  button: true,
+                  liveRegion: isThisBuffering || isThisPlaying,
+                  child: IconButton(
+                    iconSize: 32,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    tooltip: isThisPlaying
+                        ? 'إيقاف بث ${station.name}'
+                        : 'تشغيل بث ${station.name}',
+                    icon: isThisBuffering
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
                             ),
-                      onPressed: () => _toggleStation(station),
-                    ),
-                  ],
+                          )
+                        : Icon(
+                            isThisPlaying
+                                ? Icons.pause_circle_filled_rounded
+                                : Icons.play_circle_fill_rounded,
+                            color: isThisPlaying
+                                ? AppColors.accentGold
+                                : AppColors.primaryGreen,
+                          ),
+                    onPressed: () => _toggleStation(station),
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );

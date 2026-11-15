@@ -49,13 +49,20 @@ void main() {
       expect(find.text('أصوات الأذان والمؤذنون الـ 7 🕌'), findsOneWidget);
       expect(find.text('دعاء الشيخ الشعراوي بعد الأذان 🎧'), findsOneWidget);
 
-      // Verify Scholars Audio Library
+      // Verify Scholars Audio Library & Islamic Radio
       await tester.scrollUntilVisible(
         find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
       expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('الإذاعات الإسلامية والبث المباشر 📻'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('الإذاعات الإسلامية والبث المباشر 📻'), findsOneWidget);
 
       // Verify Adhkar & Tasbih
       await tester.scrollUntilVisible(
@@ -64,6 +71,12 @@ void main() {
         scrollable: find.byType(Scrollable).last,
       );
       expect(find.text('أذكار المسلم وحصن المسلم 🤲'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('السبحة الإلكترونية الذكية 📿'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
       expect(find.text('السبحة الإلكترونية الذكية 📿'), findsOneWidget);
 
       // Verify Settings, About, Developer, & Support

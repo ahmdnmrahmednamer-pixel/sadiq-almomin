@@ -13,7 +13,9 @@ import 'package:dio/dio.dart';
 /// - Never substitutes a different Sheikh's audio as a fallback.
 class FastAudioService {
   static final FastAudioService instance = FastAudioService._internal();
-  FastAudioService._internal();
+  FastAudioService._internal() {
+    _setupSharedPlayerListener();
+  }
 
   /// Builds a collision-resistant isolated cache key bound to both track ID and exact URL
   static String buildIsolatedCacheKey(String trackId, String url) =>
@@ -23,15 +25,28 @@ class FastAudioService {
   bool _isInitialized = false;
   AudioPlayer? _activePlayer;
   final AudioPlayer _sharedPlayer = AudioPlayer();
+  StreamSubscription<PlayerState>? _sharedPlayerStateSub;
   Future<void> Function()? _activeCustomStopCallback;
 
-  /// Shared AudioPlayer instance for direct service playback
-  AudioPlayer get player => _sharedPlayer;
+  /// Active AudioPlayer instance for direct service playback
+  AudioPlayer get player => _activePlayer ?? _sharedPlayer;
 
   int _activePlaybackToken = 0;
 
   /// Returns current monotonic playback request token
   int get activePlaybackToken => _activePlaybackToken;
+
+  void _setupSharedPlayerListener() {
+    _sharedPlayerStateSub?.cancel();
+    _sharedPlayerStateSub = _sharedPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        if (_activePlayer == _sharedPlayer) {
+          _activePlayer = null;
+          _activeCustomStopCallback = null;
+        }
+      }
+    });
+  }
 
   @visibleForTesting
   Future<AudioSource> Function(
@@ -51,43 +66,59 @@ class FastAudioService {
   void resetForTesting() {
     _activePlaybackToken = 0;
     _activeCustomStopCallback = null;
+    _activePlayer = null;
     getFastAudioSourceOverride = null;
     onBeforePlayCallback = null;
     setAudioSourceOverride = null;
+    _setupSharedPlayerListener();
   }
 
-  /// Stops whichever player is currently active across the app
+  /// Stops whichever player is currently active across the app and releases callbacks
   Future<void> stop() async {
     _activePlaybackToken++;
+    final cb = _activeCustomStopCallback;
+    _activeCustomStopCallback = null;
+    final ap = _activePlayer;
+    _activePlayer = null;
     try {
       if (_sharedPlayer.playing) {
         await _sharedPlayer.stop();
       }
     } catch (_) {}
-    if (_activePlayer != null) {
+    if (ap != null && ap != _sharedPlayer) {
       try {
-        if (_activePlayer!.playing) {
-          await _activePlayer!.stop();
+        if (ap.playing) {
+          await ap.stop();
         }
       } catch (_) {}
     }
-    if (_activeCustomStopCallback != null) {
+    if (cb != null) {
       try {
-        await _activeCustomStopCallback!();
+        await cb();
       } catch (_) {}
     }
   }
 
-  /// Coordinates audio players across the app so only one audio stream plays at a time
-  Future<void> claimAudioFocus({
+  /// Synchronously registers audio focus ownership and returns the newly assigned session token.
+  int registerAudioFocus({
+    AudioPlayer? player,
+    Future<void> Function()? onStopOther,
+  }) {
+    final token = ++_activePlaybackToken;
+    _activeCustomStopCallback = onStopOther;
+    _activePlayer = player ?? _sharedPlayer;
+    return token;
+  }
+
+  /// Coordinates audio players across the app so only one audio stream plays at a time.
+  /// Synchronously registers focus and returns the assigned token after stopping prior audio.
+  Future<int> claimAudioFocus({
     AudioPlayer? player,
     Future<void> Function()? onStopOther,
   }) async {
-    _activePlaybackToken++;
     final priorCallback = _activeCustomStopCallback;
-    _activeCustomStopCallback = onStopOther;
     final priorPlayer = _activePlayer;
-    _activePlayer = player ?? _sharedPlayer;
+    final sessionToken = registerAudioFocus(player: player, onStopOther: onStopOther);
 
     if (player != null) {
       try {
@@ -115,6 +146,8 @@ class FastAudioService {
         await priorCallback();
       } catch (_) {}
     }
+
+    return sessionToken;
   }
 
   final Dio _dio = Dio(BaseOptions(
@@ -247,16 +280,27 @@ class FastAudioService {
       return false;
     }
 
-    // 1. Claim audio focus synchronously registering the new player and stop callback
-    final focusFuture = claimAudioFocus(player: targetPlayer, onStopOther: onStopCallback);
-    final sessionToken = _activePlaybackToken;
-    await focusFuture;
-    if (sessionToken != _activePlaybackToken) return false;
+    // 1. Explicitly claim audio focus, returning the assigned session token
+    final sessionToken = await claimAudioFocus(
+      player: targetPlayer,
+      onStopOther: onStopCallback,
+    );
+    if (sessionToken != _activePlaybackToken) {
+      if (_activeCustomStopCallback == onStopCallback) {
+        _activeCustomStopCallback = null;
+      }
+      return false;
+    }
 
     try {
       await targetPlayer.stop();
     } catch (_) {}
-    if (sessionToken != _activePlaybackToken) return false;
+    if (sessionToken != _activePlaybackToken) {
+      if (_activeCustomStopCallback == onStopCallback) {
+        _activeCustomStopCallback = null;
+      }
+      return false;
+    }
 
     final effectiveCacheKey =
         cacheKey ?? 'stream_${mainUrl.hashCode.abs()}';
@@ -267,14 +311,24 @@ class FastAudioService {
     ];
 
     for (int i = 0; i < candidateUrls.length; i++) {
-      if (sessionToken != _activePlaybackToken) return false;
+      if (sessionToken != _activePlaybackToken) {
+        if (_activeCustomStopCallback == onStopCallback) {
+          _activeCustomStopCallback = null;
+        }
+        return false;
+      }
       final targetUrl = candidateUrls[i].trim();
       if (targetUrl.isEmpty) continue;
 
       if (targetUrl.startsWith('assets/')) {
         try {
           await targetPlayer.setAsset(targetUrl);
-          if (sessionToken != _activePlaybackToken) return false;
+          if (sessionToken != _activePlaybackToken) {
+            if (_activeCustomStopCallback == onStopCallback) {
+              _activeCustomStopCallback = null;
+            }
+            return false;
+          }
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
@@ -300,19 +354,34 @@ class FastAudioService {
                 localDownloadedPath: i == 0 ? localDownloadedPath : null,
                 isLiveStream: isLiveStream,
               );
-        if (sessionToken != _activePlaybackToken) return false;
+        if (sessionToken != _activePlaybackToken) {
+          if (_activeCustomStopCallback == onStopCallback) {
+            _activeCustomStopCallback = null;
+          }
+          return false;
+        }
 
         if (setAudioSourceOverride != null) {
           await setAudioSourceOverride!(targetPlayer, source);
         } else {
           await targetPlayer.setAudioSource(source);
         }
-        if (sessionToken != _activePlaybackToken) return false;
+        if (sessionToken != _activePlaybackToken) {
+          if (_activeCustomStopCallback == onStopCallback) {
+            _activeCustomStopCallback = null;
+          }
+          return false;
+        }
 
         if (onBeforePlayCallback != null) {
           await onBeforePlayCallback!(sessionToken, targetUrl);
         }
-        if (sessionToken != _activePlaybackToken) return false;
+        if (sessionToken != _activePlaybackToken) {
+          if (_activeCustomStopCallback == onStopCallback) {
+            _activeCustomStopCallback = null;
+          }
+          return false;
+        }
 
         unawaited(targetPlayer.play());
         // Prefetch in background for offline reuse (NEVER for live streams)
@@ -327,16 +396,31 @@ class FastAudioService {
       // Tier 2: LockCachingAudioSource fallback if direct URI source threw (ONLY for static tracks, NOT for live streams)
       if (!isLiveStream && !kIsWeb && _cacheDir != null) {
         try {
-          if (sessionToken != _activePlaybackToken) return false;
+          if (sessionToken != _activePlaybackToken) {
+            if (_activeCustomStopCallback == onStopCallback) {
+              _activeCustomStopCallback = null;
+            }
+            return false;
+          }
           final targetCacheFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
           final lockSource = LockCachingAudioSource(
             Uri.parse(targetUrl),
             cacheFile: targetCacheFile,
             headers: fastStreamingHeaders,
           );
-          if (sessionToken != _activePlaybackToken) return false;
+          if (sessionToken != _activePlaybackToken) {
+            if (_activeCustomStopCallback == onStopCallback) {
+              _activeCustomStopCallback = null;
+            }
+            return false;
+          }
           await targetPlayer.setAudioSource(lockSource);
-          if (sessionToken != _activePlaybackToken) return false;
+          if (sessionToken != _activePlaybackToken) {
+            if (_activeCustomStopCallback == onStopCallback) {
+              _activeCustomStopCallback = null;
+            }
+            return false;
+          }
           unawaited(targetPlayer.play());
           return true;
         } catch (e) {
@@ -345,6 +429,9 @@ class FastAudioService {
       }
     }
 
+    if (_activeCustomStopCallback == onStopCallback) {
+      _activeCustomStopCallback = null;
+    }
     return false;
   }
 

@@ -53,31 +53,33 @@ class IslamicRadioService extends ChangeNotifier {
     ),
   ];
 
-  /// قائمة الإذاعات المعتمدة الحية والمفحوصة شبكياً بنسبة 100%
-  /// المصدر: كتالوج MP3Quran الرسمي الموثق (https://mp3quran.net/api/v3/radios?language=ar)
-  /// تاريخ التحقق الميداني المباشر: 2026-11-15 (HTTP 200 Audio Streams Only)
+  /// قائمة الإذاعات المعتمدة الحية والمفحوصة شبكياً
+  /// المصدر: كتالوج MP3Quran الرسمي الموثق v3 (https://mp3quran.net/api/v3/radios?language=ar)
+  /// تاريخ التحقق الميداني المباشر (Snapshot): 2026-11-15 (HTTP 200 Audio Streams Only)
+  ///
+  /// توثيق أمني وفني حول بث إذاعة القاهرة:
+  /// تعيد خوادم منصة Radiojar (مثل stream.radiojar.com و n0c.radiojar.com) توجيه طلبات HTTPS عبر
+  /// إعادة توجيه (HTTP 302) إلى بروتوكول HTTP غير مشفر (Cleartext HTTP: Mini2's Broadcast).
+  /// وحفاظاً على المعايير الأمنية الصارمة للتطبيق وعدم إضعاف أمان نظام أندرويد عبر تمكين Cleartext Traffic،
+  /// فإن هذا البث غير متاح على أجهزة أندرويد الحديثة لحين توفر بث رسمي مشفر (HTTPS).
   static const List<IslamicRadioStation> defaultStations = [
     // -------------------------------------------------------------
     // ١. إذاعات القرآن العامة والبث المباشر
     // -------------------------------------------------------------
-    // توثيق هوية البث:
-    // يحمل الرابط https://stream.radiojar.com/8s5u5tpdtwzuv ترويسة ICY: (icy-name: Mini2's Broadcast).
-    // هذا البث ترحيل مجتمعي متاح عبر منصة Radiojar لإذاعة القرآن الكريم 98.2 FM (غير معتمد رسمياً من ماسبيرو/الهيئة الوطنية للإعلام).
     IslamicRadioStation(
       id: 'radio_cairo_live',
-      name: 'إذاعة القرآن الكريم من القاهرة',
+      name: 'إذاعة القرآن الكريم من القاهرة (غير مدعوم على أندرويد)',
       category: IslamicRadioCategoryType.generalLive,
       categoryName: 'إذاعات القرآن المباشرة',
-      subtitle: 'بث ترحيلي غير رسمي لإذاعة 98.2 FM عبر خادم مجتمعي (Radiojar Mini2 — غير معتمد من ماسبيرو)',
+      subtitle: 'بث ترحيلي يعيد التوجيه لبروتوكول غير مشفر HTTP — غير مدعوم على أندرويد التزاماً بسياسات الأمان',
       streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
       fallbackUrls: [
         'https://n0c.radiojar.com/8s5u5tpdtwzuv',
-        'http://n12.radiojar.com/8s5u5tpdtwzuv',
       ],
-      countryOrOrigin: 'مصر (ترحيل مجتمعي)',
+      countryOrOrigin: 'غير مدعوم بأندرويد ⚠️',
       accentColor: Color(0xFF0F5B45),
       icon: Icons.radio_rounded,
-      tags: ['القاهرة', 'ماسبيرو', 'مصر', 'ترحيل مجتمعي', 'بث غير رسمي'],
+      tags: ['القاهرة', 'ترحيل غير رسمي', 'إنترنت', 'مصر'],
     ),
     // MP3Quran ID: 108
     IslamicRadioStation(
@@ -104,48 +106,45 @@ class IslamicRadioService extends ChangeNotifier {
       name: 'إذاعة الشيخ محمد صديق المنشاوي',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'كبار القراء (٢٤ ساعة)',
-      subtitle: 'الصوت الباكي الخاشع — بث مباشر متواصل لتلاوات الشيخ المرتلة والمجودة',
+      subtitle: 'الصوت الباكي الخاشع — بث متواصل لتلاوات الشيخ المرتلة من المصحف المرتل',
       streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi_mojawwad',
         'https://qurango.net/radio/mohammed_siddiq_alminshawi',
       ],
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFFC08A3E),
       icon: Icons.record_voice_over_rounded,
-      tags: ['المنشاوي', 'مرتل', 'مجود', 'مصر', 'تلاوات خاشعة'],
+      tags: ['المنشاوي', 'مرتل', 'مصر', 'تلاوات خاشعة'],
     ),
     IslamicRadioStation(
       id: 'radio_husary',
       name: 'إذاعة الشيخ محمود خليل الحصري',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'كبار القراء (٢٤ ساعة)',
-      subtitle: 'شيخ عموم المقارئ المصرية ودقة الأحكام ومخارج الحروف برواية حفص وورش',
+      subtitle: 'شيخ عموم المقارئ المصرية — تلاوات مجودة مباركة برواية حفص عن عاصم',
       streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary',
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_warsh',
+        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       ],
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFF2D6A4F),
       icon: Icons.record_voice_over_rounded,
-      tags: ['الحصري', 'أحكام التجويد', 'ورش', 'حفص', 'المقارئ'],
+      tags: ['الحصري', 'مجود', 'حفص', 'المقارئ', 'مصر'],
     ),
     IslamicRadioStation(
       id: 'radio_abdulbasit',
       name: 'إذاعة الشيخ عبد الباسط عبد الصمد',
       category: IslamicRadioCategoryType.reciters,
       categoryName: 'كبار القراء (٢٤ ساعة)',
-      subtitle: 'صوت مكة الذهبي — روائع التلاوات الخالدة المرتلة والمجودة والحفلات الخارجية',
+      subtitle: 'صوت مكة والحنجرة الذهبية — روائع التلاوات المرتلة برواية حفص عن عاصم',
       streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad',
-        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_warsh',
+        'https://qurango.net/radio/abdulbasit_abdulsamad',
       ],
       countryOrOrigin: 'مصر 🇪🇬',
       accentColor: Color(0xFFD4A373),
       icon: Icons.record_voice_over_rounded,
-      tags: ['عبد الباسط', 'صوت مكة', 'تجويد', 'حفلات', 'روائع'],
+      tags: ['عبد الباسط', 'صوت مكة', 'مرتل', 'روائع', 'مصر'],
     ),
     IslamicRadioStation(
       id: 'radio_mustafa_ismail',
@@ -217,7 +216,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://qurango.net/radio/maher',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF0077B6),
       icon: Icons.record_voice_over_rounded,
       tags: ['ماهر المعيقلي', 'الحرم المكي', 'إمام الحرم', 'تلاوات خاشعة'],
@@ -232,7 +231,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://backup.qurango.net/radio/abdulrahman_alsudaes',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF8338EC),
       icon: Icons.record_voice_over_rounded,
       tags: ['السديس', 'عبد الرحمن السديس', 'الحرم المكي', 'إمام الحرم'],
@@ -247,7 +246,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://backup.qurango.net/radio/saud_alshuraim',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF023E8A),
       icon: Icons.record_voice_over_rounded,
       tags: ['سعود الشريم', 'الشريم', 'الحرم المكي', 'تراويح'],
@@ -262,7 +261,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://qurango.net/radio/ali_jaber',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF0096C7),
       icon: Icons.record_voice_over_rounded,
       tags: ['علي جابر', 'إمام الحرم', 'تراويح الحرم', 'تلاوات نادرة'],
@@ -292,7 +291,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://backup.qurango.net/radio/salah_albudair',
       ],
-      countryOrOrigin: 'المدينة المنورة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم النبوي 🕌',
       accentColor: Color(0xFF028090),
       icon: Icons.record_voice_over_rounded,
       tags: ['صلاح البدير', 'المسجد النبوي', 'إمام الحرم المدني', 'تلاوات'],
@@ -307,7 +306,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://qurango.net/radio/abdullah_aljohany',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF00A896),
       icon: Icons.record_voice_over_rounded,
       tags: ['عبد الله الجهني', 'إمام الحرم المكي', 'مكة', 'تلاوات رقيقة'],
@@ -337,7 +336,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://qurango.net/radio/yasser_aldosari',
       ],
-      countryOrOrigin: 'مكة المكرمة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم المكي 🕋',
       accentColor: Color(0xFF2B9348),
       icon: Icons.record_voice_over_rounded,
       tags: ['ياسر الدوسري', 'إمام الحرم المكي', 'تلاوات مؤثرة', 'تراويح'],
@@ -365,7 +364,7 @@ class IslamicRadioService extends ChangeNotifier {
       subtitle: 'تلاوات شجية بطريقة الشيخ الشاطري المتميزة التي تبث السكينة والطمأنينة',
       streamUrl: 'https://qurango.net/radio/shaik_abu_bakr_al_shatri',
       fallbackUrls: [
-        'https://qurango.net/radio/shaik_abu_bakr_al_shatri',
+        'https://backup.qurango.net/radio/shaik_abu_bakr_al_shatri',
       ],
       countryOrOrigin: 'السعودية 🇸🇦',
       accentColor: Color(0xFF80B918),
@@ -412,7 +411,7 @@ class IslamicRadioService extends ChangeNotifier {
       fallbackUrls: [
         'https://qurango.net/radio/abdulmohsen_alqasim',
       ],
-      countryOrOrigin: 'المدينة المنورة 🇸🇦',
+      countryOrOrigin: 'تلاوات الحرم النبوي 🕌',
       accentColor: Color(0xFF62B6CB),
       icon: Icons.record_voice_over_rounded,
       tags: ['عبد المحسن القاسم', 'المسجد النبوي', 'المدينة المنورة'],
@@ -654,6 +653,8 @@ class IslamicRadioService extends ChangeNotifier {
       icon: Icons.healing_rounded,
       tags: ['الرقية الشرعية', 'رقية', 'شفاء', 'تحصين', 'علاج'],
     ),
+    // MP3Quran ID: 104
+    // ملاحظة فنية: خادم المرآة https://qurango.net/radio/eid قد يعيد 502 في بعض الفترات؛ خادم backup.qurango.net الأساسي مستقر ويعيد HTTP 200
     IslamicRadioStation(
       id: 'radio_eid_takbeerat',
       name: 'إذاعة تكبيرات العيد والمشاعر المقدسة',
@@ -681,7 +682,7 @@ class IslamicRadioService extends ChangeNotifier {
       subtitle: 'تلاوة سورة البقرة كاملة بأعذب أصوات القراء لطرد الشياطين وبركة البيوت',
       streamUrl: 'https://qurango.net/radio/albaqarah',
       fallbackUrls: [
-        'https://qurango.net/radio/albaqarah',
+        'https://backup.qurango.net/radio/albaqarah',
       ],
       countryOrOrigin: 'بركة البيوت 🏠',
       accentColor: Color(0xFF4361EE),
@@ -696,7 +697,7 @@ class IslamicRadioService extends ChangeNotifier {
       subtitle: 'تلاوات متكررة لسورة تبارك المانعة والمنجية من عذاب القبر بأعذب الأصوات',
       streamUrl: 'https://qurango.net/radio/Surah_Al-Mulk',
       fallbackUrls: [
-        'https://qurango.net/radio/Surah_Al-Mulk',
+        'https://backup.qurango.net/radio/Surah_Al-Mulk',
       ],
       countryOrOrigin: 'القرآن الكريم 📖',
       accentColor: Color(0xFF3F37C9),

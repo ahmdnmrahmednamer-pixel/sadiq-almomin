@@ -251,7 +251,7 @@ class HomeShortcutsList extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   const Text(
-                    'إذاعات القرآن من القاهرة ومكة • كبار القراء • التفسير والأذكار ٢٤ ساعة',
+                    'إذاعات كبار القراء • تلاوات الحرمين • التفسير والأذكار ٢٤ ساعة',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.white70,
@@ -323,7 +323,7 @@ class HomeShortcutsList extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   const Text(
-                    'إذاعة القرآن الكريم 98.2 FM • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
+                    'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
                     style: TextStyle(
                       fontSize: 11.5,
                       color: Colors.white70,

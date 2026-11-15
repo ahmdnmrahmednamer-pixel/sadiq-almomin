@@ -144,28 +144,20 @@ class EgyptianHeritageService extends ChangeNotifier {
   // 1. إذاعة القرآن الكريم من القاهرة والإذاعات المصرية الأصيلة
   // ---------------------------------------------------------------------------
   static const List<EgyptianRadioStation> defaultRadioStations = [
-    // هوية البث: ترحيل مجتمعي على منصة Radiojar (Mini2's Broadcast) — غير معتمد رسمياً من ماسبيرو
+    // هوية البث: ترحيل مجتمعي غير رسمي عبر الإنترنت (يعيد التوجيه لبروتوكول غير مشفر HTTP، غير متاح على أندرويد)
     EgyptianRadioStation(
       id: 'eqr_cairo_main',
       name: 'إذاعة القرآن الكريم من القاهرة',
-      subtitle: 'تتابع بث 98.2 FM عبر ترحيل مجتمعي (Radiojar Mini2 — غير معتمد رسمياً من ماسبيرو)',
-      frequencyOrBadge: '98.2 FM • ترحيل مجتمعي',
+      subtitle: 'بث ترحيلي مجتمعي غير رسمي عبر الإنترنت (غير متاح على أجهزة أندرويد لعدم التشفير)',
+      frequencyOrBadge: 'ترحيل إنترنت غير رسمي',
       streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
       fallbackUrls: [
         'https://n0c.radiojar.com/8s5u5tpdtwzuv',
-        'http://n12.radiojar.com/8s5u5tpdtwzuv',
       ],
       icon: Icons.radio_rounded,
       accentColor: Color(0xFF0F5B45),
       dailyScheduleHighlights: [
-        '٠٤:٠٠ ص — تواشيح الفجر وتلاوة قرآنية مباركة وأذان الفجر بتوقيت القاهرة',
-        '٠٦:١٥ ص — برنامج «طريق الهداية» وحديث الصباح من الأزهر الشريف',
-        '٠٧:٠٠ ص — المصحف المرتل لكبار قراء دولة التلاوة المصرية',
-        '٠٩:٣٠ ص — برنامج «بريد الإسلام» للإجابة عن فتاوى المستمعين',
-        '٠١:٠٠ م — خواطر فضيلة الإمام محمد متولي الشعراوي حول آيات الذكر الحكيم',
-        '٠٥:٠٠ م — برنامج «المصحف المعلم» للشيخ محمود خليل الحصري',
-        '٠٨:٣٠ م — برنامج «في ظلال الهدي النبوي» و«قطوف من حدائق الإيمان»',
-        '١١:٠٠ م — سهرة قرآنية خاشعة من التسجيلات الخارجية النادرة بمساجد مصر',
+        'تسجيلات التراث الإذاعي وتلاوات كبار القراء والتواشيح الدينية',
       ],
     ),
     EgyptianRadioStation(
@@ -175,7 +167,6 @@ class EgyptianHeritageService extends ChangeNotifier {
       frequencyOrBadge: 'تراث الإذاعة',
       streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi_mojawwad',
         'https://qurango.net/radio/mohammed_siddiq_alminshawi',
       ],
       icon: Icons.podcasts_rounded,
@@ -190,10 +181,9 @@ class EgyptianHeritageService extends ChangeNotifier {
       name: 'أثير الشيخ محمود خليل الحصري',
       subtitle: 'شيخ عموم المقارئ المصرية — بث مباشر مستمر للمصحف المرتل والمجود',
       frequencyOrBadge: 'المصحف المعلم',
-      streamUrl: 'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
+      streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_warsh',
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary',
+        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
       ],
       icon: Icons.menu_book_rounded,
       accentColor: Color(0xFF1E6F5C),
@@ -208,8 +198,7 @@ class EgyptianHeritageService extends ChangeNotifier {
       frequencyOrBadge: 'الحنجرة الذهبية',
       streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
       fallbackUrls: [
-        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad',
-        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_warsh',
+        'https://qurango.net/radio/abdulbasit_abdulsamad',
       ],
       icon: Icons.mic_external_on_rounded,
       accentColor: Color(0xFF8B6508),

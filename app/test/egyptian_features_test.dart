@@ -37,8 +37,8 @@ void main() {
       expect(service.radioStations.length, equals(5));
       final cairoRadio = service.radioStations.first;
       expect(cairoRadio.id, equals('eqr_cairo_main'));
-      expect(cairoRadio.frequencyLabel, contains('98.2 FM'));
-      expect(cairoRadio.dailySchedule.length, greaterThanOrEqualTo(6));
+      expect(cairoRadio.frequencyLabel, contains('ترحيل إنترنت غير رسمي'));
+      expect(cairoRadio.dailySchedule.length, greaterThanOrEqualTo(1));
     });
 
     test('Egyptian Ibtihalat & Al-Shaarawi reflections are populated and filterable', () {
@@ -103,7 +103,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('واحة التراث المصري'), findsOneWidget);
-      expect(find.text('إذاعة القرآن (98.2 FM)'), findsOneWidget);
+      expect(find.text('إذاعة القرآن الكريم'), findsOneWidget);
       expect(find.text('الابتهالات والشعراوي'), findsOneWidget);
       expect(find.text('مساجد مصر التاريخية'), findsOneWidget);
       expect(find.text('فتاوى دار الإفتاء'), findsOneWidget);

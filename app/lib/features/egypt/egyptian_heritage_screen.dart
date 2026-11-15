@@ -177,7 +177,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
             tabs: const [
               Tab(
                 icon: Icon(Icons.radio_rounded, size: 20),
-                text: 'إذاعة القرآن (98.2 FM)',
+                text: 'إذاعة القرآن الكريم',
               ),
               Tab(
                 icon: Icon(Icons.music_note_rounded, size: 20),
@@ -247,7 +247,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
       padding: const EdgeInsets.all(16),
       children: [
         _buildHeroBanner(
-          title: 'إذاعة القرآن الكريم من القاهرة (98.2 FM)',
+          title: 'إذاعة القرآن الكريم من القاهرة',
           subtitle:
               'منذ ٢٥ مارس ١٩٦٤م — صوت مدرسة التلاوة المصرية الأصيلة وبرامج كبار العلماء والمبتهلين على مدار الساعة',
           icon: Icons.radio_rounded,

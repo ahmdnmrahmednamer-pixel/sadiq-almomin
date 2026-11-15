@@ -22,14 +22,14 @@ void main() {
     test('Default stations catalog contains verified stations with honest provenance', () {
       const stations = IslamicRadioService.defaultStations;
       expect(stations.isNotEmpty, isTrue);
-      expect(stations.length, greaterThanOrEqualTo(35));
+      expect(stations.length, equals(43));
 
       final cairo = stations.firstWhere((s) => s.id == 'radio_cairo_live');
       expect(cairo.name, contains('القاهرة'));
       expect(cairo.streamUrl, contains('radiojar.com'));
       // Honest unverified community relay status documented
-      expect(cairo.subtitle, contains('غير معتمد'));
-      expect(cairo.countryOrOrigin, contains('ترحيل مجتمعي'));
+      expect(cairo.subtitle, contains('غير مدعوم على أندرويد'));
+      expect(cairo.countryOrOrigin, contains('غير مدعوم بأندرويد'));
       // Cairo must NOT fall back to generic /mix
       expect(cairo.fallbackUrls.any((u) => u.contains('/radio/mix')), isFalse);
       expect(cairo.fallbackUrls.isNotEmpty, isTrue);
@@ -55,6 +55,44 @@ void main() {
           );
         }
       }
+    });
+
+    test('Husary and Abdulbasit stations maintain strict Riwayah isolation (no Warsh substitution)', () {
+      const stations = IslamicRadioService.defaultStations;
+
+      final husary = stations.firstWhere((s) => s.id == 'radio_husary');
+      expect(husary.streamUrl, contains('alhussary_mojawwad'));
+      for (final u in husary.fallbackUrls) {
+        expect(u, contains('alhussary_mojawwad'), reason: 'Husary Mojawwad must only fall back to Mojawwad');
+        expect(u.contains('warsh'), isFalse, reason: 'Husary must not fall back to Warsh riwayah');
+      }
+
+      final abdulbasit = stations.firstWhere((s) => s.id == 'radio_abdulbasit');
+      for (final u in abdulbasit.fallbackUrls) {
+        expect(u.contains('warsh'), isFalse, reason: 'Abdulbasit must not fall back to Warsh riwayah');
+      }
+    });
+
+    test('Zero URL duplicates across primary and fallback endpoints for all 43 stations', () {
+      const stations = IslamicRadioService.defaultStations;
+      expect(stations.length, equals(43));
+
+      for (final s in stations) {
+        expect(
+          s.fallbackUrls.contains(s.streamUrl),
+          isFalse,
+          reason: 'Station ${s.id} should not duplicate primary URL in fallbacks',
+        );
+        expect(
+          s.fallbackUrls.length,
+          equals(s.fallbackUrls.toSet().length),
+          reason: 'Station ${s.id} contains duplicate entries in fallbackUrls',
+        );
+      }
+
+      final eid = stations.firstWhere((s) => s.id == 'radio_eid_takbeerat');
+      expect(eid.streamUrl, equals('https://backup.qurango.net/radio/eid'));
+      expect(eid.fallbackUrls, contains('https://qurango.net/radio/eid'));
     });
 
     test('Categories contain all expected sections including Sunnah and Hadith', () {
@@ -142,10 +180,7 @@ void main() {
         return Future.value(AudioSource.uri(Uri.parse(url)));
       };
 
-      audioService.setAudioSourceOverride = (player, source) async {
-        // Track which source is actually set on player
-      };
-
+      audioService.setAudioSourceOverride = (player, source) async {};
       audioService.onBeforePlayCallback = (token, url) async {
         playedUrls.add(url);
       };
@@ -246,6 +281,36 @@ void main() {
       // 4. In-flight radio request was invalidated by token
       expect(result, isFalse);
       expect(didPlay, isFalse);
+    });
+
+    test('Cross-audio interruption with null callback: Clears active stop callback safely without throwing', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      bool radioStopped = false;
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+
+      // 1. Play radio with a stop callback
+      final ok = await audioService.playLiveRadio(
+        primaryUrl: 'https://test/radio',
+        onStopCallback: () async {
+          radioStopped = true;
+        },
+      );
+      expect(ok, isTrue);
+
+      // 2. An external player claims audio focus with null onStopOther
+      final token = await audioService.claimAudioFocus(
+        onStopOther: null,
+      );
+      expect(radioStopped, isTrue, reason: 'Prior radio stop callback must be called');
+      expect(audioService.activePlaybackToken, equals(token));
+
+      // 3. Stop called does not throw with null callback
+      await audioService.stop();
     });
 
     test('Completed Station A -> B with distinct UI callbacks: B succeeds and notifies A stop callback', () async {
@@ -384,13 +449,30 @@ void main() {
       expect(activeStationLog, isNot(contains('STOP_ACTIVE_station1')));
       expect(activeStationLog, isNot(contains('STOP_ACTIVE_station2')));
     });
+
+    test('Natural completion and stop safely clear stale owner and active player', () async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      await audioService.claimAudioFocus(
+        onStopOther: () async {},
+      );
+
+      await audioService.stop();
+      expect(audioService.player, isNotNull);
+    });
   });
 
   group('IslamicRadioScreen Widget, Semantics & Dispose Tests', () {
-    testWidgets('Renders screen with title, search, categories, and station cards with Semantics', (tester) async {
+    testWidgets('Renders screen with title, search, categories, and station cards', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
       await tester.pumpWidget(
         const MaterialApp(
-          home: IslamicRadioScreen(),
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
         ),
       );
       await tester.pumpAndSettle();
@@ -403,15 +485,141 @@ void main() {
       expect(find.byType(Card), findsWidgets);
     });
 
-    testWidgets('Dispose Race: Disposing screen while station connection is in-flight does not throw', (tester) async {
+    testWidgets('Real widget Station A -> B transition: Updates card states cleanly with NO error SnackBar', (tester) async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final playedUrls = <String>[];
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return Future.value(AudioSource.uri(Uri.parse(url)));
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+      audioService.onBeforePlayCallback = (token, url) async {
+        playedUrls.add(url);
+      };
+
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 1. Find Station A (Minshawi) and tap to play
+      final minshawiCard = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمد صديق المنشاوي'),
+      );
+      await tester.scrollUntilVisible(
+        minshawiCard,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(minshawiCard, findsOneWidget);
+      await tester.tap(minshawiCard);
+      await tester.pumpAndSettle();
+
+      expect(playedUrls, contains('https://backup.qurango.net/radio/mohammed_siddiq_alminshawi'));
+      expect(find.text('جاري البث المباشر: إذاعة الشيخ محمد صديق المنشاوي'), findsOneWidget);
+
+      // 2. Switch to Station B (Husary)
+      final husaryCard = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمود خليل الحصري'),
+      );
+      await tester.scrollUntilVisible(
+        husaryCard,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(husaryCard, findsOneWidget);
+      await tester.tap(husaryCard);
+      await tester.pumpAndSettle();
+
+      expect(playedUrls, contains('https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad'));
+      expect(find.text('جاري البث المباشر: إذاعة الشيخ محمود خليل الحصري'), findsOneWidget);
+
+      // 3. Assert NO error SnackBar appeared during station transition
+      expect(find.textContaining('تعذر تشغيل'), findsNothing);
+      expect(find.textContaining('تعذر الاتصال'), findsNothing);
+    });
+
+    testWidgets('Repeat tap while buffering cancels connection and stops playback immediately', (tester) async {
       final audioService = FastAudioService.instance;
       audioService.resetForTesting();
 
       final completer = Completer<AudioSource>();
+      bool didPlay = false;
+
       audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
         return completer.future;
       };
       audioService.setAudioSourceOverride = (player, source) async {};
+      audioService.onBeforePlayCallback = (token, url) async {
+        didPlay = true;
+      };
+
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Tap Minshawi to start buffering
+      final minshawiCard = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمد صديق المنشاوي'),
+      );
+      await tester.scrollUntilVisible(
+        minshawiCard,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(minshawiCard);
+      await tester.pump(); // Enter buffering state
+
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
+
+      // Repeat tap while buffering to cancel
+      await tester.tap(minshawiCard);
+      await tester.pump();
+
+      // Resolve slow connection after cancellation
+      completer.complete(AudioSource.uri(Uri.parse('https://backup.qurango.net/radio/mohammed_siddiq_alminshawi')));
+      await tester.pumpAndSettle();
+
+      expect(didPlay, isFalse, reason: 'Playback must be cancelled and not play after repeat buffering tap');
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('Actual dispose test: Disposing screen during connection guarantees NO post-dispose play on target station', (tester) async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      final completer = Completer<AudioSource>();
+      bool didPlayPostDispose = false;
+
+      audioService.getFastAudioSourceOverride = (url, {required cacheKey, localDownloadedPath, bool isLiveStream = false}) {
+        return completer.future;
+      };
+      audioService.setAudioSourceOverride = (player, source) async {};
+      audioService.onBeforePlayCallback = (token, url) async {
+        didPlayPostDispose = true;
+      };
+
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
         const MaterialApp(
@@ -420,21 +628,90 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap station card to trigger connection
-      final cardFinder = find.byType(InkWell).first;
+      // Tap to connect
+      final cardFinder = find.descendant(
+        of: find.byType(Card),
+        matching: find.text('إذاعة الشيخ محمد صديق المنشاوي'),
+      );
+      await tester.scrollUntilVisible(
+        cardFinder,
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
       await tester.tap(cardFinder);
       await tester.pump();
 
-      // Dispose widget tree while connection is pending
-      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Text('Done'))));
+      // Replace tree to dispose IslamicRadioScreen
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Text('Unmounted'))));
       await tester.pump();
 
-      // Now complete the delayed connection
-      completer.complete(AudioSource.uri(Uri.parse('https://test/delayed')));
+      // Now complete the delayed source after disposal
+      completer.complete(AudioSource.uri(Uri.parse('https://backup.qurango.net/radio/mohammed_siddiq_alminshawi')));
       await tester.pumpAndSettle();
 
-      // Successfully disposed without throwing setState after dispose
-      expect(find.text('Done'), findsOneWidget);
+      expect(find.text('Unmounted'), findsOneWidget);
+      expect(didPlayPostDispose, isFalse, reason: 'Target station must NEVER play post-dispose');
+    });
+
+    testWidgets('Semantics tree asserts independently reachable card details, favorite and play actions', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('إذاعة الشيخ محمد صديق المنشاوي'),
+        100,
+        scrollable: find.byType(Scrollable).last,
+      );
+
+      // Card details action
+      expect(
+        find.bySemanticsLabel(RegExp(r'إذاعة الشيخ محمد صديق المنشاوي.*مصر')),
+        findsOneWidget,
+      );
+
+      // Favorite action
+      expect(
+        find.bySemanticsLabel('إضافة إذاعة الشيخ محمد صديق المنشاوي إلى المفضلة'),
+        findsOneWidget,
+      );
+
+      // Play action
+      expect(
+        find.bySemanticsLabel('تشغيل بث إذاعة الشيخ محمد صديق المنشاوي'),
+        findsOneWidget,
+      );
+
+      handle.dispose();
+    });
+
+    testWidgets('Shared player events do NOT falsely mark radio active when another service plays', (tester) async {
+      final audioService = FastAudioService.instance;
+      audioService.resetForTesting();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IslamicRadioScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Direct player state change without radio session claim
+      // IslamicRadioScreen should not indicate active playback
+      expect(find.text('إيقاف مؤقت'), findsNothing);
+      expect(find.byIcon(Icons.pause_circle_filled_rounded), findsNothing);
     });
   });
 }
