@@ -1,0 +1,20 @@
+name: tests-manual
+
+# فحص الاختبارات يعمل بالتشغيل اليدوي فقط.
+# لا يعمل تلقائيًا مع أي رفع أو طلب سحب.
+# لا تشغله قبل التأكد من إعدادات فوترة GitHub Actions.
+on:
+  workflow_dispatch:
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run unit tests
+        run: |
+          cd tools/content_builder
+          python -m unittest discover -p "test_*.py" -v
