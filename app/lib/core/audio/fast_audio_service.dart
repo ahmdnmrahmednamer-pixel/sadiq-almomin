@@ -156,8 +156,23 @@ class FastAudioService {
     required String cacheKey,
     String? localDownloadedPath,
     List<String> fallbackUrls = const [],
+    bool isLiveStream = false,
   }) async {
     await init();
+
+    // 0. Live stream bypass: NEVER serve or lookup cached file for live broadcast streams
+    if (isLiveStream) {
+      if (!kIsWeb && _cacheDir != null) {
+        try {
+          final urlBoundKey = buildUrlBoundCacheKey(cacheKey, url);
+          final staleFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
+          if (staleFile.existsSync()) {
+            staleFile.deleteSync();
+          }
+        } catch (_) {}
+      }
+      return AudioSource.uri(Uri.parse(url), headers: fastStreamingHeaders);
+    }
 
     // 1. Explicitly downloaded user offline file
     if (localDownloadedPath != null) {
@@ -191,6 +206,7 @@ class FastAudioService {
     List<String> fallbackUrls = const [],
     String? cacheKey,
     String? localDownloadedPath,
+    bool isLiveStream = false,
     Future<void> Function()? onStopCallback,
   }) async {
     final targetPlayer = player ?? _sharedPlayer;
@@ -236,18 +252,21 @@ class FastAudioService {
           targetUrl,
           cacheKey: effectiveCacheKey,
           localDownloadedPath: i == 0 ? localDownloadedPath : null,
+          isLiveStream: isLiveStream,
         );
         await targetPlayer.setAudioSource(source);
         unawaited(targetPlayer.play());
-        // Prefetch in background for offline reuse
-        unawaited(prefetchAudio(targetUrl, urlBoundKey));
+        // Prefetch in background for offline reuse (NEVER for live streams)
+        if (!isLiveStream) {
+          unawaited(prefetchAudio(targetUrl, urlBoundKey));
+        }
         return true;
       } catch (e) {
         debugPrint('Tier 1 playback failed for URL $i ($targetUrl): $e');
       }
 
-      // Tier 2: LockCachingAudioSource fallback if direct URI source threw
-      if (!kIsWeb && _cacheDir != null) {
+      // Tier 2: LockCachingAudioSource fallback if direct URI source threw (ONLY for static tracks, NOT for live streams)
+      if (!isLiveStream && !kIsWeb && _cacheDir != null) {
         try {
           final targetCacheFile = File('${_cacheDir!.path}/$urlBoundKey.mp3');
           final lockSource = LockCachingAudioSource(
@@ -265,6 +284,23 @@ class FastAudioService {
     }
 
     return false;
+  }
+
+  /// Specialized zero-latency player for 24/7 Islamic Live Radios & Maspero broadcasts
+  /// Strictly guarantees no disk caching, no lock freezing, and resilient multi-mirror switching.
+  Future<bool> playLiveRadio({
+    required String primaryUrl,
+    List<String> fallbackUrls = const [],
+    String? cacheKey,
+    Future<void> Function()? onStopCallback,
+  }) async {
+    return playResilient(
+      primaryUrl,
+      fallbackUrls: fallbackUrls,
+      cacheKey: cacheKey,
+      isLiveStream: true,
+      onStopCallback: onStopCallback,
+    );
   }
 
   /// Pre-warms/prefetches an audio track in background

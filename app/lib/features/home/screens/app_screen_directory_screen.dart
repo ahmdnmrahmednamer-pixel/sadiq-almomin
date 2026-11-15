@@ -649,6 +649,17 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: AppColors.emerald700,
         keywords: ['علماء', 'شيوخ', 'محاضرات', 'ابن باز', 'ابن عثيمين', 'الشعراوي'],
       ),
+      const AppDirectoryItem(
+        id: 'islamic_radio',
+        title: 'الإذاعات الإسلامية والبث المباشر',
+        subtitle: 'إذاعات القرآن الكريم من القاهرة ومكة، كبار القراء، الفتاوى والتفسير ٢٤ ساعة',
+        category: 'رياض العلم',
+        categoryKey: 'library',
+        route: '/islamic-radio',
+        icon: Icons.podcasts_rounded,
+        color: Color(0xFF0F5B45),
+        keywords: ['إذاعات', 'راديو', 'بث مباشر', 'قاهرة', 'مكة', 'تفسير', 'فتاوى', 'قراء', 'قرآن'],
+      ),
       AppDirectoryItem(
         id: 'egypt_heritage',
         title: context.tr('egypt_heritage'),

@@ -60,6 +60,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     required String title,
     required String primaryUrl,
     List<String> fallbackUrls = const [],
+    bool isLiveStream = false,
   }) async {
     if (_playingId == id && _audioService.player.playing) {
       await _audioService.stop();
@@ -80,6 +81,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     final ok = await _audioService.playResilient(
       primaryUrl,
       fallbackUrls: fallbackUrls,
+      isLiveStream: isLiveStream,
     );
 
     if (!mounted) return;
@@ -344,6 +346,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     title: station.name,
                     primaryUrl: station.streamUrl,
                     fallbackUrls: station.fallbackStreamUrls,
+                    isLiveStream: true,
                   ),
                   icon: _isBuffering && isPlaying
                       ? const SizedBox(

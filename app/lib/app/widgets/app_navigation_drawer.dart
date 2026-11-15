@@ -214,6 +214,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
+        title: 'الإذاعات الإسلامية والبث المباشر 📻',
+        subtitle: 'إذاعات القرآن الكريم من القاهرة ومكة، كبار القراء، الفتاوى والتفسير ٢٤ ساعة',
+        semanticLabel: 'الإذاعات الإسلامية والبث المباشر',
+        icon: Icons.podcasts_rounded,
+        color: const Color(0xFF0F5B45),
+        categoryKey: 'scholars',
+        keywords: ['إذاعات', 'راديو', 'بث مباشر', 'قاهرة', 'مكة', 'تفسير', 'فتاوى', 'قراء', 'إذاعة'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/islamic-radio');
+        },
+      ),
+      _DrawerItemData(
         title: 'إذاعة وتراث القرآن الكريم بمصر 📻',
         subtitle: 'تسجيلات نادرة وعبق التلاوة المصرية الخالدة',
         semanticLabel: 'إذاعة وتراث القرآن الكريم',

@@ -151,8 +151,9 @@ class EgyptianHeritageService extends ChangeNotifier {
       frequencyOrBadge: '98.2 FM القاهرة',
       streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
       fallbackUrls: [
-        'https://server13.mp3quran.net/husr/001.mp3',
-        'https://server10.mp3quran.net/minsh/001.mp3',
+        'https://n0c.radiojar.com/8s5u5tpdtwzuv',
+        'http://n12.radiojar.com/8s5u5tpdtwzuv',
+        'https://backup.qurango.net/radio/mix',
       ],
       icon: Icons.radio_rounded,
       accentColor: Color(0xFF0F5B45),
@@ -170,10 +171,13 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_minshawi',
       name: 'أثير الشيخ محمد صديق المنشاوي',
-      subtitle: 'الصوت الباكي الخاشع — تلاوات مرتلة ومجودة من تراث الإذاعة المصرية',
+      subtitle: 'الصوت الباكي الخاشع — بث مباشر مستمر على مدار ٢٤ ساعة',
       frequencyOrBadge: 'تراث الإذاعة',
-      streamUrl: 'https://server10.mp3quran.net/minsh/018.mp3',
-      fallbackUrls: ['https://server10.mp3quran.net/minsh/036.mp3'],
+      streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
+      fallbackUrls: [
+        'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi_mojawwad',
+        'https://qurango.net/radio/mohammed_siddiq_alminshawi',
+      ],
       icon: Icons.podcasts_rounded,
       accentColor: Color(0xFFB8893A),
       dailyScheduleHighlights: [
@@ -184,10 +188,13 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_husary',
       name: 'أثير الشيخ محمود خليل الحصري',
-      subtitle: 'شيخ عموم المقارئ المصرية وأول من سجل المصحف المرتل في التاريخ',
+      subtitle: 'شيخ عموم المقارئ المصرية — بث مباشر مستمر للمصحف المرتل والمجود',
       frequencyOrBadge: 'المصحف المعلم',
-      streamUrl: 'https://server13.mp3quran.net/husr/002.mp3',
-      fallbackUrls: ['https://server13.mp3quran.net/husr/001.mp3'],
+      streamUrl: 'https://backup.qurango.net/radio/mahmoud_khalil_alhussary',
+      fallbackUrls: [
+        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
+        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_warsh',
+      ],
       icon: Icons.menu_book_rounded,
       accentColor: Color(0xFF1E6F5C),
       dailyScheduleHighlights: [
@@ -197,10 +204,13 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_abdulbasit',
       name: 'أثير الشيخ عبد الباسط عبد الصمد',
-      subtitle: 'صوت مكة والحنجرة الذهبية — روائع التلاوات المصرية الخالدة',
+      subtitle: 'صوت مكة والحنجرة الذهبية — بث مباشر لأعذب تلاوات الشيخ',
       frequencyOrBadge: 'الحنجرة الذهبية',
-      streamUrl: 'https://server7.mp3quran.net/basit/019.mp3',
-      fallbackUrls: ['https://server7.mp3quran.net/basit/001.mp3'],
+      streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
+      fallbackUrls: [
+        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad',
+        'https://backup.qurango.net/radio/abdulbasit_abdulsamad_warsh',
+      ],
       icon: Icons.mic_external_on_rounded,
       accentColor: Color(0xFF8B6508),
       dailyScheduleHighlights: [
@@ -210,10 +220,13 @@ class EgyptianHeritageService extends ChangeNotifier {
     EgyptianRadioStation(
       id: 'radio_egypt_mustafa_ismail',
       name: 'أثير الشيخ مصطفى إسماعيل',
-      subtitle: 'عبقري النغم القرآني وقارئ القصر والجامع الأزهر الشريف',
+      subtitle: 'عبقري النغم القرآني وقارئ الجامع الأزهر — بث مباشر مستمر',
       frequencyOrBadge: 'مدرسة المقامات',
-      streamUrl: 'https://server8.mp3quran.net/mustafa/019.mp3',
-      fallbackUrls: ['https://server8.mp3quran.net/mustafa/001.mp3'],
+      streamUrl: 'https://backup.qurango.net/radio/mustafa_ismail',
+      fallbackUrls: [
+        'https://qurango.net/radio/mustafa_ismail',
+        'https://backup.qurango.net/radio/mix',
+      ],
       icon: Icons.graphic_eq_rounded,
       accentColor: Color(0xFF2C5E43),
       dailyScheduleHighlights: [

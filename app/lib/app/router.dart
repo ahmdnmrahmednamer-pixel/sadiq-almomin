@@ -1,5 +1,6 @@
 import '../features/library/screens/riyad_alsalihin_screen.dart';
 import '../features/prayer/sunan_rawatib_screen.dart';
+import '../features/radio/islamic_radio_screen.dart';
 import '../features/library/screens/islamic_mutoon_screen.dart';
 import '../features/zakat/mawarith_calculator_screen.dart';
 import '../features/mushaf/tadabbur_journal_screen.dart';
@@ -333,6 +334,7 @@ final GoRouter appRouter = GoRouter(
         GoRoute(path: '/prayer', builder: (context, state) => const PrayerScreen()),
         GoRoute(path: '/library', builder: (context, state) => const IslamicLibraryScreen()),
         GoRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
+        GoRoute(path: '/islamic-radio', builder: (context, state) => const IslamicRadioScreen()),
         GoRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
         GoRoute(path: '/quran-sciences', builder: (context, state) => const QuranSciencesScreen()),
         GoRoute(path: '/asma-shamail', builder: (context, state) => const AsmaAllahShamailScreen()),

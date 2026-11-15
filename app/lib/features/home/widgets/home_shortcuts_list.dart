@@ -21,6 +21,10 @@ class HomeShortcutsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // 0. Live Islamic Radios Banner
+        _buildIslamicRadioBanner(context, isDark),
+        const SizedBox(height: 10),
+
         // 1. Featured Egyptian Heritage & Cairo Radio Banner
         _buildEgyptianHeritageBanner(context, isDark),
         const SizedBox(height: 12),
@@ -164,6 +168,107 @@ class HomeShortcutsList extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIslamicRadioBanner(BuildContext context, bool isDark) {
+    return InkWell(
+      onTap: () => context.push('/islamic-radio'),
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark
+                ? [const Color(0xFF1E3A2F), const Color(0xFF132720)]
+                : [const Color(0xFF0F5B45), const Color(0xFF197157)],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: const Icon(
+                Icons.radio_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'الإذاعات الإسلامية والبث المباشر',
+                        style: TextStyle(
+                          fontFamily: 'Amiri',
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'مباشر 🔴',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'إذاعات القرآن من القاهرة ومكة • كبار القراء • التفسير والأذكار ٢٤ ساعة',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white70,
+                      height: 1.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.play_circle_fill_rounded,
+              size: 28,
+              color: Colors.amberAccent,
+            ),
+          ],
         ),
       ),
     );
