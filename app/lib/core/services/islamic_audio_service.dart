@@ -143,8 +143,14 @@ class IslamicAudioService extends ChangeNotifier {
   PlaybackLoopMode get loopMode => _loopMode;
   bool get shuffleEnabled => _shuffleEnabled;
   int? get sleepTimerMinutes => _sleepTimerMinutes;
-  bool get hasNext => _queue.isNotEmpty && _currentIndex < _queue.length - 1;
-  bool get hasPrevious => _queue.isNotEmpty && (_currentIndex > 0 || _position.inSeconds > 3);
+  bool get hasNext =>
+      _queue.isNotEmpty &&
+      (_currentIndex < _queue.length - 1 || _loopMode == PlaybackLoopMode.all);
+  bool get hasPrevious =>
+      _queue.isNotEmpty &&
+      (_currentIndex > 0 ||
+          _position.inSeconds > 3 ||
+          _loopMode == PlaybackLoopMode.all);
   int? get sleepTimerRemainingSeconds {
     if (_sleepTimerEndTime == null) return null;
     final diff = _sleepTimerEndTime!.difference(DateTime.now()).inSeconds;
