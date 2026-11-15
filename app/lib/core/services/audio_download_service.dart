@@ -76,6 +76,7 @@ class AudioDownloadService extends ChangeNotifier {
   final Map<String, CancelToken> _cancelTokens = {};
 
   String? _storageDirPath;
+  int _downloadAttemptCounter = 0;
   bool _isInitialized = false;
 
   bool get isInitialized => _isInitialized;
@@ -196,12 +197,14 @@ class AudioDownloadService extends ChangeNotifier {
     if (isDownloading(reciterId, surahId)) return false;
 
     await init();
+    if (isDownloading(reciterId, surahId)) return false;
     final dirPath = _storageDirPath;
     if (dirPath == null) return false;
 
     final sNumStr = surahId.toString().padLeft(3, '0');
     final filePath = '$dirPath/${reciterId}_$sNumStr.mp3';
-    final tempFilePath = '$filePath.tmp';
+    final attempt = ++_downloadAttemptCounter;
+    final tempFilePath = '$filePath.$attempt.tmp';
 
     final downloadUrl = SettingsService.instance.getSurahAudioUrl(surahId, reciterId);
     final cancelToken = CancelToken();
@@ -212,7 +215,9 @@ class AudioDownloadService extends ChangeNotifier {
     try {
       final tempFile = File(tempFilePath);
       if (tempFile.existsSync()) {
-        tempFile.deleteSync();
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
       }
 
       int lastEmitMs = 0;
@@ -222,7 +227,7 @@ class AudioDownloadService extends ChangeNotifier {
         tempFilePath,
         cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
-          if (total > 0) {
+          if (total > 0 && identical(_cancelTokens[key], cancelToken) && !cancelToken.isCancelled) {
             final now = DateTime.now().millisecondsSinceEpoch;
             final progress = (received / total).clamp(0.0, 1.0);
             _activeProgress[key] = progress;
@@ -235,43 +240,82 @@ class AudioDownloadService extends ChangeNotifier {
         },
       );
 
-      // Rename temp file to permanent file
-      final finalFile = File(filePath);
-      if (finalFile.existsSync()) finalFile.deleteSync();
-      await File(tempFilePath).rename(filePath);
+      if (identical(_cancelTokens[key], cancelToken) && !cancelToken.isCancelled) {
+        final tempFile = File(tempFilePath);
+        if (tempFile.existsSync()) {
+          try {
+            final length = tempFile.lengthSync();
+            tempFile.renameSync(filePath);
 
-      const reciters = SettingsService.availableReciters;
-      final reciter = reciters.firstWhere(
-        (r) => r.id == reciterId,
-        orElse: () => reciters.first,
-      );
+            const reciters = SettingsService.availableReciters;
+            final reciter = reciters.firstWhere(
+              (r) => r.id == reciterId,
+              orElse: () => reciters.first,
+            );
 
-      final length = finalFile.lengthSync();
-      _downloadedSurahs[key] = DownloadedSurahInfo(
-        reciterId: reciterId,
-        reciterName: reciter.nameAr,
-        surahId: surahId,
-        surahName: surahName,
-        localPath: filePath,
-        fileSizeBytes: length,
-        downloadedAt: DateTime.now(),
-      );
+            _downloadedSurahs[key] = DownloadedSurahInfo(
+              reciterId: reciterId,
+              reciterName: reciter.nameAr,
+              surahId: surahId,
+              surahName: surahName,
+              localPath: filePath,
+              fileSizeBytes: length,
+              downloadedAt: DateTime.now(),
+            );
 
-      _activeProgress.remove(key);
-      _cancelTokens.remove(key);
-      notifyListeners();
-      return true;
+            _activeProgress.remove(key);
+            _cancelTokens.remove(key);
+            notifyListeners();
+            return true;
+          } catch (e) {
+            debugPrint('Failed to publish downloaded file for $key: $e');
+            try {
+              tempFile.deleteSync();
+            } catch (_) {}
+          }
+        }
+        if (identical(_cancelTokens[key], cancelToken)) {
+          _activeProgress.remove(key);
+          _cancelTokens.remove(key);
+          notifyListeners();
+        }
+        return false;
+      } else {
+        final tempFile = File(tempFilePath);
+        if (tempFile.existsSync()) {
+          for (int i = 0; i < 5; i++) {
+            try {
+              tempFile.deleteSync();
+              break;
+            } catch (_) {
+              if (i < 4) {
+                await Future<void>.delayed(const Duration(milliseconds: 50));
+              }
+            }
+          }
+        }
+        return false;
+      }
     } catch (e) {
       debugPrint('Download error for $key: $e');
-      _activeProgress.remove(key);
-      _cancelTokens.remove(key);
+      if (identical(_cancelTokens[key], cancelToken)) {
+        _activeProgress.remove(key);
+        _cancelTokens.remove(key);
+        notifyListeners();
+      }
       final tempFile = File(tempFilePath);
       if (tempFile.existsSync()) {
-        try {
-          tempFile.deleteSync();
-        } catch (_) {}
+        for (int i = 0; i < 5; i++) {
+          try {
+            tempFile.deleteSync();
+            break;
+          } catch (_) {
+            if (i < 4) {
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+            }
+          }
+        }
       }
-      notifyListeners();
       return false;
     }
   }
