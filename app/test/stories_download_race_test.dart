@@ -200,9 +200,16 @@ void main() {
 
   tearDown(() async {
     DynamicHttpOverrides.activeHandler = null;
+    for (final sid in ['adam', 'nuh', 'hud_salih', 'ibrahim', 'lut_shuaib', 'yusuf', 'musa']) {
+      if (service.isDownloading(sid)) {
+        service.cancelDownload(sid);
+      }
+    }
     for (final c in activeControllers) {
       if (!c.isClosed) {
-        c.close();
+        try {
+          await c.close().timeout(const Duration(milliseconds: 500));
+        } catch (_) {}
       }
     }
     activeControllers.clear();
@@ -483,10 +490,50 @@ void main() {
         expect(service.isDownloaded(storyId), isTrue);
       } finally {
         if (!req1StreamController.isClosed) {
-          await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
         if (!req2StreamController.isClosed) {
-          await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
+        }
+      }
+
+      await service.deleteDownloadedStory(storyId).timeout(const Duration(seconds: 5));
+    });
+
+    test('Control 6: Duplicate download request while download is active returns false', () async {
+      const storyId = 'lut_shuaib';
+      final reqStarted = Completer<void>();
+      final streamController = createTestStreamController();
+
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        reqStarted.complete();
+        return TestHttpClientResponse(streamController.stream, contentLength: 4000);
+      };
+
+      final dlFuture1 = service.downloadStory(storyId);
+      activeFutures.add(dlFuture1);
+
+      try {
+        await reqStarted.future.timeout(const Duration(seconds: 5));
+        expect(service.isDownloading(storyId), isTrue);
+
+        // Attempt duplicate download while dlFuture1 is active
+        final dupResult = await service.downloadStory(storyId).timeout(const Duration(seconds: 5));
+        expect(dupResult, isFalse, reason: 'Duplicate download attempt must be rejected immediately');
+
+        streamController.add(Uint8List(4000));
+        await streamController.close().timeout(const Duration(milliseconds: 500));
+        final success1 = await dlFuture1.timeout(const Duration(seconds: 5));
+        expect(success1, isTrue);
+      } finally {
+        if (!streamController.isClosed) {
+          try {
+            await streamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
       }
 
@@ -562,10 +609,14 @@ void main() {
         expect(service.isDownloaded(storyId), isTrue);
       } finally {
         if (!req1StreamController.isClosed) {
-          await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
         if (!req2StreamController.isClosed) {
-          await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
       }
 
@@ -636,10 +687,14 @@ void main() {
         expect(service.isDownloaded(storyId), isTrue);
       } finally {
         if (!req1StreamController.isClosed) {
-          await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req1StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
         if (!req2StreamController.isClosed) {
-          await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          try {
+            await req2StreamController.close().timeout(const Duration(milliseconds: 500));
+          } catch (_) {}
         }
       }
 
