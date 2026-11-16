@@ -2741,5 +2741,122 @@ void main() {
       expect(res2, isTrue);
       expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMerged));
     });
+
+    test('TESTONLY characterization: init partial state and later-save defect causes raw loss of wrong-typed entry and unknown fields on add and delete', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // 1. Seed last good live state
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.entries.length, equals(1));
+      expect(TadabburJournalService.instance.entries.first.id, equals('local_item_a'));
+
+      // 2. Prepare raw seed: valid first entry with unknown fields + wrong-typed later entry
+      final rawValidFirstWithUnknowns = {
+        'id': 'valid_first_id',
+        'surahId': 1,
+        'surahName': 'الفاتحة',
+        'ayahNumber': 5,
+        'ayahSnippet': '﴿إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ﴾',
+        'faithMessage': 'إخلاص العبودية والاستعانة بالله',
+        'practicalAction': 'تجديد النية قبل العمل',
+        'derivedDua': 'اللهم أعني على ذكرك وشكرك',
+        'createdAt': '2026-10-01T00:00:00.000',
+        'unknown_meta_string': 'custom_metadata_value',
+        'unknown_nested_map': {'sync_flag': true, 'revision': 42},
+        'unknown_tags_list': ['imaan', 'quran'],
+      };
+      final rawWrongTypedLater = {
+        'id': 'wrong_typed_later_id',
+        'surahId': 'string_not_an_int', // wrong type -> causes TypeError in TadabburReflectionItem.fromJson
+        'surahName': 'البقرة',
+        'ayahNumber': 255,
+        'ayahSnippet': '﴿اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ﴾',
+        'faithMessage': 'قيومية الله',
+        'practicalAction': 'التوكل على الحي القيوم',
+        'derivedDua': 'يا حي يا قيوم',
+        'createdAt': '2026-10-02T00:00:00.000',
+        'wrong_entry_extra': 'extra_value',
+      };
+
+      final rawMixedSeed = json.encode([
+        rawValidFirstWithUnknowns,
+        rawWrongTypedLater,
+      ]);
+      await prefs.setString('tadabbur_journal_entries_v1', rawMixedSeed);
+
+      // Verify raw prefs holds both entries and all unknown fields initially
+      final rawInitial = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawInitial, equals(rawMixedSeed));
+      final List<dynamic> initialDecoded = json.decode(rawInitial!);
+      expect(initialDecoded.length, equals(2));
+      expect((initialDecoded[0] as Map<String, dynamic>)['unknown_meta_string'], equals('custom_metadata_value'));
+      expect((initialDecoded[1] as Map<String, dynamic>)['id'], equals('wrong_typed_later_id'));
+
+      // 3. forceReload: characterizes init partial state defect
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // Because _entries..clear()..addAll(list.map(...)) clears _entries and then iterates,
+      // valid_first_id is added, then wrong_typed_later_id throws TypeError in fromJson.
+      // The exception is caught by catch (_) {}, leaving _entries partially populated with only 1 item.
+      expect(TadabburJournalService.instance.entries.length, equals(1),
+          reason: 'Defect: init leaves partial in-memory state; subsequent entries are unparsed and missing');
+      expect(TadabburJournalService.instance.entries.first.id, equals('valid_first_id'));
+
+      // In raw storage, the unparsed wrong_typed_later_id still exists prior to any save operation
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMixedSeed));
+
+      // 4. Characterize later-save raw loss on addReflection:
+      await TadabburJournalService.instance.addReflection(
+        surahId: 112,
+        surahName: 'الإخلاص',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾',
+        faithMessage: 'توحيد الله الأحد',
+        practicalAction: 'إخلاص العمل',
+        derivedDua: 'اللهم إني أسألك التوحيد',
+      ).timeout(const Duration(seconds: 5));
+
+      final rawAfterAdd = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawAfterAdd, isNotNull);
+      final List<dynamic> listAfterAdd = json.decode(rawAfterAdd!);
+
+      // Defect rawloss 1: wrong_typed_later_id was completely dropped / discarded from raw storage
+      expect(listAfterAdd.any((e) => (e as Map<String, dynamic>)['id'] == 'wrong_typed_later_id'), isFalse,
+          reason: 'Defect rawloss: unparsed wrong_typed_later_entry is permanently wiped from storage on addReflection');
+
+      // Defect rawloss 2: unknown fields on valid_first_id were completely stripped / discarded
+      final validFirstAfterAdd =
+          listAfterAdd.firstWhere((e) => (e as Map<String, dynamic>)['id'] == 'valid_first_id') as Map<String, dynamic>;
+      expect(validFirstAfterAdd.containsKey('unknown_meta_string'), isFalse,
+          reason: 'Defect rawloss: unknown fields on valid entry stripped by TadabburReflectionItem.toJson()');
+      expect(validFirstAfterAdd.containsKey('unknown_nested_map'), isFalse);
+      expect(validFirstAfterAdd.containsKey('unknown_tags_list'), isFalse);
+
+      // 5. Characterize later-save raw loss on deleteReflection:
+      // Re-seed raw with mixed valid + wrong-typed + unknown fields
+      await prefs.setString('tadabbur_journal_entries_v1', rawMixedSeed);
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.entries.length, equals(1));
+
+      // Delete the valid entry from in-memory list
+      await TadabburJournalService.instance.deleteReflection('valid_first_id').timeout(const Duration(seconds: 5));
+
+      final rawAfterDelete = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawAfterDelete, isNotNull);
+      final List<dynamic> listAfterDelete = json.decode(rawAfterDelete!);
+
+      // Defect rawloss 3: wrong_typed_later_id was wiped out completely when _saveEntries wrote the empty in-memory list
+      expect(listAfterDelete, isEmpty,
+          reason: 'Defect rawloss: wrong_typed_later_entry wiped from storage when deleteReflection saves empty in-memory list');
+    });
   });
 }
