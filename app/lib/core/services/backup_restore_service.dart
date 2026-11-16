@@ -960,28 +960,21 @@ class BackupRestoreService {
             if (importedMap != null) {
               final rawLocal =
                   prefs.getString('tadabbur_daily_accountability_v1');
-              if (rawLocal == null || rawLocal.isEmpty) {
-                final sortedKeys = importedMap.keys.toList()..sort();
-                final mapToEncode = {
-                  for (final k in sortedKeys) k: importedMap[k]!
-                };
-                await prefs.setString('tadabbur_daily_accountability_v1',
-                    json.encode(mapToEncode));
-              } else {
-                final localMap = _safeDecodeAccountability(rawLocal);
-                if (localMap != null) {
-                  final allDates = {...localMap.keys, ...importedMap.keys}
-                      .toList()
-                    ..sort();
-                  final mergedMap = <String, List<String>>{};
-                  for (final date in allDates) {
-                    final localTasks = localMap[date] ?? const <String>[];
-                    final importTasks = importedMap[date] ?? const <String>[];
-                    mergedMap[date] = {...localTasks, ...importTasks}.toList();
-                  }
-                  await prefs.setString('tadabbur_daily_accountability_v1',
-                      json.encode(mergedMap));
+              final localMap = (rawLocal == null || rawLocal.isEmpty)
+                  ? <String, List<String>>{}
+                  : _safeDecodeAccountability(rawLocal);
+              if (localMap != null) {
+                final allDates = {...localMap.keys, ...importedMap.keys}
+                    .toList()
+                  ..sort();
+                final mergedMap = <String, List<String>>{};
+                for (final date in allDates) {
+                  final localTasks = localMap[date] ?? const <String>[];
+                  final importTasks = importedMap[date] ?? const <String>[];
+                  mergedMap[date] = {...localTasks, ...importTasks}.toList();
                 }
+                await prefs.setString('tadabbur_daily_accountability_v1',
+                    json.encode(mergedMap));
               }
             }
           }

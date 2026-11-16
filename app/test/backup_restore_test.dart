@@ -1596,5 +1596,150 @@ void main() {
       expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(invalidLocalRaw),
           reason: 'Invalid local blob must not be overwritten or repaired during merge');
     });
+
+    test('replaceMode false (merge): absent local raw with imported duplicate tasks performs first-pass dedup and repeat byte idempotence', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // Local raw is absent (null)
+      await prefs.remove('tadabbur_daily_accountability_v1');
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final importPayload = {
+        '2026-11-16': ['birr_walidayn', 'birr_walidayn', 'hifz_lisan'],
+      };
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode(importPayload),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      // First restore: must immediately deduplicate tasks
+      final res1 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(res1, isTrue);
+
+      final firstRaw = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(firstRaw, isNotNull);
+      final Map<String, dynamic> firstDecoded = json.decode(firstRaw!);
+      final firstTasks = (firstDecoded['2026-11-16'] as List).cast<String>();
+      expect(firstTasks.length, equals(2),
+          reason: 'Imported duplicate tasks must be deduplicated on first write when local is absent');
+      expect(firstTasks, equals(['birr_walidayn', 'hifz_lisan']));
+
+      // Second repeat restore: must produce identical raw bytes
+      final res2 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(res2, isTrue);
+
+      final secondRaw = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(secondRaw, equals(firstRaw),
+          reason: 'Repeat restore must be byte-for-byte idempotent');
+    });
+
+    test('replaceMode false (merge): empty string local raw with imported duplicate tasks performs first-pass dedup and repeat byte idempotence', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // Local raw is empty string
+      await prefs.setString('tadabbur_daily_accountability_v1', '');
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final importPayload = {
+        '2026-11-16': ['birr_walidayn', 'birr_walidayn', 'hifz_lisan'],
+      };
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode(importPayload),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      // First restore: must immediately deduplicate tasks
+      final res1 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(res1, isTrue);
+
+      final firstRaw = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(firstRaw, isNotNull);
+      final Map<String, dynamic> firstDecoded = json.decode(firstRaw!);
+      final firstTasks = (firstDecoded['2026-11-16'] as List).cast<String>();
+      expect(firstTasks.length, equals(2),
+          reason: 'Imported duplicate tasks must be deduplicated on first write when local is empty');
+      expect(firstTasks, equals(['birr_walidayn', 'hifz_lisan']));
+
+      // Second repeat restore: must produce identical raw bytes
+      final res2 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(res2, isTrue);
+
+      final secondRaw = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(secondRaw, equals(firstRaw),
+          reason: 'Repeat restore must be byte-for-byte idempotent when local was empty string');
+    });
+
+    test('replaceMode false (merge): wrong-shape local accountability (list, date:string, non-string element) preserves exact raw bytes', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final validEnvelope = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode({'2026-11-16': ['sadaqah_ihsan']}),
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(validEnvelope)).isValid, isTrue);
+
+      // Case A: Local accountability is a JSON list instead of Map
+      const localListRaw = '["not_a_map_element"]';
+      await prefs.setString('tadabbur_daily_accountability_v1', localListRaw);
+
+      final resList = await BackupRestoreService.instance
+          .restoreBackup(validEnvelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resList, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(localListRaw),
+          reason: 'Local JSON list must be preserved without overwrite');
+
+      // Case B: Local accountability is a Map where a date maps to a string instead of a List
+      const localDateStringRaw = '{"2026-11-16": "not_a_list"}';
+      await prefs.setString('tadabbur_daily_accountability_v1', localDateStringRaw);
+
+      final resDateString = await BackupRestoreService.instance
+          .restoreBackup(validEnvelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resDateString, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(localDateStringRaw),
+          reason: 'Local map with string date value must be preserved without overwrite');
+
+      // Case C: Local accountability has list with non-string element
+      const localBadElemRaw = '{"2026-11-16": ["valid_task", 9999]}';
+      await prefs.setString('tadabbur_daily_accountability_v1', localBadElemRaw);
+
+      final resBadElem = await BackupRestoreService.instance
+          .restoreBackup(validEnvelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resBadElem, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(localBadElemRaw),
+          reason: 'Local map with non-string elements in list must be preserved without overwrite');
+    });
   });
 }
