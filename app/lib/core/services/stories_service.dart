@@ -24,6 +24,7 @@ class StoriesService extends ChangeNotifier {
   final Map<String, int> _downloadedFileSizes = {};
   final Map<String, double> _activeProgress = {};
   final Map<String, CancelToken> _cancelTokens = {};
+  int _downloadAttemptCounter = 0;
   String? _lastReadStoryId;
   String? _storageDirPath;
 
@@ -116,11 +117,13 @@ class StoriesService extends ChangeNotifier {
     if (isDownloading(id)) return false;
 
     await init();
+    if (isDownloading(id)) return false;
     final dirPath = _storageDirPath;
     if (dirPath == null) return false;
 
     final filePath = '$dirPath/$id.mp3';
-    final tempFilePath = '$filePath.tmp';
+    final attempt = ++_downloadAttemptCounter;
+    final tempFilePath = '$filePath.$attempt.tmp';
 
     final cancelToken = CancelToken();
     _cancelTokens[id] = cancelToken;
@@ -130,7 +133,9 @@ class StoriesService extends ChangeNotifier {
     try {
       final tempFile = File(tempFilePath);
       if (tempFile.existsSync()) {
-        tempFile.deleteSync();
+        try {
+          tempFile.deleteSync();
+        } catch (_) {}
       }
 
       int lastEmitMs = 0;
@@ -140,7 +145,7 @@ class StoriesService extends ChangeNotifier {
         tempFilePath,
         cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
-          if (total > 0) {
+          if (total > 0 && identical(_cancelTokens[id], cancelToken) && !cancelToken.isCancelled) {
             final now = DateTime.now().millisecondsSinceEpoch;
             final progress = (received / total).clamp(0.0, 1.0);
             _activeProgress[id] = progress;
@@ -152,27 +157,68 @@ class StoriesService extends ChangeNotifier {
         },
       );
 
-      final finalFile = File(filePath);
-      if (finalFile.existsSync()) finalFile.deleteSync();
-      await File(tempFilePath).rename(filePath);
+      if (identical(_cancelTokens[id], cancelToken) && !cancelToken.isCancelled) {
+        final tempFile = File(tempFilePath);
+        if (tempFile.existsSync()) {
+          try {
+            final length = tempFile.lengthSync();
+            tempFile.renameSync(filePath);
 
-      _downloadedLocalPaths[id] = filePath;
-      _downloadedFileSizes[id] = finalFile.lengthSync();
-      _activeProgress.remove(id);
-      _cancelTokens.remove(id);
-      notifyListeners();
-      return true;
+            _downloadedLocalPaths[id] = filePath;
+            _downloadedFileSizes[id] = length;
+            _activeProgress.remove(id);
+            _cancelTokens.remove(id);
+            notifyListeners();
+            return true;
+          } catch (e) {
+            debugPrint('Failed to publish downloaded story file for $id: $e');
+            try {
+              tempFile.deleteSync();
+            } catch (_) {}
+          }
+        }
+        if (identical(_cancelTokens[id], cancelToken)) {
+          _activeProgress.remove(id);
+          _cancelTokens.remove(id);
+          notifyListeners();
+        }
+        return false;
+      } else {
+        final tempFile = File(tempFilePath);
+        if (tempFile.existsSync()) {
+          for (int i = 0; i < 5; i++) {
+            try {
+              tempFile.deleteSync();
+              break;
+            } catch (_) {
+              if (i < 4) {
+                await Future<void>.delayed(const Duration(milliseconds: 50));
+              }
+            }
+          }
+        }
+        return false;
+      }
     } catch (e) {
       debugPrint('Story download error for $id: $e');
-      _activeProgress.remove(id);
-      _cancelTokens.remove(id);
+      if (identical(_cancelTokens[id], cancelToken)) {
+        _activeProgress.remove(id);
+        _cancelTokens.remove(id);
+        notifyListeners();
+      }
       final tempFile = File(tempFilePath);
       if (tempFile.existsSync()) {
-        try {
-          tempFile.deleteSync();
-        } catch (_) {}
+        for (int i = 0; i < 5; i++) {
+          try {
+            tempFile.deleteSync();
+            break;
+          } catch (_) {
+            if (i < 4) {
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+            }
+          }
+        }
       }
-      notifyListeners();
       return false;
     }
   }
