@@ -8,6 +8,7 @@ import 'package:almomin/core/services/khatma_service.dart';
 import 'package:almomin/core/services/adhkar_service.dart';
 import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/islamic_radio_service.dart';
+import 'package:almomin/core/services/tadabbur_journal_service.dart';
 import 'package:almomin/features/backup/backup_restore_screen.dart';
 
 void main() {
@@ -1119,6 +1120,387 @@ void main() {
       expect(SettingsService.instance.mushafDefaultMode, equals('surah'));
       expect(SettingsService.instance.screenLayoutMode, equals('comfortable'));
       expect(SettingsService.instance.bilingualDisplayEnabled, isTrue);
+    });
+  });
+
+  group('BackupRestoreService Journal & Daily Accountability Coverage & Regression Tests', () {
+    Future<void> Function() setupFullPrefsSnapshot(SharedPreferences prefs) {
+      final snapshot = <String, Object?>{};
+      for (final k in prefs.getKeys()) {
+        snapshot[k] = prefs.get(k);
+      }
+      return () async {
+        final currentKeys = prefs.getKeys().toList();
+        for (final k in currentKeys) {
+          if (!snapshot.containsKey(k)) {
+            await prefs.remove(k);
+          }
+        }
+        for (final entry in snapshot.entries) {
+          if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          } else if (entry.value is int) {
+            await prefs.setInt(entry.key, entry.value as int);
+          } else if (entry.value is double) {
+            await prefs.setDouble(entry.key, entry.value as double);
+          } else if (entry.value is List<String>) {
+            await prefs.setStringList(entry.key, entry.value as List<String>);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true);
+        await TadabburJournalService.instance.init(forceReload: true);
+      };
+    }
+
+    Map<String, dynamic> createChecksumValidEnvelope(Map<String, dynamic> dataPayload) {
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(dataPayload),
+      );
+      return {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': dataPayload,
+      };
+    }
+
+    final localItemA = TadabburReflectionItem(
+      id: 'local_item_a',
+      surahId: 2,
+      surahName: 'البقرة',
+      ayahNumber: 255,
+      ayahSnippet: 'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ',
+      faithMessage: 'رسالة إيمانية محلية أصلية',
+      practicalAction: 'عمل تطبيقي محلي أصلي',
+      derivedDua: 'دعاء محلي أصلي',
+      createdAt: DateTime(2026, 11, 10, 8, 30),
+    );
+
+    final importItemB = TadabburReflectionItem(
+      id: 'import_item_b',
+      surahId: 3,
+      surahName: 'آل عمران',
+      ayahNumber: 18,
+      ayahSnippet: 'شَهِدَ اللَّهُ أَنَّهُ لَا إِلَٰهَ إِلَّا هُوَ',
+      faithMessage: 'رسالة إيمانية مستوردة',
+      practicalAction: 'عمل تطبيقي مستورد',
+      derivedDua: 'دعاء مستورد',
+      createdAt: DateTime(2026, 11, 12, 9, 0),
+    );
+
+    test('replaceMode false (merge): distinct local A and import B both survive in prefs and live service', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      // Seed local entry A
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id), contains('local_item_a'));
+
+      // Import envelope containing distinct import entry B
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_journal': json.encode([importItemB.toJson()]),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue, reason: 'Checksum-valid fixture must pass validation');
+
+      final restored = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restored, isTrue);
+
+      // Verify SharedPreferences contains both A and B
+      final rawStored = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawStored, isNotNull);
+      final List<dynamic> decodedList = json.decode(rawStored!);
+      final storedIds = decodedList.map((e) => e['id'] as String).toList();
+      expect(storedIds, containsAll(['local_item_a', 'import_item_b']),
+          reason: 'Distinct local A and import B must both survive in merge mode');
+
+      // Forced reload verification on live singleton
+      await TadabburJournalService.instance.init(forceReload: true);
+      final liveIds = TadabburJournalService.instance.entries.map((e) => e.id).toList();
+      expect(liveIds, containsAll(['local_item_a', 'import_item_b']),
+          reason: 'Both items must survive in live service entries after forced reload');
+    });
+
+    test('replaceMode false (merge): repeat restore is idempotent without duplicate entries', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_journal': json.encode([importItemB.toJson()]),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      // First restore
+      final restoredFirst = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restoredFirst, isTrue);
+
+      // Second repeated restore
+      final restoredSecond = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restoredSecond, isTrue);
+
+      final rawStored = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawStored, isNotNull);
+      final List<dynamic> decodedList = json.decode(rawStored!);
+      final storedIds = decodedList.map((e) => e['id'] as String).toList();
+      expect(storedIds.where((id) => id == 'local_item_a').length, equals(1));
+      expect(storedIds.where((id) => id == 'import_item_b').length, equals(1));
+      expect(storedIds.length, equals(2), reason: 'Repeat restore must be idempotent without duplicates');
+
+      await TadabburJournalService.instance.init(forceReload: true);
+      final liveIds = TadabburJournalService.instance.entries.map((e) => e.id).toList();
+      expect(liveIds.where((id) => id == 'local_item_a').length, equals(1));
+      expect(liveIds.where((id) => id == 'import_item_b').length, equals(1));
+      expect(liveIds.length, equals(2));
+    });
+
+    test('replaceMode false (merge): empty import preserves existing local journal entries', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_journal': '[]',
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restored, isTrue);
+
+      final rawStored = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawStored, isNotNull);
+      final List<dynamic> decodedList = json.decode(rawStored!);
+      final storedIds = decodedList.map((e) => e['id'] as String).toList();
+      expect(storedIds, contains('local_item_a'),
+          reason: 'Empty import list in mergeMode must preserve local entries');
+
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id), contains('local_item_a'));
+    });
+
+    test('replaceMode true: replaces existing with imported, and empty import clears existing', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      // Part 1: Replaces
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      final replacePayload = {
+        'extended_features': {
+          'tadabbur_journal': json.encode([importItemB.toJson()]),
+        },
+      };
+      final envelopeReplace = createChecksumValidEnvelope(replacePayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeReplace)).isValid, isTrue);
+
+      final restoredReplace = await BackupRestoreService.instance.restoreBackup(envelopeReplace, replaceMode: true);
+      expect(restoredReplace, isTrue);
+
+      final rawReplaced = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawReplaced, isNotNull);
+      final List<dynamic> replacedList = json.decode(rawReplaced!);
+      final replacedIds = replacedList.map((e) => e['id'] as String).toList();
+      expect(replacedIds, equals(['import_item_b']),
+          reason: 'replaceMode true must overwrite local entries with imported entries');
+
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id), equals(['import_item_b']));
+
+      // Part 2: Empty clears
+      final emptyPayload = {
+        'extended_features': {
+          'tadabbur_journal': '[]',
+        },
+      };
+      final envelopeEmpty = createChecksumValidEnvelope(emptyPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeEmpty)).isValid, isTrue);
+
+      final restoredEmpty = await BackupRestoreService.instance.restoreBackup(envelopeEmpty, replaceMode: true);
+      expect(restoredEmpty, isTrue);
+
+      final rawEmpty = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawEmpty, isNotNull);
+      final List<dynamic> emptyList = json.decode(rawEmpty!);
+      expect(emptyList, isEmpty, reason: 'replaceMode true with empty import must clear entries');
+
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.entries, isEmpty);
+    });
+
+    test('replaceMode false (merge): accountability performs same-day task union and preserves different dates', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      // Local state has date1 (2026-11-15) and date2 (2026-11-16)
+      final localAccountability = {
+        '2026-11-15': ['birr_walidayn'],
+        '2026-11-16': ['hifz_lisan'],
+      };
+      await prefs.setString(
+        'tadabbur_daily_accountability_v1',
+        json.encode(localAccountability),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      // Imported state has date2 (same day with different task) and date3 (new date)
+      final importAccountability = {
+        '2026-11-16': ['sadaqah_ihsan'],
+        '2026-11-17': ['istighfar_tawbah'],
+      };
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode(importAccountability),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restored, isTrue);
+
+      final rawAcc = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAcc, isNotNull);
+      final Map<String, dynamic> storedAcc = json.decode(rawAcc!);
+
+      // Assert date 1 preserved
+      expect(storedAcc.containsKey('2026-11-15'), isTrue);
+      expect((storedAcc['2026-11-15'] as List).cast<String>(), contains('birr_walidayn'));
+
+      // Assert date 2 has same-day union
+      expect(storedAcc.containsKey('2026-11-16'), isTrue);
+      final date2Tasks = (storedAcc['2026-11-16'] as List).cast<String>();
+      expect(date2Tasks, containsAll(['hifz_lisan', 'sadaqah_ihsan']),
+          reason: 'Same-day tasks from local and import must be unioned without loss');
+
+      // Assert date 3 added
+      expect(storedAcc.containsKey('2026-11-17'), isTrue);
+      expect((storedAcc['2026-11-17'] as List).cast<String>(), contains('istighfar_tawbah'));
+
+      // Repeat restore for idempotence
+      final restoredRepeat = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restoredRepeat, isTrue);
+
+      final rawAccRepeat = prefs.getString('tadabbur_daily_accountability_v1');
+      final Map<String, dynamic> storedAccRepeat = json.decode(rawAccRepeat!);
+      final date2TasksRepeat = (storedAccRepeat['2026-11-16'] as List).cast<String>();
+      expect(date2TasksRepeat.where((t) => t == 'hifz_lisan').length, equals(1));
+      expect(date2TasksRepeat.where((t) => t == 'sadaqah_ihsan').length, equals(1));
+      expect(date2TasksRepeat.length, equals(2), reason: 'Accountability union must be idempotent');
+
+      // Forced reload verification
+      await TadabburJournalService.instance.init(forceReload: true);
+    });
+
+    test('omitted extended_features keys preserve existing local journal and accountability', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true);
+      });
+
+      // Seed local journal and accountability
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await prefs.setString(
+        'tadabbur_daily_accountability_v1',
+        json.encode({'2026-11-15': ['birr_walidayn']}),
+      );
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      // Backup payload completely omitting journal and accountability
+      final dataPayload = {
+        'bookmarks': ['1:1'],
+        'extended_features': {
+          'sunan_rawatib': 'some_data',
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      // In mergeMode: existing state preserved
+      final restoredMerge = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false);
+      expect(restoredMerge, isTrue);
+
+      final rawJournalMerge = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawJournalMerge, isNotNull);
+      final List<dynamic> journalMergeList = json.decode(rawJournalMerge!);
+      expect(journalMergeList.map((e) => e['id'] as String), contains('local_item_a'));
+
+      final rawAccMerge = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAccMerge, isNotNull);
+      final Map<String, dynamic> accMergeMap = json.decode(rawAccMerge!);
+      expect((accMergeMap['2026-11-15'] as List).cast<String>(), contains('birr_walidayn'));
+
+      // In replaceMode: omitted keys still preserve existing local data
+      final restoredReplace = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: true);
+      expect(restoredReplace, isTrue);
+
+      final rawJournalReplace = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawJournalReplace, isNotNull);
+      final List<dynamic> journalReplaceList = json.decode(rawJournalReplace!);
+      expect(journalReplaceList.map((e) => e['id'] as String), contains('local_item_a'));
+
+      final rawAccReplace = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAccReplace, isNotNull);
+      final Map<String, dynamic> accReplaceMap = json.decode(rawAccReplace!);
+      expect((accReplaceMap['2026-11-15'] as List).cast<String>(), contains('birr_walidayn'));
     });
   });
 }
