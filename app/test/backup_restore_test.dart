@@ -62,12 +62,15 @@ class MockFailureStorePlatform extends SharedPreferencesStorePlatform {
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) {
-    if (failSetValueCount != null && failSetValueCount! > 0) {
-      failSetValueCount = failSetValueCount! - 1;
-      if (throwOnSetValue) {
-        throw Exception('Simulated platform setValue exception');
+    if (failSetValueCount != null) {
+      if (failSetValueCount! > 0) {
+        failSetValueCount = failSetValueCount! - 1;
+        if (throwOnSetValue) {
+          throw Exception('Simulated platform setValue exception');
+        }
+        return Future.value(false);
       }
-      return Future.value(false);
+      return delegate.setValue(valueType, key, value);
     }
     if (throwOnSetValue) {
       throw Exception('Simulated platform setValue exception');
@@ -3283,13 +3286,42 @@ void main() {
       expect(TadabburJournalService.instance.isReadable, isTrue);
       expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
 
-      // 5. Unchanged raw merge no-write guard: establishes actual host live and returns confirmedWrite without write
+      // 5. Unchanged raw merge no-write guard: establishes actual host live and returns intentionalSkip without write
       final resUnchanged = await TadabburJournalService.instance.restoreJournal(
         rawImport: json.encode([localItemA.toJson()]),
         replaceMode: false,
       ).timeout(const Duration(seconds: 5));
-      expect(resUnchanged.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(resUnchanged.status, equals(JournalRestoreStatus.intentionalSkip));
       expect(resUnchanged.livePublished, isTrue);
+    });
+
+    test('BackupRestoreService.instance.restoreBackup returns false when journal write fails in both replace and merge modes', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+
+      addTearDown(() async {
+        SharedPreferencesStorePlatform.instance = originalPlatform;
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final envelope = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_journal': json.encode([importItemB.toJson()]),
+        },
+      });
+
+      // 1. replaceMode: true with setValue failure -> writeUnconfirmed -> restoreBackup returns false
+      mockPlatform.returnFalseOnSetValue = true;
+      final resReplace = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: true).timeout(const Duration(seconds: 5));
+      expect(resReplace, isFalse, reason: 'restoreBackup in replaceMode must return false when journal write fails');
+
+      // 2. replaceMode: false (merge) with setValue failure -> writeUnconfirmed -> restoreBackup returns false
+      final resMerge = await BackupRestoreService.instance.restoreBackup(envelope, replaceMode: false).timeout(const Duration(seconds: 5));
+      expect(resMerge, isFalse, reason: 'restoreBackup in mergeMode must return false when journal write fails');
     });
 
     test('queued concurrent add/delete/init/restore in both modes: no lost update, no deadlock, and chain recovers from failure', () async {
@@ -3332,11 +3364,28 @@ void main() {
         rawImport: json.encode([importItemB.toJson()]),
         replaceMode: false,
       );
+      final f5 = service.restoreJournal(
+        rawImport: json.encode([
+          {
+            'id': 'final_replace_item',
+            'surahId': 114,
+            'surahName': 'الناس',
+            'ayahNumber': 1,
+            'ayahSnippet': 'قل أعوذ برب الناس',
+            'faithMessage': 'الاستعاذة بالرب',
+            'practicalAction': 'قراءة المعوذات',
+            'derivedDua': 'أعوذ برب الناس',
+            'createdAt': '2026-11-16T00:00:00.000',
+          }
+        ]),
+        replaceMode: true,
+      );
 
       final r1 = await f1.timeout(const Duration(seconds: 10));
       final r2 = await f2.timeout(const Duration(seconds: 10));
       final r3 = await f3.timeout(const Duration(seconds: 10));
       final r4 = await f4.timeout(const Duration(seconds: 10));
+      final r5 = await f5.timeout(const Duration(seconds: 10));
       expect(r1.status, equals(JournalOperationStatus.persisted));
       expect(r1.livePublished, isTrue);
       expect(r2.status, equals(JournalOperationStatus.persisted));
@@ -3345,11 +3394,17 @@ void main() {
       expect(r3.livePublished, isTrue);
       expect(r4.status, equals(JournalRestoreStatus.confirmedWrite));
       expect(r4.livePublished, isTrue);
+      expect(r5.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(r5.livePublished, isTrue);
 
-      // Verify no lost updates and no deadlock:
-      expect(service.entries.any((e) => e.id == 'local_item_a'), isFalse);
-      expect(service.entries.any((e) => e.id == 'import_item_b'), isTrue);
-      expect(service.entries.length, equals(3));
+      // Deterministic disk and live assertions: queued replaceMode: true must leave ONLY final_replace_item in disk and live
+      expect(service.entries.length, equals(1));
+      expect(service.entries.first.id, equals('final_replace_item'));
+      final rawDisk = prefs.getString('tadabbur_journal_entries_v1');
+      expect(rawDisk, isNotNull);
+      final List<dynamic> decodedDisk = json.decode(rawDisk!);
+      expect(decodedDisk.length, equals(1));
+      expect(decodedDisk.first['id'], equals('final_replace_item'));
 
       // Test that an injected failure does not wedge the queue
       final originalPlatform = SharedPreferencesStorePlatform.instance;
@@ -3376,6 +3431,8 @@ void main() {
 
       // Queue did not deadlock or abort subsequent op
       await expectLater(subsequentOp, completes);
+      mockPlatform.throwOnSetValue = false;
+      mockPlatform.failSetValueCount = null;
       SharedPreferencesStorePlatform.instance = originalPlatform;
     });
 

@@ -520,7 +520,7 @@ class TadabburJournalService extends ChangeNotifier {
         if (rawLocal != null && rawLocal.isNotEmpty && mergedJson == rawLocal) {
           final published = await _reloadAndSyncFromHost(prefs);
           return JournalRestoreResult(
-            status: JournalRestoreStatus.confirmedWrite,
+            status: JournalRestoreStatus.intentionalSkip,
             livePublished: published,
           );
         }
