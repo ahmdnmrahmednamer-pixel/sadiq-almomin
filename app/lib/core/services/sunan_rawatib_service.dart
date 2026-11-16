@@ -1,6 +1,71 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+enum SunanRawatibOperationStatus {
+  persisted,
+  writeUnconfirmed,
+  writeRefusedUnreadable,
+}
+
+@immutable
+class SunanRawatibToggleResult {
+  final SunanRawatibOperationStatus status;
+  final bool livePublished;
+
+  const SunanRawatibToggleResult({
+    required this.status,
+    required this.livePublished,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SunanRawatibToggleResult &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          livePublished == other.livePublished;
+
+  @override
+  int get hashCode => Object.hash(status, livePublished);
+
+  @override
+  String toString() =>
+      'SunanRawatibToggleResult(status: $status, livePublished: $livePublished)';
+}
+
+enum SunanRawatibRestoreStatus {
+  confirmedWrite,
+  intentionalSkip,
+  writeUnconfirmed,
+}
+
+@immutable
+class SunanRawatibRestoreResult {
+  final SunanRawatibRestoreStatus status;
+  final bool livePublished;
+
+  const SunanRawatibRestoreResult({
+    required this.status,
+    required this.livePublished,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SunanRawatibRestoreResult &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          livePublished == other.livePublished;
+
+  @override
+  int get hashCode => Object.hash(status, livePublished);
+
+  @override
+  String toString() =>
+      'SunanRawatibRestoreResult(status: $status, livePublished: $livePublished)';
+}
 
 class SunnahPrayerItem {
   final String id;
@@ -28,6 +93,21 @@ class SunanRawatibService extends ChangeNotifier {
 
   static const String _storageKey = 'sunan_rawatib_logs_v1';
   bool _isInitialized = false;
+
+  Future<void> _lastOp = Future.value();
+
+  Future<T> _enqueue<T>(Future<T> Function() op) {
+    final c = Completer<T>();
+    _lastOp = _lastOp.then((_) async {
+      try {
+        final res = await op();
+        c.complete(res);
+      } catch (e, st) {
+        c.completeError(e, st);
+      }
+    });
+    return c.future;
+  }
 
   /// Map of dateKey ('yyyy-MM-dd') -> Set of completed Sunnah IDs
   final Map<String, Set<String>> _dailyCompleted = {};
@@ -146,16 +226,264 @@ class SunanRawatibService extends ChangeNotifier {
     return _dailyCompleted[key]?.contains(sunnahId) ?? false;
   }
 
-  Future<void> toggleSunnah(String sunnahId, {DateTime? date}) async {
-    final key = dateKey(date ?? DateTime.now());
-    final set = _dailyCompleted.putIfAbsent(key, () => <String>{});
-    if (set.contains(sunnahId)) {
-      set.remove(sunnahId);
-    } else {
-      set.add(sunnahId);
+  static Map<String, List<String>>? safeDecodeSunanRawatib(String raw) {
+    try {
+      final dynamic decoded = json.decode(raw);
+      if (decoded is! Map) return null;
+      final result = <String, List<String>>{};
+      for (final entry in decoded.entries) {
+        if (entry.key is! String) return null;
+        if (entry.value is! List) return null;
+        final list = entry.value as List;
+        final stringList = <String>[];
+        for (final item in list) {
+          if (item is! String) return null;
+          stringList.add(item);
+        }
+        result[entry.key as String] = stringList;
+      }
+      return result;
+    } catch (_) {
+      return null;
     }
-    await _save();
-    notifyListeners();
+  }
+
+  Future<SunanRawatibRestoreResult> restoreSunanRawatib({
+    required String rawImport,
+    required bool replaceMode,
+  }) {
+    return _enqueue(() => _restoreSunanRawatibInternal(
+          rawImport: rawImport,
+          replaceMode: replaceMode,
+        ));
+  }
+
+  Future<SunanRawatibRestoreResult> restoreSunanRawatibReplace(
+    String rawImport,
+  ) {
+    return restoreSunanRawatib(rawImport: rawImport, replaceMode: true);
+  }
+
+  Future<SunanRawatibRestoreResult> restoreSunanRawatibMerge(
+    String rawImport,
+  ) {
+    return restoreSunanRawatib(rawImport: rawImport, replaceMode: false);
+  }
+
+  Future<SunanRawatibRestoreResult> _restoreSunanRawatibInternal({
+    required String rawImport,
+    required bool replaceMode,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      if (replaceMode) {
+        bool writeSuccess = false;
+        try {
+          writeSuccess =
+              await prefs.setString(_storageKey, rawImport);
+        } catch (_) {
+          writeSuccess = false;
+        }
+
+        final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+        if (writeSuccess) {
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
+      } else {
+        try {
+          await prefs.reload();
+        } catch (_) {
+          return const SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.writeUnconfirmed,
+            livePublished: false,
+          );
+        }
+
+        final rawLocal = prefs.getString(_storageKey);
+        final localMap = (rawLocal == null || rawLocal.isEmpty)
+            ? <String, List<String>>{}
+            : safeDecodeSunanRawatib(rawLocal);
+        if (localMap == null) {
+          final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        final importedMap = safeDecodeSunanRawatib(rawImport);
+        if (importedMap == null) {
+          final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        final allDates = {...localMap.keys, ...importedMap.keys}.toList()..sort();
+        final mergedMap = <String, List<String>>{};
+        for (final date in allDates) {
+          final localTasks = localMap[date] ?? const <String>[];
+          final importTasks = importedMap[date] ?? const <String>[];
+          mergedMap[date] = {...localTasks, ...importTasks}.toList();
+        }
+        final mergedJson = json.encode(mergedMap);
+
+        if (rawLocal != null && rawLocal.isNotEmpty && mergedJson == rawLocal) {
+          final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        bool writeSuccess = false;
+        try {
+          writeSuccess =
+              await prefs.setString(_storageKey, mergedJson);
+        } catch (_) {
+          writeSuccess = false;
+        }
+
+        final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+        if (writeSuccess) {
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return SunanRawatibRestoreResult(
+            status: SunanRawatibRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
+      }
+    } catch (_) {
+      return const SunanRawatibRestoreResult(
+        status: SunanRawatibRestoreStatus.writeUnconfirmed,
+        livePublished: false,
+      );
+    }
+  }
+
+  Future<bool> _reloadAndSyncSunanRawatibFromHost(
+      SharedPreferences prefs) async {
+    try {
+      await prefs.reload();
+    } catch (_) {
+      return false;
+    }
+    final raw = prefs.getString(_storageKey);
+    if (raw == null || raw.isEmpty) {
+      return false;
+    }
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is Map) {
+        _dailyCompleted.clear();
+        decoded.forEach((k, v) {
+          if (v is List) {
+            _dailyCompleted[k.toString()] =
+                v.map((e) => e.toString()).toSet();
+          }
+        });
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<SunanRawatibToggleResult> toggleSunnah(
+      String sunnahId, {DateTime? date}) {
+    return _enqueue(() => _toggleSunnahInternal(sunnahId, date: date));
+  }
+
+  Future<SunanRawatibToggleResult> _toggleSunnahInternal(
+      String sunnahId, {DateTime? date}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      try {
+        await prefs.reload();
+      } catch (_) {
+        return const SunanRawatibToggleResult(
+          status: SunanRawatibOperationStatus.writeUnconfirmed,
+          livePublished: false,
+        );
+      }
+
+      final raw = prefs.getString(_storageKey);
+      final Map<String, List<String>> hostDecoded;
+      if (raw == null || raw.isEmpty) {
+        hostDecoded = <String, List<String>>{};
+      } else {
+        final decoded = safeDecodeSunanRawatib(raw);
+        if (decoded == null) {
+          return const SunanRawatibToggleResult(
+            status: SunanRawatibOperationStatus.writeRefusedUnreadable,
+            livePublished: false,
+          );
+        }
+        hostDecoded = decoded;
+      }
+
+      final candidateMap = <String, List<String>>{};
+      for (final entry in hostDecoded.entries) {
+        candidateMap[entry.key] = List<String>.from(entry.value);
+      }
+      final key = dateKey(date ?? DateTime.now());
+      final dayList =
+          List<String>.from(candidateMap[key] ?? const <String>[]);
+      if (dayList.contains(sunnahId)) {
+        dayList.removeWhere((item) => item == sunnahId);
+      } else {
+        dayList.add(sunnahId);
+      }
+      candidateMap[key] = dayList;
+      final candidateJson = json.encode(candidateMap);
+
+      bool writeSuccess = false;
+      try {
+        writeSuccess =
+            await prefs.setString(_storageKey, candidateJson);
+      } catch (_) {
+        writeSuccess = false;
+      }
+
+      if (writeSuccess) {
+        _dailyCompleted.clear();
+        candidateMap.forEach((k, v) {
+          _dailyCompleted[k] = Set<String>.from(v);
+        });
+        notifyListeners();
+        return const SunanRawatibToggleResult(
+          status: SunanRawatibOperationStatus.persisted,
+          livePublished: true,
+        );
+      } else {
+        final published = await _reloadAndSyncSunanRawatibFromHost(prefs);
+        return SunanRawatibToggleResult(
+          status: SunanRawatibOperationStatus.writeUnconfirmed,
+          livePublished: published,
+        );
+      }
+    } catch (_) {
+      return const SunanRawatibToggleResult(
+        status: SunanRawatibOperationStatus.writeUnconfirmed,
+        livePublished: false,
+      );
+    }
   }
 
   /// Total confirmed Rawatib rak'ahs completed on [date] (out of 12)
@@ -199,13 +527,5 @@ class SunanRawatibService extends ChangeNotifier {
       }
     }
     return count;
-  }
-
-  Future<void> _save() async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = <String, List<String>>{
-      for (final entry in _dailyCompleted.entries) entry.key: entry.value.toList(),
-    };
-    await prefs.setString(_storageKey, json.encode(map));
   }
 }
