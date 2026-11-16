@@ -902,8 +902,16 @@ class BackupRestoreService {
       final extData = data['extended_features'] as Map<String, dynamic>?;
       if (extData != null) {
         if (extData['sunan_rawatib'] is String) {
-          await prefs.setString(
-              'sunan_rawatib_logs_v1', extData['sunan_rawatib'] as String);
+          final rawImport = extData['sunan_rawatib'] as String;
+          final rawatibResult =
+              await SunanRawatibService.instance.restoreSunanRawatib(
+            rawImport: rawImport,
+            replaceMode: replaceMode,
+          );
+          if (rawatibResult.status ==
+              SunanRawatibRestoreStatus.writeUnconfirmed) {
+            return false;
+          }
         }
         if (extData['tadabbur_journal'] is String) {
           final rawImport = extData['tadabbur_journal'] as String;

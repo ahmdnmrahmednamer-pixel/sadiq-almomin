@@ -236,7 +236,30 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                             ),
                           ],
                         ),
-                        onChanged: (_) => s.toggleSunnah(item.id, date: _selectedDate),
+                        onChanged: (_) async {
+                          final result =
+                              await s.toggleSunnah(item.id, date: _selectedDate);
+                          if (!mounted) return;
+                          if (result.status ==
+                              SunanRawatibOperationStatus.writeRefusedUnreadable) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'تعذرت قراءة سجل السنن الرواتب المحفوظ، لذلك لم يُنفَّذ التغيير. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.',
+                                ),
+                              ),
+                            );
+                          } else if (result.status ==
+                              SunanRawatibOperationStatus.writeUnconfirmed) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'تعذر تأكيد حفظ سجل السنن الرواتب لليوم. أعد المحاولة لاحقًا.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ),
                   );
