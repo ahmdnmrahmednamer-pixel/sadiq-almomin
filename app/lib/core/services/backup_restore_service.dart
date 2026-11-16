@@ -482,6 +482,143 @@ class BackupRestoreService {
     }
   }
 
+  static List<Map<String, dynamic>>? _safeDecodeJournalEntries(String raw) {
+    try {
+      final dynamic decoded = json.decode(raw);
+      if (decoded is! List) return null;
+
+      final result = <Map<String, dynamic>>[];
+      for (final element in decoded) {
+        if (element is! Map) return null;
+
+        final map = <String, dynamic>{};
+        for (final entry in element.entries) {
+          if (entry.key is! String) return null;
+          map[entry.key as String] = entry.value;
+        }
+
+        final id = map['id'];
+        if (id is! String || id.isEmpty) return null;
+
+        // surahId/ayahNumber int if non-null
+        if (map.containsKey('surahId') && map['surahId'] != null) {
+          if (map['surahId'] is! int) return null;
+        }
+        if (map.containsKey('ayahNumber') && map['ayahNumber'] != null) {
+          if (map['ayahNumber'] is! int) return null;
+        }
+
+        // surahName/ayahSnippet/faithMessage/practicalAction/derivedDua/createdAt String if non-null
+        if (map.containsKey('surahName') && map['surahName'] != null) {
+          if (map['surahName'] is! String) return null;
+        }
+        if (map.containsKey('ayahSnippet') && map['ayahSnippet'] != null) {
+          if (map['ayahSnippet'] is! String) return null;
+        }
+        if (map.containsKey('faithMessage') && map['faithMessage'] != null) {
+          if (map['faithMessage'] is! String) return null;
+        }
+        if (map.containsKey('practicalAction') && map['practicalAction'] != null) {
+          if (map['practicalAction'] is! String) return null;
+        }
+        if (map.containsKey('derivedDua') && map['derivedDua'] != null) {
+          if (map['derivedDua'] is! String) return null;
+        }
+        if (map.containsKey('createdAt') && map['createdAt'] != null) {
+          if (map['createdAt'] is! String) return null;
+        }
+
+        result.add(map);
+      }
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Map<String, dynamic> _entryContentSansId(Map<String, dynamic> entry) {
+    final copy = <String, dynamic>{};
+    for (final e in entry.entries) {
+      if (e.key != 'id') {
+        copy[e.key] = e.value;
+      }
+    }
+    return copy;
+  }
+
+  static String _canonicalEntryContent(Map<String, dynamic> entry) {
+    return canonicalJsonEncode(_entryContentSansId(entry));
+  }
+
+  static List<Map<String, dynamic>> _mergeJournalEntries({
+    required List<Map<String, dynamic>> localList,
+    required List<Map<String, dynamic>> importedList,
+  }) {
+    // 1. Preserve ALL local order, values, duplicates
+    final result = <Map<String, dynamic>>[];
+    for (final localEntry in localList) {
+      result.add(Map<String, dynamic>.from(localEntry));
+    }
+
+    // 2. Process imports in sequential input order against growing result
+    for (final importEntry in importedList) {
+      final originalId = importEntry['id'] as String;
+      final importCanonical = _canonicalEntryContent(importEntry);
+
+      // Scan ALL occupants with originalid:
+      // ANY same content => dedupe; unoccupied => append raw;
+      // otherwise baseID = 'restored_' + calculateChecksum(canonicalcontentSansId)
+      final occupantsWithOriginalId =
+          result.where((e) => e['id'] == originalId).toList();
+
+      if (occupantsWithOriginalId.isNotEmpty) {
+        final hasSameContent = occupantsWithOriginalId
+            .any((e) => _canonicalEntryContent(e) == importCanonical);
+        if (hasSameContent) {
+          // ANY same content => dedupe
+          continue;
+        }
+      } else {
+        // unoccupied => append raw
+        result.add(Map<String, dynamic>.from(importEntry));
+        continue;
+      }
+
+      // Otherwise: occupied only by different content!
+      // Compute baseID = 'restored_' + calculateChecksum(canonicalcontentSansId)
+      final baseId = 'restored_${calculateChecksum(importCanonical)}';
+
+      // Scan ALL occupants for candidateID:
+      // ANY same content => dedupe; occupied only different => try base+'-2','-3',etc;
+      // absent => append raw map ONLY id changed
+      int suffix = 1;
+      while (true) {
+        final candidateId = suffix == 1 ? baseId : '$baseId-$suffix';
+        final occupantsWithCandidate =
+            result.where((e) => e['id'] == candidateId).toList();
+
+        if (occupantsWithCandidate.isNotEmpty) {
+          final hasSameContent = occupantsWithCandidate
+              .any((e) => _canonicalEntryContent(e) == importCanonical);
+          if (hasSameContent) {
+            // ANY same content => dedupe
+            break;
+          }
+          // Occupied only by different content => try next suffix
+          suffix++;
+        } else {
+          // absent => append raw map ONLY id changed
+          final newEntry = Map<String, dynamic>.from(importEntry);
+          newEntry['id'] = candidateId;
+          result.add(newEntry);
+          break;
+        }
+      }
+    }
+
+    return result;
+  }
+
   /// Restores backup data into the app state
   Future<bool> restoreBackup(
     Map<String, dynamic> backupEnvelope, {
@@ -927,8 +1064,27 @@ class BackupRestoreService {
               'sunan_rawatib_logs_v1', extData['sunan_rawatib'] as String);
         }
         if (extData['tadabbur_journal'] is String) {
-          await prefs.setString('tadabbur_journal_entries_v1',
-              extData['tadabbur_journal'] as String);
+          final rawImport = extData['tadabbur_journal'] as String;
+          if (replaceMode) {
+            await prefs.setString(
+                'tadabbur_journal_entries_v1', rawImport);
+          } else {
+            final importedList = _safeDecodeJournalEntries(rawImport);
+            if (importedList != null) {
+              final rawLocal = prefs.getString('tadabbur_journal_entries_v1');
+              final localList = (rawLocal == null || rawLocal.isEmpty)
+                  ? <Map<String, dynamic>>[]
+                  : _safeDecodeJournalEntries(rawLocal);
+              if (localList != null) {
+                final merged = _mergeJournalEntries(
+                  localList: localList,
+                  importedList: importedList,
+                );
+                await prefs.setString('tadabbur_journal_entries_v1',
+                    json.encode(merged));
+              }
+            }
+          }
         }
         if (extData['riyad_bookmarks_v1'] is List) {
           await restoreOrMergeList(
