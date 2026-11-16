@@ -482,6 +482,60 @@ class BackupRestoreService {
     }
   }
 
+  static List<Map<String, dynamic>>? _safeDecodeJournalEntries(String raw) {
+    try {
+      final dynamic decoded = json.decode(raw);
+      if (decoded is! List) return null;
+
+      final result = <Map<String, dynamic>>[];
+      for (final element in decoded) {
+        if (element is! Map) return null;
+
+        final map = <String, dynamic>{};
+        for (final entry in element.entries) {
+          if (entry.key is! String) return null;
+          map[entry.key as String] = entry.value;
+        }
+
+        final id = map['id'];
+        if (id is! String || id.isEmpty) return null;
+
+        // surahId/ayahNumber int if non-null
+        if (map.containsKey('surahId') && map['surahId'] != null) {
+          if (map['surahId'] is! int) return null;
+        }
+        if (map.containsKey('ayahNumber') && map['ayahNumber'] != null) {
+          if (map['ayahNumber'] is! int) return null;
+        }
+
+        // surahName/ayahSnippet/faithMessage/practicalAction/derivedDua/createdAt String if non-null
+        if (map.containsKey('surahName') && map['surahName'] != null) {
+          if (map['surahName'] is! String) return null;
+        }
+        if (map.containsKey('ayahSnippet') && map['ayahSnippet'] != null) {
+          if (map['ayahSnippet'] is! String) return null;
+        }
+        if (map.containsKey('faithMessage') && map['faithMessage'] != null) {
+          if (map['faithMessage'] is! String) return null;
+        }
+        if (map.containsKey('practicalAction') && map['practicalAction'] != null) {
+          if (map['practicalAction'] is! String) return null;
+        }
+        if (map.containsKey('derivedDua') && map['derivedDua'] != null) {
+          if (map['derivedDua'] is! String) return null;
+        }
+        if (map.containsKey('createdAt') && map['createdAt'] != null) {
+          if (map['createdAt'] is! String) return null;
+        }
+
+        result.add(map);
+      }
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Restores backup data into the app state
   Future<bool> restoreBackup(
     Map<String, dynamic> backupEnvelope, {
@@ -927,8 +981,43 @@ class BackupRestoreService {
               'sunan_rawatib_logs_v1', extData['sunan_rawatib'] as String);
         }
         if (extData['tadabbur_journal'] is String) {
-          await prefs.setString('tadabbur_journal_entries_v1',
-              extData['tadabbur_journal'] as String);
+          final rawImport = extData['tadabbur_journal'] as String;
+          final importedList = _safeDecodeJournalEntries(rawImport);
+          if (importedList != null) {
+            if (replaceMode) {
+              await prefs.setString(
+                  'tadabbur_journal_entries_v1', rawImport);
+            } else {
+              final rawLocal = prefs.getString('tadabbur_journal_entries_v1');
+              final localList = (rawLocal == null || rawLocal.isEmpty)
+                  ? <Map<String, dynamic>>[]
+                  : _safeDecodeJournalEntries(rawLocal);
+              if (localList != null) {
+                final merged = <Map<String, dynamic>>[];
+                final idToIndex = <String, int>{};
+                for (final entry in localList) {
+                  final id = entry['id'] as String;
+                  if (idToIndex.containsKey(id)) {
+                    merged[idToIndex[id]!] = entry;
+                  } else {
+                    idToIndex[id] = merged.length;
+                    merged.add(entry);
+                  }
+                }
+                for (final entry in importedList) {
+                  final id = entry['id'] as String;
+                  if (idToIndex.containsKey(id)) {
+                    merged[idToIndex[id]!] = entry;
+                  } else {
+                    idToIndex[id] = merged.length;
+                    merged.add(entry);
+                  }
+                }
+                await prefs.setString('tadabbur_journal_entries_v1',
+                    json.encode(merged));
+              }
+            }
+          }
         }
         if (extData['riyad_bookmarks_v1'] is List) {
           await restoreOrMergeList(
