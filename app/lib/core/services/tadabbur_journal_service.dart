@@ -212,32 +212,34 @@ class TadabburJournalService extends ChangeNotifier {
   }
 
   Future<void> init({bool forceReload = false}) {
-    return _enqueue(() => _initInternal(forceReload: forceReload)).catchError((_) {
-      _isReadable = false;
-      notifyListeners();
-    });
+    return _enqueue(() => _initInternal(forceReload: forceReload));
   }
 
   Future<void> _initInternal({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload && _isReadable) return;
-    final prefs = await SharedPreferences.getInstance();
+    try {
+      if (_isInitialized && !forceReload && _isReadable) return;
+      final prefs = await SharedPreferences.getInstance();
 
-    await _reloadAndSyncFromHost(prefs);
+      await _reloadAndSyncFromHost(prefs);
 
-    final rawAcc = prefs.getString(_dailyAccountabilityKey);
-    if (rawAcc != null && rawAcc.isNotEmpty) {
-      try {
-        final Map<String, dynamic> map = json.decode(rawAcc);
-        _dailyAccountability.clear();
-        map.forEach((k, v) {
-          if (v is List) {
-            _dailyAccountability[k] = v.map((e) => e.toString()).toSet();
-          }
-        });
-      } catch (_) {}
+      final rawAcc = prefs.getString(_dailyAccountabilityKey);
+      if (rawAcc != null && rawAcc.isNotEmpty) {
+        try {
+          final Map<String, dynamic> map = json.decode(rawAcc);
+          _dailyAccountability.clear();
+          map.forEach((k, v) {
+            if (v is List) {
+              _dailyAccountability[k] = v.map((e) => e.toString()).toSet();
+            }
+          });
+        } catch (_) {}
+      }
+
+      _isInitialized = true;
+    } catch (_) {
+      _isReadable = false;
+      notifyListeners();
     }
-
-    _isInitialized = true;
   }
 
   /// Common private path for host reload, read, decode, materialize, and publish.
@@ -303,14 +305,7 @@ class TadabburJournalService extends ChangeNotifier {
           faithMessage: faithMessage,
           practicalAction: practicalAction,
           derivedDua: derivedDua,
-        )).catchError((_) {
-      _isReadable = false;
-      notifyListeners();
-      return const JournalOperationResult(
-        status: JournalOperationStatus.writeUnconfirmed,
-        livePublished: false,
-      );
-    });
+        ));
   }
 
   Future<JournalOperationResult> _addReflectionInternal({
@@ -322,104 +317,115 @@ class TadabburJournalService extends ChangeNotifier {
     required String practicalAction,
     required String derivedDua,
   }) async {
-    // Refuse before mutation if unreadable
-    if (!_isReadable) {
-      return const JournalOperationResult(
-        status: JournalOperationStatus.refusedUnreadable,
-        livePublished: false,
-      );
-    }
-
-    final item = TadabburReflectionItem(
-      id: 'tadabbur_${DateTime.now().millisecondsSinceEpoch}',
-      surahId: surahId,
-      surahName: surahName,
-      ayahNumber: ayahNumber,
-      ayahSnippet: ayahSnippet,
-      faithMessage: faithMessage,
-      practicalAction: practicalAction,
-      derivedDua: derivedDua,
-      createdAt: DateTime.now(),
-    );
-
-    // Compute candidate without live mutation
-    final candidateList = [item, ..._entries];
-    final candidateJson = json.encode(candidateList.map((e) => e.toJson()).toList());
-
-    final prefs = await SharedPreferences.getInstance();
-    bool writeSuccess = false;
     try {
-      writeSuccess = await prefs.setString(_storageKey, candidateJson);
-    } catch (_) {
-      writeSuccess = false;
-    }
+      // Refuse before mutation if unreadable
+      if (!_isReadable) {
+        return const JournalOperationResult(
+          status: JournalOperationStatus.refusedUnreadable,
+          livePublished: false,
+        );
+      }
 
-    if (writeSuccess) {
-      _entries
-        ..clear()
-        ..addAll(candidateList);
-      notifyListeners();
-      return const JournalOperationResult(
-        status: JournalOperationStatus.persisted,
-        livePublished: true,
+      final item = TadabburReflectionItem(
+        id: 'tadabbur_${DateTime.now().millisecondsSinceEpoch}',
+        surahId: surahId,
+        surahName: surahName,
+        ayahNumber: ayahNumber,
+        ayahSnippet: ayahSnippet,
+        faithMessage: faithMessage,
+        practicalAction: practicalAction,
+        derivedDua: derivedDua,
+        createdAt: DateTime.now(),
       );
-    }
 
-    // false/throw ALWAYS writeUnconfirmed, never inferred success from readback.
-    // SAME queue attempt host reload to evict optimistic cache
-    final published = await _reloadAndSyncFromHost(prefs);
-    return JournalOperationResult(
-      status: JournalOperationStatus.writeUnconfirmed,
-      livePublished: published,
-    );
-  }
+      // Compute candidate without live mutation
+      final candidateList = [item, ..._entries];
+      final candidateJson = json.encode(candidateList.map((e) => e.toJson()).toList());
 
-  Future<JournalOperationResult> deleteReflection(String id) {
-    return _enqueue(() => _deleteReflectionInternal(id)).catchError((_) {
+      final prefs = await SharedPreferences.getInstance();
+      bool writeSuccess = false;
+      try {
+        writeSuccess = await prefs.setString(_storageKey, candidateJson);
+      } catch (_) {
+        writeSuccess = false;
+      }
+
+      if (writeSuccess) {
+        _entries
+          ..clear()
+          ..addAll(candidateList);
+        notifyListeners();
+        return const JournalOperationResult(
+          status: JournalOperationStatus.persisted,
+          livePublished: true,
+        );
+      }
+
+      // false/throw ALWAYS writeUnconfirmed, never inferred success from readback.
+      // SAME queue attempt host reload to evict optimistic cache
+      final published = await _reloadAndSyncFromHost(prefs);
+      return JournalOperationResult(
+        status: JournalOperationStatus.writeUnconfirmed,
+        livePublished: published,
+      );
+    } catch (_) {
       _isReadable = false;
       notifyListeners();
       return const JournalOperationResult(
         status: JournalOperationStatus.writeUnconfirmed,
         livePublished: false,
       );
-    });
+    }
+  }
+
+  Future<JournalOperationResult> deleteReflection(String id) {
+    return _enqueue(() => _deleteReflectionInternal(id));
   }
 
   Future<JournalOperationResult> _deleteReflectionInternal(String id) async {
-    if (!_isReadable) {
+    try {
+      if (!_isReadable) {
+        return const JournalOperationResult(
+          status: JournalOperationStatus.refusedUnreadable,
+          livePublished: false,
+        );
+      }
+
+      final candidateList = _entries.where((e) => e.id != id).toList();
+      final candidateJson = json.encode(candidateList.map((e) => e.toJson()).toList());
+
+      final prefs = await SharedPreferences.getInstance();
+      bool writeSuccess = false;
+      try {
+        writeSuccess = await prefs.setString(_storageKey, candidateJson);
+      } catch (_) {
+        writeSuccess = false;
+      }
+
+      if (writeSuccess) {
+        _entries
+          ..clear()
+          ..addAll(candidateList);
+        notifyListeners();
+        return const JournalOperationResult(
+          status: JournalOperationStatus.persisted,
+          livePublished: true,
+        );
+      }
+
+      final published = await _reloadAndSyncFromHost(prefs);
+      return JournalOperationResult(
+        status: JournalOperationStatus.writeUnconfirmed,
+        livePublished: published,
+      );
+    } catch (_) {
+      _isReadable = false;
+      notifyListeners();
       return const JournalOperationResult(
-        status: JournalOperationStatus.refusedUnreadable,
+        status: JournalOperationStatus.writeUnconfirmed,
         livePublished: false,
       );
     }
-
-    final candidateList = _entries.where((e) => e.id != id).toList();
-    final candidateJson = json.encode(candidateList.map((e) => e.toJson()).toList());
-
-    final prefs = await SharedPreferences.getInstance();
-    bool writeSuccess = false;
-    try {
-      writeSuccess = await prefs.setString(_storageKey, candidateJson);
-    } catch (_) {
-      writeSuccess = false;
-    }
-
-    if (writeSuccess) {
-      _entries
-        ..clear()
-        ..addAll(candidateList);
-      notifyListeners();
-      return const JournalOperationResult(
-        status: JournalOperationStatus.persisted,
-        livePublished: true,
-      );
-    }
-
-    final published = await _reloadAndSyncFromHost(prefs);
-    return JournalOperationResult(
-      status: JournalOperationStatus.writeUnconfirmed,
-      livePublished: published,
-    );
   }
 
   Future<JournalRestoreResult> restoreJournal({
@@ -429,117 +435,123 @@ class TadabburJournalService extends ChangeNotifier {
     return _enqueue(() => _restoreJournalInternal(
           rawImport: rawImport,
           replaceMode: replaceMode,
-        )).catchError((_) {
-      _isReadable = false;
-      notifyListeners();
-      return const JournalRestoreResult(
-        status: JournalRestoreStatus.writeUnconfirmed,
-        livePublished: false,
-      );
-    });
+        ));
   }
 
   Future<JournalRestoreResult> _restoreJournalInternal({
     required String rawImport,
     required bool replaceMode,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
+    try {
+      final prefs = await SharedPreferences.getInstance();
 
-    if (replaceMode) {
-      // restore replace: ignore latch, setString rawVERBATIM incl malformed/nonlist/empty as PR21.
-      bool writeSuccess = false;
-      try {
-        writeSuccess = await prefs.setString(_storageKey, rawImport);
-      } catch (_) {
-        writeSuccess = false;
-      }
+      if (replaceMode) {
+        // restore replace: ignore latch, setString rawVERBATIM incl malformed/nonlist/empty as PR21.
+        bool writeSuccess = false;
+        try {
+          writeSuccess = await prefs.setString(_storageKey, rawImport);
+        } catch (_) {
+          writeSuccess = false;
+        }
 
-      // Storage write confirmed or failed: read back actual host storage
-      // Note: Replace '' writes verbatim KEY REMAINS and does NOT clear live per baseline 138e.
-      final published = await _reloadAndSyncFromHost(prefs);
-      if (writeSuccess) {
-        return JournalRestoreResult(
-          status: JournalRestoreStatus.confirmedWrite,
-          livePublished: published,
-        );
+        // Storage write confirmed or failed: read back actual host storage
+        // Note: Replace '' writes verbatim KEY REMAINS and does NOT clear live per baseline 138e.
+        final published = await _reloadAndSyncFromHost(prefs);
+        if (writeSuccess) {
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
       } else {
-        return JournalRestoreResult(
-          status: JournalRestoreStatus.writeUnconfirmed,
-          livePublished: published,
-        );
-      }
-    } else {
-      // restore merge: unconditional HOST reload INSIDE queue BEFORE local read;
-      // failure => writeUnconfirmed / no write, latch unreadable
-      try {
-        await prefs.reload();
-      } catch (_) {
-        _isReadable = false;
-        notifyListeners();
-        return const JournalRestoreResult(
-          status: JournalRestoreStatus.writeUnconfirmed,
-          livePublished: false,
-        );
-      }
+        // restore merge: unconditional HOST reload INSIDE queue BEFORE local read;
+        // failure => writeUnconfirmed / no write, latch unreadable
+        try {
+          await prefs.reload();
+        } catch (_) {
+          _isReadable = false;
+          notifyListeners();
+          return const JournalRestoreResult(
+            status: JournalRestoreStatus.writeUnconfirmed,
+            livePublished: false,
+          );
+        }
 
-      // Validate fresh LOCAL FIRST before malformed IMPORT skip, so known corrupt local cannot stay readable
-      final rawLocal = prefs.getString(_storageKey);
-      final localList = (rawLocal == null || rawLocal.isEmpty)
-          ? <Map<String, dynamic>>[]
-          : JournalMergeUtil.safeDecodeJournalEntries(rawLocal);
-      if (localList == null) {
-        // malformed local must latch unreadable before return so later add cannot overwrite
-        _isReadable = false;
-        notifyListeners();
-        return const JournalRestoreResult(
-          status: JournalRestoreStatus.intentionalSkip,
-          livePublished: false,
-        );
-      }
+        // Validate fresh LOCAL FIRST before malformed IMPORT skip, so known corrupt local cannot stay readable
+        final rawLocal = prefs.getString(_storageKey);
+        final localList = (rawLocal == null || rawLocal.isEmpty)
+            ? <Map<String, dynamic>>[]
+            : JournalMergeUtil.safeDecodeJournalEntries(rawLocal);
+        if (localList == null) {
+          // malformed local must latch unreadable before return so later add cannot overwrite
+          _isReadable = false;
+          notifyListeners();
+          return const JournalRestoreResult(
+            status: JournalRestoreStatus.intentionalSkip,
+            livePublished: false,
+          );
+        }
 
-      // Validate IMPORT: unreadable import => whole-key skip per PR 21 / no write
-      final importedList = JournalMergeUtil.safeDecodeJournalEntries(rawImport);
-      if (importedList == null) {
-        return const JournalRestoreResult(
-          status: JournalRestoreStatus.intentionalSkip,
-          livePublished: false,
-        );
-      }
+        // Validate IMPORT: unreadable import => whole-key skip per PR 21 / no write
+        final importedList = JournalMergeUtil.safeDecodeJournalEntries(rawImport);
+        if (importedList == null) {
+          // malformed IMPORT skip after readable fresh LOCAL must establish actual host live/latch, actual skip livePublished
+          final published = await _reloadAndSyncFromHost(prefs);
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
 
-      // otherwise exact PR 21 union/remap/inputorder/unknownrawpreservation.
-      final merged = JournalMergeUtil.mergeJournalEntries(
-        localList: localList,
-        importedList: importedList,
+        // otherwise exact PR 21 union/remap/inputorder/unknownrawpreservation.
+        final merged = JournalMergeUtil.mergeJournalEntries(
+          localList: localList,
+          importedList: importedList,
+        );
+        final mergedJson = json.encode(merged);
+
+        // Unchanged raw merge no-write guard:
+        // Must perform actual host decode/materialize/publish and return accurate flag without write!
+        if (rawLocal != null && rawLocal.isNotEmpty && mergedJson == rawLocal) {
+          final published = await _reloadAndSyncFromHost(prefs);
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        }
+
+        bool writeSuccess = false;
+        try {
+          writeSuccess = await prefs.setString(_storageKey, mergedJson);
+        } catch (_) {
+          writeSuccess = false;
+        }
+
+        final published = await _reloadAndSyncFromHost(prefs);
+        if (writeSuccess) {
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return JournalRestoreResult(
+            status: JournalRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
+      }
+    } catch (_) {
+      _isReadable = false;
+      notifyListeners();
+      return const JournalRestoreResult(
+        status: JournalRestoreStatus.writeUnconfirmed,
+        livePublished: false,
       );
-      final mergedJson = json.encode(merged);
-
-      // Unchanged raw merge no-write guard:
-      if (rawLocal != null && rawLocal.isNotEmpty && mergedJson == rawLocal) {
-        return const JournalRestoreResult(
-          status: JournalRestoreStatus.confirmedWrite,
-          livePublished: true,
-        );
-      }
-
-      bool writeSuccess = false;
-      try {
-        writeSuccess = await prefs.setString(_storageKey, mergedJson);
-      } catch (_) {
-        writeSuccess = false;
-      }
-
-      final published = await _reloadAndSyncFromHost(prefs);
-      if (writeSuccess) {
-        return JournalRestoreResult(
-          status: JournalRestoreStatus.confirmedWrite,
-          livePublished: published,
-        );
-      } else {
-        return JournalRestoreResult(
-          status: JournalRestoreStatus.writeUnconfirmed,
-          livePublished: published,
-        );
-      }
     }
   }
 

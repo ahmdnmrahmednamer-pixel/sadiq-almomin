@@ -1,7 +1,10 @@
+// ignore_for_file: depend_on_referenced_packages
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:shared_preferences_platform_interface/types.dart';
 import 'package:almomin/core/services/backup_restore_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/services/khatma_service.dart';
@@ -10,6 +13,71 @@ import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/islamic_radio_service.dart';
 import 'package:almomin/core/services/tadabbur_journal_service.dart';
 import 'package:almomin/features/backup/backup_restore_screen.dart';
+import 'package:almomin/features/mushaf/tadabbur_journal_screen.dart';
+
+class MockFailureStorePlatform extends SharedPreferencesStorePlatform {
+  final SharedPreferencesStorePlatform delegate;
+  int? failSetValueCount;
+  bool returnFalseOnSetValue = false;
+  bool throwOnSetValue = false;
+  bool throwOnGetAll = false;
+  Map<String, Object>? overrideGetAllData;
+
+  MockFailureStorePlatform(this.delegate);
+
+  @override
+  bool get isMock => true;
+
+  @override
+  Future<bool> clear() => delegate.clear();
+
+  @override
+  Future<bool> clearWithParameters(ClearParameters parameters) =>
+      delegate.clearWithParameters(parameters);
+
+  @override
+  Future<Map<String, Object>> getAll() {
+    if (throwOnGetAll) {
+      throw Exception('Simulated platform host read/reload failure');
+    }
+    if (overrideGetAllData != null) {
+      return Future.value(Map<String, Object>.from(overrideGetAllData!));
+    }
+    return delegate.getAll();
+  }
+
+  @override
+  Future<Map<String, Object>> getAllWithParameters(GetAllParameters parameters) {
+    if (throwOnGetAll) {
+      throw Exception('Simulated platform host read/reload failure');
+    }
+    if (overrideGetAllData != null) {
+      return Future.value(Map<String, Object>.from(overrideGetAllData!));
+    }
+    return delegate.getAllWithParameters(parameters);
+  }
+
+  @override
+  Future<bool> remove(String key) => delegate.remove(key);
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) {
+    if (failSetValueCount != null && failSetValueCount! > 0) {
+      failSetValueCount = failSetValueCount! - 1;
+      if (throwOnSetValue) {
+        throw Exception('Simulated platform setValue exception');
+      }
+      return Future.value(false);
+    }
+    if (throwOnSetValue) {
+      throw Exception('Simulated platform setValue exception');
+    }
+    if (returnFalseOnSetValue) {
+      return Future.value(false);
+    }
+    return delegate.setValue(valueType, key, value);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -2740,6 +2808,687 @@ void main() {
           .timeout(const Duration(seconds: 5));
       expect(res2, isTrue);
       expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMerged));
+    });
+
+    test('RED spec replacing c998: init whole-list reject, last good live preserved, raw storage preserved, and writes blocked', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // 1. Seed last good live state
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.entries.length, equals(1));
+      expect(TadabburJournalService.instance.entries.first.id, equals('local_item_a'));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // 2. Prepare raw seed: valid first entry with unknown fields + wrong-typed later entry
+      final rawValidFirstWithUnknowns = {
+        'id': 'valid_first_id',
+        'surahId': 1,
+        'surahName': 'الفاتحة',
+        'ayahNumber': 5,
+        'ayahSnippet': '﴿إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ﴾',
+        'faithMessage': 'إخلاص العبودية والاستعانة بالله',
+        'practicalAction': 'تجديد النية قبل العمل',
+        'derivedDua': 'اللهم أعني على ذكرك وشكرك',
+        'createdAt': '2026-10-01T00:00:00.000',
+        'unknown_meta_string': 'custom_metadata_value',
+        'unknown_nested_map': {'sync_flag': true, 'revision': 42},
+        'unknown_tags_list': ['imaan', 'quran'],
+      };
+      final rawWrongTypedLater = {
+        'id': 'wrong_typed_later_id',
+        'surahId': 'string_not_an_int', // wrong type -> causes TypeError in TadabburReflectionItem.fromJson
+        'surahName': 'البقرة',
+        'ayahNumber': 255,
+        'ayahSnippet': '﴿اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ﴾',
+        'faithMessage': 'قيومية الله',
+        'practicalAction': 'التوكل على الحي القيوم',
+        'derivedDua': 'يا حي يا قيوم',
+        'createdAt': '2026-10-02T00:00:00.000',
+        'wrong_entry_extra': 'extra_value',
+      };
+
+      final rawMixedSeed = json.encode([
+        rawValidFirstWithUnknowns,
+        rawWrongTypedLater,
+      ]);
+      await prefs.setString('tadabbur_journal_entries_v1', rawMixedSeed);
+
+      // 3. forceReload: whole-list reject
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // Desired RED spec behavior:
+      // a) whole list rejected
+      expect(TadabburJournalService.instance.isReadable, isFalse,
+          reason: 'ANY malformed entry must reject WHOLE list and latch unreadable');
+      // b) last good live unchanged
+      expect(TadabburJournalService.instance.entries.length, equals(1));
+      expect(TadabburJournalService.instance.entries.first.id, equals('local_item_a'),
+          reason: 'Last good live entries must be preserved untouched');
+      // c) raw bytes in storage untouched
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMixedSeed),
+          reason: 'Primary bytes in storage must remain untouched');
+
+      // d) write blocked: addReflection returns refusedUnreadable
+      final addRes = await TadabburJournalService.instance.addReflection(
+        surahId: 112,
+        surahName: 'الإخلاص',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾',
+        faithMessage: 'توحيد الله الأحد',
+        practicalAction: 'إخلاص العمل',
+        derivedDua: 'اللهم إني أسألك التوحيد',
+      ).timeout(const Duration(seconds: 5));
+      expect(addRes.status, equals(JournalOperationStatus.refusedUnreadable));
+      expect(addRes.livePublished, isFalse);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMixedSeed),
+          reason: 'Storage bytes must remain untouched when write is refused');
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+
+      // e) write blocked: deleteReflection returns refusedUnreadable
+      final delRes = await TadabburJournalService.instance.deleteReflection('local_item_a').timeout(const Duration(seconds: 5));
+      expect(delRes.status, equals(JournalOperationStatus.refusedUnreadable));
+      expect(delRes.livePublished, isFalse);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(rawMixedSeed));
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+    });
+
+    test('baseline 138e R3 verified: null/empty string preserves live entries, literal [] clears live, and replace verbatim preserves key', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // Part 1: null storage does not clear live entries (seeds remain), marks readable, livePublished = false
+      await prefs.remove('tadabbur_journal_entries_v1');
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      expect(TadabburJournalService.instance.entries, isNotEmpty,
+          reason: 'null storage retains default cold-start seeds without clearing live');
+
+      // Part 2: empty string "" does not clear existing live entries
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([localItemA.toJson()]));
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+
+      await prefs.setString('tadabbur_journal_entries_v1', '');
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']),
+          reason: 'empty string storage does not decode and leaves live entries untouched');
+
+      // Part 3: literal "[]" decodes and CLEARS live entries
+      await prefs.setString('tadabbur_journal_entries_v1', '[]');
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      expect(TadabburJournalService.instance.entries, isEmpty,
+          reason: 'literal "[]" decodes to empty list and clears live entries');
+
+      // Part 4: replaceMode with rawImport "" writes verbatim, key remains in prefs, does NOT clear live
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([localItemA.toJson()]));
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+
+      final replaceEmptyRes = await TadabburJournalService.instance.restoreJournal(
+        rawImport: '',
+        replaceMode: true,
+      ).timeout(const Duration(seconds: 5));
+      expect(replaceEmptyRes.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(replaceEmptyRes.livePublished, isFalse);
+      expect(prefs.containsKey('tadabbur_journal_entries_v1'), isTrue);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(''));
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']),
+          reason: 'replace verbatim "" preserves key in prefs and does NOT clear live entries');
+
+      // Part 5: replaceMode with rawImport "[]" writes verbatim, CLEARS live, livePublished = true
+      final replaceEmptyListRes = await TadabburJournalService.instance.restoreJournal(
+        rawImport: '[]',
+        replaceMode: true,
+      ).timeout(const Duration(seconds: 5));
+      expect(replaceEmptyListRes.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(replaceEmptyListRes.livePublished, isTrue);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals('[]'));
+      expect(TadabburJournalService.instance.entries, isEmpty,
+          reason: 'replace verbatim "[]" clears live entries and sets livePublished = true');
+    });
+
+    test('false/throw and reload success same/different/undecodable/reloadfailure matrices for addReflection and deleteReflection', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+
+      addTearDown(() async {
+        SharedPreferencesStorePlatform.instance = originalPlatform;
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // Seed valid state
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      expect(TadabburJournalService.instance.entries.length, equals(1));
+
+      // Matrix 1: setString returns false + host reload succeeds with same host data
+      mockPlatform.returnFalseOnSetValue = true;
+      final res1 = await TadabburJournalService.instance.addReflection(
+        surahId: 112,
+        surahName: 'الإخلاص',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾',
+        faithMessage: 'التوحيد',
+        practicalAction: 'العمل',
+        derivedDua: 'الدعاء',
+      ).timeout(const Duration(seconds: 5));
+      expect(res1.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(res1.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']),
+          reason: 'Optimistic candidate evicted, live reflects reloaded same host data');
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // Matrix 2: setString returns false + host reload succeeds with DIFFERENT host data
+      final hostItemDiff = TadabburReflectionItem(
+        id: 'host_item_diff',
+        surahId: 2,
+        surahName: 'البقرة',
+        ayahNumber: 255,
+        ayahSnippet: 'آية الكرسي',
+        faithMessage: 'قيومية الله',
+        practicalAction: 'التوكل',
+        derivedDua: 'يا حي يا قيوم',
+        createdAt: DateTime(2026, 11, 1),
+      );
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': json.encode([hostItemDiff.toJson()]),
+      };
+      final res2 = await TadabburJournalService.instance.addReflection(
+        surahId: 113,
+        surahName: 'الفلق',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ﴾',
+        faithMessage: 'الاستعاذة',
+        practicalAction: 'الأذكار',
+        derivedDua: 'أعوذ بك',
+      ).timeout(const Duration(seconds: 5));
+      expect(res2.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(res2.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['host_item_diff']),
+          reason: 'Host data published atomically EVEN IF DIFFERENT from prior live/candidate');
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // Matrix 3: setString returns false + host reload succeeds with UNDECODABLE host data
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': 'malformed_non_json_string',
+      };
+      final res3 = await TadabburJournalService.instance.addReflection(
+        surahId: 114,
+        surahName: 'الناس',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ أَعُوذُ بِرَبِّ النَّاسِ﴾',
+        faithMessage: 'الاعتصام',
+        practicalAction: 'الحفظ',
+        derivedDua: 'أعوذ برب الناس',
+      ).timeout(const Duration(seconds: 5));
+      expect(res3.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(res3.livePublished, isFalse);
+      expect(TadabburJournalService.instance.isReadable, isFalse,
+          reason: 'Undecodable host data marks latch unreadable');
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['host_item_diff']),
+          reason: 'Undecodable host data keeps last good live');
+
+      // Unblock by restoring valid host data
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': json.encode([localItemA.toJson()]),
+      };
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // Matrix 4: setString returns false + host reload FAILS (throws)
+      mockPlatform.throwOnGetAll = true;
+      final res4 = await TadabburJournalService.instance.addReflection(
+        surahId: 112,
+        surahName: 'الإخلاص',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾',
+        faithMessage: 'التوحيد',
+        practicalAction: 'العمل',
+        derivedDua: 'الدعاء',
+      ).timeout(const Duration(seconds: 5));
+      expect(res4.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(res4.livePublished, isFalse);
+      expect(TadabburJournalService.instance.isReadable, isFalse,
+          reason: 'Host reload failure marks latch unreadable');
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']),
+          reason: 'Host reload failure keeps last good live');
+
+      // Unblock
+      mockPlatform.throwOnGetAll = false;
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // Matrix 5: setString throws + host reload succeeds
+      mockPlatform.returnFalseOnSetValue = false;
+      mockPlatform.throwOnSetValue = true;
+      final res5 = await TadabburJournalService.instance.addReflection(
+        surahId: 112,
+        surahName: 'الإخلاص',
+        ayahNumber: 1,
+        ayahSnippet: '﴿قُلْ هُوَ اللَّهُ أَحَدٌ﴾',
+        faithMessage: 'التوحيد',
+        practicalAction: 'العمل',
+        derivedDua: 'الدعاء',
+      ).timeout(const Duration(seconds: 5));
+      expect(res5.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(res5.livePublished, isTrue);
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      // Delete matrix: setString returns false
+      mockPlatform.throwOnSetValue = false;
+      mockPlatform.returnFalseOnSetValue = true;
+      final delResFalse = await TadabburJournalService.instance.deleteReflection('local_item_a').timeout(const Duration(seconds: 5));
+      expect(delResFalse.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(delResFalse.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']),
+          reason: 'Candidate not published when delete setString returns false');
+
+      // Delete matrix: setString throws
+      mockPlatform.returnFalseOnSetValue = false;
+      mockPlatform.throwOnSetValue = true;
+      final delResThrow = await TadabburJournalService.instance.deleteReflection('local_item_a').timeout(const Duration(seconds: 5));
+      expect(delResThrow.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(delResThrow.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+    });
+
+    test('retries use reloaded host data not stale live, and later successful host init unblocks', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+
+      addTearDown(() async {
+        SharedPreferencesStorePlatform.instance = originalPlatform;
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      // 1. Initial live has localItemA
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // 2. Failed op with host having changed to importItemB
+      mockPlatform.returnFalseOnSetValue = true;
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': json.encode([importItemB.toJson()]),
+      };
+      final failedOp = await TadabburJournalService.instance.addReflection(
+        surahId: 108,
+        surahName: 'الكوثر',
+        ayahNumber: 1,
+        ayahSnippet: '﴿إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ﴾',
+        faithMessage: 'فضل الله',
+        practicalAction: 'الشكر',
+        derivedDua: 'الحمد لله',
+      ).timeout(const Duration(seconds: 5));
+      expect(failedOp.status, equals(JournalOperationStatus.writeUnconfirmed));
+      expect(failedOp.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['import_item_b']),
+          reason: 'Live synchronized with reloaded host data');
+
+      // 3. Retry succeeds: candidate is built on top of reloaded host data (importItemB)
+      mockPlatform.returnFalseOnSetValue = false;
+      mockPlatform.overrideGetAllData = null; // real write through to delegate
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([importItemB.toJson()]));
+      final retryOp = await TadabburJournalService.instance.addReflection(
+        surahId: 108,
+        surahName: 'الكوثر',
+        ayahNumber: 1,
+        ayahSnippet: '﴿إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ﴾',
+        faithMessage: 'فضل الله',
+        practicalAction: 'الشكر',
+        derivedDua: 'الحمد لله',
+      ).timeout(const Duration(seconds: 5));
+      expect(retryOp.status, equals(JournalOperationStatus.persisted));
+      expect(retryOp.livePublished, isTrue);
+      expect(TadabburJournalService.instance.entries.length, equals(2));
+      expect(TadabburJournalService.instance.entries.map((e) => e.id), contains('import_item_b'));
+
+      // 4. Latch unreadable then later successful host init unblocks
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': 'bad_corrupt_data',
+      };
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isFalse);
+      final refRes = await TadabburJournalService.instance.addReflection(
+        surahId: 1,
+        surahName: 'الفاتحة',
+        ayahNumber: 1,
+        ayahSnippet: 'بسم الله',
+        faithMessage: 'البسملة',
+        practicalAction: 'الذكر',
+        derivedDua: 'يا الله',
+      );
+      expect(refRes.status, equals(JournalOperationStatus.refusedUnreadable));
+      expect(refRes.livePublished, isFalse);
+
+      // Host fixed -> init unblocks
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': json.encode([localItemA.toJson()]),
+      };
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      mockPlatform.overrideGetAllData = null;
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([localItemA.toJson()]));
+      final persistRes = await TadabburJournalService.instance.addReflection(
+        surahId: 1,
+        surahName: 'الفاتحة',
+        ayahNumber: 1,
+        ayahSnippet: 'بسم الله',
+        faithMessage: 'البسملة',
+        practicalAction: 'الذكر',
+        derivedDua: 'يا الله',
+      );
+      expect(persistRes.status, equals(JournalOperationStatus.persisted));
+      expect(persistRes.livePublished, isTrue);
+    });
+
+    test('restore replace and merge edge cases: malformed replace confirmed but unreadable, merge preread failure no write, corrupt local skips, unchanged merge no-write', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+
+      addTearDown(() async {
+        SharedPreferencesStorePlatform.instance = originalPlatform;
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // 1. Malformed replace: confirmed storage write, but live latch remains unreadable
+      const badRaw = '{"not_valid_json_list';
+      final resReplace = await TadabburJournalService.instance.restoreJournal(
+        rawImport: badRaw,
+        replaceMode: true,
+      ).timeout(const Duration(seconds: 5));
+      expect(resReplace.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(resReplace.livePublished, isFalse);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(badRaw));
+      expect(TadabburJournalService.instance.isReadable, isFalse,
+          reason: 'Malformed raw replace confirmed to storage, but live latch is unreadable');
+
+      // 2. Merge pre-read failure: host reload throws before local read -> writeUnconfirmed, no write
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([localItemA.toJson()]));
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+
+      mockPlatform.throwOnGetAll = true;
+      final resMerge = await TadabburJournalService.instance.restoreJournal(
+        rawImport: json.encode([importItemB.toJson()]),
+        replaceMode: false,
+      ).timeout(const Duration(seconds: 5));
+      expect(resMerge.status, equals(JournalRestoreStatus.writeUnconfirmed));
+      expect(resMerge.livePublished, isFalse);
+      mockPlatform.throwOnGetAll = false;
+
+      // Primary storage untouched
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(json.encode([localItemA.toJson()])));
+
+      // 3. Corrupt local + corrupt import: local validated FIRST -> intentionalSkip, latch unreadable
+      await prefs.setString('tadabbur_journal_entries_v1', '{"invalid":"map_not_list"}');
+      final resCorruptBoth = await TadabburJournalService.instance.restoreJournal(
+        rawImport: '{also_invalid',
+        replaceMode: false,
+      ).timeout(const Duration(seconds: 5));
+      expect(resCorruptBoth.status, equals(JournalRestoreStatus.intentionalSkip));
+      expect(resCorruptBoth.livePublished, isFalse);
+      expect(TadabburJournalService.instance.isReadable, isFalse,
+          reason: 'Corrupt local validated first must latch unreadable');
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals('{"invalid":"map_not_list"}'));
+
+      // 4. Malformed import skip after readable fresh local: establishes actual host live and latch
+      await prefs.setString('tadabbur_journal_entries_v1', json.encode([localItemA.toJson()]));
+      final resMalformedImport = await TadabburJournalService.instance.restoreJournal(
+        rawImport: 'malformed_import_string',
+        replaceMode: false,
+      ).timeout(const Duration(seconds: 5));
+      expect(resMalformedImport.status, equals(JournalRestoreStatus.intentionalSkip));
+      expect(resMalformedImport.livePublished, isTrue,
+          reason: 'malformed import skip after readable fresh local establishes actual host live');
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      expect(TadabburJournalService.instance.entries.map((e) => e.id).toList(), equals(['local_item_a']));
+
+      // 5. Unchanged raw merge no-write guard: establishes actual host live and returns confirmedWrite without write
+      final resUnchanged = await TadabburJournalService.instance.restoreJournal(
+        rawImport: json.encode([localItemA.toJson()]),
+        replaceMode: false,
+      ).timeout(const Duration(seconds: 5));
+      expect(resUnchanged.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(resUnchanged.livePublished, isTrue);
+    });
+
+    test('queued concurrent add/delete/init/restore in both modes: no lost update, no deadlock, and chain recovers from failure', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      await prefs.setString(
+        'tadabbur_journal_entries_v1',
+        json.encode([localItemA.toJson()]),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final service = TadabburJournalService.instance;
+
+      // Launch concurrent operations in FIFO order
+      final f1 = service.addReflection(
+        surahId: 1,
+        surahName: 'الفاتحة',
+        ayahNumber: 1,
+        ayahSnippet: 'آية 1',
+        faithMessage: 'رسالة 1',
+        practicalAction: 'عمل 1',
+        derivedDua: 'دعاء 1',
+      );
+      final f2 = service.addReflection(
+        surahId: 2,
+        surahName: 'البقرة',
+        ayahNumber: 1,
+        ayahSnippet: 'آية 2',
+        faithMessage: 'رسالة 2',
+        practicalAction: 'عمل 2',
+        derivedDua: 'دعاء 2',
+      );
+      final f3 = service.deleteReflection('local_item_a');
+      final f4 = service.restoreJournal(
+        rawImport: json.encode([importItemB.toJson()]),
+        replaceMode: false,
+      );
+
+      final r1 = await f1.timeout(const Duration(seconds: 10));
+      final r2 = await f2.timeout(const Duration(seconds: 10));
+      final r3 = await f3.timeout(const Duration(seconds: 10));
+      final r4 = await f4.timeout(const Duration(seconds: 10));
+      expect(r1.status, equals(JournalOperationStatus.persisted));
+      expect(r1.livePublished, isTrue);
+      expect(r2.status, equals(JournalOperationStatus.persisted));
+      expect(r2.livePublished, isTrue);
+      expect(r3.status, equals(JournalOperationStatus.persisted));
+      expect(r3.livePublished, isTrue);
+      expect(r4.status, equals(JournalRestoreStatus.confirmedWrite));
+      expect(r4.livePublished, isTrue);
+
+      // Verify no lost updates and no deadlock:
+      expect(service.entries.any((e) => e.id == 'local_item_a'), isFalse);
+      expect(service.entries.any((e) => e.id == 'import_item_b'), isTrue);
+      expect(service.entries.length, equals(3));
+
+      // Test that an injected failure does not wedge the queue
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+      mockPlatform.failSetValueCount = 1;
+      mockPlatform.throwOnSetValue = true;
+
+      final failingOp = service.addReflection(
+        surahId: 3,
+        surahName: 'آل عمران',
+        ayahNumber: 1,
+        ayahSnippet: 'آية 3',
+        faithMessage: 'رسالة 3',
+        practicalAction: 'عمل 3',
+        derivedDua: 'دعاء 3',
+      );
+
+      // Subsequent op enqueued after failing op
+      final subsequentOp = service.init(forceReload: true);
+
+      final failResult = await failingOp;
+      expect(failResult.status, equals(JournalOperationStatus.writeUnconfirmed));
+
+      // Queue did not deadlock or abort subsequent op
+      await expectLater(subsequentOp, completes);
+      SharedPreferencesStorePlatform.instance = originalPlatform;
+    });
+
+    testWidgets('TadabburJournalScreen add dialog failure preserves dialog, input, and displays exact Arabic snackbar', (tester) async {
+      tester.binding.setSurfaceSize(const Size(800, 1200));
+      final originalPlatform = SharedPreferencesStorePlatform.instance;
+      final mockPlatform = MockFailureStorePlatform(originalPlatform);
+      SharedPreferencesStorePlatform.instance = mockPlatform;
+
+      addTearDown(() {
+        SharedPreferencesStorePlatform.instance = originalPlatform;
+        tester.binding.setSurfaceSize(null);
+      });
+
+      // Part A: Refused unreadable failure
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': 'malformed_json',
+      };
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.isReadable, isFalse);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: TadabburJournalScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Open add reflection dialog
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+
+      // Verify dialog is open
+      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
+
+      // Enter input in text fields
+      final textFields = find.byType(TextField);
+      expect(textFields, findsNWidgets(3));
+      await tester.enterText(textFields.at(0), 'خاطرة إيمانية اختبارية');
+      await tester.enterText(textFields.at(1), 'عمل تطبيقي اختباري');
+      await tester.enterText(textFields.at(2), 'دعاء اختباري');
+      await tester.pump();
+
+      // Tap save
+      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      // Assert dialog is preserved (not popped)
+      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
+      // Assert typed inputs are preserved
+      expect(find.text('خاطرة إيمانية اختبارية'), findsOneWidget);
+      expect(find.text('عمل تطبيقي اختباري'), findsOneWidget);
+      expect(find.text('دعاء اختباري'), findsOneWidget);
+
+      // Assert exact Arabic snackbar copy for unreadable
+      expect(
+        find.text('تعذرت قراءة بيانات التدبر المحفوظة، لذلك لم يُنفَّذ الحفظ. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.'),
+        findsOneWidget,
+      );
+
+      // Clear SnackBars before Part B
+      ScaffoldMessenger.of(tester.element(find.text('حفظ بطاقة التدبر والعمل'))).clearSnackBars();
+      await tester.pumpAndSettle();
+
+      // Part B: Write unconfirmed failure
+      // Unblock service readability but make setValue return false
+      mockPlatform.overrideGetAllData = {
+        'flutter.tadabbur_journal_entries_v1': '[]',
+      };
+      await TadabburJournalService.instance.init(forceReload: true);
+      expect(TadabburJournalService.instance.isReadable, isTrue);
+      mockPlatform.returnFalseOnSetValue = true;
+
+      // Tap save again with inputs still in dialog
+      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      // Assert dialog and inputs still preserved
+      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
+      expect(find.text('خاطرة إيمانية اختبارية'), findsOneWidget);
+
+      // Assert exact Arabic snackbar copy for write unconfirmed
+      expect(
+        find.text('تعذر تأكيد حفظ الخاطرة. أعد المحاولة لاحقًا.'),
+        findsOneWidget,
+      );
+
+      // Part C: Persisted success pops dialog
+      mockPlatform.returnFalseOnSetValue = false;
+      mockPlatform.overrideGetAllData = null;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('tadabbur_journal_entries_v1', '[]');
+      await TadabburJournalService.instance.init(forceReload: true);
+
+      ScaffoldMessenger.of(tester.element(find.text('حفظ بطاقة التدبر والعمل'))).clearSnackBars();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      // Dialog is popped on persisted
+      expect(find.text('حفظ بطاقة التدبر والعمل'), findsNothing);
+
+      // Cleanup
+      SharedPreferencesStorePlatform.instance = originalPlatform;
+      await TadabburJournalService.instance.init(forceReload: true);
+      await tester.pumpAndSettle();
     });
   });
 }
