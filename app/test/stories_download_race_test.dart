@@ -504,31 +504,61 @@ void main() {
       await service.deleteDownloadedStory(storyId).timeout(const Duration(seconds: 5));
     });
 
-    test('Control 6: Duplicate download request while download is active returns false', () async {
+    test('Control 6: Same-turn concurrent download calls before init await resolves -> exactly one HTTP call, one false, one byte-exact success', () async {
       const storyId = 'lut_shuaib';
+      final testData = Uint8List(4096);
+      for (int i = 0; i < testData.length; i++) {
+        testData[i] = (i * 13 + 7) % 251 + 1;
+      }
+
+      int httpCallCount = 0;
       final reqStarted = Completer<void>();
       final streamController = createTestStreamController();
 
       DynamicHttpOverrides.activeHandler = (method, url, req) async {
-        reqStarted.complete();
-        return TestHttpClientResponse(streamController.stream, contentLength: 4000);
+        httpCallCount++;
+        if (!reqStarted.isCompleted) reqStarted.complete();
+        return TestHttpClientResponse(streamController.stream, contentLength: testData.length);
       };
 
-      final dlFuture1 = service.downloadStory(storyId);
-      activeFutures.add(dlFuture1);
+      // Ensure service is not downloading storyId
+      expect(service.isDownloading(storyId), isFalse);
+      expect(service.isDownloaded(storyId), isFalse);
+
+      // Launch TWO calls in the EXACT SAME synchronous turn before either init() await continuation executes
+      final future1 = service.downloadStory(storyId);
+      final future2 = service.downloadStory(storyId);
+      activeFutures.add(future1);
+      activeFutures.add(future2);
 
       try {
+        // Wait for HTTP handler to be invoked
         await reqStarted.future.timeout(const Duration(seconds: 5));
-        expect(service.isDownloading(storyId), isTrue);
 
-        // Attempt duplicate download while dlFuture1 is active
-        final dupResult = await service.downloadStory(storyId).timeout(const Duration(seconds: 5));
-        expect(dupResult, isFalse, reason: 'Duplicate download attempt must be rejected immediately');
-
-        streamController.add(Uint8List(4000));
+        // Emit exact test bytes and complete stream
+        streamController.add(testData);
         await streamController.close().timeout(const Duration(milliseconds: 500));
-        final success1 = await dlFuture1.timeout(const Duration(seconds: 5));
-        expect(success1, isTrue);
+
+        final results = await Future.wait([future1, future2]);
+
+        // Exactly one must return true, and exactly one must return false
+        expect(results, contains(true));
+        expect(results, contains(false));
+        expect(results.where((r) => r == true).length, equals(1));
+        expect(results.where((r) => r == false).length, equals(1));
+
+        // Assert exactly ONE HTTP request was made
+        expect(httpCallCount, equals(1), reason: 'Post-init guard must prevent duplicate HTTP download requests');
+
+        // Assert byte-exact success on disk
+        expect(service.isDownloaded(storyId), isTrue);
+        final localPath = service.getLocalAudioPath(storyId);
+        expect(localPath, isNotNull);
+        final finalFile = File(localPath!);
+        expect(finalFile.existsSync(), isTrue);
+        expect(finalFile.lengthSync(), equals(testData.length));
+        expect(finalFile.readAsBytesSync(), equals(testData));
+        expect(getLingeringTempFiles(storiesDir, storyId), isEmpty);
       } finally {
         if (!streamController.isClosed) {
           try {
