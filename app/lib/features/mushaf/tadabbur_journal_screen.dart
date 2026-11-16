@@ -140,7 +140,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                         label: const Text('حفظ بطاقة التدبر والعمل'),
                         onPressed: () async {
                           final ayah = await QuranRepository.getAyah(selectedSurahId, selectedAyahNum);
-                          await TadabburJournalService.instance.addReflection(
+                          final result = await TadabburJournalService.instance.addReflection(
                             surahId: selectedSurahId,
                             surahName: surah?.nameAr ?? 'الفاتحة',
                             ayahNumber: selectedAyahNum,
@@ -155,7 +155,21 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                                 ? duaCtrl.text.trim()
                                 : 'اللهم اجعل القرآن العظيم ربيع قلبي ونور صدري.',
                           );
-                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (result.status == JournalOperationStatus.persisted) {
+                            if (ctx.mounted) Navigator.pop(ctx);
+                          } else {
+                            if (ctx.mounted) {
+                              final message = result.status == JournalOperationStatus.refusedUnreadable
+                                  ? 'تعذرت قراءة بيانات التدبر المحفوظة، لذلك لم يُنفَّذ الحفظ. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.'
+                                  : 'تعذر تأكيد حفظ الخاطرة. أعد المحاولة لاحقًا.';
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(
+                                  content: Text(message),
+                                  backgroundColor: Colors.red.shade700,
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                     ],
