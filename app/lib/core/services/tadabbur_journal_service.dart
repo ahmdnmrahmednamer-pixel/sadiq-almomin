@@ -118,6 +118,70 @@ class JournalRestoreResult {
       'JournalRestoreResult(status: $status, livePublished: $livePublished)';
 }
 
+enum AccountabilityOperationStatus {
+  persisted,
+  writeUnconfirmed,
+  writeRefusedUnreadable,
+}
+
+@immutable
+class AccountabilityToggleResult {
+  final AccountabilityOperationStatus status;
+  final bool livePublished;
+
+  const AccountabilityToggleResult({
+    required this.status,
+    required this.livePublished,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AccountabilityToggleResult &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          livePublished == other.livePublished;
+
+  @override
+  int get hashCode => Object.hash(status, livePublished);
+
+  @override
+  String toString() =>
+      'AccountabilityToggleResult(status: $status, livePublished: $livePublished)';
+}
+
+enum AccountabilityRestoreStatus {
+  confirmedWrite,
+  intentionalSkip,
+  writeUnconfirmed,
+}
+
+@immutable
+class AccountabilityRestoreResult {
+  final AccountabilityRestoreStatus status;
+  final bool livePublished;
+
+  const AccountabilityRestoreResult({
+    required this.status,
+    required this.livePublished,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AccountabilityRestoreResult &&
+          runtimeType == other.runtimeType &&
+          status == other.status &&
+          livePublished == other.livePublished;
+
+  @override
+  int get hashCode => Object.hash(status, livePublished);
+
+  @override
+  String toString() =>
+      'AccountabilityRestoreResult(status: $status, livePublished: $livePublished)';
+}
+
 /// الميزة الخامسة الجديدة: دفتر التدبر والعمل بالقرآن ومحاسبة النفس الإيمانية اليومية
 class TadabburJournalService extends ChangeNotifier {
   static final TadabburJournalService instance = TadabburJournalService._internal();
@@ -559,19 +623,263 @@ class TadabburJournalService extends ChangeNotifier {
     return _dailyAccountability[_todayKey()]?.contains(itemId) ?? false;
   }
 
-  Future<void> toggleEthicalItemToday(String itemId) async {
-    final key = _todayKey();
-    final set = _dailyAccountability.putIfAbsent(key, () => <String>{});
-    if (set.contains(itemId)) {
-      set.remove(itemId);
-    } else {
-      set.add(itemId);
+  static Map<String, List<String>>? safeDecodeAccountability(String raw) {
+    try {
+      final dynamic decoded = json.decode(raw);
+      if (decoded is! Map) return null;
+      final result = <String, List<String>>{};
+      for (final entry in decoded.entries) {
+        if (entry.key is! String) return null;
+        if (entry.value is! List) return null;
+        final list = entry.value as List;
+        final stringList = <String>[];
+        for (final item in list) {
+          if (item is! String) return null;
+          stringList.add(item);
+        }
+        result[entry.key as String] = stringList;
+      }
+      return result;
+    } catch (_) {
+      return null;
     }
-    final prefs = await SharedPreferences.getInstance();
-    final map = <String, List<String>>{
-      for (final e in _dailyAccountability.entries) e.key: e.value.toList(),
-    };
-    await prefs.setString(_dailyAccountabilityKey, json.encode(map));
-    notifyListeners();
+  }
+
+  Future<AccountabilityRestoreResult> restoreAccountability({
+    required String rawImport,
+    required bool replaceMode,
+  }) {
+    return _enqueue(() => _restoreAccountabilityInternal(
+          rawImport: rawImport,
+          replaceMode: replaceMode,
+        ));
+  }
+
+  Future<AccountabilityRestoreResult> restoreAccountabilityReplace(
+    String rawImport,
+  ) {
+    return restoreAccountability(rawImport: rawImport, replaceMode: true);
+  }
+
+  Future<AccountabilityRestoreResult> restoreAccountabilityMerge(
+    String rawImport,
+  ) {
+    return restoreAccountability(rawImport: rawImport, replaceMode: false);
+  }
+
+  Future<AccountabilityRestoreResult> _restoreAccountabilityInternal({
+    required String rawImport,
+    required bool replaceMode,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      if (replaceMode) {
+        bool writeSuccess = false;
+        try {
+          writeSuccess =
+              await prefs.setString(_dailyAccountabilityKey, rawImport);
+        } catch (_) {
+          writeSuccess = false;
+        }
+
+        final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+        if (writeSuccess) {
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
+      } else {
+        try {
+          await prefs.reload();
+        } catch (_) {
+          return const AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.writeUnconfirmed,
+            livePublished: false,
+          );
+        }
+
+        final rawLocal = prefs.getString(_dailyAccountabilityKey);
+        final localMap = (rawLocal == null || rawLocal.isEmpty)
+            ? <String, List<String>>{}
+            : safeDecodeAccountability(rawLocal);
+        if (localMap == null) {
+          final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        final importedMap = safeDecodeAccountability(rawImport);
+        if (importedMap == null) {
+          final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        final allDates = {...localMap.keys, ...importedMap.keys}.toList()..sort();
+        final mergedMap = <String, List<String>>{};
+        for (final date in allDates) {
+          final localTasks = localMap[date] ?? const <String>[];
+          final importTasks = importedMap[date] ?? const <String>[];
+          mergedMap[date] = {...localTasks, ...importTasks}.toList();
+        }
+        final mergedJson = json.encode(mergedMap);
+
+        if (rawLocal != null && rawLocal.isNotEmpty && mergedJson == rawLocal) {
+          final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.intentionalSkip,
+            livePublished: published,
+          );
+        }
+
+        bool writeSuccess = false;
+        try {
+          writeSuccess =
+              await prefs.setString(_dailyAccountabilityKey, mergedJson);
+        } catch (_) {
+          writeSuccess = false;
+        }
+
+        final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+        if (writeSuccess) {
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.confirmedWrite,
+            livePublished: published,
+          );
+        } else {
+          return AccountabilityRestoreResult(
+            status: AccountabilityRestoreStatus.writeUnconfirmed,
+            livePublished: published,
+          );
+        }
+      }
+    } catch (_) {
+      return const AccountabilityRestoreResult(
+        status: AccountabilityRestoreStatus.writeUnconfirmed,
+        livePublished: false,
+      );
+    }
+  }
+
+  Future<bool> _reloadAndSyncAccountabilityFromHost(
+      SharedPreferences prefs) async {
+    try {
+      await prefs.reload();
+    } catch (_) {
+      return false;
+    }
+    final rawAcc = prefs.getString(_dailyAccountabilityKey);
+    if (rawAcc == null || rawAcc.isEmpty) {
+      return false;
+    }
+    try {
+      final decoded = json.decode(rawAcc);
+      if (decoded is Map) {
+        _dailyAccountability.clear();
+        decoded.forEach((k, v) {
+          if (v is List) {
+            _dailyAccountability[k.toString()] =
+                v.map((e) => e.toString()).toSet();
+          }
+        });
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<AccountabilityToggleResult> toggleEthicalItemToday(
+      String itemId) {
+    return _enqueue(() => _toggleEthicalItemTodayInternal(itemId));
+  }
+
+  Future<AccountabilityToggleResult> _toggleEthicalItemTodayInternal(
+      String itemId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      try {
+        await prefs.reload();
+      } catch (_) {
+        return const AccountabilityToggleResult(
+          status: AccountabilityOperationStatus.writeUnconfirmed,
+          livePublished: false,
+        );
+      }
+
+      final rawAcc = prefs.getString(_dailyAccountabilityKey);
+      final Map<String, List<String>> hostDecoded;
+      if (rawAcc == null || rawAcc.isEmpty) {
+        hostDecoded = <String, List<String>>{};
+      } else {
+        final decoded = safeDecodeAccountability(rawAcc);
+        if (decoded == null) {
+          return const AccountabilityToggleResult(
+            status: AccountabilityOperationStatus.writeRefusedUnreadable,
+            livePublished: false,
+          );
+        }
+        hostDecoded = decoded;
+      }
+
+      final candidateMap = <String, List<String>>{};
+      for (final entry in hostDecoded.entries) {
+        candidateMap[entry.key] = List<String>.from(entry.value);
+      }
+      final today = _todayKey();
+      final todayList =
+          List<String>.from(candidateMap[today] ?? const <String>[]);
+      if (todayList.contains(itemId)) {
+        todayList.removeWhere((item) => item == itemId);
+      } else {
+        todayList.add(itemId);
+      }
+      candidateMap[today] = todayList;
+      final candidateJson = json.encode(candidateMap);
+
+      bool writeSuccess = false;
+      try {
+        writeSuccess =
+            await prefs.setString(_dailyAccountabilityKey, candidateJson);
+      } catch (_) {
+        writeSuccess = false;
+      }
+
+      if (writeSuccess) {
+        _dailyAccountability.clear();
+        candidateMap.forEach((k, v) {
+          _dailyAccountability[k] = Set<String>.from(v);
+        });
+        notifyListeners();
+        return const AccountabilityToggleResult(
+          status: AccountabilityOperationStatus.persisted,
+          livePublished: true,
+        );
+      } else {
+        final published = await _reloadAndSyncAccountabilityFromHost(prefs);
+        return AccountabilityToggleResult(
+          status: AccountabilityOperationStatus.writeUnconfirmed,
+          livePublished: published,
+        );
+      }
+    } catch (_) {
+      return const AccountabilityToggleResult(
+        status: AccountabilityOperationStatus.writeUnconfirmed,
+        livePublished: false,
+      );
+    }
   }
 }

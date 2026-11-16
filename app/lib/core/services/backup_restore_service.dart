@@ -460,28 +460,6 @@ class BackupRestoreService {
     }
   }
 
-  static Map<String, List<String>>? _safeDecodeAccountability(String raw) {
-    try {
-      final dynamic decoded = json.decode(raw);
-      if (decoded is! Map) return null;
-      final result = <String, List<String>>{};
-      for (final entry in decoded.entries) {
-        if (entry.key is! String) return null;
-        if (entry.value is! List) return null;
-        final list = entry.value as List;
-        final stringList = <String>[];
-        for (final item in list) {
-          if (item is! String) return null;
-          stringList.add(item);
-        }
-        result[entry.key as String] = stringList;
-      }
-      return result;
-    } catch (_) {
-      return null;
-    }
-  }
-
 
   /// Restores backup data into the app state
   Future<bool> restoreBackup(
@@ -959,31 +937,13 @@ class BackupRestoreService {
         }
         if (extData['tadabbur_daily_accountability'] is String) {
           final rawImport = extData['tadabbur_daily_accountability'] as String;
-          if (replaceMode) {
-            await prefs.setString(
-                'tadabbur_daily_accountability_v1', rawImport);
-          } else {
-            final importedMap = _safeDecodeAccountability(rawImport);
-            if (importedMap != null) {
-              final rawLocal =
-                  prefs.getString('tadabbur_daily_accountability_v1');
-              final localMap = (rawLocal == null || rawLocal.isEmpty)
-                  ? <String, List<String>>{}
-                  : _safeDecodeAccountability(rawLocal);
-              if (localMap != null) {
-                final allDates = {...localMap.keys, ...importedMap.keys}
-                    .toList()
-                  ..sort();
-                final mergedMap = <String, List<String>>{};
-                for (final date in allDates) {
-                  final localTasks = localMap[date] ?? const <String>[];
-                  final importTasks = importedMap[date] ?? const <String>[];
-                  mergedMap[date] = {...localTasks, ...importTasks}.toList();
-                }
-                await prefs.setString('tadabbur_daily_accountability_v1',
-                    json.encode(mergedMap));
-              }
-            }
+          final accResult =
+              await TadabburJournalService.instance.restoreAccountability(
+            rawImport: rawImport,
+            replaceMode: replaceMode,
+          );
+          if (accResult.status == AccountabilityRestoreStatus.writeUnconfirmed) {
+            return false;
           }
         }
         if (extData['stories_favorites'] is List) {

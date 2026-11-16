@@ -285,7 +285,29 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                         activeColor: AppColors.primaryGreen,
                         title: Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         subtitle: Text(item['verse']!, style: const TextStyle(fontSize: 12, color: AppColors.secondaryGreen)),
-                        onChanged: (_) => svc.toggleEthicalItemToday(id),
+                        onChanged: (_) async {
+                          final result = await svc.toggleEthicalItemToday(id);
+                          if (!context.mounted) return;
+                          if (result.status ==
+                              AccountabilityOperationStatus.writeRefusedUnreadable) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'تعذرت قراءة بيانات محاسبة اليوم المحفوظة، لذلك لم يُنفَّذ التغيير. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.',
+                                ),
+                              ),
+                            );
+                          } else if (result.status ==
+                              AccountabilityOperationStatus.writeUnconfirmed) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'تعذر تأكيد حفظ محاسبة اليوم. أعد المحاولة لاحقًا.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     );
                   }),
