@@ -2563,7 +2563,7 @@ void main() {
       expect(TadabburJournalService.instance.entries, isEmpty);
     });
 
-    test('replaceMode true: wrong-shape imported journal preserves valid local raw prefs without clearing or overwrite', () async {
+    test('replaceMode true: malformed/nonlist/empty raw string writes verbatim in replaceMode', () async {
       final prefs = await SharedPreferences.getInstance();
       final cleanup = setupFullPrefsSnapshot(prefs);
       addTearDown(() async {
@@ -2572,21 +2572,57 @@ void main() {
       });
 
       const validLocalRaw = '[{"id":"local_safe_replace","faithMessage":"رسالة آمنة"}]';
-      await prefs.setString('tadabbur_journal_entries_v1', validLocalRaw);
 
-      final envelope = createChecksumValidEnvelope({
+      // Case A: malformed/invalid JSON string writes verbatim
+      await prefs.setString('tadabbur_journal_entries_v1', validLocalRaw);
+      const malformedPayload = '{"not_a_valid_json_list';
+      final envMalformed = createChecksumValidEnvelope({
         'extended_features': {
-          'tadabbur_journal': '[{"id": "", "surahName": "empty_id_invalid"}]',
+          'tadabbur_journal': malformedPayload,
         },
       });
-      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envMalformed)).isValid, isTrue);
 
-      final res = await BackupRestoreService.instance
-          .restoreBackup(envelope, replaceMode: true)
+      final resMalformed = await BackupRestoreService.instance
+          .restoreBackup(envMalformed, replaceMode: true)
           .timeout(const Duration(seconds: 5));
-      expect(res, isTrue);
-      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(validLocalRaw),
-          reason: 'replaceMode true must not overwrite or clear when imported journal payload is invalid');
+      expect(resMalformed, isTrue);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(malformedPayload),
+          reason: 'replaceMode true must write raw import string verbatim even if malformed');
+
+      // Case B: non-list JSON string (top-level Object) writes verbatim
+      await prefs.setString('tadabbur_journal_entries_v1', validLocalRaw);
+      const nonListPayload = '{"id": "top_object_not_list"}';
+      final envNonList = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_journal': nonListPayload,
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envNonList)).isValid, isTrue);
+
+      final resNonList = await BackupRestoreService.instance
+          .restoreBackup(envNonList, replaceMode: true)
+          .timeout(const Duration(seconds: 5));
+      expect(resNonList, isTrue);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(nonListPayload),
+          reason: 'replaceMode true must write raw import string verbatim even if non-list');
+
+      // Case C: empty list "[]" writes verbatim (clears entries)
+      await prefs.setString('tadabbur_journal_entries_v1', validLocalRaw);
+      const emptyPayload = '[]';
+      final envEmpty = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_journal': emptyPayload,
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envEmpty)).isValid, isTrue);
+
+      final resEmpty = await BackupRestoreService.instance
+          .restoreBackup(envEmpty, replaceMode: true)
+          .timeout(const Duration(seconds: 5));
+      expect(resEmpty, isTrue);
+      expect(prefs.getString('tadabbur_journal_entries_v1'), equals(emptyPayload),
+          reason: 'replaceMode true must write empty string list verbatim');
     });
 
     test('omitted extended_features keys preserve existing local journal entries in both merge and replace modes', () async {

@@ -1065,12 +1065,12 @@ class BackupRestoreService {
         }
         if (extData['tadabbur_journal'] is String) {
           final rawImport = extData['tadabbur_journal'] as String;
-          final importedList = _safeDecodeJournalEntries(rawImport);
-          if (importedList != null) {
-            if (replaceMode) {
-              await prefs.setString(
-                  'tadabbur_journal_entries_v1', rawImport);
-            } else {
+          if (replaceMode) {
+            await prefs.setString(
+                'tadabbur_journal_entries_v1', rawImport);
+          } else {
+            final importedList = _safeDecodeJournalEntries(rawImport);
+            if (importedList != null) {
               final rawLocal = prefs.getString('tadabbur_journal_entries_v1');
               final localList = (rawLocal == null || rawLocal.isEmpty)
                   ? <Map<String, dynamic>>[]
