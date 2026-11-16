@@ -8,6 +8,7 @@ import 'package:almomin/core/services/khatma_service.dart';
 import 'package:almomin/core/services/adhkar_service.dart';
 import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/islamic_radio_service.dart';
+import 'package:almomin/core/services/tadabbur_journal_service.dart';
 import 'package:almomin/features/backup/backup_restore_screen.dart';
 
 void main() {
@@ -1119,6 +1120,481 @@ void main() {
       expect(SettingsService.instance.mushafDefaultMode, equals('surah'));
       expect(SettingsService.instance.screenLayoutMode, equals('comfortable'));
       expect(SettingsService.instance.bilingualDisplayEnabled, isTrue);
+    });
+  });
+
+  group('BackupRestoreService Daily Accountability Coverage & Regression Tests', () {
+    Future<void> Function() setupFullPrefsSnapshot(SharedPreferences prefs) {
+      final snapshot = <String, Object?>{};
+      for (final k in prefs.getKeys()) {
+        snapshot[k] = prefs.get(k);
+      }
+      return () async {
+        final currentKeys = prefs.getKeys().toList();
+        for (final k in currentKeys) {
+          if (!snapshot.containsKey(k)) {
+            await prefs.remove(k);
+          }
+        }
+        for (final entry in snapshot.entries) {
+          if (entry.value is bool) {
+            await prefs.setBool(entry.key, entry.value as bool);
+          } else if (entry.value is String) {
+            await prefs.setString(entry.key, entry.value as String);
+          } else if (entry.value is int) {
+            await prefs.setInt(entry.key, entry.value as int);
+          } else if (entry.value is double) {
+            await prefs.setDouble(entry.key, entry.value as double);
+          } else if (entry.value is List<String>) {
+            await prefs.setStringList(entry.key, entry.value as List<String>);
+          }
+        }
+        await SettingsService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      };
+    }
+
+    Map<String, dynamic> createChecksumValidEnvelope(Map<String, dynamic> dataPayload) {
+      final checksum = BackupRestoreService.calculateChecksum(
+        BackupRestoreService.canonicalJsonEncode(dataPayload),
+      );
+      return {
+        'app': 'AlMomin',
+        'schema_version': 1,
+        'created_at': DateTime.now().toIso8601String(),
+        'dedicated_to': BackupRestoreService.dedicationNote,
+        'checksum': checksum,
+        'data': dataPayload,
+      };
+    }
+
+    test('replaceMode false (merge): accountability performs same-day task union on today and preserves different dates with public getter', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+      final otherDate = now.add(const Duration(days: 1));
+      final otherDateKey = '${otherDate.year}-${otherDate.month.toString().padLeft(2, '0')}-${otherDate.day.toString().padLeft(2, '0')}';
+
+      // Local state has yesterday and today with task 1
+      final localAccountability = {
+        yesterdayKey: ['birr_walidayn'],
+        todayKey: ['hifz_lisan'],
+      };
+      await prefs.setString(
+        'tadabbur_daily_accountability_v1',
+        json.encode(localAccountability),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('hifz_lisan'), isTrue);
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('sadaqah_ihsan'), isFalse);
+
+      // Imported state has today with task 2 (same-day union!) and otherDate with task 3
+      final importAccountability = {
+        todayKey: ['sadaqah_ihsan'],
+        otherDateKey: ['istighfar_tawbah'],
+      };
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode(importAccountability),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      final validation = BackupRestoreService.instance.validateBackup(json.encode(envelope));
+      expect(validation.isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored, isTrue);
+
+      final rawAcc = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAcc, isNotNull);
+      final Map<String, dynamic> storedAcc = json.decode(rawAcc!);
+
+      // Assert yesterday preserved
+      expect(storedAcc.containsKey(yesterdayKey), isTrue);
+      expect((storedAcc[yesterdayKey] as List).cast<String>(), contains('birr_walidayn'));
+
+      // Assert today has same-day union
+      expect(storedAcc.containsKey(todayKey), isTrue);
+      final todayTasks = (storedAcc[todayKey] as List).cast<String>();
+      expect(todayTasks, containsAll(['hifz_lisan', 'sadaqah_ihsan']),
+          reason: 'Same-day tasks from local and import must be unioned without loss');
+
+      // Assert otherDate added
+      expect(storedAcc.containsKey(otherDateKey), isTrue);
+      expect((storedAcc[otherDateKey] as List).cast<String>(), contains('istighfar_tawbah'));
+
+      // Forced reload verification on live singleton
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // Public getter verification on today's items
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('hifz_lisan'), isTrue,
+          reason: 'Local item on today must remain done after merge');
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('sadaqah_ihsan'), isTrue,
+          reason: 'Imported item on today must be done after merge');
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isFalse,
+          reason: 'Yesterday item must not report as done today');
+    });
+
+    test('replaceMode false (merge): repeat restore is idempotent with exact map and set equality', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final otherDate = now.add(const Duration(days: 1));
+      final otherDateKey = '${otherDate.year}-${otherDate.month.toString().padLeft(2, '0')}-${otherDate.day.toString().padLeft(2, '0')}';
+
+      final localAcc = {
+        todayKey: ['hifz_lisan'],
+      };
+      await prefs.setString(
+        'tadabbur_daily_accountability_v1',
+        json.encode(localAcc),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final importAccountability = {
+        todayKey: ['sadaqah_ihsan'],
+        otherDateKey: ['istighfar_tawbah'],
+      };
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode(importAccountability),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      // First restore
+      final restored1 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored1, isTrue);
+
+      final rawFirst = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawFirst, isNotNull);
+
+      // Second repeat restore
+      final restored2 = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored2, isTrue);
+
+      final rawSecond = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawSecond, isNotNull);
+
+      final Map<String, dynamic> firstMap = json.decode(rawFirst!);
+      final Map<String, dynamic> secondMap = json.decode(rawSecond!);
+
+      expect(secondMap.keys.toSet(), equals(firstMap.keys.toSet()));
+      for (final date in firstMap.keys) {
+        final firstList = (firstMap[date] as List).cast<String>();
+        final secondList = (secondMap[date] as List).cast<String>();
+        expect(secondList, equals(firstList),
+            reason: 'Task list for date $date must be strictly identical across repeat restores');
+      }
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('hifz_lisan'), isTrue);
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('sadaqah_ihsan'), isTrue);
+    });
+
+    test('replaceMode false (merge): empty import preserves existing local accountability', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final localAcc = {
+        todayKey: ['birr_walidayn'],
+      };
+      await prefs.setString('tadabbur_daily_accountability_v1', json.encode(localAcc));
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isTrue);
+
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': '{}',
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored, isTrue);
+
+      final rawAcc = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAcc, isNotNull);
+      final Map<String, dynamic> storedAcc = json.decode(rawAcc!);
+      expect(storedAcc.containsKey(todayKey), isTrue);
+      expect((storedAcc[todayKey] as List).cast<String>(), contains('birr_walidayn'),
+          reason: 'Empty import in mergeMode must preserve local accountability');
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isTrue);
+    });
+
+    test('replaceMode true: replaces existing accountability with imported, and empty import clears accountability', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayKey = '${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}';
+
+      // Part 1: Replaces
+      final localAcc = {
+        yesterdayKey: ['birr_walidayn'],
+      };
+      await prefs.setString('tadabbur_daily_accountability_v1', json.encode(localAcc));
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final replacePayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode({
+            todayKey: ['hifz_lisan'],
+          }),
+        },
+      };
+      final envelopeReplace = createChecksumValidEnvelope(replacePayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeReplace)).isValid, isTrue);
+
+      final restoredReplace = await BackupRestoreService.instance
+          .restoreBackup(envelopeReplace, replaceMode: true)
+          .timeout(const Duration(seconds: 5));
+      expect(restoredReplace, isTrue);
+
+      final rawReplaced = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawReplaced, isNotNull);
+      final Map<String, dynamic> replacedAcc = json.decode(rawReplaced!);
+      expect(replacedAcc.containsKey(yesterdayKey), isFalse, reason: 'Previous date must be cleared in replaceMode true');
+      expect(replacedAcc.containsKey(todayKey), isTrue);
+      expect((replacedAcc[todayKey] as List).cast<String>(), equals(['hifz_lisan']));
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('hifz_lisan'), isTrue);
+
+      // Part 2: Empty clears
+      final emptyPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': '{}',
+        },
+      };
+      final envelopeEmpty = createChecksumValidEnvelope(emptyPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeEmpty)).isValid, isTrue);
+
+      final restoredEmpty = await BackupRestoreService.instance
+          .restoreBackup(envelopeEmpty, replaceMode: true)
+          .timeout(const Duration(seconds: 5));
+      expect(restoredEmpty, isTrue);
+
+      final rawEmpty = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawEmpty, isNotNull);
+      final Map<String, dynamic> emptyAcc = json.decode(rawEmpty!);
+      expect(emptyAcc, isEmpty, reason: 'replaceMode true with empty import must clear accountability');
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('hifz_lisan'), isFalse);
+    });
+
+    test('omitted extended_features keys preserve existing local accountability in both merge and replace modes', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      await prefs.setString(
+        'tadabbur_daily_accountability_v1',
+        json.encode({todayKey: ['birr_walidayn']}),
+      );
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      final dataPayload = {
+        'bookmarks': ['1:1'],
+        'extended_features': <String, dynamic>{},
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      // In mergeMode: existing state preserved
+      final restoredMerge = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restoredMerge, isTrue);
+
+      final rawAccMerge = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAccMerge, isNotNull);
+      final Map<String, dynamic> accMergeMap = json.decode(rawAccMerge!);
+      expect((accMergeMap[todayKey] as List).cast<String>(), contains('birr_walidayn'));
+
+      // In replaceMode: omitted keys still preserve existing local data
+      final restoredReplace = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: true)
+          .timeout(const Duration(seconds: 5));
+      expect(restoredReplace, isTrue);
+
+      final rawAccReplace = prefs.getString('tadabbur_daily_accountability_v1');
+      expect(rawAccReplace, isNotNull);
+      final Map<String, dynamic> accReplaceMap = json.decode(rawAccReplace!);
+      expect((accReplaceMap[todayKey] as List).cast<String>(), contains('birr_walidayn'));
+    });
+
+    test('replaceMode false (merge): malformed imported inner JSON preserves valid local raw prefs and forced live reload', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final validLocalRaw = json.encode({todayKey: ['birr_walidayn']});
+      await prefs.setString('tadabbur_daily_accountability_v1', validLocalRaw);
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isTrue);
+
+      // Malformed inner JSON string inside valid backup envelope
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': '{ not valid json ...',
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored, isTrue);
+
+      // Conservative whole-feature skip: raw local prefs MUST remain exact raw bytes
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(validLocalRaw),
+          reason: 'Malformed imported JSON must not overwrite or corrupt valid local raw bytes');
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isTrue);
+    });
+
+    test('replaceMode false (merge): wrong imported shape (non-map, non-list, or non-string elements) preserves valid local raw prefs and forced live reload', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      final now = DateTime.now();
+      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final validLocalRaw = json.encode({todayKey: ['birr_walidayn']});
+      await prefs.setString('tadabbur_daily_accountability_v1', validLocalRaw);
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+
+      // Case A: Imported payload is a JSON list instead of a Map
+      final envelopeList = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_daily_accountability': '["birr_walidayn"]',
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeList)).isValid, isTrue);
+
+      final resList = await BackupRestoreService.instance
+          .restoreBackup(envelopeList, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resList, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(validLocalRaw),
+          reason: 'Non-map imported shape must be conservatively skipped');
+
+      // Case B: Map with non-list value
+      final envelopeNonListVal = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_daily_accountability': '{"2026-11-16": "not_a_list"}',
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeNonListVal)).isValid, isTrue);
+
+      final resNonListVal = await BackupRestoreService.instance
+          .restoreBackup(envelopeNonListVal, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resNonListVal, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(validLocalRaw),
+          reason: 'Map with non-list values must be conservatively skipped');
+
+      // Case C: Map with list containing non-string elements (do NOT silently drop; skip whole feature)
+      final envelopeBadElem = createChecksumValidEnvelope({
+        'extended_features': {
+          'tadabbur_daily_accountability': '{"2026-11-16": ["valid_task", 12345]}',
+        },
+      });
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelopeBadElem)).isValid, isTrue);
+
+      final resBadElem = await BackupRestoreService.instance
+          .restoreBackup(envelopeBadElem, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(resBadElem, isTrue);
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(validLocalRaw),
+          reason: 'List with non-string elements must not be silently filtered; skip whole feature');
+
+      await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      expect(TadabburJournalService.instance.isEthicalItemDoneToday('birr_walidayn'), isTrue);
+    });
+
+    test('replaceMode false (merge): invalid local accountability raw blob is preserved without overwrite attempt', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final cleanup = setupFullPrefsSnapshot(prefs);
+      addTearDown(() async {
+        await cleanup();
+        await TadabburJournalService.instance.init(forceReload: true).timeout(const Duration(seconds: 5));
+      });
+
+      const invalidLocalRaw = '{ corrupted local raw data, not json';
+      await prefs.setString('tadabbur_daily_accountability_v1', invalidLocalRaw);
+
+      final dataPayload = {
+        'extended_features': {
+          'tadabbur_daily_accountability': json.encode({'2026-11-16': ['sadaqah_ihsan']}),
+        },
+      };
+      final envelope = createChecksumValidEnvelope(dataPayload);
+      expect(BackupRestoreService.instance.validateBackup(json.encode(envelope)).isValid, isTrue);
+
+      final restored = await BackupRestoreService.instance
+          .restoreBackup(envelope, replaceMode: false)
+          .timeout(const Duration(seconds: 5));
+      expect(restored, isTrue);
+
+      // Must not overwrite an invalid local blob attempting a repair
+      expect(prefs.getString('tadabbur_daily_accountability_v1'), equals(invalidLocalRaw),
+          reason: 'Invalid local blob must not be overwritten or repaired during merge');
     });
   });
 }
