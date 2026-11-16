@@ -33,6 +33,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
     final faithCtrl = TextEditingController();
     final actionCtrl = TextEditingController();
     final duaCtrl = TextEditingController();
+    String? errorMessage;
 
     await showModalBottomSheet(
       context: context,
@@ -42,7 +43,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
       ),
       builder: (ctx) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalContext, setModalState) {
             final surah = _surahs.isNotEmpty
                 ? _surahs.firstWhere((s) => s.id == selectedSurahId, orElse: () => _surahs.first)
                 : null;
@@ -55,7 +56,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                   right: 20,
                   left: 20,
                   top: 20,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                  bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -129,6 +130,36 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
+                      if (errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Semantics(
+                          liveRegion: true,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(modalContext).brightness == Brightness.dark
+                                  ? Colors.red.shade900.withValues(alpha: 0.3)
+                                  : Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(modalContext).brightness == Brightness.dark
+                                    ? Colors.red.shade700
+                                    : Colors.red.shade300,
+                              ),
+                            ),
+                            child: Text(
+                              errorMessage!,
+                              style: TextStyle(
+                                color: Theme.of(modalContext).brightness == Brightness.dark
+                                    ? Colors.red.shade200
+                                    : Colors.red.shade800,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 14),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
@@ -158,16 +189,13 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                           if (result.status == JournalOperationStatus.persisted) {
                             if (ctx.mounted) Navigator.pop(ctx);
                           } else {
-                            if (ctx.mounted) {
+                            if (modalContext.mounted) {
                               final message = result.status == JournalOperationStatus.refusedUnreadable
                                   ? 'تعذرت قراءة بيانات التدبر المحفوظة، لذلك لم يُنفَّذ الحفظ. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.'
                                   : 'تعذر تأكيد حفظ الخاطرة. أعد المحاولة لاحقًا.';
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(
-                                  content: Text(message),
-                                  backgroundColor: Colors.red.shade700,
-                                ),
-                              );
+                              setModalState(() {
+                                errorMessage = message;
+                              });
                             }
                           }
                         },

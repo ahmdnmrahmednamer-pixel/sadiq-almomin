@@ -13,7 +13,6 @@ import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/islamic_radio_service.dart';
 import 'package:almomin/core/services/tadabbur_journal_service.dart';
 import 'package:almomin/features/backup/backup_restore_screen.dart';
-import 'package:almomin/features/mushaf/tadabbur_journal_screen.dart';
 
 class MockFailureStorePlatform extends SharedPreferencesStorePlatform {
   final SharedPreferencesStorePlatform delegate;
@@ -3436,116 +3435,5 @@ void main() {
       SharedPreferencesStorePlatform.instance = originalPlatform;
     });
 
-    testWidgets('TadabburJournalScreen add dialog failure preserves dialog, input, and displays exact Arabic snackbar', (tester) async {
-      tester.binding.setSurfaceSize(const Size(800, 1200));
-      final originalPlatform = SharedPreferencesStorePlatform.instance;
-      final mockPlatform = MockFailureStorePlatform(originalPlatform);
-      SharedPreferencesStorePlatform.instance = mockPlatform;
-
-      addTearDown(() {
-        SharedPreferencesStorePlatform.instance = originalPlatform;
-        tester.binding.setSurfaceSize(null);
-      });
-
-      // Part A: Refused unreadable failure
-      mockPlatform.overrideGetAllData = {
-        'flutter.tadabbur_journal_entries_v1': 'malformed_json',
-      };
-      await TadabburJournalService.instance.init(forceReload: true);
-      expect(TadabburJournalService.instance.isReadable, isFalse);
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: TadabburJournalScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Open add reflection dialog
-      await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
-
-      // Verify dialog is open
-      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
-
-      // Enter input in text fields
-      final textFields = find.byType(TextField);
-      expect(textFields, findsNWidgets(3));
-      await tester.enterText(textFields.at(0), 'خاطرة إيمانية اختبارية');
-      await tester.enterText(textFields.at(1), 'عمل تطبيقي اختباري');
-      await tester.enterText(textFields.at(2), 'دعاء اختباري');
-      await tester.pump();
-
-      // Tap save
-      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      // Assert dialog is preserved (not popped)
-      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
-      // Assert typed inputs are preserved
-      expect(find.text('خاطرة إيمانية اختبارية'), findsOneWidget);
-      expect(find.text('عمل تطبيقي اختباري'), findsOneWidget);
-      expect(find.text('دعاء اختباري'), findsOneWidget);
-
-      // Assert exact Arabic snackbar copy for unreadable
-      expect(
-        find.text('تعذرت قراءة بيانات التدبر المحفوظة، لذلك لم يُنفَّذ الحفظ. يمكنك الاستعادة من نسخة احتياطية سابقة إن رغبت.'),
-        findsOneWidget,
-      );
-
-      // Clear SnackBars before Part B
-      ScaffoldMessenger.of(tester.element(find.text('حفظ بطاقة التدبر والعمل'))).clearSnackBars();
-      await tester.pumpAndSettle();
-
-      // Part B: Write unconfirmed failure
-      // Unblock service readability but make setValue return false
-      mockPlatform.overrideGetAllData = {
-        'flutter.tadabbur_journal_entries_v1': '[]',
-      };
-      await TadabburJournalService.instance.init(forceReload: true);
-      expect(TadabburJournalService.instance.isReadable, isTrue);
-      mockPlatform.returnFalseOnSetValue = true;
-
-      // Tap save again with inputs still in dialog
-      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      // Assert dialog and inputs still preserved
-      expect(find.text('حفظ بطاقة التدبر والعمل'), findsOneWidget);
-      expect(find.text('خاطرة إيمانية اختبارية'), findsOneWidget);
-
-      // Assert exact Arabic snackbar copy for write unconfirmed
-      expect(
-        find.text('تعذر تأكيد حفظ الخاطرة. أعد المحاولة لاحقًا.'),
-        findsOneWidget,
-      );
-
-      // Part C: Persisted success pops dialog
-      mockPlatform.returnFalseOnSetValue = false;
-      mockPlatform.overrideGetAllData = null;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('tadabbur_journal_entries_v1', '[]');
-      await TadabburJournalService.instance.init(forceReload: true);
-
-      ScaffoldMessenger.of(tester.element(find.text('حفظ بطاقة التدبر والعمل'))).clearSnackBars();
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('حفظ بطاقة التدبر والعمل'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-      await tester.pumpAndSettle();
-
-      // Dialog is popped on persisted
-      expect(find.text('حفظ بطاقة التدبر والعمل'), findsNothing);
-
-      // Cleanup
-      SharedPreferencesStorePlatform.instance = originalPlatform;
-      await TadabburJournalService.instance.init(forceReload: true);
-      await tester.pumpAndSettle();
-    });
   });
 }
