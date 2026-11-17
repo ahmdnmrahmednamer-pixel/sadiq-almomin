@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../app/widgets/app_navigation_drawer.dart';
+import '../../../app/router.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -16,8 +16,8 @@ class ApprovedSourcesScreen extends StatelessWidget {
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
-        drawer: const AppNavigationDrawer(),
         appBar: AppBar(
+          leading: const IsolatedBackButton(),
           title: const Text('المصادر والمراجع القرآنية المعتمدة'),
         ),
         body: ListView(

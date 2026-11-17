@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/settings_service.dart';
 import '../../mushaf/page_mode_mushaf_screen.dart';
@@ -22,12 +24,18 @@ class HomeQuranContinueCard extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PageModeMushafScreen(initialPage: lastPage),
-                ),
-              );
+              final router = GoRouter.maybeOf(context);
+              if (router != null) {
+                router.push('/mushaf-pages?page=$lastPage');
+              } else {
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(
+                    builder: (_) => IsolatedFeatureRouteHost(
+                      child: PageModeMushafScreen(initialPage: lastPage),
+                    ),
+                  ),
+                );
+              }
             },
             child: Padding(
               padding: const EdgeInsets.all(14.0),
@@ -73,10 +81,18 @@ class HomeQuranContinueCard extends StatelessWidget {
                           icon: const Icon(Icons.list_alt_rounded, color: AppColors.primaryGreen, size: 22),
                           tooltip: 'فهرس المصحف والأجزاء',
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const MushafScreen()),
-                            );
+                            final router = GoRouter.maybeOf(context);
+                            if (router != null) {
+                              router.push('/mushaf-reader');
+                            } else {
+                              Navigator.of(context, rootNavigator: true).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const IsolatedFeatureRouteHost(
+                                    child: MushafScreen(),
+                                  ),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),

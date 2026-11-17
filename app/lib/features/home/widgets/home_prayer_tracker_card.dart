@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/prayer_tracker_service.dart';
 import '../../prayer/prayer_tracker_screen.dart';
@@ -21,10 +23,18 @@ class HomePrayerTrackerCard extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(16),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PrayerTrackerScreen()),
-              );
+              final router = GoRouter.maybeOf(context);
+              if (router != null) {
+                router.push('/prayer-tracker');
+              } else {
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(
+                    builder: (_) => const IsolatedFeatureRouteHost(
+                      child: PrayerTrackerScreen(),
+                    ),
+                  ),
+                );
+              }
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

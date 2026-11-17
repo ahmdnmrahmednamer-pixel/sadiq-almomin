@@ -81,6 +81,122 @@ import '../features/zakat/zakat_screen.dart';
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _rootNavigatorKey = rootNavigatorKey;
 
+/// Top-level hub routes (and hub alias) hosted inside [ShellRoute] / [MainScaffold].
+const Set<String> kHubShellRoutePaths = {
+  '/home',
+  '/mushaf',
+  '/quran-hub',
+  '/prayer',
+  '/adhkar-hub',
+  '/library',
+};
+
+/// Reusable AppBar leading back button for isolated full-page feature screens.
+/// Pops the current route when possible, or falls back to `/home` on direct deep links.
+class IsolatedBackButton extends StatelessWidget {
+  const IsolatedBackButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = SettingsService.instance.isArabic;
+    return IconButton(
+      icon: const Icon(Icons.arrow_back_rounded),
+      tooltip: isArabic ? 'رجوع' : 'Back',
+      onPressed: () {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          GoRouter.maybeOf(context)?.go('/home');
+        }
+      },
+    );
+  }
+}
+
+/// Hosts an isolated full-page feature/detail route on [rootNavigatorKey]
+/// without [MainScaffold]'s persistent bottom navigation bar, while preserving
+/// [GlobalMiniPlayerBar] playback/stop controls and reachable back/home actions on deep links.
+class IsolatedFeatureRouteHost extends StatelessWidget {
+  final Widget child;
+  final bool includeMiniPlayer;
+  final bool hasOwnDirectBackAction;
+
+  const IsolatedFeatureRouteHost({
+    super.key,
+    required this.child,
+    this.includeMiniPlayer = true,
+    this.hasOwnDirectBackAction = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
+    final showDirectBackBar = !canPop && !hasOwnDirectBackAction;
+    final isArabic = SettingsService.instance.isArabic;
+    final theme = Theme.of(context);
+
+    final content = Column(
+      children: [
+        if (showDirectBackBar)
+          Directionality(
+            textDirection: SettingsService.instance.textDirection,
+            child: Material(
+              color: theme.colorScheme.surface,
+              child: SafeArea(
+                bottom: false,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: theme.colorScheme.outlineVariant),
+                    ),
+                  ),
+                  alignment: AlignmentDirectional.centerStart,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: TextButton.icon(
+                    key: const ValueKey('isolated_direct_back_home_button'),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: Text(isArabic ? 'رجوع للرئيسية' : 'Back to Home'),
+                    onPressed: () => GoRouter.maybeOf(context)?.go('/home'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        Expanded(child: child),
+        if (includeMiniPlayer) const GlobalMiniPlayerBar(),
+      ],
+    );
+
+    return PopScope(
+      canPop: canPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !canPop) {
+          GoRouter.maybeOf(context)?.go('/home');
+        }
+      },
+      child: content,
+    );
+  }
+}
+
+GoRoute _isolatedFeatureRoute({
+  required String path,
+  required GoRouterWidgetBuilder builder,
+  bool includeMiniPlayer = true,
+  bool hasOwnDirectBackAction = false,
+}) {
+  return GoRoute(
+    path: path,
+    parentNavigatorKey: _rootNavigatorKey,
+    builder: (context, state) => IsolatedFeatureRouteHost(
+      includeMiniPlayer: includeMiniPlayer,
+      hasOwnDirectBackAction: hasOwnDirectBackAction,
+      child: builder(context, state),
+    ),
+  );
+}
+
 class MainScaffold extends StatefulWidget {
   final Widget child;
   const MainScaffold({super.key, required this.child});
@@ -100,70 +216,16 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = _safeLocation(context);
-    if (location.startsWith('/mushaf') ||
-        location.startsWith('/quran-hub') ||
-        location.startsWith('/mushaf-reader') ||
-        location.startsWith('/mushaf-pages') ||
-        location.startsWith('/surah-reader') ||
-        location.startsWith('/audio') ||
-        location.startsWith('/notes') ||
-        location.startsWith('/memorization') ||
-        location.startsWith('/topics') ||
-        location.startsWith('/topic-detail') ||
-        location.startsWith('/search') ||
-        location.startsWith('/khatma') ||
-        location.startsWith('/gharib-quran') ||
-        location.startsWith('/comparative-tafsir') ||
-        location.startsWith('/tadabbur-journal') ||
-        location.startsWith('/tajweed') ||
-        location.startsWith('/tajweed-rule') ||
-        location.startsWith('/quran-irab') ||
-        location.startsWith('/qiraat') ||
-        location.startsWith('/audio-tafsir') ||
-        location.startsWith('/approved-sources') ||
-        location.startsWith('/quran-asbab-nuzul')) {
+    if (location.startsWith('/mushaf') || location.startsWith('/quran-hub')) {
       return 1;
     }
-    if (location.startsWith('/prayer') ||
-        location.startsWith('/prayer-times-detail') ||
-        location.startsWith('/adhan-control') ||
-        location.startsWith('/qibla') ||
-        location.startsWith('/calendar') ||
-        location.startsWith('/prayer-tracker') ||
-        location.startsWith('/fajr-qiyam-alarm') ||
-        location.startsWith('/sunan-rawatib') ||
-        location.startsWith('/voluntary-fasting') ||
-        location.startsWith('/battery-guide')) {
+    if (location.startsWith('/prayer')) {
       return 2;
     }
-    if (location.startsWith('/adhkar') ||
-        location.startsWith('/adhkar-hub') ||
-        location.startsWith('/spiritual-mood') ||
-        location.startsWith('/tasbih') ||
-        location.startsWith('/daily-wird') ||
-        location.startsWith('/daawah-studio')) {
+    if (location.startsWith('/adhkar-hub')) {
       return 3;
     }
-    if (location.startsWith('/library') ||
-        location.startsWith('/scholars-audio') ||
-        location.startsWith('/hadith') ||
-        location.startsWith('/hadith-detail') ||
-        location.startsWith('/stories') ||
-        location.startsWith('/story-detail') ||
-        location.startsWith('/ramadan') ||
-        location.startsWith('/zakat') ||
-        location.startsWith('/mawarith-calculator') ||
-        location.startsWith('/kaffarah-fidyah') ||
-        location.startsWith('/hajj-umrah') ||
-        location.startsWith('/downloads') ||
-        location.startsWith('/egypt-heritage') ||
-        location.startsWith('/fiqh-library') ||
-        location.startsWith('/quran-sciences') ||
-        location.startsWith('/asma-shamail') ||
-        location.startsWith('/islamic-history') ||
-        location.startsWith('/islamic-mutoon') ||
-        location.startsWith('/riyad-alsalihin') ||
-        location.startsWith('/library-search')) {
+    if (location.startsWith('/library')) {
       return 4;
     }
     return 0;
@@ -192,10 +254,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     final location = _safeLocation(context);
-    final isSecondaryPage = location.startsWith('/settings') ||
-        location.startsWith('/backup') ||
-        location.startsWith('/support') ||
-        location.startsWith('/about-developer');
+    final isHubRoute = kHubShellRoutePaths.contains(location);
     final selectedIndex = _calculateSelectedIndex(context).clamp(0, 4);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -205,7 +264,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       builder: (context, _) {
         return Scaffold(
           body: widget.child,
-          bottomNavigationBar: isSecondaryPage
+          bottomNavigationBar: !isHubRoute
               ? const GlobalMiniPlayerBar()
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -321,242 +380,261 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
+
+    // Five top-level hubs (+ /quran-hub alias) hosted inside MainScaffold
     ShellRoute(
       builder: (context, state, child) => MainScaffold(child: child),
       routes: [
         GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
         GoRoute(path: '/mushaf', builder: (context, state) => const QuranHubScreen()),
         GoRoute(path: '/quran-hub', builder: (context, state) => const QuranHubScreen()),
-        GoRoute(path: '/adhkar-hub', builder: (context, state) => const AdhkarHubScreen()),
-        GoRoute(path: '/mushaf-reader', builder: (context, state) => const MushafScreen()),
-        GoRoute(path: '/audio', builder: (context, state) => const AudioScreen()),
-        GoRoute(path: '/scholars-audio', builder: (context, state) => const ScholarsAudioLibraryScreen()),
         GoRoute(path: '/prayer', builder: (context, state) => const PrayerScreen()),
+        GoRoute(path: '/adhkar-hub', builder: (context, state) => const AdhkarHubScreen()),
         GoRoute(path: '/library', builder: (context, state) => const IslamicLibraryScreen()),
-        GoRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
-        GoRoute(path: '/islamic-radio', builder: (context, state) => const IslamicRadioScreen()),
-        GoRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
-        GoRoute(path: '/quran-sciences', builder: (context, state) => const QuranSciencesScreen()),
-        GoRoute(path: '/asma-shamail', builder: (context, state) => const AsmaAllahShamailScreen()),
-        GoRoute(path: '/islamic-history', builder: (context, state) => const IslamicHistoryScreen()),
-        GoRoute(path: '/library-search', builder: (context, state) => const UnifiedLibrarySearchScreen()),
-        GoRoute(path: '/daily-wird', builder: (context, state) => const DailyWirdScreen()),
-        GoRoute(path: '/daawah-studio', builder: (context, state) => const DaawahCardStudioScreen()),
-        GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-        GoRoute(path: '/ramadan', builder: (context, state) => const RamadanScreen()),
-        GoRoute(path: '/stories', builder: (context, state) => const StoriesScreen()),
-        GoRoute(path: '/tajweed', builder: (context, state) => const TajweedScreen()),
-        GoRoute(path: '/hajj-umrah', builder: (context, state) => const HajjUmrahCompanionScreen()),
-        GoRoute(path: '/voluntary-fasting', builder: (context, state) => const VoluntaryFastingScreen()),
-        GoRoute(path: '/spiritual-mood', builder: (context, state) => const SpiritualMoodRemedyScreen()),
-        GoRoute(path: '/gharib-quran', builder: (context, state) => const GharibQuranScreen()),
-        GoRoute(path: '/kaffarah-fidyah', builder: (context, state) => const KaffarahFidyahScreen()),
-        GoRoute(
-          path: '/adhkar',
-          builder: (context, state) {
-            final indexParam = state.uri.queryParameters['index'];
-            if (indexParam != null) {
-              final categoryIndex = int.tryParse(indexParam) ?? 0;
-              return AdhkarScreen(initialCategoryIndex: categoryIndex);
-            }
-            return const AdhkarHubScreen();
-          },
-        ),
-        GoRoute(path: '/tasbih', builder: (context, state) => const TasbihScreen()),
-        GoRoute(path: '/qibla', builder: (context, state) => const QiblaCompassScreen()),
-        GoRoute(path: '/calendar', builder: (context, state) => const HijriCalendarScreen()),
-        GoRoute(path: '/khatma', builder: (context, state) => const KhatmaScreen()),
-        GoRoute(path: '/battery-guide', builder: (context, state) => const BatteryReliabilityScreen()),
-        GoRoute(path: '/backup', builder: (context, state) => const BackupRestoreScreen()),
-        GoRoute(path: '/prayer-tracker', builder: (context, state) => const PrayerTrackerScreen()),
-        GoRoute(path: '/fajr-qiyam-alarm', builder: (context, state) => const FajrQiyamAlarmScreen()),
-        GoRoute(path: '/downloads', builder: (context, state) => const DownloadsManagerScreen()),
-        GoRoute(path: '/notes', builder: (context, state) => const QuranNotesScreen()),
-        GoRoute(
-          path: '/memorization',
-          builder: (context, state) {
-            final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '1') ?? 1;
-            final fromAyah = int.tryParse(state.uri.queryParameters['fromAyah'] ?? '1') ?? 1;
-            final toAyah = int.tryParse(state.uri.queryParameters['toAyah'] ?? '7') ?? 7;
-            return MemorizationScreen(
-              initialSurahId: surahId,
-              initialFromAyah: fromAyah,
-              initialToAyah: toAyah,
-            );
-          },
-        ),
-        GoRoute(path: '/zakat', builder: (context, state) => const ZakatScreen()),
-        GoRoute(
-          path: '/hadith',
-          builder: (context, state) {
-            final bookId = state.uri.queryParameters['bookId'];
-            return HadithLibraryScreen(initialBookId: bookId);
-          },
-        ),
-        GoRoute(
-          path: '/hadith-detail',
-          builder: (context, state) {
-            final id = int.tryParse(state.uri.queryParameters['id'] ?? '1') ?? 1;
-            return HadithDetailScreen(hadithId: id);
-          },
-        ),
-        GoRoute(
-          path: '/topics',
-          builder: (context, state) {
-            final catStr = state.uri.queryParameters['category'];
-            TopicCategory? cat;
-            if (catStr != null) {
-              try {
-                cat = TopicCategory.values.firstWhere((c) => c.name == catStr, orElse: () => TopicCategory.values.first);
-              } catch (_) {}
-            }
-            return QuranTopicsScreen(initialCategory: cat);
-          },
-        ),
-        GoRoute(
-          path: '/topic-detail',
-          builder: (context, state) {
-            final id = state.uri.queryParameters['id'] ?? 'patience';
-            return TopicDetailScreen(topicId: id);
-          },
-        ),
-        GoRoute(
-          path: '/search',
-          builder: (context, state) {
-            final q = state.uri.queryParameters['q'];
-            return QuranSearchScreen(initialQuery: q);
-          },
-        ),
-        GoRoute(
-          path: '/mushaf-pages',
-          builder: (context, state) {
-            final page = int.tryParse(state.uri.queryParameters['page'] ?? '1') ?? 1;
-            return PageModeMushafScreen(initialPage: page);
-          },
-        ),
-        GoRoute(
-          path: '/quran-irab',
-          builder: (context, state) => const QuranIrabScreen(),
-        ),
-        GoRoute(
-          path: '/qiraat',
-          builder: (context, state) => const QiraatMushafScreen(),
-        ),
-        GoRoute(
-          path: '/audio-tafsir',
-          builder: (context, state) => const AudioTafsirScreen(),
-        ),
-        GoRoute(
-          path: '/approved-sources',
-          builder: (context, state) => const ApprovedSourcesScreen(),
-        ),
-        GoRoute(
-          path: '/quran-asbab-nuzul',
-          builder: (context, state) => const QuranAsbabNuzulScreen(),
-        ),
-        GoRoute(
-          path: '/prayer-times-detail',
-          builder: (context, state) => const PrayerTimesDetailScreen(),
-        ),
-        GoRoute(
-          path: '/about-developer',
-          builder: (context, state) => const AboutDeveloperScreen(),
-        ),
-        GoRoute(
-          path: '/support',
-          builder: (context, state) => const ContactSupportScreen(),
-        ),
-        GoRoute(
-          path: '/sunan-rawatib',
-          builder: (context, state) => const SunanRawatibScreen(),
-        ),
-        GoRoute(
-          path: '/riyad-alsalihin',
-          builder: (context, state) => const RiyadAlSalihinScreen(),
-        ),
-        GoRoute(
-          path: '/islamic-mutoon',
-          builder: (context, state) => const IslamicMutoonScreen(),
-        ),
-        GoRoute(
-          path: '/mawarith-calculator',
-          builder: (context, state) => const MawarithCalculatorScreen(),
-        ),
-        GoRoute(
-          path: '/tadabbur-journal',
-          builder: (context, state) => const TadabburJournalScreen(),
-        ),
-        GoRoute(
-          path: '/comparative-tafsir',
-          builder: (context, state) => const ComparativeTafsirScreen(),
-        ),
-        GoRoute(
-          path: '/app-directory',
-          builder: (context, state) => const AppScreenDirectoryScreen(),
-        ),
-        GoRoute(
-          path: '/app-screen-directory',
-          builder: (context, state) => const AppScreenDirectoryScreen(),
-        ),
-        GoRoute(
-          path: '/surah-reader',
-          builder: (context, state) {
-            if (state.extra is Surah) {
-              final initialAyah = int.tryParse(state.uri.queryParameters['ayah'] ?? '1') ?? 1;
-              return SurahReaderScreen(surah: state.extra as Surah, initialAyah: initialAyah);
-            }
-            final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '1') ?? 1;
-            final initialAyah = int.tryParse(state.uri.queryParameters['ayah'] ?? '1') ?? 1;
-            return FutureBuilder<Surah?>(
-              future: QuranRepository.getSurahById(surahId),
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data != null) {
-                  return SurahReaderScreen(surah: snapshot.data!, initialAyah: initialAyah);
-                }
-                final defaultSurah = Surah(
-                  id: surahId,
-                  nameAr: 'الفاتحة',
-                  nameSimple: 'Al-Fatihah',
-                  revelationPlace: 'makkah',
-                  revelationOrder: 5,
-                  ayahCount: 7,
-                  hasBasmala: false,
-                  pageStart: 1,
-                  pageEnd: 1,
-                );
-                return SurahReaderScreen(surah: defaultSurah, initialAyah: initialAyah);
-              },
-            );
-          },
-        ),
-        GoRoute(
-          path: '/story-detail',
-          builder: (context, state) {
-            if (state.extra is ProphetAudioStory) {
-              return StoryDetailScreen(story: state.extra as ProphetAudioStory);
-            }
-            final id = state.uri.queryParameters['id'] ?? 'adam';
-            final stories = StoriesService.instance.getAllStories();
-            final story = stories.firstWhere(
-              (s) => s.id == id,
-              orElse: () => stories.first,
-            );
-            return StoryDetailScreen(story: story);
-          },
-        ),
-        GoRoute(
-          path: '/tajweed-rule',
-          builder: (context, state) {
-            if (state.extra is TajweedRule) {
-              return RuleDetailScreen(rule: state.extra as TajweedRule);
-            }
-            final id = state.uri.queryParameters['id'] ?? 'noon_sakina_ithhar';
-            final rule = TajweedService.instance.getRuleById(id) ??
-                TajweedService.instance.getRulesByCategory(TajweedCategory.nunTanween).first;
-            return RuleDetailScreen(rule: rule);
-          },
-        ),
       ],
+    ),
+
+    // Root-isolated full-page feature & detail routes (outside MainScaffold / bottom nav)
+    _isolatedFeatureRoute(path: '/mushaf-reader', builder: (context, state) => const MushafScreen()),
+    _isolatedFeatureRoute(path: '/audio', builder: (context, state) => const AudioScreen()),
+    _isolatedFeatureRoute(
+      path: '/scholars-audio',
+      includeMiniPlayer: false,
+      builder: (context, state) => const ScholarsAudioLibraryScreen(),
+    ),
+    _isolatedFeatureRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
+    _isolatedFeatureRoute(path: '/islamic-radio', builder: (context, state) => const IslamicRadioScreen()),
+    _isolatedFeatureRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
+    _isolatedFeatureRoute(path: '/quran-sciences', builder: (context, state) => const QuranSciencesScreen()),
+    _isolatedFeatureRoute(path: '/asma-shamail', builder: (context, state) => const AsmaAllahShamailScreen()),
+    _isolatedFeatureRoute(path: '/islamic-history', builder: (context, state) => const IslamicHistoryScreen()),
+    _isolatedFeatureRoute(
+      path: '/library-search',
+      includeMiniPlayer: false,
+      builder: (context, state) => const UnifiedLibrarySearchScreen(),
+    ),
+    _isolatedFeatureRoute(path: '/daily-wird', builder: (context, state) => const DailyWirdScreen()),
+    _isolatedFeatureRoute(path: '/daawah-studio', builder: (context, state) => const DaawahCardStudioScreen()),
+    _isolatedFeatureRoute(
+      path: '/settings',
+      hasOwnDirectBackAction: true,
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    _isolatedFeatureRoute(path: '/ramadan', builder: (context, state) => const RamadanScreen()),
+    _isolatedFeatureRoute(path: '/stories', builder: (context, state) => const StoriesScreen()),
+    _isolatedFeatureRoute(path: '/tajweed', builder: (context, state) => const TajweedScreen()),
+    _isolatedFeatureRoute(path: '/hajj-umrah', builder: (context, state) => const HajjUmrahCompanionScreen()),
+    _isolatedFeatureRoute(path: '/voluntary-fasting', builder: (context, state) => const VoluntaryFastingScreen()),
+    _isolatedFeatureRoute(path: '/spiritual-mood', builder: (context, state) => const SpiritualMoodRemedyScreen()),
+    _isolatedFeatureRoute(path: '/gharib-quran', builder: (context, state) => const GharibQuranScreen()),
+    _isolatedFeatureRoute(path: '/kaffarah-fidyah', builder: (context, state) => const KaffarahFidyahScreen()),
+    _isolatedFeatureRoute(
+      path: '/adhkar',
+      builder: (context, state) {
+        final indexParam = state.uri.queryParameters['index'];
+        if (indexParam != null) {
+          final categoryIndex = int.tryParse(indexParam) ?? 0;
+          return AdhkarScreen(initialCategoryIndex: categoryIndex);
+        }
+        return const AdhkarHubScreen();
+      },
+    ),
+    _isolatedFeatureRoute(path: '/tasbih', builder: (context, state) => const TasbihScreen()),
+    _isolatedFeatureRoute(path: '/qibla', builder: (context, state) => const QiblaCompassScreen()),
+    _isolatedFeatureRoute(path: '/calendar', builder: (context, state) => const HijriCalendarScreen()),
+    _isolatedFeatureRoute(path: '/khatma', builder: (context, state) => const KhatmaScreen()),
+    _isolatedFeatureRoute(path: '/battery-guide', builder: (context, state) => const BatteryReliabilityScreen()),
+    _isolatedFeatureRoute(path: '/backup', builder: (context, state) => const BackupRestoreScreen()),
+    _isolatedFeatureRoute(path: '/prayer-tracker', builder: (context, state) => const PrayerTrackerScreen()),
+    _isolatedFeatureRoute(path: '/fajr-qiyam-alarm', builder: (context, state) => const FajrQiyamAlarmScreen()),
+    _isolatedFeatureRoute(path: '/downloads', builder: (context, state) => const DownloadsManagerScreen()),
+    _isolatedFeatureRoute(path: '/notes', builder: (context, state) => const QuranNotesScreen()),
+    _isolatedFeatureRoute(
+      path: '/memorization',
+      builder: (context, state) {
+        final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '1') ?? 1;
+        final fromAyah = int.tryParse(state.uri.queryParameters['fromAyah'] ?? '1') ?? 1;
+        final toAyah = int.tryParse(state.uri.queryParameters['toAyah'] ?? '7') ?? 7;
+        return MemorizationScreen(
+          initialSurahId: surahId,
+          initialFromAyah: fromAyah,
+          initialToAyah: toAyah,
+        );
+      },
+    ),
+    _isolatedFeatureRoute(path: '/zakat', builder: (context, state) => const ZakatScreen()),
+    _isolatedFeatureRoute(
+      path: '/hadith',
+      builder: (context, state) {
+        final bookId = state.uri.queryParameters['bookId'];
+        return HadithLibraryScreen(initialBookId: bookId);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/hadith-detail',
+      builder: (context, state) {
+        final id = int.tryParse(state.uri.queryParameters['id'] ?? '1') ?? 1;
+        return HadithDetailScreen(hadithId: id);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/topics',
+      builder: (context, state) {
+        final catStr = state.uri.queryParameters['category'];
+        TopicCategory? cat;
+        if (catStr != null) {
+          try {
+            cat = TopicCategory.values.firstWhere((c) => c.name == catStr, orElse: () => TopicCategory.values.first);
+          } catch (_) {}
+        }
+        return QuranTopicsScreen(initialCategory: cat);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/topic-detail',
+      builder: (context, state) {
+        final id = state.uri.queryParameters['id'] ?? 'patience';
+        return TopicDetailScreen(topicId: id);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/search',
+      builder: (context, state) {
+        final q = state.uri.queryParameters['q'];
+        return QuranSearchScreen(initialQuery: q);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/mushaf-pages',
+      builder: (context, state) {
+        final page = int.tryParse(state.uri.queryParameters['page'] ?? '1') ?? 1;
+        return PageModeMushafScreen(initialPage: page);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/quran-irab',
+      builder: (context, state) => const QuranIrabScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/qiraat',
+      hasOwnDirectBackAction: true,
+      builder: (context, state) => const QiraatMushafScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/audio-tafsir',
+      hasOwnDirectBackAction: true,
+      builder: (context, state) => const AudioTafsirScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/approved-sources',
+      hasOwnDirectBackAction: true,
+      builder: (context, state) => const ApprovedSourcesScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/quran-asbab-nuzul',
+      builder: (context, state) => const QuranAsbabNuzulScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/prayer-times-detail',
+      builder: (context, state) => const PrayerTimesDetailScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/about-developer',
+      builder: (context, state) => const AboutDeveloperScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/support',
+      builder: (context, state) => const ContactSupportScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/sunan-rawatib',
+      builder: (context, state) => const SunanRawatibScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/riyad-alsalihin',
+      builder: (context, state) => const RiyadAlSalihinScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/islamic-mutoon',
+      builder: (context, state) => const IslamicMutoonScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/mawarith-calculator',
+      builder: (context, state) => const MawarithCalculatorScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/tadabbur-journal',
+      builder: (context, state) => const TadabburJournalScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/comparative-tafsir',
+      builder: (context, state) => const ComparativeTafsirScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/app-directory',
+      builder: (context, state) => const AppScreenDirectoryScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/app-screen-directory',
+      builder: (context, state) => const AppScreenDirectoryScreen(),
+    ),
+    _isolatedFeatureRoute(
+      path: '/surah-reader',
+      builder: (context, state) {
+        if (state.extra is Surah) {
+          final initialAyah = int.tryParse(state.uri.queryParameters['ayah'] ?? '1') ?? 1;
+          return SurahReaderScreen(surah: state.extra as Surah, initialAyah: initialAyah);
+        }
+        final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '1') ?? 1;
+        final initialAyah = int.tryParse(state.uri.queryParameters['ayah'] ?? '1') ?? 1;
+        return FutureBuilder<Surah?>(
+          future: QuranRepository.getSurahById(surahId),
+          builder: (context, snapshot) {
+            if (snapshot.hasData && snapshot.data != null) {
+              return SurahReaderScreen(surah: snapshot.data!, initialAyah: initialAyah);
+            }
+            final defaultSurah = Surah(
+              id: surahId,
+              nameAr: 'الفاتحة',
+              nameSimple: 'Al-Fatihah',
+              revelationPlace: 'makkah',
+              revelationOrder: 5,
+              ayahCount: 7,
+              hasBasmala: false,
+              pageStart: 1,
+              pageEnd: 1,
+            );
+            return SurahReaderScreen(surah: defaultSurah, initialAyah: initialAyah);
+          },
+        );
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/story-detail',
+      builder: (context, state) {
+        if (state.extra is ProphetAudioStory) {
+          return StoryDetailScreen(story: state.extra as ProphetAudioStory);
+        }
+        final id = state.uri.queryParameters['id'] ?? 'adam';
+        final stories = StoriesService.instance.getAllStories();
+        final story = stories.firstWhere(
+          (s) => s.id == id,
+          orElse: () => stories.first,
+        );
+        return StoryDetailScreen(story: story);
+      },
+    ),
+    _isolatedFeatureRoute(
+      path: '/tajweed-rule',
+      builder: (context, state) {
+        if (state.extra is TajweedRule) {
+          return RuleDetailScreen(rule: state.extra as TajweedRule);
+        }
+        final id = state.uri.queryParameters['id'] ?? 'noon_sakina_ithhar';
+        final rule = TajweedService.instance.getRuleById(id) ??
+            TajweedService.instance.getRulesByCategory(TajweedCategory.nunTanween).first;
+        return RuleDetailScreen(rule: rule);
+      },
     ),
   ],
 );

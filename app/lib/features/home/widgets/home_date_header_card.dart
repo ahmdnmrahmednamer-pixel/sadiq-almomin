@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../prayer/hijri_calendar_screen.dart';
 
@@ -19,10 +21,18 @@ class HomeDateHeaderCard extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const HijriCalendarScreen()),
-        );
+        final router = GoRouter.maybeOf(context);
+        if (router != null) {
+          router.push('/calendar');
+        } else {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (_) => const IsolatedFeatureRouteHost(
+                child: HijriCalendarScreen(),
+              ),
+            ),
+          );
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),

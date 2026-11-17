@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../app/widgets/app_navigation_drawer.dart';
+import '../../app/router.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/notifications/prayer_notification_service.dart';
 import '../../core/services/adhan_sensor_gesture_service.dart';
@@ -33,21 +33,8 @@ class SettingsScreen extends StatelessWidget {
         return Directionality(
           textDirection: s.textDirection,
           child: Scaffold(
-            drawer: const AppNavigationDrawer(),
             appBar: AppBar(
-              leading: Navigator.canPop(context)
-                  ? IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      tooltip: s.isArabic ? 'رجوع' : 'Back',
-                      onPressed: () => Navigator.pop(context),
-                    )
-                  : Builder(
-                      builder: (ctx) => IconButton(
-                        icon: const Icon(Icons.menu_rounded),
-                        tooltip: s.isArabic ? 'القائمة الرئيسية' : 'Menu',
-                        onPressed: () => Scaffold.of(ctx).openDrawer(),
-                      ),
-                    ),
+              leading: const IsolatedBackButton(),
               title: Text(context.tr('settings_title')),
               actions: [
                 IconButton(

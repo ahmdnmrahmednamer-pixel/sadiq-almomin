@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/prayer_service.dart';
-import '../../prayer/prayer_screen.dart';
+import '../../prayer/prayer_times_detail_screen.dart';
 
 class HomeNextPrayerCard extends StatelessWidget {
   final PrayerData? prayerData;
@@ -26,10 +28,18 @@ class HomeNextPrayerCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const PrayerScreen()),
-          );
+          final router = GoRouter.maybeOf(context);
+          if (router != null) {
+            router.push('/prayer-times-detail');
+          } else {
+            Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(
+                builder: (context) => const IsolatedFeatureRouteHost(
+                  child: PrayerTimesDetailScreen(),
+                ),
+              ),
+            );
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../app/router.dart';
 import '../../app/widgets/app_navigation_drawer.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../core/services/prayer_service.dart';
@@ -34,20 +35,17 @@ class _HomeScreenState extends State<HomeScreen> {
     PrayerService.instance.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        final uri = GoRouterState.of(context).uri;
-        if (uri.queryParameters['openDrawer'] == 'true' && mounted) {
-          _scaffoldKey.currentState?.openDrawer();
-        }
-      } catch (_) {}
-
       if (!SettingsService.instance.hasCompletedOnboarding &&
           SettingsService.instance.showTutorialScreens &&
           mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-        );
+        final router = GoRouter.maybeOf(context);
+        if (router != null) {
+          router.push('/onboarding');
+        } else {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          );
+        }
       }
     });
   }
@@ -89,12 +87,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     final query = await QuranVoiceSearchSheet.show(context);
                     if (!mounted) return;
                     if (query != null && query.trim().isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QuranSearchScreen(initialQuery: query.trim()),
-                        ),
-                      );
+                      final trimmed = query.trim();
+                      final router = GoRouter.maybeOf(context);
+                      if (router != null) {
+                        router.push(Uri(path: '/search', queryParameters: {'q': trimmed}).toString());
+                      } else {
+                        Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                            builder: (context) => IsolatedFeatureRouteHost(
+                              child: QuranSearchScreen(initialQuery: trimmed),
+                            ),
+                          ),
+                        );
+                      }
                     }
                   },
                 ),

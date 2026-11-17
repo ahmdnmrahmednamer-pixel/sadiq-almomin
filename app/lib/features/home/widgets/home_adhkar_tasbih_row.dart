@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../app/router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../adhkar/adhkar_screen.dart';
 import '../../adhkar/tasbih_screen.dart';
@@ -17,10 +19,18 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AdhkarScreen()),
-                );
+                final router = GoRouter.maybeOf(context);
+                if (router != null) {
+                  router.push('/adhkar?index=0');
+                } else {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (context) => const IsolatedFeatureRouteHost(
+                        child: AdhkarScreen(),
+                      ),
+                    ),
+                  );
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -58,10 +68,18 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TasbihScreen()),
-                );
+                final router = GoRouter.maybeOf(context);
+                if (router != null) {
+                  router.push('/tasbih');
+                } else {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (context) => const IsolatedFeatureRouteHost(
+                        child: TasbihScreen(),
+                      ),
+                    ),
+                  );
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),

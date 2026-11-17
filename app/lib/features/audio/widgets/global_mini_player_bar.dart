@@ -1,5 +1,6 @@
 import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../../../core/services/islamic_audio_service.dart';
 import '../../../core/theme/app_theme.dart';
 import 'full_screen_studio_player.dart';
@@ -38,7 +39,13 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
     } else if (!_audioService.isPlaying && _rotationController.isAnimating) {
       _rotationController.stop();
     }
-    setState(() {});
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   @override
@@ -86,7 +93,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
             FullScreenStudioPlayer.show(context);
           },
           child: Container(
-            height: 64,
+            constraints: const BoxConstraints(minHeight: 64),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF131D18) : const Color(0xFFFAFAF7),
               border: Border(
