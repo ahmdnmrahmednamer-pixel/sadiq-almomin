@@ -22,7 +22,7 @@ void main() {
   });
 
   group('Navigation Architecture & Organization Tests', () {
-    testWidgets('HomeScreen renders HomeQuickSectionsGrid with 6 organized cards', (tester) async {
+    testWidgets('HomeScreen renders cleaned HomeQuickSectionsGrid without directory clutter', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -39,17 +39,19 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(0, -600));
       await tester.pumpAndSettle();
 
-      // Verify header of quick sections
-      expect(find.text('أقسام النور والوصول السريع'), findsOneWidget);
+      // Verify cleaned header and absence of directory clutter
+      expect(find.text('الأقسام الرئيسية'), findsOneWidget);
       expect(find.byType(HomeQuickSectionsGrid), findsOneWidget);
+      expect(find.text('دليل الشاشات الشامل'), findsNothing);
+      expect(find.text('عرض الفهرس الكامل'), findsNothing);
 
-      // Verify the 6 primary hubs exist
+      // Verify core feature access cards exist
       expect(find.text('المصحف الشريف'), findsOneWidget);
-      expect(find.text('محراب الصلاة والقبلة'), findsOneWidget);
+      expect(find.text('الصلاة والقبلة'), findsOneWidget);
       expect(find.text('الأذكار والسبحة'), findsOneWidget);
-      expect(find.text('مكتبة كبار العلماء'), findsOneWidget);
-      expect(find.text('المكتبة والحديث النبوي'), findsOneWidget);
-      expect(find.text('دليل الشاشات الشامل'), findsOneWidget);
+      expect(find.text('المكتبة والحديث'), findsOneWidget);
+      expect(find.text('كبار العلماء'), findsOneWidget);
+      expect(find.text('ختمة القرآن'), findsOneWidget);
 
       PrayerService.instance.stopLiveTicker();
     });

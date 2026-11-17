@@ -205,6 +205,9 @@ class SunanRawatibService extends ChangeNotifier {
   Future<void> init({bool forceReload = false}) async {
     if (_isInitialized && !forceReload) return;
     final prefs = await SharedPreferences.getInstance();
+    if (forceReload) {
+      _dailyCompleted.clear();
+    }
     final raw = prefs.getString(_storageKey);
     if (raw != null && raw.isNotEmpty) {
       try {

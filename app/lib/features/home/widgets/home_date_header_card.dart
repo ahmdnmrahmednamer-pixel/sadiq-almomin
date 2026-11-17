@@ -16,75 +16,97 @@ class HomeDateHeaderCard extends StatelessWidget {
     required this.gregStr,
   });
 
+  void _openCalendar(BuildContext context) {
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
+      router.push('/calendar');
+    } else {
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute(
+          builder: (_) => const IsolatedFeatureRouteHost(
+            child: HijriCalendarScreen(),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        final router = GoRouter.maybeOf(context);
-        if (router != null) {
-          router.push('/calendar');
-        } else {
-          Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(
-              builder: (_) => const IsolatedFeatureRouteHost(
-                child: HijriCalendarScreen(),
+    void handleTap() => _openCalendar(context);
+
+    return Semantics(
+      button: true,
+      excludeSemantics: true,
+      label: '$dayName، $hijriStr، $gregStr، فتح التقويم الهجري',
+      onTap: handleTap,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: handleTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
+            ],
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGreen.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+          child: Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
-                    const Icon(Icons.calendar_today, color: AppColors.softGold, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      dayName,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today, color: AppColors.softGold, size: 18),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            dayName,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            gregStr,
+                            style: const TextStyle(color: AppColors.softGold, fontSize: 13),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_ios, color: AppColors.softGold, size: 12),
+                      ],
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      gregStr,
-                      style: const TextStyle(color: AppColors.softGold, fontSize: 13),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios, color: AppColors.softGold, size: 12),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              hijriStr,
-              style: const TextStyle(color: AppColors.softGold, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                hijriStr,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.softGold, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -41,21 +41,23 @@ class HomeQuranContinueCard extends StatelessWidget {
               padding: const EdgeInsets.all(14.0),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(11),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primaryGreen.withValues(alpha: 0.16),
-                          AppColors.emeraldLight.withValues(alpha: 0.12),
-                        ],
+                  ExcludeSemantics(
+                    child: Container(
+                      padding: const EdgeInsets.all(11),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primaryGreen.withValues(alpha: 0.16),
+                            AppColors.emeraldLight.withValues(alpha: 0.12),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
                       ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
+                      child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 28),
                     ),
-                    child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 28),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,6 +71,7 @@ class HomeQuranContinueCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 6),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -97,13 +100,15 @@ class HomeQuranContinueCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
+                      ExcludeSemantics(
+                        child: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),
                         ),
-                        child: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),
                       ),
                     ],
                   ),

@@ -9,7 +9,6 @@ class _QuickSectionItem {
   final IconData icon;
   final Color color;
   final String route;
-  final String badgeText;
 
   const _QuickSectionItem({
     required this.title,
@@ -17,63 +16,56 @@ class _QuickSectionItem {
     required this.icon,
     required this.color,
     required this.route,
-    required this.badgeText,
   });
 }
 
-/// شبكة الوصول السريع لأقسام النور (HomeQuickSectionsGrid)
-/// توفر وصولاً فورياً منظماً ومباشراً إلى كافة محاور وأقسام التطبيق الرئيسية
+/// شبكة الوصول السريع لأقسام التطبيق الرئيسية (HomeQuickSectionsGrid)
+/// تعرض الأقسام الأساسية بعناوين مختصرة ودون تكرار دلالي أو فيضان عند التكبير 2.0x
 class HomeQuickSectionsGrid extends StatelessWidget {
   const HomeQuickSectionsGrid({super.key});
 
   static const List<_QuickSectionItem> _items = [
     _QuickSectionItem(
       title: 'المصحف الشريف',
-      subtitle: 'قراءة، تلاوات، تفاسير، وقراءات',
+      subtitle: 'تلاوة، تفسير، وبحث قرآني',
       icon: Icons.menu_book_rounded,
       color: AppColors.primaryGreen,
       route: '/mushaf',
-      badgeText: '١١٤ سورة',
     ),
     _QuickSectionItem(
-      title: 'محراب الصلاة والقبلة',
-      subtitle: 'المواقيت، المؤذنون الـ ٧، والمنبه',
+      title: 'الصلاة والقبلة',
+      subtitle: 'المواقيت والأذان والقبلة',
       icon: Icons.access_time_filled_rounded,
       color: Color(0xFF25739B),
       route: '/prayer',
-      badgeText: 'مواقيت دقيقة',
     ),
     _QuickSectionItem(
       title: 'الأذكار والسبحة',
-      subtitle: 'حصن المسلم، الأوراد، والرقية',
+      subtitle: 'حصن المسلم والأوراد اليومية',
       icon: Icons.volunteer_activism_rounded,
       color: Color(0xFF059669),
       route: '/adhkar-hub',
-      badgeText: 'حصن المسلم',
     ),
     _QuickSectionItem(
-      title: 'مكتبة كبار العلماء',
-      subtitle: 'الشعراوي، كشك، ابن عثيمين، والدروس',
-      icon: Icons.mic_external_on_rounded,
-      color: Color(0xFF7C3AED),
-      route: '/scholars-audio',
-      badgeText: '٧٠٠+ محاضرة',
-    ),
-    _QuickSectionItem(
-      title: 'المكتبة والحديث النبوي',
-      subtitle: 'رياض الصالحين، القصص، والفقه',
+      title: 'المكتبة والحديث',
+      subtitle: 'رياض الصالحين والقصص والفقه',
       icon: Icons.auto_stories_rounded,
       color: Color(0xFFB45309),
       route: '/library',
-      badgeText: 'موسوعة شاملة',
     ),
     _QuickSectionItem(
-      title: 'دليل الشاشات الشامل',
-      subtitle: 'فهرس تفصيلي لـ ٦٣ باباً وشاشة إيمانية',
-      icon: Icons.grid_view_rounded,
-      color: AppColors.accentGold,
-      route: '/app-screen-directory',
-      badgeText: '٦٣ شاشة',
+      title: 'كبار العلماء',
+      subtitle: 'دروس ومحاضرات صوتية',
+      icon: Icons.mic_external_on_rounded,
+      color: Color(0xFF7C3AED),
+      route: '/scholars-audio',
+    ),
+    _QuickSectionItem(
+      title: 'ختمة القرآن',
+      subtitle: 'خطة الختمة والمتابعة',
+      icon: Icons.bookmark_added_rounded,
+      color: Color(0xFF0F766E),
+      route: '/khatma',
     ),
   ];
 
@@ -84,7 +76,6 @@ class HomeQuickSectionsGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
@@ -98,46 +89,62 @@ class HomeQuickSectionsGrid extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
-                'أقسام النور والوصول السريع',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w900,
-                  fontFamily: 'Cairo',
+              const Expanded(
+                child: Text(
+                  'الأقسام الرئيسية',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'Cairo',
+                  ),
                 ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-                icon: const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.primaryGreen),
-                label: const Text(
-                  'عرض الفهرس الكامل',
-                  style: TextStyle(fontSize: 12, color: AppColors.primaryGreen, fontWeight: FontWeight.bold),
-                ),
-                onPressed: () => context.push('/app-screen-directory'),
               ),
             ],
           ),
         ),
         const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final textScale = MediaQuery.textScalerOf(context).scale(14) / 14.0;
+            final singleColumn = constraints.maxWidth < 420 && textScale >= 1.5;
 
-        // 2-Column Responsive Grid
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _items.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.25,
-          ),
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            return _buildCard(context, item, isDark);
+            if (singleColumn) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (int i = 0; i < _items.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 10),
+                    _buildCard(context, _items[i], isDark),
+                  ],
+                ],
+              );
+            }
+
+            final rows = <Widget>[];
+            for (int i = 0; i < _items.length; i += 2) {
+              final first = _items[i];
+              final second = (i + 1 < _items.length) ? _items[i + 1] : null;
+              if (rows.isNotEmpty) {
+                rows.add(const SizedBox(height: 10));
+              }
+              rows.add(
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(child: _buildCard(context, first, isDark)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: second != null
+                            ? _buildCard(context, second, isDark)
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return Column(children: rows);
           },
         ),
       ],
@@ -145,22 +152,31 @@ class HomeQuickSectionsGrid extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, _QuickSectionItem item, bool isDark) {
+    void handleTap() {
+      final router = GoRouter.maybeOf(context);
+      if (router == null) return;
+      if (item.route == '/mushaf' ||
+          item.route == '/prayer' ||
+          item.route == '/adhkar-hub' ||
+          item.route == '/library') {
+        router.go(item.route);
+      } else {
+        router.push(item.route);
+      }
+    }
+
     return Semantics(
-      label: '${item.title} — ${item.subtitle}',
+      label: '${item.title}، ${item.subtitle}',
       button: true,
+      excludeSemantics: true,
+      onTap: handleTap,
       child: Material(
         color: isDark ? const Color(0xFF1B2420) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         elevation: 0,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            if (item.route == '/mushaf' || item.route == '/prayer' || item.route == '/adhkar-hub' || item.route == '/library') {
-              context.go(item.route);
-            } else {
-              context.push(item.route);
-            }
-          },
+          onTap: handleTap,
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -181,61 +197,35 @@ class HomeQuickSectionsGrid extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top Row: Icon + Badge
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: item.color.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: item.color.withValues(alpha: 0.25)),
-                      ),
-                      child: Icon(item.icon, color: item.color, size: 20),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: item.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item.badgeText,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.bold,
-                          color: item.color,
-                        ),
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: item.color.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: item.color.withValues(alpha: 0.25)),
+                  ),
+                  child: Icon(item.icon, color: item.color, size: 20),
                 ),
-
-                // Bottom Content: Title + Subtitle
+                const SizedBox(height: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       item.title,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         fontFamily: 'Cairo',
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       item.subtitle,
                       style: TextStyle(
-                        fontSize: 10.5,
+                        fontSize: 11,
                         color: isDark ? Colors.white60 : Colors.grey.shade600,
-                        height: 1.2,
+                        height: 1.25,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

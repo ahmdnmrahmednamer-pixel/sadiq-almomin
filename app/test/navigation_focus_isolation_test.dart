@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/app/router.dart';
 import 'package:almomin/app/theme/app_theme.dart';
 import 'package:almomin/app/widgets/app_navigation_drawer.dart';
+import 'package:almomin/core/services/daily_wird_service.dart';
 import 'package:almomin/core/services/islamic_audio_service.dart';
 import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/prayer_tracker_service.dart';
@@ -107,38 +107,6 @@ Widget _buildRouterApp({double textScale = 1.0}) {
   );
 }
 
-bool _isKnownBaselineHomeOverflow(
-  FlutterErrorDetails details,
-  Set<String> allowedSources,
-) {
-  if (details.exception is! FlutterError) return false;
-  final summary = details.exceptionAsString();
-  if (!summary.contains('A RenderFlex overflowed by')) return false;
-  final diagnosticsText = details.toString();
-  return allowedSources.any((source) => diagnosticsText.contains(source));
-}
-
-Future<List<FlutterErrorDetails>> _runValidatingKnownBaselineHomeOverflows(
-  Future<void> Function() action, {
-  required Set<String> allowedSources,
-}) async {
-  final capturedKnown = <FlutterErrorDetails>[];
-  final previousHandler = FlutterError.onError;
-  FlutterError.onError = (FlutterErrorDetails details) {
-    if (_isKnownBaselineHomeOverflow(details, allowedSources)) {
-      capturedKnown.add(details);
-    } else {
-      previousHandler?.call(details);
-    }
-  };
-  try {
-    await action();
-  } finally {
-    FlutterError.onError = previousHandler;
-  }
-  return capturedKnown;
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -152,8 +120,9 @@ void main() {
       'show_tutorial_screens': false,
     });
     await SettingsService.instance.init();
-    await PrayerTrackerService.instance.init();
+    await PrayerTrackerService.instance.init(forceReload: true);
     await SunanRawatibService.instance.init(forceReload: true);
+    await DailyWirdService.instance.init(forceReload: true);
     IslamicAudioService.instance.disableNativePlayerForTesting = true;
     await IslamicAudioService.instance.stop();
   });
@@ -527,29 +496,11 @@ void main() {
         expect(tester.takeException(), isNull,
             reason: 'Isolated /settings + GlobalMiniPlayerBar at ${scale}x must produce zero exceptions/overflows');
 
-        // Tap visible Back arrow to return to /home
-        if (scale == 1.0) {
-          await tester.tap(find.byType(IsolatedBackButton));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-        } else {
-          // Capture ONLY known baseline HomeNextPrayerCard 412x915 2.0x RenderFlex overflow during exact Home-return frame
-          final knownOverflows = await _runValidatingKnownBaselineHomeOverflows(
-            () async {
-              await tester.tap(find.byType(IsolatedBackButton));
-              await tester.pumpAndSettle();
-            },
-            allowedSources: const {'home_next_prayer_card.dart'},
-          );
-          expect(knownOverflows, isNotEmpty);
-          expect(
-            knownOverflows.every(
-              (d) => _isKnownBaselineHomeOverflow(d, const {'home_next_prayer_card.dart'}),
-            ),
-            isTrue,
-          );
-          expect(tester.takeException(), isNull);
-        }
+        // Tap visible Back arrow to return to /home — zero overflows at BOTH 1.0x and 2.0x
+        await tester.tap(find.byType(IsolatedBackButton));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull,
+            reason: 'Returning to /home at 412x915 ${scale}x must produce zero exceptions/overflows');
         expect(find.byType(NavigationBar), findsOneWidget);
       }
 
@@ -589,119 +540,16 @@ void main() {
         expect(tester.takeException(), isNull,
             reason: 'Direct /settings at 360x800 ${scale}x must render without layout/runtime exception');
 
-        // Tap visible Back arrow to return to /home
-        if (scale == 1.0) {
-          await tester.tap(find.byType(IsolatedBackButton));
-          await tester.pumpAndSettle();
-          expect(tester.takeException(), isNull);
-        } else {
-          // Validate ONLY known baseline Home card 2.0x RenderFlex overflows during exact Home-return frame
-          const allowedHomeSources = {
-            'home_date_header_card.dart',
-            'home_next_prayer_card.dart',
-          };
-          final knownOverflows = await _runValidatingKnownBaselineHomeOverflows(
-            () async {
-              await tester.tap(find.byType(IsolatedBackButton));
-              await tester.pumpAndSettle();
-            },
-            allowedSources: allowedHomeSources,
-          );
-          expect(knownOverflows, isNotEmpty);
-          expect(
-            knownOverflows.every(
-              (d) => _isKnownBaselineHomeOverflow(d, allowedHomeSources),
-            ),
-            isTrue,
-          );
-          expect(tester.takeException(), isNull);
-        }
+        // Tap visible Back arrow to return to /home — zero overflows at BOTH 360x800 1.0x and 2.0x
+        await tester.tap(find.byType(IsolatedBackButton));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull,
+            reason: 'Returning to /home at 360x800 ${scale}x must produce zero exceptions/overflows');
         expect(find.byType(NavigationBar), findsOneWidget);
       }
 
       PrayerService.instance.stopLiveTicker();
       semantics.dispose();
-    });
-
-    testWidgets('Known baseline Home card overflow guard matches original HomeDateHeaderCard/HomeNextPrayerCard overflows and rejects unexpected errors', (tester) async {
-      // 1. Verify guard strictly rejects non-RenderFlex errors and overflows from other widgets
-      expect(
-        _isKnownBaselineHomeOverflow(
-          FlutterErrorDetails(exception: StateError('unexpected runtime error')),
-          const {'home_date_header_card.dart', 'home_next_prayer_card.dart'},
-        ),
-        isFalse,
-      );
-      expect(
-        _isKnownBaselineHomeOverflow(
-          FlutterErrorDetails(
-            exception: FlutterError('A RenderFlex overflowed by 12 pixels on the right.'),
-            informationCollector: () => [
-              ErrorDescription('The relevant error-causing widget was: settings_screen.dart:42:10'),
-            ],
-          ),
-          const {'home_date_header_card.dart', 'home_next_prayer_card.dart'},
-        ),
-        isFalse,
-      );
-
-      // 2. Render HomeDateHeaderCard & HomeNextPrayerCard directly in a narrow 360x800 2.0x fixture
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await PrayerService.instance.init();
-      const allowedHomeSources = {
-        'home_date_header_card.dart',
-        'home_next_prayer_card.dart',
-      };
-      final captured = await _runValidatingKnownBaselineHomeOverflows(
-        () async {
-          await tester.pumpWidget(
-            MaterialApp(
-              theme: AppTheme.lightTheme,
-              builder: (context, child) {
-                final mq = MediaQuery.of(context);
-                return MediaQuery(
-                  data: mq.copyWith(textScaler: const TextScaler.linear(2.0)),
-                  child: child!,
-                );
-              },
-              home: Directionality(
-                textDirection: TextDirection.rtl,
-                child: Scaffold(
-                  body: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ListView(
-                      children: [
-                        HomeDateHeaderCard(
-                          dayName: HijriDateHelper.getDayOfWeek(),
-                          hijriStr: HijriDateHelper.getHijriDateString(),
-                          gregStr: HijriDateHelper.getGregorianDateString(),
-                        ),
-                        const SizedBox(height: 12),
-                        HomeNextPrayerCard(
-                          prayerData: PrayerService.instance.currentData,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-          await tester.pumpAndSettle();
-        },
-        allowedSources: allowedHomeSources,
-      );
-
-      final allDiag = captured.map((d) => d.toString()).join('\n');
-      expect(captured, isNotEmpty, reason: 'Baseline narrow 2.0x Home card fixture must reproduce known RenderFlex overflows');
-      expect(allDiag, contains('home_date_header_card.dart'));
-      expect(allDiag, contains('home_next_prayer_card.dart'));
-      expect(tester.takeException(), isNull);
-      PrayerService.instance.stopLiveTicker();
     });
 
     testWidgets('Onboarding push from HomeScreen isolates on root navigator without bottom NavigationBar', (tester) async {

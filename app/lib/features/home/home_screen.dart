@@ -3,23 +3,30 @@ import 'package:go_router/go_router.dart';
 import '../../app/router.dart';
 import '../../app/widgets/app_navigation_drawer.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/services/daily_wird_service.dart';
 import '../../core/services/prayer_service.dart';
+import '../../core/services/prayer_tracker_service.dart';
 import '../../core/services/settings_service.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/services/sunan_rawatib_service.dart';
 import '../onboarding/onboarding_screen.dart';
-import '../settings/widgets/settings_language_modal.dart';
-import '../search/widgets/quran_voice_search_sheet.dart';
-import '../search/quran_search_screen.dart';
+import '../settings/settings_screen.dart';
+import '../settings/widgets/settings_about_modal.dart';
+import 'widgets/home_adhkar_tasbih_row.dart';
+import 'widgets/home_daily_progress_card.dart';
 import 'widgets/home_date_header_card.dart';
 import 'widgets/home_next_prayer_card.dart';
-import 'widgets/home_quran_continue_card.dart';
-import 'widgets/home_adhkar_tasbih_row.dart';
 import 'widgets/home_quick_sections_grid.dart';
+import 'widgets/home_quran_continue_card.dart';
 
 /// شاشة التطبيق الرئيسية (HomeScreen)
-/// مصممة بهدوء وسكينة إيمانية، وتتيح الوصول لكافة الأقسام والشيوخ والمؤذنين عبر القائمة الجانبية (Navigation Menu)
+/// لوحة يومية مبسطة تعرض التاريخ، الصلاة القادمة، إنجاز اليوم الفعلي، والوصول السريع للأقسام
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final DateTime Function()? clock;
+
+  const HomeScreen({
+    super.key,
+    this.clock,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -33,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     SettingsService.instance.init();
     PrayerService.instance.init();
+    PrayerTrackerService.instance.init();
+    SunanRawatibService.instance.init();
+    DailyWirdService.instance.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!SettingsService.instance.hasCompletedOnboarding &&
@@ -50,17 +60,33 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _openSettings(BuildContext context) {
+    final router = GoRouter.maybeOf(context);
+    if (router != null) {
+      router.push('/settings');
+    } else {
+      Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute(
+          builder: (_) => const IsolatedFeatureRouteHost(
+            hasOwnDirectBackAction: true,
+            child: SettingsScreen(),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: Listenable.merge([SettingsService.instance, PrayerService.instance]),
       builder: (context, _) {
         final s = SettingsService.instance;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         final prayerData = PrayerService.instance.currentData;
-        final dayName = HijriDateHelper.getDayOfWeek();
-        final hijriStr = HijriDateHelper.getHijriDateString();
-        final gregStr = HijriDateHelper.getGregorianDateString();
+        final now = (widget.clock ?? DateTime.now)();
+        final dayName = HijriDateHelper.getDayOfWeek(now);
+        final hijriStr = HijriDateHelper.getHijriDateString(now);
+        final gregStr = HijriDateHelper.getGregorianDateString(now);
 
         return Directionality(
           textDirection: s.textDirection,
@@ -68,50 +94,25 @@ class _HomeScreenState extends State<HomeScreen> {
             key: _scaffoldKey,
             drawer: const AppNavigationDrawer(),
             appBar: AppBar(
-              leading: Semantics(
-                label: 'open navigation menu',
-                button: true,
-                hint: 'افتح قائمة التنقل',
-                child: IconButton(
-                  icon: const Icon(Icons.menu_rounded),
-                  tooltip: 'open navigation menu',
-                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                ),
+              leading: IconButton(
+                key: const ValueKey('home_menu_button'),
+                icon: const Icon(Icons.menu_rounded),
+                tooltip: 'القائمة',
+                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
               title: Text(context.tr('app_name')),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.mic_rounded),
-                  tooltip: 'البحث الصوتي عن الآيات',
-                  onPressed: () async {
-                    final query = await QuranVoiceSearchSheet.show(context);
-                    if (!mounted) return;
-                    if (query != null && query.trim().isNotEmpty) {
-                      final trimmed = query.trim();
-                      final router = GoRouter.maybeOf(context);
-                      if (router != null) {
-                        router.push(Uri(path: '/search', queryParameters: {'q': trimmed}).toString());
-                      } else {
-                        Navigator.of(context, rootNavigator: true).push(
-                          MaterialPageRoute(
-                            builder: (context) => IsolatedFeatureRouteHost(
-                              child: QuranSearchScreen(initialQuery: trimmed),
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  },
+                  key: const ValueKey('home_settings_button'),
+                  icon: const Icon(Icons.settings_outlined),
+                  tooltip: 'الإعدادات',
+                  onPressed: () => _openSettings(context),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.language_rounded),
-                  tooltip: context.tr('app_language'),
-                  onPressed: () => showSettingsLanguageModal(context),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.search_rounded),
-                  tooltip: context.tr('quran_search'),
-                  onPressed: () => context.push('/search'),
+                  key: const ValueKey('home_info_button'),
+                  icon: const Icon(Icons.info_outline_rounded),
+                  tooltip: 'عن التطبيق',
+                  onPressed: () => showSettingsAboutModal(context),
                 ),
               ],
             ),
@@ -127,71 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // 2. Next Prayer & Location Card (الوقت المتبقي على الصلاة القادمة وموقعك الحالي الفعلي)
+                // 2. Next Prayer & Location Card
                 HomeNextPrayerCard(prayerData: prayerData),
                 const SizedBox(height: 12),
 
-                // 3. Open Navigation Menu Interactive Banner
-                InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [AppColors.night900, AppColors.emerald900.withValues(alpha: 0.4)]
-                            : [AppColors.mint100.withValues(alpha: 0.5), AppColors.paper50],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.menu_open_rounded, color: AppColors.primaryGreen, size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'القائمة الإيمانية الشاملة ☰',
-                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'الإعدادات، عن التطبيق، المطور، والتواصل في القائمة الجانبية',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  color: isDark ? Colors.white70 : AppColors.mutedText,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                          child: const Text('فتح القائمة', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // 3. Truthful Daily Progress Dashboard (Obligatory / Sunan / Daily Wird)
+                HomeDailyProgressCard(clock: widget.clock),
                 const SizedBox(height: 12),
 
                 // 4. Continue Quran Card
@@ -202,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const HomeAdhkarTasbihRow(),
                 const SizedBox(height: 14),
 
-                // 6. Quick Access Sections Grid
+                // 6. Core Feature Quick Access Grid
                 const HomeQuickSectionsGrid(),
                 const SizedBox(height: 20),
               ],

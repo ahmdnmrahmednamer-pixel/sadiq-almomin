@@ -287,6 +287,9 @@ class PrayerTrackerService extends ChangeNotifier {
 
   Future<void> init({bool forceReload = false}) async {
     _prefs = await SharedPreferences.getInstance();
+    if (forceReload) {
+      _records.clear();
+    }
     final rawJson = _prefs?.getString(_storageKey);
     if (rawJson != null && rawJson.isNotEmpty) {
       try {
