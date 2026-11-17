@@ -418,14 +418,15 @@ void main() {
         );
 
         // 3. 'اختر تاريخاً' via SemanticsAction.tap at 360x800 2.0x:
-        //    Verify DatePickerDialog bounds/actions, semantic day selection + confirmation updates banner,
+        //    Verify responsive large-text picker bounds/actions, semantic day selection + confirmation updates banner,
         //    and both cancel button & system back preserve previous date.
         final pickBtn = find.byKey(const ValueKey('hijri_pick_date_button'));
         await tester.scrollUntilVisible(pickBtn, 200, scrollable: listScrollable);
         await tester.pumpAndSettle();
         await _performSemanticTap(tester, 'اختر تاريخاً');
 
-        final datePickerFinder = find.byType(DatePickerDialog);
+        final datePickerFinder =
+            find.byKey(const ValueKey('hijri_accessible_date_picker_dialog'));
         expect(datePickerFinder, findsOneWidget);
         final pickerMaterial = find
             .descendant(of: datePickerFinder, matching: find.byType(Material))
@@ -444,10 +445,22 @@ void main() {
         expect(okRect.bottom, lessThanOrEqualTo(pickerRect.bottom));
         expect(cancelRect.bottom, lessThanOrEqualTo(pickerRect.bottom));
 
-        // Pick a distinct day in the current month and confirm via SemanticsAction.tap
-        final confirmedDay = today.day == 5 ? 6 : 5;
+        // Pick a distinct 2-digit day in the current month and confirm via SemanticsAction.tap
+        final confirmedDay = today.day == 11 ? 12 : 11;
         final confirmedDate = DateTime(today.year, today.month, confirmedDay);
-        await _performSemanticTapByLabelPrefix(tester, '$confirmedDay, ');
+        final pickerScrollable = find
+            .descendant(
+              of: find.byKey(const ValueKey('hijri_picker_scroll_view')),
+              matching: find.byType(Scrollable),
+            )
+            .first;
+        await tester.scrollUntilVisible(
+          find.byKey(ValueKey('hijri_picker_day_$confirmedDay')),
+          140,
+          scrollable: pickerScrollable,
+        );
+        await tester.pumpAndSettle();
+        await _performSemanticTapByLabelPrefix(tester, '$confirmedDay، ');
         await _performSemanticTap(tester, 'حسنًا');
         expect(datePickerFinder, findsNothing);
 
@@ -466,7 +479,7 @@ void main() {
         await tester.pumpAndSettle();
         await _performSemanticTap(tester, 'اختر تاريخاً');
         expect(datePickerFinder, findsOneWidget);
-        await _performSemanticTapByLabelPrefix(tester, '7, ');
+        await _performSemanticTapByLabelPrefix(tester, '7، ');
         await _performSemanticTap(tester, 'الإلغاء');
         expect(datePickerFinder, findsNothing);
 
@@ -481,7 +494,7 @@ void main() {
         await tester.pumpAndSettle();
         await _performSemanticTap(tester, 'اختر تاريخاً');
         expect(datePickerFinder, findsOneWidget);
-        await _performSemanticTapByLabelPrefix(tester, '8, ');
+        await _performSemanticTapByLabelPrefix(tester, '8، ');
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(datePickerFinder, findsNothing);

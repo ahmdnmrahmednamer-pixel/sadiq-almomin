@@ -4,6 +4,7 @@ import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 
 import '../ramadan/ramadan_screen.dart';
+import 'widgets/hijri_accessible_date_picker_dialog.dart';
 
 class IslamicOccasion {
   final String title;
@@ -606,13 +607,21 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
   }
 
   Future<void> _pickGregorianDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(1980),
-      lastDate: DateTime(2050),
-      locale: const Locale('ar'),
-    );
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final picked = textScale >= 1.35
+        ? await showHijriAccessibleDatePicker(
+            context: context,
+            initialDate: _selectedDate,
+            firstDate: DateTime(1980),
+            lastDate: DateTime(2050),
+          )
+        : await showDatePicker(
+            context: context,
+            initialDate: _selectedDate,
+            firstDate: DateTime(1980),
+            lastDate: DateTime(2050),
+            locale: const Locale('ar'),
+          );
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
