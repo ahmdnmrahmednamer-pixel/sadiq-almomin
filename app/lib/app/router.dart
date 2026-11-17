@@ -251,6 +251,51 @@ class _MainScaffoldState extends State<MainScaffold> {
     }
   }
 
+  double _computeAdaptiveNavBarHeight({
+    required double maxWidth,
+    required List<String> labels,
+    required TextStyle measureStyle,
+    required TextScaler textScaler,
+    required TextDirection textDirection,
+  }) {
+    const double baseHeight = 70.0;
+    const double indicatorHeight = 32.0;
+    const double labelTopPadding = 4.0;
+    const double horizontalLabelPadding = 4.0;
+    const double verticalBreathingRoom = 16.0;
+
+    final int count = labels.length;
+    if (count == 0 || !maxWidth.isFinite || maxWidth <= 0) {
+      return baseHeight;
+    }
+
+    // Material 3 NavigationDestination clamps its label text scaler to 1.3x.
+    final TextScaler effectiveScaler = textScaler.clamp(maxScaleFactor: 1.3);
+    final double tabTextWidth =
+        ((maxWidth / count) - horizontalLabelPadding).clamp(24.0, maxWidth);
+
+    double maxLabelHeight = 0.0;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: measureStyle),
+        textAlign: TextAlign.center,
+        textDirection: textDirection,
+        textScaler: effectiveScaler,
+      )..layout(maxWidth: tabTextWidth);
+      if (painter.height > maxLabelHeight) {
+        maxLabelHeight = painter.height;
+      }
+      painter.dispose();
+    }
+
+    final double requiredHeight = (indicatorHeight +
+            labelTopPadding +
+            maxLabelHeight +
+            verticalBreathingRoom)
+        .ceilToDouble();
+    return requiredHeight > baseHeight ? requiredHeight : baseHeight;
+  }
+
   @override
   Widget build(BuildContext context) {
     final location = _safeLocation(context);
@@ -262,6 +307,32 @@ class _MainScaffoldState extends State<MainScaffold> {
     return AnimatedBuilder(
       animation: SettingsService.instance,
       builder: (context, _) {
+        final textDirection = SettingsService.instance.textDirection;
+        final textScaler = MediaQuery.textScalerOf(context);
+        final baseLabelStyle =
+            (theme.textTheme.labelSmall ?? const TextStyle(fontSize: 12))
+                .copyWith(
+          fontSize: 12,
+          height: 1.25,
+          letterSpacing: 0,
+        );
+        final selectedLabelStyle = baseLabelStyle.copyWith(
+          fontWeight: FontWeight.w700,
+          color: isDark ? theme.colorScheme.primary : AppColors.primaryGreen,
+        );
+        final unselectedLabelStyle = baseLabelStyle.copyWith(
+          fontWeight: FontWeight.w500,
+          color: theme.colorScheme.onSurfaceVariant,
+        );
+
+        final navLabels = <String>[
+          context.tr('nav_home'),
+          context.tr('nav_quran'),
+          context.tr('nav_prayer'),
+          context.tr('nav_adhkar'),
+          context.tr('nav_library'),
+        ];
+
         return Scaffold(
           body: widget.child,
           bottomNavigationBar: !isHubRoute
@@ -271,7 +342,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                   children: [
                     const GlobalMiniPlayerBar(),
                     Directionality(
-                      textDirection: SettingsService.instance.textDirection,
+                      textDirection: textDirection,
                       child: Container(
                         decoration: BoxDecoration(
                           color: theme.colorScheme.surface,
@@ -283,63 +354,99 @@ class _MainScaffoldState extends State<MainScaffold> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.05),
+                              color: Colors.black
+                                  .withValues(alpha: isDark ? 0.35 : 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, -2),
                             ),
                           ],
                         ),
-                        child: NavigationBar(
-                          selectedIndex: selectedIndex,
-                          onDestinationSelected: (index) =>
-                              _onItemTapped(index, context),
-                          height: 70,
-                          elevation: 0,
-                          backgroundColor: Colors.transparent,
-                          indicatorColor: AppColors.primaryGreen
-                              .withValues(alpha: isDark ? 0.28 : 0.15),
-                          labelBehavior:
-                              NavigationDestinationLabelBehavior.alwaysShow,
-                          destinations: [
-                            NavigationDestination(
-                              icon: const Icon(Icons.home_outlined),
-                              selectedIcon: const Icon(Icons.home_rounded,
-                                  color: AppColors.primaryGreen),
-                              label: context.tr('nav_home'),
-                              tooltip: context.tr('tooltip_home'),
-                            ),
-                            NavigationDestination(
-                              icon: const Icon(Icons.menu_book_outlined),
-                              selectedIcon: const Icon(Icons.menu_book_rounded,
-                                  color: AppColors.primaryGreen),
-                              label: context.tr('nav_quran'),
-                              tooltip: context.tr('tooltip_quran'),
-                            ),
-                            NavigationDestination(
-                              icon: const Icon(Icons.access_time_outlined),
-                              selectedIcon: const Icon(
-                                  Icons.access_time_filled_rounded,
-                                  color: AppColors.primaryGreen),
-                              label: context.tr('nav_prayer'),
-                              tooltip: context.tr('tooltip_prayer'),
-                            ),
-                            NavigationDestination(
-                              icon: const Icon(Icons.fingerprint_outlined),
-                              selectedIcon: const Icon(
-                                  Icons.fingerprint_rounded,
-                                  color: AppColors.primaryGreen),
-                              label: context.tr('nav_adhkar'),
-                              tooltip: context.tr('tooltip_adhkar'),
-                            ),
-                            NavigationDestination(
-                              icon: const Icon(Icons.auto_stories_outlined),
-                              selectedIcon: const Icon(
-                                  Icons.auto_stories_rounded,
-                                  color: AppColors.primaryGreen),
-                              label: context.tr('nav_library'),
-                              tooltip: context.tr('tooltip_library'),
-                            ),
-                          ],
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final navHeight = _computeAdaptiveNavBarHeight(
+                              maxWidth: constraints.maxWidth,
+                              labels: navLabels,
+                              measureStyle: selectedLabelStyle,
+                              textScaler: textScaler,
+                              textDirection: textDirection,
+                            );
+
+                            return DefaultTextStyle.merge(
+                              textAlign: TextAlign.center,
+                              child: NavigationBar(
+                                selectedIndex: selectedIndex,
+                                onDestinationSelected: (index) =>
+                                    _onItemTapped(index, context),
+                                height: navHeight,
+                                elevation: 0,
+                                backgroundColor: Colors.transparent,
+                                indicatorColor: AppColors.primaryGreen
+                                    .withValues(alpha: isDark ? 0.28 : 0.15),
+                                labelBehavior:
+                                    NavigationDestinationLabelBehavior
+                                        .alwaysShow,
+                                labelPadding:
+                                    const EdgeInsets.fromLTRB(2, 4, 2, 0),
+                                labelTextStyle:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return selectedLabelStyle;
+                                  }
+                                  return unselectedLabelStyle;
+                                }),
+                                destinations: [
+                                  NavigationDestination(
+                                    icon: const Icon(Icons.home_outlined),
+                                    selectedIcon: const Icon(
+                                      Icons.home_rounded,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    label: navLabels[0],
+                                    tooltip: context.tr('tooltip_home'),
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(Icons.menu_book_outlined),
+                                    selectedIcon: const Icon(
+                                      Icons.menu_book_rounded,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    label: navLabels[1],
+                                    tooltip: context.tr('tooltip_quran'),
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(
+                                        Icons.access_time_outlined),
+                                    selectedIcon: const Icon(
+                                      Icons.access_time_filled_rounded,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    label: navLabels[2],
+                                    tooltip: context.tr('tooltip_prayer'),
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(
+                                        Icons.fingerprint_outlined),
+                                    selectedIcon: const Icon(
+                                      Icons.fingerprint_rounded,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    label: navLabels[3],
+                                    tooltip: context.tr('tooltip_adhkar'),
+                                  ),
+                                  NavigationDestination(
+                                    icon: const Icon(
+                                        Icons.auto_stories_outlined),
+                                    selectedIcon: const Icon(
+                                      Icons.auto_stories_rounded,
+                                      color: AppColors.primaryGreen,
+                                    ),
+                                    label: navLabels[4],
+                                    tooltip: context.tr('tooltip_library'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
