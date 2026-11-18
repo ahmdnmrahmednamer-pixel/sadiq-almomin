@@ -629,7 +629,28 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
             uthmaniText: ayah.cleanTextUthmani,
           ),
           hint: QuranAccessibilityService.ayahSemanticHint,
-          child: Container(
+          onTap: () {
+            if (isPlaying) {
+              AyahAudioPlayer.instance.stop();
+            } else {
+              AyahAudioPlayer.instance.playAyah(
+                context,
+                widget.surah.id,
+                ayah.ayahNumber,
+                surahName: widget.surah.nameAr,
+              );
+            }
+          },
+          onLongPress: () {
+            AyahActionSheet.show(
+              context,
+              surah: widget.surah,
+              ayah: ayah,
+            );
+          },
+          child: ExcludeSemantics(
+            excluding: true,
+            child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1C221F) : Colors.white,
@@ -897,6 +918,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 ],
               ],
             ),
+          ),
           ),
         );
       },
