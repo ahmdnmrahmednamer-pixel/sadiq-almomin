@@ -118,247 +118,310 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF1B2420) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
+    final goldLabelColor = isDark ? AppColors.accentGold : const Color(0xFF7A5818);
+    final mq = MediaQuery.of(context);
+    final textScale = mq.textScaler.scale(16) / 16.0;
+    final useStackedActions = textScale >= 1.35 || mq.size.width < 340;
+    final availableHeight = (mq.size.height - mq.viewInsets.bottom - mq.viewPadding.top - 16)
+        .clamp(180.0, mq.size.height * 0.92);
+
+    final primaryButton = ElevatedButton.icon(
+      key: const ValueKey('voice_sheet_search_button'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primaryGreen,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: isDark ? Colors.white12 : Colors.grey.shade300,
+        disabledForegroundColor: isDark ? Colors.white54 : Colors.black54,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        elevation: 2,
+      ),
+      icon: Icon(
+        Icons.search_rounded,
+        size: 20,
+        color: _recognizedWords.trim().isNotEmpty
+            ? Colors.white
+            : (isDark ? Colors.white54 : Colors.black54),
+      ),
+      label: Text(
+        'بحث بالآية',
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: _recognizedWords.trim().isNotEmpty
+              ? Colors.white
+              : (isDark ? Colors.white54 : Colors.black54),
+        ),
+      ),
+      onPressed: _recognizedWords.trim().isNotEmpty ? _confirmAndSearch : null,
+    );
+
+    final retryButton = OutlinedButton.icon(
+      key: const ValueKey('voice_sheet_retry_button'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: textColor,
+        side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade400),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+      ),
+      icon: Icon(Icons.refresh_rounded, size: 18, color: textColor),
+      label: Text(
+        'إعادة',
+        style: TextStyle(color: textColor, fontWeight: FontWeight.w600),
+      ),
+      onPressed: _startVoiceListening,
+    );
+
+    final closeButton = IconButton(
+      key: const ValueKey('voice_sheet_close_button'),
+      tooltip: 'إغلاق',
+      color: textColor,
+      icon: const Icon(Icons.close_rounded),
+      onPressed: () => Navigator.pop(context),
+    );
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Container(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 28,
-        ),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle Bar
-            Center(
-              child: Container(
-                width: 44,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.white24 : Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Header Title
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.mic_rounded, color: AppColors.primaryGreen, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'البحث الصوتي في القرآن الكريم',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                    fontFamily: 'Cairo',
-                  ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: availableHeight),
+          child: Container(
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-
-            // Subtitle / Status
-            Text(
-              _errorMessage ?? _statusMessage,
-              style: TextStyle(
-                fontSize: 13,
-                color: _errorMessage != null
-                    ? Colors.red.shade400
-                    : (_isListening ? AppColors.accentGold : AppColors.secondaryGreen),
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-
-            // Central Pulsating Mic Button
-            GestureDetector(
-              onTap: () {
-                if (_isListening) {
-                  _service.stopListening();
-                  setState(() => _isListening = false);
-                } else {
-                  _startVoiceListening();
-                }
-              },
-              child: AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  final soundBoost = (_soundLevel.clamp(0.0, 10.0) / 50.0);
-                  final scale = _isListening ? (_pulseAnimation.value + soundBoost) : 1.0;
-                  return Transform.scale(
-                    scale: scale,
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: _isListening
-                              ? [AppColors.accentGold, AppColors.primaryGreen]
-                              : [AppColors.primaryGreen, AppColors.secondaryGreen],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+            child: SafeArea(
+              top: false,
+              child: SingleChildScrollView(
+                key: const ValueKey('voice_sheet_scroll_view'),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Handle Bar
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white24 : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: (_isListening ? AppColors.accentGold : AppColors.primaryGreen)
-                                .withValues(alpha: 0.4),
-                            blurRadius: _isListening ? 24 : 12,
-                            spreadRadius: _isListening ? 6 : 2,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Header Title
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.mic_rounded, color: AppColors.primaryGreen, size: 24),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'البحث الصوتي في القرآن الكريم',
+                            textAlign: TextAlign.center,
+                            softWrap: true,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                              fontFamily: 'Cairo',
+                            ),
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Subtitle / Status
+                    Text(
+                      _errorMessage ?? _statusMessage,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _errorMessage != null
+                            ? Colors.red.shade700
+                            : (_isListening ? goldLabelColor : AppColors.primaryGreen),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Central Pulsating Mic Button
+                    GestureDetector(
+                      onTap: () {
+                        if (_isListening) {
+                          _service.stopListening();
+                          setState(() => _isListening = false);
+                        } else {
+                          _startVoiceListening();
+                        }
+                      },
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          final soundBoost = (_soundLevel.clamp(0.0, 10.0) / 50.0);
+                          final scale = _isListening ? (_pulseAnimation.value + soundBoost) : 1.0;
+                          return Transform.scale(
+                            scale: scale,
+                            child: Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: _isListening
+                                      ? [AppColors.accentGold, AppColors.primaryGreen]
+                                      : [AppColors.primaryGreen, AppColors.secondaryGreen],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (_isListening ? AppColors.accentGold : AppColors.primaryGreen)
+                                        .withValues(alpha: 0.4),
+                                    blurRadius: _isListening ? 24 : 12,
+                                    spreadRadius: _isListening ? 6 : 2,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
+                                color: Colors.white,
+                                size: 42,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Spoken Text Display Box
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _recognizedWords.isNotEmpty
+                              ? AppColors.accentGold.withValues(alpha: 0.6)
+                              : (isDark ? Colors.white12 : Colors.grey.shade200),
+                          width: _recognizedWords.isNotEmpty ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          if (_recognizedWords.isNotEmpty) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(Icons.format_quote_rounded, size: 18, color: goldLabelColor),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    'الكلمات التي تم التقاطها:',
+                                    textAlign: TextAlign.center,
+                                    softWrap: true,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: goldLabelColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '«$_recognizedWords»',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                                fontFamily: 'Amiri',
+                                height: 1.6,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ] else ...[
+                            Text(
+                              'تحدّث باسم السورة، أو آية كريمة، أو كلمة قرانية تبحث عنها:',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: isDark ? Colors.white60 : Colors.grey.shade700,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              alignment: WrapAlignment.center,
+                              children: [
+                                _buildExampleChip('آية الكرسي'),
+                                _buildExampleChip('قل هو الله أحد'),
+                                _buildExampleChip('سورة الملك'),
+                                _buildExampleChip('إن مع العسر يسرا'),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
-                      child: Icon(
-                        _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
-                        color: Colors.white,
-                        size: 42,
-                      ),
                     ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-            // Spoken Text Display Box
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _recognizedWords.isNotEmpty
-                      ? AppColors.accentGold.withValues(alpha: 0.6)
-                      : (isDark ? Colors.white12 : Colors.grey.shade200),
-                  width: _recognizedWords.isNotEmpty ? 1.5 : 1.0,
-                ),
-              ),
-              child: Column(
-                children: [
-                  if (_recognizedWords.isNotEmpty) ...[
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.format_quote_rounded, size: 18, color: AppColors.accentGold),
-                        SizedBox(width: 4),
-                        Text(
-                          'الكلمات التي تم التقاطها:',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.accentGold,
-                            fontWeight: FontWeight.bold,
+                    // Action Buttons (adaptive stacked layout at large text scale)
+                    if (useStackedActions)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          primaryButton,
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(child: retryButton),
+                              const SizedBox(width: 8),
+                              closeButton,
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '«$_recognizedWords»',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                        fontFamily: 'Amiri',
-                        height: 1.6,
+                        ],
+                      )
+                    else
+                      Row(
+                        children: [
+                          Expanded(child: primaryButton),
+                          const SizedBox(width: 10),
+                          retryButton,
+                          const SizedBox(width: 8),
+                          closeButton,
+                        ],
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ] else ...[
-                    Text(
-                      'تحدّث باسم السورة، أو آية كريمة، أو كلمة قرانية تبحث عنها:',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        _buildExampleChip('آية الكرسي'),
-                        _buildExampleChip('قل هو الله أحد'),
-                        _buildExampleChip('سورة الملك'),
-                        _buildExampleChip('إن مع العسر يسرا'),
-                      ],
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 2,
-                    ),
-                    icon: const Icon(Icons.search_rounded, size: 20),
-                    label: const Text(
-                      'بحث بالآية',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: _recognizedWords.trim().isNotEmpty ? _confirmAndSearch : null,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: textColor,
-                    side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('إعادة'),
-                  onPressed: () {
-                    _startVoiceListening();
-                  },
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'إغلاق',
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -366,7 +429,11 @@ class _QuranVoiceSearchSheetState extends State<QuranVoiceSearchSheet>
 
   Widget _buildExampleChip(String label) {
     return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 11)),
+      label: Text(
+        label,
+        softWrap: true,
+        style: const TextStyle(fontSize: 11),
+      ),
       backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.08),
       side: BorderSide(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
       onPressed: () {
