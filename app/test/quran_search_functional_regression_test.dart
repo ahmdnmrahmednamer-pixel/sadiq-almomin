@@ -607,13 +607,7 @@ void main() {
           _assertOnlyKnownOutOfScopeDestinationOverflows(
             destErrors,
             destinationName: 'SurahReaderScreen(18)',
-            expectedMultiset: const [
-              (
-                sourceLocation: 'surah_reader_screen.dart:123:15',
-                direction: 'right',
-                roundedPixels: 132,
-              ),
-            ],
+            expectedMultiset: const [],
           );
 
           await tester.pumpWidget(const SizedBox.shrink());

@@ -17,6 +17,12 @@ import '../../core/services/khatma_service.dart';
 import '../../core/services/quran_accessibility_service.dart';
 import '../../core/ui/app_dropdown_field.dart';
 
+enum _SurahReaderMenuAction {
+  cycleTheme,
+  selectReciter,
+  openPageMode,
+}
+
 class SurahReaderScreen extends StatefulWidget {
   final Surah surah;
   final int initialAyah;
@@ -84,8 +90,139 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     );
   }
 
+  void _cycleFontSize() {
+    setState(() {
+      _fontSize = _fontSize >= 34.0 ? 18.0 : _fontSize + 4.0;
+    });
+    SettingsService.instance.setMushafFontSize(_fontSize);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('حجم الخط: ${_fontSize.toInt()}'),
+        duration: const Duration(milliseconds: 600),
+      ),
+    );
+  }
+
+  void _openPageModeMushaf() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PageModeMushafScreen(initialPage: widget.surah.pageStart),
+      ),
+    );
+  }
+
+  void _handleHeaderMenuAction(_SurahReaderMenuAction action) {
+    switch (action) {
+      case _SurahReaderMenuAction.cycleTheme:
+        _cycleReadingTheme();
+        break;
+      case _SurahReaderMenuAction.selectReciter:
+        showSettingsReciterModal(context);
+        break;
+      case _SurahReaderMenuAction.openPageMode:
+        _openPageModeMushaf();
+        break;
+    }
+  }
+
+  Widget _buildReadingControlsBar({
+    required BuildContext context,
+    required bool isDark,
+    required Color headerBg,
+    required Color headerBorder,
+  }) {
+    final controlTheme = Theme.of(context).copyWith(
+      brightness: isDark ? Brightness.dark : Brightness.light,
+    );
+
+    return Theme(
+      data: controlTheme,
+      child: Container(
+        key: const ValueKey('surah_reader_controls_bar'),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: headerBg,
+          border: Border(
+            bottom: BorderSide(
+              color: headerBorder.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.start,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            AppToolbarDropdown<String>(
+              semanticLabel: 'نمط عرض الآيات',
+              value: _readingDisplayMode,
+              options: const [
+                AppDropdownOption(
+                  value: 'continuous',
+                  label: 'المصحف المتصل',
+                  icon: Icons.menu_book_rounded,
+                ),
+                AppDropdownOption(
+                  value: 'cards',
+                  label: 'بطاقات الآيات والتفسير',
+                  icon: Icons.view_agenda_rounded,
+                ),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _readingDisplayMode = val;
+                });
+              },
+            ),
+            AppToolbarDropdown<int>(
+              semanticLabel: 'مظهر القراءة',
+              value: _themeModeIndex,
+              options: const [
+                AppDropdownOption(
+                  value: 0,
+                  label: 'تلقائي',
+                  icon: Icons.brightness_auto_rounded,
+                ),
+                AppDropdownOption(
+                  value: 1,
+                  label: 'ورقي مصحفي',
+                  icon: Icons.menu_book_rounded,
+                ),
+                AppDropdownOption(
+                  value: 2,
+                  label: 'ليلي مريح',
+                  icon: Icons.nightlight_round,
+                ),
+                AppDropdownOption(
+                  value: 3,
+                  label: 'نهاري ناصع',
+                  icon: Icons.wb_sunny_rounded,
+                ),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _themeModeIndex = val;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final textScale = media.textScaler.scale(1.0);
+    final isLargeText = textScale >= 1.35;
+    final isCompactHeader = media.size.width < 480 || isLargeText;
+
     final isSysDark = Theme.of(context).brightness == Brightness.dark;
     final isDark = _themeModeIndex == 2 || (_themeModeIndex == 0 && isSysDark);
     final isSepia = _themeModeIndex == 1;
@@ -121,85 +258,105 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
     return Scaffold(
       backgroundColor: pageBg,
       appBar: AppBar(
-        title: Text('سورة ${widget.surah.nameAr}'),
+        toolbarHeight: isLargeText ? (textScale >= 1.75 ? 104.0 : 80.0) : null,
+        titleSpacing: isLargeText ? 8.0 : null,
+        title: Text(
+          'سورة ${widget.surah.nameAr}',
+          maxLines: 2,
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          style: const TextStyle(height: 1.2),
+        ),
         actions: [
-          IconButton(
-            icon: Icon(themeIcon),
-            tooltip: 'تغيير نمط القراءة',
-            onPressed: _cycleReadingTheme,
-          ),
-          IconButton(
-            icon: const Icon(Icons.record_voice_over_rounded),
-            tooltip: 'تغيير القارئ للتلاوة',
-            onPressed: () => showSettingsReciterModal(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.auto_stories_rounded),
-            tooltip: 'الانتقال إلى نمط صفحات المصحف (604 صفحات)',
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => PageModeMushafScreen(initialPage: widget.surah.pageStart),
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: AppToolbarDropdown<String>(
-              semanticLabel: 'نمط عرض الآيات',
-              value: _readingDisplayMode,
-              options: const [
-                AppDropdownOption(value: 'continuous', label: 'المصحف المتصل', icon: Icons.menu_book_rounded),
-                AppDropdownOption(value: 'cards', label: 'بطاقات الآيات والتفسير', icon: Icons.view_agenda_rounded),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  _readingDisplayMode = val;
-                });
-              },
+          if (!isCompactHeader) ...[
+            IconButton(
+              icon: Icon(themeIcon),
+              tooltip: 'تغيير نمط القراءة',
+              onPressed: _cycleReadingTheme,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: AppToolbarDropdown<int>(
-              semanticLabel: 'مظهر القراءة',
-              value: _themeModeIndex,
-              options: const [
-                AppDropdownOption(value: 0, label: 'تلقائي', icon: Icons.brightness_auto_rounded),
-                AppDropdownOption(value: 1, label: 'ورقي مصحفي', icon: Icons.menu_book_rounded),
-                AppDropdownOption(value: 2, label: 'ليلي مريح', icon: Icons.nightlight_round),
-                AppDropdownOption(value: 3, label: 'نهاري ناصع', icon: Icons.wb_sunny_rounded),
-              ],
-              onChanged: (val) {
-                setState(() {
-                  _themeModeIndex = val;
-                });
-              },
+            IconButton(
+              icon: const Icon(Icons.record_voice_over_rounded),
+              tooltip: 'تغيير القارئ للتلاوة',
+              onPressed: () => showSettingsReciterModal(context),
             ),
-          ),
+            IconButton(
+              icon: const Icon(Icons.auto_stories_rounded),
+              tooltip: 'الانتقال إلى نمط صفحات المصحف (604 صفحات)',
+              onPressed: _openPageModeMushaf,
+            ),
+          ],
           IconButton(
             icon: const Icon(Icons.format_size),
             tooltip: 'تغيير حجم الخط',
-            onPressed: () {
-              setState(() {
-                _fontSize = _fontSize >= 34.0 ? 18.0 : _fontSize + 4.0;
-              });
-              SettingsService.instance.setMushafFontSize(_fontSize);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('حجم الخط: ${_fontSize.toInt()}'),
-                  duration: const Duration(milliseconds: 600),
-                ),
-              );
-            },
+            onPressed: _cycleFontSize,
           ),
+          if (isCompactHeader)
+            PopupMenuButton<_SurahReaderMenuAction>(
+              tooltip: 'المزيد من خيارات القراءة',
+              icon: const Icon(Icons.more_vert_rounded),
+              onSelected: _handleHeaderMenuAction,
+              itemBuilder: (context) => [
+                PopupMenuItem<_SurahReaderMenuAction>(
+                  value: _SurahReaderMenuAction.cycleTheme,
+                  child: Row(
+                    children: [
+                      Icon(themeIcon, size: 20),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text(
+                          'تغيير نمط القراءة',
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<_SurahReaderMenuAction>(
+                  value: _SurahReaderMenuAction.selectReciter,
+                  child: Row(
+                    children: [
+                      Icon(Icons.record_voice_over_rounded, size: 20),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'تغيير القارئ للتلاوة',
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<_SurahReaderMenuAction>(
+                  value: _SurahReaderMenuAction.openPageMode,
+                  child: Row(
+                    children: [
+                      Icon(Icons.auto_stories_rounded, size: 20),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'الانتقال إلى نمط صفحات المصحف (604 صفحات)',
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: Directionality(
         textDirection: SettingsService.instance.textDirection,
-        child: FutureBuilder<List<Ayah>>(
+        child: Column(
+          children: [
+            _buildReadingControlsBar(
+              context: context,
+              isDark: isDark,
+              headerBg: headerBg,
+              headerBorder: headerBorder,
+            ),
+            Expanded(
+              child: FutureBuilder<List<Ayah>>(
           future: _ayahsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -409,6 +566,9 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
               },
             );
           },
+        ),
+            ),
+          ],
         ),
       ),
     );
