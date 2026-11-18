@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/services/prayer_service.dart';
 import '../prayer/battery_reliability_screen.dart';
+import '../prayer/widgets/prayer_location_banner.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,7 +18,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   // Selected values in onboarding
-  String _selectedCityName = 'القاهرة، مصر';
   double _fontSize = 24.0;
   String _selectedReciterId = 'minshawi_murattal';
   bool _enableNotifications = true;
@@ -27,9 +27,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (PrayerService.instance.isAutoLocation) {
-        PrayerService.instance.checkAndUpdateLocationOnResume();
-      }
+      PrayerService.instance.checkAndUpdateLocationOnResume(
+        isUserTriggered: false,
+      );
     });
     _fontSize = SettingsService.instance.mushafFontSize;
     _selectedReciterId = SettingsService.instance.selectedReciterId;
@@ -136,12 +136,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         onChanged: (val) => setState(() => _dontShowAgain = val ?? true),
                       ),
                       const SizedBox(width: 4),
-                      const Text(
-                        'عدم إظهار شاشات شرح البرنامج مرة أخرى',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.secondaryGreen,
+                      const Flexible(
+                        child: Text(
+                          'عدم إظهار شاشات شرح البرنامج مرة أخرى',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.secondaryGreen,
+                          ),
                         ),
                       ),
                     ],
@@ -294,16 +296,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   const Icon(Icons.mosque_rounded, color: AppColors.accentGold, size: 24),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGold.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
-                    ),
-                    child: const Text(
-                      'أهلاً بك في رحاب الإيمان 🕊️',
-                      style: TextStyle(color: AppColors.softGold, fontSize: 13, fontWeight: FontWeight.bold),
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentGold.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+                      ),
+                      child: const Text(
+                        'أهلاً بك في رحاب الإيمان 🕊️',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.softGold, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -423,7 +428,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'يتكيف التطبيق تلقائياً مع مدينتك لتحديث مواقيت الصلاة والقبلة بدقة عند السفر والتنقل',
+                            'يتكيف التطبيق تلقائياً مع موقعك لتحديث مواقيت الصلاة والقبلة عند السفر والتنقل',
                             style: TextStyle(fontSize: 11.5, color: Colors.black87),
                           ),
                         ],
@@ -432,80 +437,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  icon: const Icon(Icons.my_location_rounded, size: 18),
-                  label: Text(
-                    PrayerService.instance.isAutoLocation && PrayerService.instance.currentData != null
-                        ? 'موقعك الفعلي الحالي: ${PrayerService.instance.currentData!.locationName}'
-                        : 'تفعيل التحديد التلقائي للموقع الآن (GPS)',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                  onPressed: () async {
-                    final ok = await PrayerService.instance.requestGpsLocation();
-                    if (mounted) {
-                      setState(() {
-                        if (PrayerService.instance.currentData != null) {
-                          _selectedCityName = PrayerService.instance.currentData!.locationName;
-                        }
-                      });
-                      if (ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('تم تحديد موقعك ومحافظتك بنجاح: $_selectedCityName')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // City Selection
-        Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.location_city, color: AppColors.primaryGreen, size: 20),
-                    SizedBox(width: 8),
-                    Text('المدينة لمواقيت الصلاة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: PrayerService.famousCities.take(6).map((city) {
-                    final isSelected = _selectedCityName == city.name;
-                    return ChoiceChip(
-                      label: Text(city.name, style: const TextStyle(fontSize: 12)),
-                      selected: isSelected,
-                      selectedColor: AppColors.primaryGreen,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black87,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      ),
-                      onSelected: (val) {
-                        if (val) {
-                          setState(() => _selectedCityName = city.name);
-                          PrayerService.instance.setManualCity(city);
-                        }
-                      },
+                AnimatedBuilder(
+                  animation: PrayerService.instance,
+                  builder: (context, _) {
+                    final service = PrayerService.instance;
+                    final data = service.currentData;
+                    final freshness = service.locationFreshness;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            GpsFreshnessChip(freshness: freshness),
+                            if (data != null)
+                              Text(
+                                data.locationName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: AppColors.primaryGreen,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (data == null) ...[
+                          Text(
+                            GpsLocationActionControls.describeUnavailableReason(
+                              service,
+                              promptContext: GpsPromptContext.general,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black87,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const GpsLocationActionControls(
+                            promptContext: GpsPromptContext.general,
+                          ),
+                        ] else ...[
+                          if (service.cachedFixAgeLabel != null)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                service.cachedFixAgeLabel!,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                          const GpsLocationActionControls(
+                            promptContext: GpsPromptContext.general,
+                          ),
+                        ],
+                      ],
                     );
-                  }).toList(),
+                  },
                 ),
               ],
             ),
@@ -526,11 +519,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Icon(Icons.record_voice_over, color: AppColors.primaryGreen, size: 20),
                     SizedBox(width: 8),
-                    Text('القارئ الافتراضي للتلاوة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Flexible(
+                      child: Text('القارئ الافتراضي للتلاوة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
+                  isExpanded: true,
                   initialValue: SettingsService.availableReciters.any((r) => r.id == _selectedReciterId)
                       ? _selectedReciterId
                       : SettingsService.availableReciters.first.id,
@@ -541,7 +537,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   items: SettingsService.availableReciters.map((r) {
                     return DropdownMenuItem<String>(
                       value: r.id,
-                      child: Text(r.nameAr, style: const TextStyle(fontSize: 13)),
+                      child: Text(
+                        r.nameAr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -563,18 +564,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.format_size, color: AppColors.primaryGreen, size: 20),
-                        SizedBox(width: 8),
-                        Text('حجم خط المصحف', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      ],
-                    ),
-                    Text('${_fontSize.toInt()} نقطة', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
-                  ],
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.format_size, color: AppColors.primaryGreen, size: 20),
+                          SizedBox(width: 8),
+                          Flexible(
+                            child: Text('حجم خط المصحف', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          ),
+                        ],
+                      ),
+                      Text('${_fontSize.toInt()} نقطة', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
                 Slider(
                   value: _fontSize.clamp(18.0, 38.0),

@@ -18,25 +18,37 @@ void main() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('Bug #1 & #3: PrayerService preserves manual city selection and recalculates on method change', () async {
-      await SettingsService.instance.init();
-      await PrayerService.instance.init();
+    test('Bug #1 & #3: PrayerService migrates unverified/manual prefs to UNKNOWN and recalculates verified GPS on method change', () async {
+      SharedPreferences.setMockInitialValues({
+        'is_manual_location': true,
+        'last_latitude': 31.2001,
+        'last_longitude': 29.9187,
+        'last_city': 'الإسكندرية، مصر',
+      });
+      await SettingsService.instance.init(forceReload: true);
+      await PrayerService.instance.init(forceReload: true);
 
-      const alexandria = CityCoordinate.named(
-        name: 'الإسكندرية، مصر',
-        country: 'مصر',
-        latitude: 31.2001,
-        longitude: 29.9187,
-        method: 'egyptian',
-      );
-      await PrayerService.instance.setManualCity(alexandria);
-      expect(PrayerService.instance.isManualLocation, isTrue);
-      expect(PrayerService.instance.currentData?.locationName, 'الإسكندرية، مصر');
+      // Legacy manual location must migrate to UNKNOWN (never relabeled as GPS)
+      expect(PrayerService.instance.currentData, isNull);
+      expect(PrayerService.instance.hasVerifiedGpsLocation, isFalse);
 
-      // Auto-init GPS must NOT overwrite a manually chosen city
-      final autoGpsResult = await PrayerService.instance.requestGpsLocation(isAutoInit: true);
-      expect(autoGpsResult, isFalse);
-      expect(PrayerService.instance.currentData?.locationName, 'الإسكندرية، مصر');
+      // Verified GPS cache loads cleanly and recalculates when calculation method changes
+      SharedPreferences.setMockInitialValues({
+        PrayerService.locationSourceKey: PrayerService.locationSourceGps,
+        PrayerService.locationUpdatedAtMsKey:
+            DateTime.now().toUtc().millisecondsSinceEpoch,
+        'last_latitude': 31.2001,
+        'last_longitude': 29.9187,
+        'last_city': 'الإسكندرية، مصر (موقعك الفعلي)',
+      });
+      await SettingsService.instance.init(forceReload: true);
+      await PrayerService.instance.init(forceReload: true);
+      expect(PrayerService.instance.currentData?.locationName, 'الإسكندرية، مصر (موقعك الفعلي)');
+      final beforeFajr = PrayerService.instance.currentData!.prayers.first.time;
+
+      await SettingsService.instance.setCalculationMethod('isna');
+      final afterFajr = PrayerService.instance.currentData!.prayers.first.time;
+      expect(afterFajr, isNot(equals(beforeFajr)));
     });
 
     test('Bug #4, #5, #6: KhatmaPlan off-by-one math, uncheck prayer rollback, and forward-only reading', () async {

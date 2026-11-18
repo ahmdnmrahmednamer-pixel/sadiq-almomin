@@ -158,7 +158,9 @@ class PrayerQiblaOverviewCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${data?.qiblaDegrees.toStringAsFixed(1) ?? "136.0"}° من جهة الشمال (اضغط لفتح البوصلة)',
+                      data != null
+                          ? '${data!.qiblaDegrees.toStringAsFixed(1)}° من جهة الشمال (اضغط لفتح البوصلة)'
+                          : 'فعّل GPS لحساب زاوية القبلة (اضغط لفتح البوصلة)',
                       style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w800, fontSize: 13),
                     ),
                   ],

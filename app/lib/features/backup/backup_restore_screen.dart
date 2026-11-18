@@ -5,6 +5,7 @@ import '../../core/services/backup_restore_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/services/khatma_service.dart';
 import '../../core/services/adhkar_service.dart';
+import '../../core/services/prayer_service.dart';
 
 class BackupRestoreScreen extends StatefulWidget {
   const BackupRestoreScreen({super.key});
@@ -23,7 +24,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   int _khatmaPage = 1;
   bool _hasKhatma = false;
   int _tasbihTotal = 0;
-  String _currentCity = 'القاهرة، مصر';
+  String _currentCity = 'غير محدد (يُحدد عبر GPS)';
 
   @override
   void initState() {
@@ -42,12 +43,24 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   Future<void> _loadCurrentStats() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+    final hasVerifiedGps =
+        prefs.getString(PrayerService.locationSourceKey) ==
+                PrayerService.locationSourceGps &&
+            prefs.getBool('is_manual_location') != true &&
+            PrayerService.instance.isValidFixTimestampMsNow(
+              prefs.getInt(PrayerService.locationUpdatedAtMsKey),
+            );
+    final verifiedCity =
+        PrayerService.instance.currentData?.locationName ??
+            (hasVerifiedGps ? prefs.getString('last_city') : null);
     setState(() {
       _bookmarksCount = SettingsService.instance.bookmarks.length;
       _hasKhatma = KhatmaService.instance.hasActivePlan;
       _khatmaPage = KhatmaService.instance.activePlan?.currentPage ?? 1;
       _tasbihTotal = AdhkarService.instance.tasbihTotalToday;
-      _currentCity = prefs.getString('last_city') ?? 'القاهرة، مصر';
+      _currentCity = (verifiedCity != null && verifiedCity.trim().isNotEmpty)
+          ? verifiedCity
+          : 'غير محدد (يُحدد عبر GPS)';
     });
   }
 
@@ -318,9 +331,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                           child: const Icon(Icons.cloud_upload_rounded, color: Color(0xFF1B4D3E)),
                         ),
                         const SizedBox(width: 10),
-                        const Text(
-                          'تصدير نسخة احتياطية (FR-BKM-003)',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        const Expanded(
+                          child: Text(
+                            'تصدير نسخة احتياطية (FR-BKM-003)',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
@@ -387,9 +402,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                           child: Icon(Icons.cloud_download_rounded, color: Colors.amber.shade800),
                         ),
                         const SizedBox(width: 10),
-                        const Text(
-                          'استعادة نسخة سابقة',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        const Expanded(
+                          child: Text(
+                            'استعادة نسخة سابقة',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
@@ -563,9 +580,11 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
             children: [
               Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 20),
               SizedBox(width: 8),
-              Text(
-                'النسخة صالحة ومطابقة لسلامة البيانات ✓',
-                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+              Expanded(
+                child: Text(
+                  'النسخة صالحة ومطابقة لسلامة البيانات ✓',
+                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                ),
               ),
             ],
           ),

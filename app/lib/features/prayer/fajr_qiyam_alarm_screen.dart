@@ -5,6 +5,7 @@ import '../../core/services/fajr_qiyam_alarm_service.dart';
 import '../../core/services/islamic_audio_service.dart';
 import '../../core/services/prayer_service.dart';
 import '../../core/theme/app_theme.dart';
+import 'widgets/prayer_location_banner.dart';
 import '../../core/ui/app_dropdown_field.dart';
 
 /// شاشة ضبط «منبّه الاستعداد لصلاة الفجر ومنبّه قيام الليل الذكي»
@@ -149,12 +150,29 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
+                      if (prayerData == null) ...[
+                        Text(
+                          GpsLocationActionControls.describeUnavailableReason(
+                            PrayerService.instance,
+                          ),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12.5,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const GpsLocationActionControls(onDarkSurface: true),
+                        const SizedBox(height: 12),
+                      ],
                       Row(
                         children: [
                           Expanded(
                             child: _buildTimeStatBox(
                               label: 'موعد أذان الفجر القادم',
-                              timeStr: _alarmService.formatTimeAr(nextFajr),
+                              timeStr: nextFajr != null
+                                  ? _alarmService.formatTimeAr(nextFajr)
+                                  : 'يتطلب GPS',
                               icon: Icons.wb_twilight_rounded,
                             ),
                           ),
@@ -162,22 +180,30 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                           Expanded(
                             child: _buildTimeStatBox(
                               label: 'منبّه الاستعداد للفجر',
-                              timeStr: _alarmService.preFajrEnabled
-                                  ? _alarmService.formatTimeAr(nextPreFajrWake)
-                                  : 'متوقف',
+                              timeStr: !_alarmService.preFajrEnabled
+                                  ? 'متوقف'
+                                  : (nextPreFajrWake != null
+                                      ? _alarmService
+                                          .formatTimeAr(nextPreFajrWake)
+                                      : 'يتطلب GPS'),
                               icon: Icons.notifications_active_rounded,
-                              highlight: _alarmService.preFajrEnabled,
+                              highlight: _alarmService.preFajrEnabled &&
+                                  nextPreFajrWake != null,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildTimeStatBox(
                               label: 'منبّه قيام الليل',
-                              timeStr: _alarmService.qiyamEnabled
-                                  ? _alarmService.formatTimeAr(nextQiyamWake)
-                                  : 'متوقف',
+                              timeStr: !_alarmService.qiyamEnabled
+                                  ? 'متوقف'
+                                  : (nextQiyamWake != null
+                                      ? _alarmService
+                                          .formatTimeAr(nextQiyamWake)
+                                      : 'يتطلب GPS'),
                               icon: Icons.nights_stay_rounded,
-                              highlight: _alarmService.qiyamEnabled,
+                              highlight: _alarmService.qiyamEnabled &&
+                                  nextQiyamWake != null,
                             ),
                           ),
                         ],
@@ -243,7 +269,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
     );
   }
 
-  Widget _buildPreFajrSectionCard(bool isDark, DateTime nextPreFajrWake) {
+  Widget _buildPreFajrSectionCard(bool isDark, DateTime? nextPreFajrWake) {
     final mins = _alarmService.preFajrMinutesBefore;
     final selectedToneId = _alarmService.preFajrToneId;
 
@@ -283,7 +309,9 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                         ),
                       ),
                       Text(
-                        'يوقظك قبل الفجر بـ $mins دقيقة (${_alarmService.formatTimeAr(nextPreFajrWake)}) لتتوضأ وتدرك الصلاة في وقتها',
+                        nextPreFajrWake != null
+                            ? 'يوقظك قبل الفجر بـ $mins دقيقة (${_alarmService.formatTimeAr(nextPreFajrWake)}) لتتوضأ وتدرك الصلاة في وقتها'
+                            : 'يوقظك قبل الفجر بـ $mins دقيقة فور تحديد موقعك عبر GPS',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
@@ -418,8 +446,8 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
 
   Widget _buildQiyamSectionCard(
     bool isDark,
-    DateTime nextQiyamWake,
-    DateTime lastThirdStart,
+    DateTime? nextQiyamWake,
+    DateTime? lastThirdStart,
   ) {
     final mode = _alarmService.qiyamMode;
     final selectedToneId = _alarmService.qiyamToneId;
@@ -460,7 +488,11 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                         ),
                       ),
                       Text(
-                        'موعد التنبيه القادم: ${_alarmService.formatTimeAr(nextQiyamWake)} (بداية الثلث الأخير: ${_alarmService.formatTimeAr(lastThirdStart)})',
+                        nextQiyamWake != null
+                            ? (lastThirdStart != null
+                                ? 'موعد التنبيه القادم: ${_alarmService.formatTimeAr(nextQiyamWake)} (بداية الثلث الأخير: ${_alarmService.formatTimeAr(lastThirdStart)})'
+                                : 'موعد التنبيه الثابت القادم: ${_alarmService.formatTimeAr(nextQiyamWake)}')
+                            : 'فعّل GPS لحساب الثلث الأخير من الليل، أو اختر وقتاً ثابتاً',
                         style: const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],

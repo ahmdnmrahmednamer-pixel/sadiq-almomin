@@ -1029,9 +1029,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
         : getAdhanVoiceName(notifService.getPrayerVoice(widget.prayerName));
 
     final currentData = PrayerService.instance.currentData;
-    final locationName = currentData?.locationName ?? 'موقعك الحالي';
+    final locationName = currentData?.locationName ?? 'الموقع غير محدد عبر GPS';
     final hijriStr = HijriDateHelper.getHijriDateString(_currentTime);
-    final qiblaDegrees = currentData?.qiblaDegrees ?? 136.0;
+    final double? qiblaDegrees = currentData?.qiblaDegrees;
 
     return Scaffold(
       body: Container(
@@ -1121,7 +1121,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     String hijriStr,
     String locationName,
     String activeVoiceTitle,
-    double qiblaDegrees,
+    double? qiblaDegrees,
   ) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -1567,7 +1567,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     String timeStr,
     String hijriStr,
     String locationName,
-    double qiblaDegrees,
+    double? qiblaDegrees,
   ) {
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -2119,7 +2119,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     );
   }
 
-  Widget _buildQuickQiblaCard(double qiblaDegrees, _PrayerAtmosphereTheme themeData) {
+  Widget _buildQuickQiblaCard(double? qiblaDegrees, _PrayerAtmosphereTheme themeData) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
@@ -2141,7 +2141,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 shape: BoxShape.circle,
               ),
               child: Transform.rotate(
-                angle: qiblaDegrees * (math.pi / 180.0),
+                angle: (qiblaDegrees ?? 0.0) * (math.pi / 180.0),
                 child: Icon(Icons.navigation_rounded, color: themeData.primaryAccent, size: 18),
               ),
             ),
@@ -2159,7 +2159,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     ),
                   ),
                   Text(
-                    'زاوية القبلة: ${qiblaDegrees.toStringAsFixed(0)}° • اضغط للمعاينة بالبوصلة',
+                    qiblaDegrees != null
+                        ? 'زاوية القبلة: ${qiblaDegrees.toStringAsFixed(0)}° • اضغط للمعاينة بالبوصلة'
+                        : 'فعّل GPS لتحديد زاوية القبلة • اضغط لفتح البوصلة',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 11,

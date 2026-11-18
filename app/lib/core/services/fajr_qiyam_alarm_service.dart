@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +32,12 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
+  static const int preFajrAlarmNotificationId = 880;
+  static const int qiyamAlarmNotificationId = 881;
+
   bool _initialized = false;
+  int _alarmScheduleGeneration = 0;
+  Future<void>? _activeAlarmOp;
 
   // 1. Pre-Fajr Wake-Up Alarm Settings
   bool _preFajrEnabled = true;
@@ -136,31 +142,32 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Calculates the next Fajr DateTime from PrayerService
-  DateTime getNextFajrTime([PrayerData? data]) {
+  bool get isQiyamFixedClock =>
+      _qiyamMode != 'last_third' && _qiyamMode != 'before_fajr';
+
+  /// Calculates the next Fajr DateTime from verified GPS PrayerService data.
+  /// Returns null when location is UNKNOWN instead of fabricating 04:45 AM.
+  DateTime? getNextFajrTime([PrayerData? data]) {
     final now = DateTime.now();
     final prayerData = data ?? PrayerService.instance.currentData;
-    if (prayerData != null && prayerData.prayers.isNotEmpty) {
-      final fajr = prayerData.prayers.firstWhere(
-        (p) => p.name.contains('الفجر'),
-        orElse: () => prayerData.prayers.first,
-      );
-      if (fajr.time.isAfter(now)) {
-        return fajr.time;
-      }
-      return fajr.time.add(const Duration(days: 1));
+    if (prayerData == null || prayerData.prayers.isEmpty) {
+      return null;
     }
-    // Fallback default 04:45 AM
-    final candidate = DateTime(now.year, now.month, now.day, 4, 45);
-    return candidate.isAfter(now)
-        ? candidate
-        : candidate.add(const Duration(days: 1));
+    final fajr = prayerData.prayers.firstWhere(
+      (p) => p.name.contains('الفجر'),
+      orElse: () => prayerData.prayers.first,
+    );
+    if (fajr.time.isAfter(now)) {
+      return fajr.time;
+    }
+    return fajr.time.add(const Duration(days: 1));
   }
 
-  /// Calculates the exact Pre-Fajr Wake-Up Alarm DateTime
-  DateTime getNextPreFajrWakeTime([PrayerData? data]) {
+  /// Calculates the exact Pre-Fajr Wake-Up Alarm DateTime (null if location UNKNOWN)
+  DateTime? getNextPreFajrWakeTime([PrayerData? data]) {
     final now = DateTime.now();
     final fajr = getNextFajrTime(data);
+    if (fajr == null) return null;
     final candidate = fajr.subtract(Duration(minutes: _preFajrMinutesBefore));
     if (candidate.isAfter(now)) {
       return candidate;
@@ -168,34 +175,27 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     return candidate.add(const Duration(days: 1));
   }
 
-  /// Calculates the astronomical start of the Last Third of the Night (الثلث الأخير من الليل)
-  DateTime getLastThirdOfNightStart([PrayerData? data]) {
+  /// Calculates the astronomical start of the Last Third of the Night (الثلث الأخير من الليل).
+  /// Returns null when location is UNKNOWN instead of fabricating 18:00/04:45.
+  DateTime? getLastThirdOfNightStart([PrayerData? data]) {
     final now = DateTime.now();
     final prayerData = data ?? PrayerService.instance.currentData;
-    DateTime maghribTime;
-    DateTime fajrTime = getNextFajrTime(data);
-
-    if (prayerData != null && prayerData.prayers.isNotEmpty) {
-      final maghrib = prayerData.prayers.firstWhere(
-        (p) => p.name.contains('المغرب'),
-        orElse: () => prayerData.prayers.last,
-      );
-      maghribTime = DateTime(
-        fajrTime.year,
-        fajrTime.month,
-        fajrTime.day,
-        maghrib.time.hour,
-        maghrib.time.minute,
-      ).subtract(const Duration(days: 1));
-    } else {
-      maghribTime = DateTime(
-        fajrTime.year,
-        fajrTime.month,
-        fajrTime.day,
-        18,
-        0,
-      ).subtract(const Duration(days: 1));
+    final fajrTime = getNextFajrTime(data);
+    if (prayerData == null || prayerData.prayers.isEmpty || fajrTime == null) {
+      return null;
     }
+
+    final maghrib = prayerData.prayers.firstWhere(
+      (p) => p.name.contains('المغرب'),
+      orElse: () => prayerData.prayers.last,
+    );
+    final maghribTime = DateTime(
+      fajrTime.year,
+      fajrTime.month,
+      fajrTime.day,
+      maghrib.time.hour,
+      maghrib.time.minute,
+    ).subtract(const Duration(days: 1));
 
     final nightDurationMinutes = fajrTime.difference(maghribTime).inMinutes;
     final twoThirdsMinutes = (nightDurationMinutes * 2 / 3).round();
@@ -206,13 +206,15 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     return lastThirdStart.add(const Duration(days: 1));
   }
 
-  /// Calculates the next Qiyam Al-Layl Wake-Up Alarm DateTime based on selected mode
-  DateTime getNextQiyamWakeTime([PrayerData? data]) {
+  /// Calculates the next Qiyam Al-Layl Wake-Up Alarm DateTime based on selected mode.
+  /// Fixed-clock mode works without GPS; astronomical modes return null when location is UNKNOWN.
+  DateTime? getNextQiyamWakeTime([PrayerData? data]) {
     final now = DateTime.now();
     if (_qiyamMode == 'last_third') {
       return getLastThirdOfNightStart(data);
     } else if (_qiyamMode == 'before_fajr') {
       final fajr = getNextFajrTime(data);
+      if (fajr == null) return null;
       final candidate =
           fajr.subtract(Duration(minutes: _qiyamMinutesBeforeFajr));
       return candidate.isAfter(now)
@@ -316,19 +318,146 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     await IslamicAudioService.instance.playTrackById(tone.trackId);
   }
 
-  /// Schedules the actual OS alarm notifications for Pre-Fajr and Qiyam Al-Layl
+  /// Zone-safe serializer for alarm notification mutations so delayed
+  /// `scheduleAlarms` calls cannot enqueue derived 880/881 alarms after an
+  /// `UNKNOWN` cancellation while preserving fixed-clock Qiyam (881).
+  Future<T> _serializeAlarmOp<T>(Future<T> Function() action) async {
+    final previous = _activeAlarmOp;
+    final currentGate = Completer<void>();
+    _activeAlarmOp = currentGate.future;
+    if (previous != null) {
+      try {
+        await previous;
+      } catch (_) {}
+    }
+    try {
+      return await action();
+    } finally {
+      if (identical(_activeAlarmOp, currentGate.future)) {
+        _activeAlarmOp = null;
+      }
+      if (!currentGate.isCompleted) {
+        currentGate.complete();
+      }
+    }
+  }
+
+  /// Synchronizes alarms when GPS location becomes UNKNOWN or verified:
+  /// - When UNKNOWN: cancels derived 880 (Pre-Fajr) and cancels 881 ONLY if
+  ///   Qiyam mode is location-derived ('last_third' / 'before_fajr'); preserves
+  ///   and ensures fixed-clock Qiyam (881 when mode == 'fixed_time') remains
+  ///   scheduled if enabled.
+  /// - When verified GPS exists: schedules enabled alarms.
+  Future<void> syncWithLocationAvailability([PrayerData? data]) async {
+    final int generation = ++_alarmScheduleGeneration;
+    await _serializeAlarmOp<void>(() async {
+      if (generation != _alarmScheduleGeneration) return;
+      try {
+        if (!_initialized) {
+          final prefs = await SharedPreferences.getInstance();
+          if (generation != _alarmScheduleGeneration) return;
+          _preFajrEnabled = prefs.getBool('wake_pre_fajr_enabled') ?? true;
+          _preFajrMinutesBefore = prefs.getInt('wake_pre_fajr_minutes') ?? 25;
+          _preFajrToneId = prefs.getString('wake_pre_fajr_tone') ?? 'adhan_fajr';
+          _qiyamEnabled = prefs.getBool('wake_qiyam_enabled') ?? true;
+          _qiyamMode = prefs.getString('wake_qiyam_mode') ?? 'last_third';
+          _qiyamMinutesBeforeFajr =
+              prefs.getInt('wake_qiyam_minutes_before') ?? 60;
+          _qiyamFixedHour = prefs.getInt('wake_qiyam_fixed_hour') ?? 3;
+          _qiyamFixedMinute = prefs.getInt('wake_qiyam_fixed_minute') ?? 15;
+          _qiyamToneId =
+              prefs.getString('wake_qiyam_tone') ?? 'duaa_sharawi_post_prayer';
+        }
+
+        final effectiveData = data ?? PrayerService.instance.currentData;
+        if (effectiveData == null || effectiveData.prayers.isEmpty) {
+          if (generation != _alarmScheduleGeneration) return;
+          await _notifications.cancel(preFajrAlarmNotificationId);
+          if (generation != _alarmScheduleGeneration) return;
+          if (!isQiyamFixedClock) {
+            await _notifications.cancel(qiyamAlarmNotificationId);
+          } else if (_qiyamEnabled) {
+            await _scheduleQiyamAlarmLocked(generation, null);
+          } else {
+            await _notifications.cancel(qiyamAlarmNotificationId);
+          }
+          return;
+        }
+
+        await _scheduleAlarmsLocked(generation, effectiveData);
+      } catch (e) {
+        debugPrint('FajrQiyamAlarmService sync error: $e');
+      }
+    });
+  }
+
+  /// Schedules the actual OS alarm notifications for Pre-Fajr (880) and Qiyam (881)
   Future<void> scheduleAlarms([PrayerData? data]) async {
+    final int generation = ++_alarmScheduleGeneration;
+    await _serializeAlarmOp<void>(() async {
+      await _scheduleAlarmsLocked(generation, data);
+    });
+  }
+
+  Future<void> _scheduleQiyamAlarmLocked(
+    int generation, [
+    PrayerData? data,
+  ]) async {
+    if (generation != _alarmScheduleGeneration) return;
+    try {
+      tz_data.initializeTimeZones();
+    } catch (_) {}
+    final qiyamTime = _qiyamEnabled ? getNextQiyamWakeTime(data) : null;
+    if (qiyamTime == null || generation != _alarmScheduleGeneration) return;
+
+    final tzQiyam = tz.TZDateTime.from(qiyamTime, tz.local);
+    final tone = getToneById(_qiyamToneId);
+
+    final androidDetails = AndroidNotificationDetails(
+      'qiyam_wakeup_alarm_${tone.rawSoundName}',
+      'منبه قيام الليل والتهجد الذكي',
+      channelDescription: 'منبه صوتي لإيقاظك لقيام الليل والثلث الأخير',
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound(tone.rawSoundName),
+      enableVibration: true,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
+    );
+
+    if (generation != _alarmScheduleGeneration) return;
+    await _notifications.zonedSchedule(
+      qiyamAlarmNotificationId,
+      'منبّه قيام الليل والثلث الأخير 🌙',
+      'حان وقت الخلوة بالله في الثلث الأخير من الليل — وقت النزول الإلهي واستجابة الدعاء',
+      tzQiyam,
+      NotificationDetails(android: androidDetails),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'type=adhan&prayer=الفجر',
+    );
+  }
+
+  Future<void> _scheduleAlarmsLocked(
+    int generation, [
+    PrayerData? data,
+  ]) async {
+    if (generation != _alarmScheduleGeneration) return;
     try {
       try {
         tz_data.initializeTimeZones();
       } catch (_) {}
-      // Cancel previous IDs 880 (Pre-Fajr) and 881 (Qiyam)
-      await _notifications.cancel(880);
-      await _notifications.cancel(881);
+      // Cancel previous ID 880 (Pre-Fajr) and ID 881 (Qiyam) before rescheduling
+      await _notifications.cancel(preFajrAlarmNotificationId);
+      if (generation != _alarmScheduleGeneration) return;
+      await _notifications.cancel(qiyamAlarmNotificationId);
+      if (generation != _alarmScheduleGeneration) return;
 
-      if (_preFajrEnabled) {
-        final wakeTime = getNextPreFajrWakeTime(data);
-        final tzWake = tz.TZDateTime.from(wakeTime, tz.local);
+      final preFajrWake = _preFajrEnabled ? getNextPreFajrWakeTime(data) : null;
+      if (preFajrWake != null) {
+        final tzWake = tz.TZDateTime.from(preFajrWake, tz.local);
         final tone = getToneById(_preFajrToneId);
 
         final androidDetails = AndroidNotificationDetails(
@@ -344,8 +473,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
           category: AndroidNotificationCategory.alarm,
         );
 
+        if (generation != _alarmScheduleGeneration) return;
         await _notifications.zonedSchedule(
-          880,
+          preFajrAlarmNotificationId,
           'منبّه الاستعداد لصلاة الفجر 🌅 (باقي $_preFajrMinutesBefore دقيقة)',
           'قم فتوضأ واستعد لصلاة الفجر — «ركعتا الفجر خير من الدنيا وما فيها» (${tone.title})',
           tzWake,
@@ -355,38 +485,10 @@ class FajrQiyamAlarmService extends ChangeNotifier {
               UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'type=adhan&prayer=الفجر',
         );
+        if (generation != _alarmScheduleGeneration) return;
       }
 
-      if (_qiyamEnabled) {
-        final qiyamTime = getNextQiyamWakeTime(data);
-        final tzQiyam = tz.TZDateTime.from(qiyamTime, tz.local);
-        final tone = getToneById(_qiyamToneId);
-
-        final androidDetails = AndroidNotificationDetails(
-          'qiyam_wakeup_alarm_${tone.rawSoundName}',
-          'منبه قيام الليل والتهجد الذكي',
-          channelDescription: 'منبه صوتي لإيقاظك لقيام الليل والثلث الأخير',
-          importance: Importance.max,
-          priority: Priority.max,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound(tone.rawSoundName),
-          enableVibration: true,
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-        );
-
-        await _notifications.zonedSchedule(
-          881,
-          'منبّه قيام الليل والثلث الأخير 🌙',
-          'حان وقت الخلوة بالله في الثلث الأخير من الليل — وقت النزول الإلهي واستجابة الدعاء',
-          tzQiyam,
-          NotificationDetails(android: androidDetails),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          payload: 'type=adhan&prayer=الفجر',
-        );
-      }
+      await _scheduleQiyamAlarmLocked(generation, data);
     } catch (e) {
       debugPrint('FajrQiyamAlarmService schedule error: $e');
     }

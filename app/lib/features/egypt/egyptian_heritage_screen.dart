@@ -761,8 +761,8 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
 
   Widget _buildHistoricMosquesTab(bool isDark) {
     final currentPrayerData = PrayerService.instance.currentData;
-    final userLat = currentPrayerData?.latitude ?? 30.0444;
-    final userLng = currentPrayerData?.longitude ?? 31.2357;
+    final userLat = currentPrayerData?.latitude;
+    final userLng = currentPrayerData?.longitude;
 
     final mosques = _service
         .searchMosques(_mosqueQuery)
@@ -775,7 +775,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
         _buildHeroBanner(
           title: 'دليل مساجد مصر التاريخية ومآذن المحروسة',
           subtitle:
-              'تعرف على تاريخ المساجد الكبرى في مصر، المسافة التقريبية من موقعك الحالي، مع إمكانية ضبط مواقيت الصلاة والقبلة على أي مسجد بلمسة واحدة',
+              'تعرف على تاريخ المساجد الكبرى في مصر ومعالمها المعمارية، مع حساب المسافة التقريبية تلقائياً عند توفر موقعك عبر GPS',
           icon: Icons.mosque_rounded,
         ),
         const SizedBox(height: 12),
@@ -797,12 +797,14 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
           _buildEmptyState('لا توجد مساجد مطابقة للبحث الحالي')
         else
           ...mosques.map((mosque) {
-            final distKm = _service.calculateDistanceKm(
-              fromLat: userLat,
-              fromLng: userLng,
-              toLat: mosque.latitude,
-              toLng: mosque.longitude,
-            );
+            final double? distKm = (userLat != null && userLng != null)
+                ? _service.calculateDistanceKm(
+                    fromLat: userLat,
+                    fromLng: userLng,
+                    toLat: mosque.latitude,
+                    toLng: mosque.longitude,
+                  )
+                : null;
             final isFav = _service.isFavorite(mosque.id);
 
             return Card(
@@ -848,24 +850,25 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '${distKm.toStringAsFixed(1)} كم',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryGreen,
+                        if (distKm != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${distKm.toStringAsFixed(1)} كم',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryGreen,
+                              ),
                             ),
                           ),
-                        ),
                         IconButton(
                           tooltip: 'حفظ في المفضلة',
                           icon: Icon(
@@ -890,46 +893,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                         fontSize: 12.5,
                         color: AppColors.accentGold,
                         fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primaryGreen,
-                          side: const BorderSide(color: AppColors.primaryGreen),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        icon: const Icon(Icons.my_location_rounded, size: 18),
-                        label: const Text(
-                          'ضبط مواقيت الصلاة والقبلة على موقع هذا المسجد',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        onPressed: () async {
-                          await PrayerService.instance.setManualCity(
-                            CityCoordinate(
-                              mosque.name,
-                              mosque.latitude,
-                              mosque.longitude,
-                              'egyptian',
-                              'مصر',
-                            ),
-                          );
-                          if (!mounted) return;
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'تم ضبط المواقيت والقبلة على ${mosque.name} وفق الهيئة المصرية العامة للمساحة',
-                                style: const TextStyle(fontFamily: 'Amiri'),
-                              ),
-                              backgroundColor: AppColors.primaryGreen,
-                            ),
-                          );
-                        },
                       ),
                     ),
                   ],

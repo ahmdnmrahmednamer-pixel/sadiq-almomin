@@ -364,7 +364,17 @@ void main() {
       calls.clear();
       await notifService.schedulePrayerNotifications(testPrayerData);
 
-      expect(calls.any((c) => c.method == 'cancelAll'), isTrue);
+      // Scoped derived-range cancellation only (must NOT call destructive cancelAll)
+      expect(calls.any((c) => c.method == 'cancelAll'), isFalse);
+      expect(
+        calls.any((c) =>
+            c.method == 'cancel' &&
+            (c.arguments == PrayerNotificationService.prayerDerivedNotificationIdStart ||
+                (c.arguments is Map &&
+                    (c.arguments as Map)['id'] ==
+                        PrayerNotificationService.prayerDerivedNotificationIdStart))),
+        isTrue,
+      );
 
       // 1. Past Dhuhr Adhan must NOT be scheduled
       final dhuhrAdhan = calls.where((c) => isAdhanCall(c, 'الظهر')).toList();

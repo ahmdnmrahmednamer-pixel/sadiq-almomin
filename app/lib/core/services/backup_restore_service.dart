@@ -226,11 +226,34 @@ class BackupRestoreService {
           prefs.getInt('tasbih_slider_step_value') ?? 1,
     };
 
-    final location = {
-      'last_latitude': prefs.getDouble('last_latitude') ?? 30.0444,
-      'last_longitude': prefs.getDouble('last_longitude') ?? 31.2357,
-      'last_city': prefs.getString('last_city') ?? 'القاهرة، مصر',
-    };
+    final locationSource = prefs.getString(PrayerService.locationSourceKey);
+    final savedLat = prefs.getDouble('last_latitude');
+    final savedLng = prefs.getDouble('last_longitude');
+    final savedCity = prefs.getString('last_city');
+    final updatedAtMs = prefs.getInt(PrayerService.locationUpdatedAtMsKey);
+    final bool hasVerifiedGps =
+        locationSource == PrayerService.locationSourceGps &&
+            prefs.getBool('is_manual_location') != true &&
+            savedLat != null &&
+            savedLng != null &&
+            savedLat.isFinite &&
+            savedLng.isFinite &&
+            savedLat >= -90.0 &&
+            savedLat <= 90.0 &&
+            savedLng >= -180.0 &&
+            savedLng <= 180.0 &&
+            savedCity != null &&
+            savedCity.trim().isNotEmpty &&
+            PrayerService.instance.isValidFixTimestampMsNow(updatedAtMs);
+    final Map<String, dynamic>? location = hasVerifiedGps
+        ? {
+            'location_source': PrayerService.locationSourceGps,
+            'location_updated_at_ms': updatedAtMs,
+            'last_latitude': savedLat,
+            'last_longitude': savedLng,
+            'last_city': savedCity,
+          }
+        : null;
 
     final prayerTrackerJson = prefs.getString('prayer_tracker_records_v1');
     Map<String, dynamic>? prayerTrackerData;
@@ -749,20 +772,10 @@ class BackupRestoreService {
         }
       }
 
-      // 6. Location
-      final location = data['location'] as Map<String, dynamic>?;
-      if (location != null && replaceMode) {
-        if (location['last_latitude'] is num) {
-          await prefs.setDouble(
-              'last_latitude', (location['last_latitude'] as num).toDouble());
-        }
-        if (location['last_longitude'] is num) {
-          await prefs.setDouble(
-              'last_longitude', (location['last_longitude'] as num).toDouble());
-        }
-        if (location['last_city'] != null) {
-          await prefs.setString('last_city', location['last_city'].toString());
-        }
+      // 6. Location (GPS-only policy: NEVER import backup coordinates as GPS.
+      // Merge mode preserves the current device GPS; replace mode resets to UNKNOWN.)
+      if (replaceMode) {
+        await PrayerService.instance.clearLocationToUnknown();
       }
 
       // 7. Prayer Tracker Records
@@ -1036,7 +1049,9 @@ class BackupRestoreService {
       await SettingsService.instance.init(forceReload: true);
       await KhatmaService.instance.init(forceReload: true);
       await AdhkarService.instance.init(forceReload: true);
-      await PrayerService.instance.init(forceRefresh: true);
+      if (!replaceMode) {
+        await PrayerService.instance.init(forceReload: true);
+      }
       await PrayerTrackerService.instance.init(forceReload: true);
       await AyahNotesService.instance.init(forceReload: true);
       await MemorizationService.instance.init(forceReload: true);

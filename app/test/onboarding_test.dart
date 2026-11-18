@@ -66,7 +66,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('تخصيص تجربتك في التطبيق'), findsOneWidget);
-      expect(find.text('المدينة لمواقيت الصلاة'), findsOneWidget);
+      expect(find.text('المدينة لمواقيت الصلاة'), findsNothing);
+      expect(find.text('تحديد موقعك ومحافظتك تلقائياً (GPS)'), findsOneWidget);
       expect(find.text('القارئ الافتراضي للتلاوة'), findsOneWidget);
 
       // 4. Move to Page 3 (Notifications & Readiness)

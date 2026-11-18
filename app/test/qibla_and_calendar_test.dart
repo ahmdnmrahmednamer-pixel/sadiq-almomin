@@ -124,7 +124,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.text('بوصلة القبلة التفاعلية'), findsOneWidget);
-      expect(find.textContaining('حرك الهاتف'), findsOneWidget);
+      expect(find.textContaining('GPS'), findsWidgets);
       expect(find.text('اتجاه الهاتف'), findsOneWidget);
       expect(find.text('زاوية القبلة'), findsOneWidget);
     });

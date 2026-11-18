@@ -54,7 +54,10 @@ class _PrayerTimesDetailScreenState extends State<PrayerTimesDetailScreen> {
                           content: Text(
                             ok
                                 ? 'تم تحديث الموقع ومواقيت الصلاة بنجاح عبر GPS'
-                                : (PrayerService.instance.errorMessage ?? 'تعذر تحديث الموقع'),
+                                : GpsLocationActionControls
+                                    .describeUnavailableReason(
+                                      PrayerService.instance,
+                                    ),
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           backgroundColor: ok ? AppColors.primaryGreen : Colors.redAccent,

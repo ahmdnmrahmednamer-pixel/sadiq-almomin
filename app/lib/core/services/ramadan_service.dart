@@ -136,8 +136,19 @@ class RamadanService extends ChangeNotifier {
     double? longitude,
     DateTime? startDate,
   }) {
-    final lat = latitude ?? PrayerService.instance.currentData?.latitude ?? 30.0444; // Default Cairo
-    final lng = longitude ?? PrayerService.instance.currentData?.longitude ?? 31.2357;
+    final currentData = PrayerService.instance.currentData;
+    final lat = latitude ?? currentData?.latitude;
+    final lng = longitude ?? currentData?.longitude;
+    if (lat == null ||
+        lng == null ||
+        !lat.isFinite ||
+        !lng.isFinite ||
+        lat < -90.0 ||
+        lat > 90.0 ||
+        lng < -180.0 ||
+        lng > 180.0) {
+      return const <RamadanDay>[];
+    }
     final coords = Coordinates(lat, lng);
     final params = _getParams();
 
@@ -178,17 +189,12 @@ class RamadanService extends ChangeNotifier {
     return days;
   }
 
-  RamadanCountdownInfo getCountdown([DateTime? customNow]) {
+  RamadanCountdownInfo? getCountdown([DateTime? customNow]) {
     final now = customNow ?? DateTime.now();
     final data = PrayerService.instance.currentData;
 
     if (data == null || data.prayers.isEmpty) {
-      return const RamadanCountdownInfo(
-        title: 'موعد الإفطار المبارك',
-        remaining: Duration(hours: 4),
-        targetTimeFormatted: '06:00 م',
-        isFasting: true,
-      );
+      return null;
     }
 
     final fajr = data.prayers.firstWhere((p) => p.name.contains('الفجر'), orElse: () => data.prayers.first).time;

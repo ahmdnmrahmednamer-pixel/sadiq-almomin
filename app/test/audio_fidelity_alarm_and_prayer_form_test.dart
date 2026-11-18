@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/services/islamic_audio_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
+import 'package:almomin/core/services/prayer_service.dart';
 import 'package:almomin/core/services/fajr_qiyam_alarm_service.dart';
 import 'package:almomin/core/services/prayer_tracker_service.dart';
 import 'package:almomin/features/prayer/fajr_qiyam_alarm_screen.dart';
@@ -65,15 +66,42 @@ void main() {
   });
 
   group('2. Pre-Fajr Wake-Up Alarm & Qiyam Al-Layl Smart Alarm Tests', () {
-    test('FajrQiyamAlarmService calculates Pre-Fajr and Last-Third-of-Night wake times accurately', () async {
+    test('FajrQiyamAlarmService returns null when location is UNKNOWN and calculates Pre-Fajr accurately for verified PrayerData', () async {
       final service = FajrQiyamAlarmService.instance;
+      await PrayerService.instance.init(forceReload: true);
 
       await service.setPreFajrMinutesBefore(30);
       expect(service.preFajrMinutesBefore, equals(30));
 
-      final nextFajr = service.getNextFajrTime();
-      final nextWake = service.getNextPreFajrWakeTime();
-      final diffMinutes = nextFajr.difference(nextWake).inMinutes % (24 * 60);
+      expect(service.getNextFajrTime(), isNull);
+      expect(service.getNextPreFajrWakeTime(), isNull);
+
+      final now = DateTime.now();
+      final verifiedData = PrayerData(
+        latitude: 24.7136,
+        longitude: 46.6753,
+        locationName: 'الرياض، السعودية (موقعك الفعلي)',
+        prayers: [
+          PrayerInfo(
+            name: 'الفجر',
+            time: now.add(const Duration(hours: 6)),
+            formattedTime: '04:30 ص',
+          ),
+          PrayerInfo(
+            name: 'المغرب',
+            time: now.subtract(const Duration(hours: 4)),
+            formattedTime: '06:00 م',
+          ),
+        ],
+        qiblaDegrees: 245.0,
+        lastUpdated: now,
+      );
+
+      final nextFajr = service.getNextFajrTime(verifiedData);
+      final nextWake = service.getNextPreFajrWakeTime(verifiedData);
+      expect(nextFajr, isNotNull);
+      expect(nextWake, isNotNull);
+      final diffMinutes = nextFajr!.difference(nextWake!).inMinutes % (24 * 60);
       expect(diffMinutes, equals(30));
 
       await service.setPreFajrTone('adhan_cairo_refaat');

@@ -93,12 +93,11 @@ void main() {
       expect(zakat.cashOnHand, equals(50000.0));
     });
 
-    test('4. Static verification of Level-7 ArabicNormalizer in 6 UI screens & StreamSubscription/Timer cancellation guards', () {
+    test('4. Static verification of Level-7 ArabicNormalizer in 5 UI screens & StreamSubscription/Timer cancellation guards', () {
       for (final uiPath in [
         'lib/features/mushaf/mushaf_screen.dart',
         'lib/features/audio/audio_screen.dart',
         'lib/features/adhkar/adhkar_hub_screen.dart',
-        'lib/features/prayer/widgets/arab_city_picker_modal.dart',
         'lib/features/settings/widgets/settings_adhan_voice_modal.dart',
         'lib/features/settings/widgets/settings_reciter_modal.dart',
       ]) {

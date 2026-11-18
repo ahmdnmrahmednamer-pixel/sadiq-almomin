@@ -397,12 +397,14 @@ void main() {
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
 
-      await _performSemanticTapByLabel(tester, 'الصلاة القادمة:');
+      await _performSemanticTapByLabel(tester, 'مواقيت الصلاة بانتظار تحديد موقعك عبر GPS');
       expect(find.byType(PrayerTimesDetailScreen), findsOneWidget);
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
 
-      final gpsNode = _findSemanticNodeByLabelContains(tester, 'تحديث الموقع عبر GPS');
+      final gpsButtonFinder = find.byKey(const ValueKey('gps_enable_retry_button'));
+      expect(gpsButtonFinder, findsOneWidget);
+      final gpsNode = tester.getSemantics(gpsButtonFinder);
       expect(gpsNode.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
       tester.binding.pipelineOwner.semanticsOwner!.performAction(gpsNode.id, SemanticsAction.tap);
       await tester.pump();
@@ -566,10 +568,12 @@ void main() {
         }
 
         await verifyRouteTap('فتح التقويم الهجري', '/calendar');
-        await verifyRouteTap('الصلاة القادمة:', '/prayer-times-detail');
+        await verifyRouteTap('مواقيت الصلاة بانتظار تحديد موقعك عبر GPS', '/prayer-times-detail');
 
         // GPS semantic tap at 360x800 1.0x and 2.0x
-        final gNode = _findSemanticNodeByLabelContains(tester, 'تحديث الموقع عبر GPS');
+        final gBtnFinder = find.byKey(const ValueKey('gps_enable_retry_button'));
+        expect(gBtnFinder, findsOneWidget);
+        final gNode = tester.getSemantics(gBtnFinder);
         expect(gNode.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
         tester.binding.pipelineOwner.semanticsOwner!.performAction(gNode.id, SemanticsAction.tap);
         await tester.pump();
@@ -697,8 +701,7 @@ void main() {
         // Verify visible clickable Home cards expose SemanticsAction.tap at 360x800/412x915 1.0x & 2.0x
         for (final needle in const [
           'فتح التقويم الهجري',
-          'الصلاة القادمة:',
-          'تحديث الموقع عبر GPS',
+          'مواقيت الصلاة بانتظار تحديد موقعك عبر GPS',
           'الإعدادات',
           'عن التطبيق',
         ]) {
@@ -709,6 +712,14 @@ void main() {
             reason: 'Node "$needle" must expose SemanticsAction.tap at ${viewport.width.toInt()}x${viewport.height.toInt()} ${scale}x',
           );
         }
+        final homeGpsNode = tester.getSemantics(
+          find.byKey(const ValueKey('gps_enable_retry_button')),
+        );
+        expect(
+          homeGpsNode.getSemanticsData().hasAction(SemanticsAction.tap),
+          isTrue,
+          reason: 'Home GPS action must expose SemanticsAction.tap at ${viewport.width.toInt()}x${viewport.height.toInt()} ${scale}x',
+        );
 
         // Activate Settings via SemanticsAction.tap at narrow 360x800 1.0x/2.0x and return cleanly
         await _performSemanticTapByLabel(tester, 'الإعدادات', scrollIfNeeded: false);

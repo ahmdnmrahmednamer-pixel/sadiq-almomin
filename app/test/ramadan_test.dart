@@ -17,8 +17,13 @@ void main() {
   });
 
   group('RamadanService Unit Tests (FR-CAL-004)', () {
-    test('generateImsakiyyah generates complete 30-day Ramadan table with non-empty times', () {
-      final days = RamadanService.instance.generateImsakiyyah();
+    test('generateImsakiyyah returns empty when location is UNKNOWN and generates 30-day table for verified coordinates', () {
+      expect(RamadanService.instance.generateImsakiyyah(), isEmpty);
+
+      final days = RamadanService.instance.generateImsakiyyah(
+        latitude: 24.7136,
+        longitude: 46.6753,
+      );
       expect(days.length, 30);
 
       for (int i = 0; i < 30; i++) {
@@ -33,9 +38,22 @@ void main() {
       }
     });
 
-    test('getCountdown returns valid CountdownInfo with non-negative duration', () {
+    test('getCountdown returns null when location is UNKNOWN and valid CountdownInfo when verified GPS exists', () async {
+      expect(RamadanService.instance.getCountdown(), isNull);
+
+      SharedPreferences.setMockInitialValues({
+        PrayerService.locationSourceKey: PrayerService.locationSourceGps,
+        PrayerService.locationUpdatedAtMsKey:
+            DateTime.now().toUtc().millisecondsSinceEpoch,
+        'last_latitude': 24.7136,
+        'last_longitude': 46.6753,
+        'last_city': 'الرياض، السعودية (موقعك الفعلي)',
+      });
+      await PrayerService.instance.init(forceReload: true);
+
       final countdown = RamadanService.instance.getCountdown();
-      expect(countdown.title.isNotEmpty, isTrue);
+      expect(countdown, isNotNull);
+      expect(countdown!.title.isNotEmpty, isTrue);
       expect(countdown.remaining.isNegative, isFalse);
       expect(countdown.targetTimeFormatted.isNotEmpty, isTrue);
     });

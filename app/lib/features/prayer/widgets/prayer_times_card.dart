@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/prayer_service.dart';
 import '../../../core/notifications/prayer_notification_service.dart';
 import '../../../core/theme/app_theme.dart';
+import 'prayer_location_banner.dart';
 
 /// Renders the list of daily prayer cards with icons, formatted times, next-indicator, and notification toggles.
 class PrayerTimesCard extends StatelessWidget {
@@ -36,10 +37,49 @@ class PrayerTimesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data == null) {
-      return const Center(
+      final service = PrayerService.instance;
+      return Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: EdgeInsets.all(20),
-          child: CircularProgressIndicator(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const ExcludeSemantics(
+                    child: Icon(
+                      Icons.location_off_rounded,
+                      color: AppColors.primaryGreen,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'لا يمكن عرض مواقيت الصلاة قبل تحديد موقعك عبر GPS',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14.5,
+                        color: isDark ? Colors.white : AppColors.lightText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                GpsLocationActionControls.describeUnavailableReason(service),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: isDark ? Colors.white70 : AppColors.mutedText,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const GpsLocationActionControls(),
+            ],
+          ),
         ),
       );
     }
