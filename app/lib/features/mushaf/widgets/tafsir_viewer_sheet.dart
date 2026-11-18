@@ -133,10 +133,12 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
             // Sheet Top Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+                  final isCompact = constraints.maxWidth < 520 || textScale >= 1.35;
+                  final titleRow = Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
@@ -147,41 +149,49 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                         child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 20),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'سورة ${widget.surah.nameAr} — الآية $_currentAyahNumber',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            'سورة ${widget.surah.nameAr} — الآية $_currentAyahNumber',
+                            softWrap: true,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                  Row(
+                  );
+                  final secondaryActions = _buildHeaderSecondaryActions();
+                  final closeButton = IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    tooltip: 'إغلاق',
+                    onPressed: () => Navigator.pop(context),
+                  );
+                  if (!isCompact) {
+                    return Row(
+                      children: [
+                        Expanded(child: titleRow),
+                        const SizedBox(width: 8),
+                        ...secondaryActions,
+                        closeButton,
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.format_size, size: 20),
-                        tooltip: 'تغيير حجم خط التفسير',
-                        onPressed: () {
-                          setState(() {
-                            _fontSize = _fontSize >= 24.0 ? 14.0 : _fontSize + 2.0;
-                          });
-                        },
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [Expanded(child: titleRow), closeButton],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.copy_rounded, size: 20),
-                        tooltip: 'نسخ التفسير',
-                        onPressed: _copyTafsir,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.share_rounded, size: 20),
-                        tooltip: 'مشاركة التفسير',
-                        onPressed: _shareTafsir,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 20),
-                        tooltip: 'إغلاق',
-                        onPressed: () => Navigator.pop(context),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Wrap(spacing: 4, runSpacing: 4, children: secondaryActions),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
 
@@ -370,5 +380,29 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildHeaderSecondaryActions() {
+    return [
+      IconButton(
+        icon: const Icon(Icons.format_size, size: 20),
+        tooltip: 'تغيير حجم خط التفسير',
+        onPressed: () {
+          setState(() {
+            _fontSize = _fontSize >= 24.0 ? 14.0 : _fontSize + 2.0;
+          });
+        },
+      ),
+      IconButton(
+        icon: const Icon(Icons.copy_rounded, size: 20),
+        tooltip: 'نسخ التفسير',
+        onPressed: _copyTafsir,
+      ),
+      IconButton(
+        icon: const Icon(Icons.share_rounded, size: 20),
+        tooltip: 'مشاركة التفسير',
+        onPressed: _shareTafsir,
+      ),
+    ];
   }
 }

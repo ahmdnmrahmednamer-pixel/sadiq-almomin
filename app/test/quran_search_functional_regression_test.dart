@@ -865,40 +865,18 @@ void main() {
             expect(tafsirWidget.initialAyah.ayahNumber, 2);
             expect(tafsirWidget.initialAyah.page, 1);
             const expectedTafsirOverflows = <String, List<_ExpectedUnresolvedDestinationOverflow>>{
-              '360_1x_kb': [
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:136:22',
-                  direction: 'right',
-                  roundedPixels: 72,
-                ),
-              ],
+              '360_1x_kb': [],
               '360_2x_kb': [
                 (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:136:22',
-                  direction: 'right',
-                  roundedPixels: 236,
-                ),
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:345:24',
+                  sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
                   direction: 'right',
                   roundedPixels: 131,
                 ),
               ],
-              '412_1x_kb': [
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:136:22',
-                  direction: 'right',
-                  roundedPixels: 20,
-                ),
-              ],
+              '412_1x_kb': [],
               '412_2x_kb': [
                 (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:136:22',
-                  direction: 'right',
-                  roundedPixels: 184,
-                ),
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:345:24',
+                  sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
                   direction: 'right',
                   roundedPixels: 79,
                 ),
