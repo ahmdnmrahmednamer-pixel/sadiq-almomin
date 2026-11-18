@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import '../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import '../../core/services/prayer_tracker_service.dart';
@@ -62,120 +63,205 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
           builder: (context, setModalState) {
             return Directionality(
               textDirection: SettingsService.instance.textDirection,
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: 20,
-                  left: 20,
-                  top: 20,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            targetStatus == PrayerPerformanceStatus.missed
-                                ? Icons.warning_amber_rounded
-                                : Icons.schedule_rounded,
-                            color: targetStatus == PrayerPerformanceStatus.missed
-                                ? Colors.redAccent
-                                : Colors.orange,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: 20,
+                    left: 20,
+                    top: 20,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Icon(
+                                targetStatus == PrayerPerformanceStatus.missed
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.schedule_rounded,
+                                color: targetStatus == PrayerPerformanceStatus.missed
+                                    ? Colors.redAccent
+                                    : Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                targetStatus == PrayerPerformanceStatus.missed
+                                    ? 'تسجيل سبب فوات صلاة $prayerName'
+                                    : 'تسجيل سبب تأخير صلاة $prayerName (قضاء)',
+                                style: const TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'إغلاق أو مسح',
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
+                              icon: const Icon(Icons.close_rounded),
+                              onPressed: () => Navigator.pop(ctx, false),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'اكتب بصراحة لماذا فاتتك أو تأخرت عن هذه الصلاة، حتى تراجع أسبابك في نهاية الأسبوع وتعالج المشكلة:',
+                          style: TextStyle(fontSize: 12.5, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'اختر سبباً سريعاً أو اكتب السبب بالتفصيل:',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: PrayerTrackerService.commonMissedReasons.map((r) {
+                            final isSel = selectedQuickReason == r;
+                            return Semantics(
+                              container: true,
+                              button: true,
+                              selected: isSel,
+                              label: r,
+                              child: Material(
+                                color: isSel
+                                    ? AppColors.primaryGreen
+                                    : Theme.of(context).colorScheme.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: isSel
+                                        ? AppColors.primaryGreen
+                                        : Colors.grey.shade400,
+                                  ),
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(10),
+                                  onTap: () {
+                                    setModalState(() {
+                                      selectedQuickReason = r;
+                                      if (controller.text.trim().isEmpty) {
+                                        controller.text = r;
+                                      } else if (!controller.text.contains(r)) {
+                                        controller.text =
+                                            '${controller.text.trim()} — $r';
+                                      }
+                                    });
+                                  },
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 48,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                      child: Align(
+                                        alignment: AlignmentDirectional.centerStart,
+                                        widthFactor: 1.0,
+                                        child: ExcludeSemantics(
+                                          child: Text(
+                                            r,
+                                            softWrap: true,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isSel ? Colors.white : null,
+                                              fontWeight: isSel
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 12),
+                        ExcludeSemantics(
+                          child: Text(
+                            'أنا لم أصلِّ / أخرت صلاة $prayerName بسبب...',
+                            softWrap: true,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              targetStatus == PrayerPerformanceStatus.missed
-                                  ? 'تسجيل سبب فوات صلاة $prayerName'
-                                  : 'تسجيل سبب تأخير صلاة $prayerName (قضاء)',
-                              style: const TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: 19,
-                                fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 6),
+                        MergeSemantics(
+                          child: Semantics(
+                            label:
+                                'أنا لم أصلِّ / أخرت صلاة $prayerName بسبب...',
+                            child: TextField(
+                              controller: controller,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                hintText:
+                                    'مثال: نمت متأخراً بعد الساعة ٢ ص ولم أسمع المنبه، أو انشغلت في اجتماع عمل...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey.shade400),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  borderSide: const BorderSide(
+                                    color: AppColors.primaryGreen,
+                                    width: 1.5,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                          IconButton(
-                            tooltip: 'إغلاق أو مسح',
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () => Navigator.pop(ctx, false),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'اكتب بصراحة لماذا فاتتك أو تأخرت عن هذه الصلاة، حتى تراجع أسبابك في نهاية الأسبوع وتعالج المشكلة:',
-                        style: TextStyle(fontSize: 12.5, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'اختر سبباً سريعاً أو اكتب السبب بالتفصيل:',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: PrayerTrackerService.commonMissedReasons.map((r) {
-                          final isSel = selectedQuickReason == r;
-                          return ChoiceChip(
-                            label: Text(r, style: const TextStyle(fontSize: 12)),
-                            selected: isSel,
-                            selectedColor: AppColors.primaryGreen,
-                            labelStyle: TextStyle(
-                              color: isSel ? Colors.white : null,
-                              fontWeight:
-                                  isSel ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(48, 48),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            onSelected: (_) {
-                              setModalState(() {
-                                selectedQuickReason = r;
-                                if (controller.text.trim().isEmpty) {
-                                  controller.text = r;
-                                } else if (!controller.text.contains(r)) {
-                                  controller.text = '${controller.text.trim()} — $r';
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: controller,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          labelText: 'أنا لم أصلِّ / أخرت صلاة $prayerName بسبب...',
-                          hintText:
-                              'مثال: نمت متأخراً بعد الساعة ٢ ص ولم أسمع المنبه، أو انشغلت في اجتماع عمل...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            icon: const Icon(Icons.save_rounded),
+                            label: const Text(
+                              'حفظ الحالة والسبب في سجل المحاسبة الأسبوعي',
+                              softWrap: true,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            onPressed: () => Navigator.pop(ctx, true),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: const Icon(Icons.save_rounded),
-                          label: const Text(
-                            'حفظ الحالة والسبب في سجل المحاسبة الأسبوعي',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          onPressed: () => Navigator.pop(ctx, true),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -202,20 +288,62 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
     }
   }
 
+  double _adaptiveToolbarHeight(
+    BuildContext context,
+    String title,
+    TextDirection textDirection,
+  ) {
+    final media = MediaQuery.of(context);
+    final theme = Theme.of(context);
+    final baseStyle = DefaultTextStyle.of(context).style.merge(
+      theme.appBarTheme.titleTextStyle ??
+          theme.textTheme.titleLarge ??
+          const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+    );
+    final hasLeading = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
+    final availableWidth = math.max(
+      120.0,
+      media.size.width - (hasLeading ? 128.0 : 80.0),
+    );
+    final painter = TextPainter(
+      text: TextSpan(text: title, style: baseStyle),
+      textDirection: textDirection,
+      textScaler: media.textScaler.clamp(maxScaleFactor: 1.34),
+      maxLines: 3,
+    )..layout(maxWidth: availableWidth);
+    final lineCount = painter.computeLineMetrics().length;
+    if (lineCount <= 1) return kToolbarHeight;
+    return math.max(kToolbarHeight, (painter.height + 16.0).ceilToDouble());
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final textDirection = SettingsService.instance.textDirection;
+    const appBarTitle = 'سجل متابعة الصلوات والسنن';
 
     return Directionality(
-      textDirection: SettingsService.instance.textDirection,
+      textDirection: textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('سجل متابعة الصلوات والسنن'),
+          toolbarHeight: _adaptiveToolbarHeight(
+            context,
+            appBarTitle,
+            textDirection,
+          ),
+          title: const Text(
+            appBarTitle,
+            softWrap: true,
+            maxLines: 3,
+            overflow: TextOverflow.visible,
+            textAlign: TextAlign.center,
+          ),
           centerTitle: true,
           actions: [
             IconButton(
               tooltip: 'منبّه الاستعداد للفجر وقيام الليل',
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               icon: const Icon(Icons.alarm_on_rounded),
               onPressed: () {
                 Navigator.push(
@@ -257,63 +385,67 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                   ),
                 ),
                 // Quick Banner to Pre-Fajr & Qiyam Alarm
-                InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FajrQiyamAlarmScreen(),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF0D5C46), Color(0xFF083B2C)],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.accentGold.withValues(alpha: 0.45),
-                      ),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(
-                          Icons.alarm_on_rounded,
-                          color: AppColors.accentGold,
-                          size: 24,
+                Semantics(
+                  container: true,
+                  button: true,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FajrQiyamAlarmScreen(),
                         ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'منبّه الاستعداد قبل الفجر ومنبّه قيام الليل 🌅🌙',
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                'اضبط منبهاً بنغمة خاصة ليوقظك قبل الفجر بوقت تحدده أو للثلث الأخير من الليل',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.white70,
-                                ),
-                              ),
-                            ],
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0D5C46), Color(0xFF083B2C)],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.accentGold.withValues(alpha: 0.45),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.alarm_on_rounded,
+                            color: AppColors.accentGold,
+                            size: 24,
                           ),
-                        ),
-                        Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 14,
-                          color: AppColors.accentGold,
-                        ),
-                      ],
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'منبّه الاستعداد قبل الفجر ومنبّه قيام الليل 🌅🌙',
+                                  style: TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'اضبط منبهاً بنغمة خاصة ليوقظك قبل الفجر بوقت تحدده أو للثلث الأخير من الليل',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: AppColors.accentGold,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -321,25 +453,30 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
 
                 // Date Navigation Header
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded, size: 18),
                       tooltip: 'اليوم السابق',
+                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       onPressed: _previousDay,
                     ),
-                    Text(
-                      _isToday
-                          ? 'اليوم (${record.dateStr})'
-                          : record.dateStr,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        _isToday
+                            ? 'اليوم (${record.dateStr})'
+                            : record.dateStr,
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.arrow_back_ios_rounded, size: 18),
                       tooltip: 'اليوم التالي',
+                      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                       onPressed: _isToday ? null : _nextDay,
                     ),
                   ],
@@ -361,40 +498,46 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'إنجاز اليوم في الصلاة',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: record.isAllObligatoryCompleted
-                                    ? Colors.green.withValues(alpha: 0.15)
-                                    : AppColors.accentGold.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${record.completedObligatoryCount} من 5 صلوات',
+                        SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              const Text(
+                                'إنجاز اليوم في الصلاة',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: record.isAllObligatoryCompleted
-                                      ? Colors.green.shade800
-                                      : const Color(0xFF8B6B00),
+                                  color: AppColors.primaryGreen,
                                 ),
                               ),
-                            ),
-                          ],
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: record.isAllObligatoryCompleted
+                                      ? Colors.green.withValues(alpha: 0.15)
+                                      : AppColors.accentGold.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${record.completedObligatoryCount} من 5 صلوات',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: record.isAllObligatoryCompleted
+                                        ? Colors.green.shade800
+                                        : const Color(0xFF8B6B00),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 10),
                         ClipRRect(
@@ -409,22 +552,28 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'السنن الرواتب (12 ركعة):',
-                              style: TextStyle(fontSize: 13, color: Colors.grey),
-                            ),
-                            Text(
-                              '${record.completedRawatibRakats} / 12 ركعة',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.accentGold,
+                        SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: [
+                              const Text(
+                                'السنن الرواتب (12 ركعة):',
+                                style: TextStyle(fontSize: 13, color: Colors.grey),
                               ),
-                            ),
-                          ],
+                              Text(
+                                '${record.completedRawatibRakats} / 12 ركعة',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.accentGold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Container(
@@ -619,19 +768,25 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.auto_stories_rounded,
-                            color: Color(0xFFB8860B),
-                            size: 18,
+                          Padding(
+                            padding: EdgeInsets.only(top: 2),
+                            child: Icon(
+                              Icons.auto_stories_rounded,
+                              color: Color(0xFFB8860B),
+                              size: 18,
+                            ),
                           ),
                           SizedBox(width: 8),
-                          Text(
-                            'فضل السنن الرواتب الاثنتي عشرة ركعة',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Color(0xFFB8860B),
+                          Expanded(
+                            child: Text(
+                              'فضل السنن الرواتب الاثنتي عشرة ركعة',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: Color(0xFFB8860B),
+                              ),
                             ),
                           ),
                         ],
@@ -700,40 +855,74 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildWeeklyStatTile(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+                final tiles = [
+                  _buildWeeklyStatTile(
                     label: 'صليت في الأسبوع',
                     value: '${report.totalPrayedCount} / 35',
                     color: AppColors.primaryGreen,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildWeeklyStatTile(
+                  _buildWeeklyStatTile(
                     label: 'في وقتها',
                     value: '${report.prayedOnTimeCount}',
                     color: Colors.teal,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildWeeklyStatTile(
+                  _buildWeeklyStatTile(
                     label: 'قضاء',
                     value: '${report.prayedQadaCount}',
                     color: Colors.orange.shade800,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildWeeklyStatTile(
+                  _buildWeeklyStatTile(
                     label: 'فاتتك / مسجلة فائتة',
                     value: '${report.explicitlyMissedCount} (${report.missedOrUnprayedCount})',
                     color: Colors.redAccent,
                   ),
-                ),
-              ],
+                ];
+
+                final useTwoColumns =
+                    textScale > 1.25 || constraints.maxWidth < 290;
+                if (!useTwoColumns) {
+                  return Row(
+                    children: [
+                      Expanded(child: tiles[0]),
+                      const SizedBox(width: 8),
+                      Expanded(child: tiles[1]),
+                      const SizedBox(width: 8),
+                      Expanded(child: tiles[2]),
+                      const SizedBox(width: 8),
+                      Expanded(child: tiles[3]),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: tiles[0]),
+                          const SizedBox(width: 8),
+                          Expanded(child: tiles[1]),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: tiles[2]),
+                          const SizedBox(width: 8),
+                          Expanded(child: tiles[3]),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 14),
             if (report.diagnosticEntries.isNotEmpty) ...[
@@ -805,12 +994,23 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                 spacing: 6,
                 runSpacing: 6,
                 children: report.reasonFrequency.entries.map((e) {
-                  return Chip(
-                    label: Text(
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.accentGold.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.accentGold.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Text(
                       '${e.key} (${e.value} مرات)',
+                      softWrap: true,
                       style: const TextStyle(fontSize: 11.5),
                     ),
-                    backgroundColor: AppColors.accentGold.withValues(alpha: 0.14),
                   );
                 }).toList(),
               ),
@@ -883,77 +1083,160 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
   }
 
   Widget _buildWeeklyStrip(List<DailyPrayerRecord> recentDays) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: recentDays.map((r) {
-        final isSelected = r.dateStr == PrayerTrackerService.formatDateKey(_selectedDate);
-        final count = r.completedObligatoryCount;
-        final parts = r.dateStr.split('-');
-        final dayNum = parts.length == 3 ? parts[2] : r.dateStr;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final textScaler = MediaQuery.textScalerOf(context);
+        final textDirection = Directionality.of(context);
+        final baseStyle = DefaultTextStyle.of(context).style;
 
-        Color circleColor = Colors.grey.shade300;
-        if (count == 5) {
-          circleColor = AppColors.primaryGreen;
-        } else if (count > 0) {
-          circleColor = AppColors.accentGold;
-        } else if (r.missedObligatoryCount > 0) {
-          circleColor = Colors.redAccent;
-        }
-
-        return GestureDetector(
-          onTap: () {
-            final parsed = DateTime.tryParse(r.dateStr);
-            if (parsed != null) {
-              setState(() {
-                _selectedDate = parsed;
-              });
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primaryGreen.withValues(alpha: 0.14)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              border: isSelected
-                  ? Border.all(color: AppColors.primaryGreen, width: 1.5)
-                  : null,
+        final badgePainter = TextPainter(
+          text: TextSpan(
+            text: '5/5',
+            style: baseStyle.merge(
+              const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
             ),
-            child: Column(
-              children: [
-                Text(
-                  dayNum,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
+          ),
+          textDirection: textDirection,
+          textScaler: textScaler,
+          maxLines: 1,
+        )..layout();
+        final dayPainter = TextPainter(
+          text: TextSpan(
+            text: '30',
+            style: baseStyle.merge(
+              const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+          textDirection: textDirection,
+          textScaler: textScaler,
+          maxLines: 1,
+        )..layout();
+
+        final badgeMinSize = math.max(
+          28.0,
+          math.max(badgePainter.width + 12.0, badgePainter.height + 8.0),
+        );
+        final tileMinWidth = math.max(
+          44.0,
+          math.max(dayPainter.width, badgeMinSize) + 16.0,
+        );
+        final useWrap = recentDays.length * tileMinWidth > constraints.maxWidth;
+
+        Widget buildDayTile(DailyPrayerRecord r) {
+          final isSelected =
+              r.dateStr == PrayerTrackerService.formatDateKey(_selectedDate);
+          final count = r.completedObligatoryCount;
+          final parts = r.dateStr.split('-');
+          final dayNum = parts.length == 3 ? parts[2] : r.dateStr;
+
+          Color circleColor = Colors.grey.shade300;
+          if (count == 5) {
+            circleColor = AppColors.primaryGreen;
+          } else if (count > 0) {
+            circleColor = AppColors.accentGold;
+          } else if (r.missedObligatoryCount > 0) {
+            circleColor = Colors.redAccent;
+          }
+
+          return Semantics(
+            container: true,
+            button: true,
+            selected: isSelected,
+            label: 'يوم $dayNum، $count من 5 صلوات',
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                final parsed = DateTime.tryParse(r.dateStr);
+                if (parsed != null) {
+                  setState(() {
+                    _selectedDate = parsed;
+                  });
+                }
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: useWrap ? math.max(48.0, tileMinWidth) : 44.0,
+                  minHeight: 48.0,
                 ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 28,
-                  height: 28,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: circleColor,
-                    shape: BoxShape.circle,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 8,
                   ),
-                  child: Text(
-                    '$count/5',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: count > 0 || r.missedObligatoryCount > 0
-                          ? Colors.white
-                          : Colors.black54,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primaryGreen.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: isSelected
+                        ? Border.all(color: AppColors.primaryGreen, width: 1.5)
+                        : null,
+                  ),
+                  child: ExcludeSemantics(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          dayNum,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          constraints: BoxConstraints(
+                            minWidth: badgeMinSize,
+                            minHeight: badgeMinSize,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: circleColor,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Center(
+                            widthFactor: 1.0,
+                            heightFactor: 1.0,
+                            child: Text(
+                              '$count/5',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: count > 0 || r.missedObligatoryCount > 0
+                                    ? Colors.white
+                                    : Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          );
+        }
+
+        if (useWrap) {
+          return Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: recentDays.map(buildDayTile).toList(),
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: recentDays.map(buildDayTile).toList(),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -961,6 +1244,11 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
     final currentStatus = record.getPrayerStatus(prayerName);
     final reason = record.getReasonForPrayer(prayerName);
     final service = PrayerTrackerService.instance;
+    final isOnTime =
+        currentStatus == PrayerPerformanceStatus.onTimeCongregation ||
+        currentStatus == PrayerPerformanceStatus.onTimeIndividual;
+    final isQada = currentStatus == PrayerPerformanceStatus.lateQada;
+    final isMissed = currentStatus == PrayerPerformanceStatus.missed;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -971,18 +1259,17 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
           runSpacing: 6,
           children: [
             ChoiceChip(
-              label: const Text('في وقتها ✅', style: TextStyle(fontSize: 11.5)),
-              selected:
-                  currentStatus == PrayerPerformanceStatus.onTimeCongregation ||
-                      currentStatus == PrayerPerformanceStatus.onTimeIndividual,
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+              label: Semantics(
+                label: 'صلاة $prayerName - في وقتها',
+                child: const ExcludeSemantics(
+                  child: Text('في وقتها ✅', style: TextStyle(fontSize: 11.5)),
+                ),
+              ),
+              selected: isOnTime,
               selectedColor: AppColors.primaryGreen,
               labelStyle: TextStyle(
-                color: (currentStatus ==
-                            PrayerPerformanceStatus.onTimeCongregation ||
-                        currentStatus ==
-                            PrayerPerformanceStatus.onTimeIndividual)
-                    ? Colors.white
-                    : null,
+                color: isOnTime ? Colors.white : null,
                 fontWeight: FontWeight.bold,
               ),
               onSelected: (_) {
@@ -994,13 +1281,17 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
               },
             ),
             ChoiceChip(
-              label: const Text('قضاء ⏳', style: TextStyle(fontSize: 11.5)),
-              selected: currentStatus == PrayerPerformanceStatus.lateQada,
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+              label: Semantics(
+                label: 'صلاة $prayerName - قضاء',
+                child: const ExcludeSemantics(
+                  child: Text('قضاء ⏳', style: TextStyle(fontSize: 11.5)),
+                ),
+              ),
+              selected: isQada,
               selectedColor: Colors.orange.shade700,
               labelStyle: TextStyle(
-                color: currentStatus == PrayerPerformanceStatus.lateQada
-                    ? Colors.white
-                    : null,
+                color: isQada ? Colors.white : null,
                 fontWeight: FontWeight.bold,
               ),
               onSelected: (_) {
@@ -1012,13 +1303,17 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
               },
             ),
             ChoiceChip(
-              label: const Text('فاتتني ❌', style: TextStyle(fontSize: 11.5)),
-              selected: currentStatus == PrayerPerformanceStatus.missed,
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+              label: Semantics(
+                label: 'صلاة $prayerName - فاتتني',
+                child: const ExcludeSemantics(
+                  child: Text('فاتتني ❌', style: TextStyle(fontSize: 11.5)),
+                ),
+              ),
+              selected: isMissed,
               selectedColor: Colors.redAccent,
               labelStyle: TextStyle(
-                color: currentStatus == PrayerPerformanceStatus.missed
-                    ? Colors.white
-                    : null,
+                color: isMissed ? Colors.white : null,
                 fontWeight: FontWeight.bold,
               ),
               onSelected: (_) {
@@ -1029,13 +1324,19 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                 );
               },
             ),
-            if (currentStatus == PrayerPerformanceStatus.missed ||
-                currentStatus == PrayerPerformanceStatus.lateQada)
+            if (isMissed || isQada)
               ActionChip(
+                materialTapTargetSize: MaterialTapTargetSize.padded,
                 avatar: const Icon(Icons.edit_note_rounded, size: 15),
-                label: Text(
-                  reason != null ? 'تعديل السبب' : 'كتابة سبب الفوات',
-                  style: const TextStyle(fontSize: 11),
+                label: Semantics(
+                  label:
+                      'صلاة $prayerName - ${reason != null ? 'تعديل السبب' : 'كتابة سبب الفوات'}',
+                  child: ExcludeSemantics(
+                    child: Text(
+                      reason != null ? 'تعديل السبب' : 'كتابة سبب الفوات',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
                 ),
                 onPressed: () {
                   _showReasonEntryDialog(
