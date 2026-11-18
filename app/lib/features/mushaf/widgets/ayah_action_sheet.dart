@@ -7,6 +7,8 @@ import '../../../core/models/ayah.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/services/ayah_notes_service.dart';
 import '../../../core/audio/ayah_audio_player.dart';
+import '../../../core/models/memorization_item.dart';
+import '../../../core/services/memorization_service.dart';
 import 'tafsir_viewer_sheet.dart';
 import 'ayah_note_edit_dialog.dart';
 import 'ayah_linguistics_sheet.dart';
@@ -43,6 +45,14 @@ class AyahActionSheet extends StatefulWidget {
 }
 
 class _AyahActionSheetState extends State<AyahActionSheet> {
+  @override
+  void initState() {
+    super.initState();
+    MemorizationService.instance.init().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
   void _copyAyah() {
     final textToCopy = '${widget.ayah.cleanTextUthmani} ﴿${widget.ayah.ayahNumber}﴾ [سورة ${widget.surah.nameAr}]';
     Clipboard.setData(ClipboardData(text: textToCopy)).catchError((_) {});
@@ -135,6 +145,66 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
     );
   }
 
+  Future<void> _markReinforcement() async {
+    await MemorizationService.instance.recordReview(
+      surahId: widget.surah.id,
+      ayahNumber: widget.ayah.ayahNumber,
+      surahName: widget.surah.nameAr,
+      rating: MemorizationRating.hard,
+    );
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.timelapse, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'تم تحديد الآية: تحتاج تثبيت ومراجعة',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF1B4332),
+      ),
+    );
+  }
+
+  Future<void> _markForgotten() async {
+    await MemorizationService.instance.recordReview(
+      surahId: widget.surah.id,
+      ayahNumber: widget.ayah.ayahNumber,
+      surahName: widget.surah.nameAr,
+      rating: MemorizationRating.forgot,
+    );
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.replay_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'تم تحديد الآية: نسيتها وتحتاج إعادة حفظ',
+                style: TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF8B2500),
+      ),
+    );
+  }
+
   void _showTadabburNote() {
     Navigator.pop(context);
     AyahNoteEditDialog.show(context, surah: widget.surah, ayah: widget.ayah);
@@ -167,6 +237,9 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
     final hasNote = AyahNotesService.instance.hasNote(widget.surah.id, widget.ayah.ayahNumber);
     final currentReciter = SettingsService.instance.currentReciter;
     final ayahKey = '${widget.surah.id}:${widget.ayah.ayahNumber}';
+    final memItem = MemorizationService.instance.getItem(widget.surah.id, widget.ayah.ayahNumber);
+    final isReinforced = memItem?.lastRating == MemorizationRating.hard;
+    final isForgotten = memItem?.lastRating == MemorizationRating.forgot;
 
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
@@ -502,9 +575,23 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                       runSpacing: 10,
                       children: [
                         _buildFeatureButton(
+                          icon: isReinforced ? Icons.timelapse : Icons.timelapse_outlined,
+                          label: 'تثبيت',
+                          subtitle: isReinforced ? 'محددة للتثبيت' : 'يحتاج مراجعة',
+                          color: isReinforced ? AppColors.accentGold : Colors.amber.shade800,
+                          onTap: _markReinforcement,
+                        ),
+                        _buildFeatureButton(
+                          icon: isForgotten ? Icons.replay_circle_filled_rounded : Icons.replay_rounded,
+                          label: 'نسيت',
+                          subtitle: isForgotten ? 'محددة للإعادة' : 'إعادة الحفظ',
+                          color: isForgotten ? AppColors.accentGold : Colors.redAccent,
+                          onTap: _markForgotten,
+                        ),
+                        _buildFeatureButton(
                           icon: Icons.repeat_one_rounded,
                           label: 'تحفيظ وتكرار',
-                          subtitle: 'تثبيت الآية',
+                          subtitle: 'جلسة التكرار',
                           color: AppColors.secondaryGreen,
                           onTap: _showMemorization,
                         ),
@@ -598,12 +685,14 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
           ),
         ),
         const SizedBox(width: 6),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.bold,
-            color: color,
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -619,12 +708,14 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
+    return Semantics(
+      button: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
           width: 102,
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
@@ -653,7 +744,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                   color: isDark ? Colors.white : AppColors.emerald900,
                   height: 1.15,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
@@ -665,13 +756,14 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                   color: isDark ? Colors.white60 : Colors.black45,
                   height: 1.1,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
