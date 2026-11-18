@@ -783,13 +783,7 @@ void main() {
             );
             const expectedPageModeOverflows = <String, List<_ExpectedUnresolvedDestinationOverflow>>{
               '360_1x_kb': [],
-              '360_2x_kb': [
-                (
-                  sourceLocation: 'page_mode_mushaf_screen.dart:206:15',
-                  direction: 'right',
-                  roundedPixels: 22,
-                ),
-              ],
+              '360_2x_kb': [],
               '412_1x_kb': [],
               '412_2x_kb': [],
             };

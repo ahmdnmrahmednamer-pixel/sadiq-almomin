@@ -770,13 +770,7 @@ void main() {
           String sourceLocation,
           String direction,
           int roundedPixels,
-        })>[
-          (
-            sourceLocation: 'page_mode_mushaf_screen.dart:206:15',
-            direction: 'right',
-            roundedPixels: 22,
-          ),
-        ];
+        })>[];
 
         final pageMode2xSemErrors = <({String message, String fullDump})>[];
         FlutterError.onError = (details) {

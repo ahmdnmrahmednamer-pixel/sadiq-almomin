@@ -14,6 +14,12 @@ import 'surah_reader_screen.dart';
 import '../../core/services/quran_accessibility_service.dart';
 import '../../core/ui/app_dropdown_field.dart';
 
+enum _PageModeMenuAction {
+  cycleTheme,
+  switchToSurahMode,
+  toggleBookmark,
+}
+
 class PageModeMushafScreen extends StatefulWidget {
   final int initialPage;
 
@@ -106,6 +112,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
             return Directionality(
               textDirection: SettingsService.instance.textDirection,
               child: AlertDialog(
+                scrollable: true,
                 title: const Text('الانتقال إلى صفحة'),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -126,22 +133,38 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                       },
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: controller,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'رقم الصفحة (1 - 604)',
+                    const Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        'رقم الصفحة (1 - 604)',
+                        softWrap: true,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
-                      onChanged: (val) {
-                        final parsed = ArabicNormalizer.tryParseInt(val);
-                        if (parsed != null && parsed >= 1 && parsed <= 604) {
-                          setDialogState(() {
-                            sliderVal = parsed.toDouble();
-                          });
-                        }
-                      },
+                    ),
+                    const SizedBox(height: 6),
+                    Semantics(
+                      label: 'رقم الصفحة (1 - 604)',
+                      textField: true,
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: '1 - 604',
+                        ),
+                        onChanged: (val) {
+                          final parsed = ArabicNormalizer.tryParseInt(val);
+                          if (parsed != null && parsed >= 1 && parsed <= 604) {
+                            setDialogState(() {
+                              sliderVal = parsed.toDouble();
+                            });
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -180,8 +203,140 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
     }).join();
   }
 
+  Future<void> _openSurahReaderMode() async {
+    final meta = await QuranRepository.getPageMetadata(_currentPage);
+    if (meta != null && mounted) {
+      final surah = await QuranRepository.getSurahById(meta.surahId);
+      if (surah != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SurahReaderScreen(
+              surah: surah,
+              initialAyah: meta.startAyah,
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleCurrentPageBookmark() async {
+    final meta = await QuranRepository.getPageMetadata(_currentPage);
+    if (meta != null && mounted) {
+      final added = await SettingsService.instance.toggleBookmark(
+        meta.surahId,
+        meta.startAyah,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              added
+                  ? 'تمت إضافة سورة ${meta.surahName} (صفحة $_currentPage) إلى العلامات المرجعية'
+                  : 'تمت إزالة العلامة المرجعية',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  void _handleHeaderMenuAction(_PageModeMenuAction action) {
+    switch (action) {
+      case _PageModeMenuAction.cycleTheme:
+        _cycleTheme();
+        break;
+      case _PageModeMenuAction.switchToSurahMode:
+        _openSurahReaderMode();
+        break;
+      case _PageModeMenuAction.toggleBookmark:
+        _toggleCurrentPageBookmark();
+        break;
+    }
+  }
+
+  Widget _buildReadingControlsBar({
+    required BuildContext context,
+    required bool isDark,
+    required bool isSepia,
+    required Color frameColor,
+  }) {
+    final Color barBg = isSepia
+        ? const Color(0xFFEFE6D2)
+        : (isDark
+            ? const Color(0xFF1E2522)
+            : AppColors.primaryGreen.withValues(alpha: 0.08));
+    final controlTheme = Theme.of(context).copyWith(
+      brightness: isDark ? Brightness.dark : Brightness.light,
+    );
+
+    return Theme(
+      data: controlTheme,
+      child: Container(
+        key: const ValueKey('page_mode_controls_bar'),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: barBg,
+          border: Border(
+            bottom: BorderSide(
+              color: frameColor.withValues(alpha: 0.35),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          alignment: WrapAlignment.start,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            AppToolbarDropdown<int>(
+              semanticLabel: 'مظهر صفحة المصحف',
+              value: _themeModeIndex,
+              options: const [
+                AppDropdownOption(
+                  value: 0,
+                  label: 'تلقائي',
+                  icon: Icons.brightness_auto_rounded,
+                ),
+                AppDropdownOption(
+                  value: 1,
+                  label: 'ورقي مصحفي',
+                  icon: Icons.menu_book_rounded,
+                ),
+                AppDropdownOption(
+                  value: 2,
+                  label: 'ليلي داكن',
+                  icon: Icons.nightlight_round,
+                ),
+                AppDropdownOption(
+                  value: 3,
+                  label: 'نهاري ناصع',
+                  icon: Icons.wb_sunny_rounded,
+                ),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _themeModeIndex = val;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final textScale = media.textScaler.scale(1.0);
+    final isLargeText = textScale >= 1.35;
+    final isCompactHeader = media.size.width < 480 || isLargeText;
+
     final isSysDark = Theme.of(context).brightness == Brightness.dark;
     final isDark = _themeModeIndex == 2 || (_themeModeIndex == 0 && isSysDark);
     final isSepia = _themeModeIndex == 1;
@@ -204,153 +359,185 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
         backgroundColor: pageBg,
         appBar: _showControls
             ? AppBar(
-                title: Text('صفحة ${_toArabicIndic(_currentPage)} / ٦٠٤'),
+                toolbarHeight: isLargeText
+                    ? (textScale >= 1.75 ? 96.0 : 76.0)
+                    : null,
+                titleSpacing: isLargeText ? 8.0 : null,
+                title: Text(
+                  'صفحة ${_toArabicIndic(_currentPage)} / ٦٠٤',
+                  maxLines: 2,
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
+                  style: const TextStyle(height: 1.2),
+                ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.palette_outlined),
-                    tooltip: 'تغيير سمة القراءة',
-                    onPressed: _cycleTheme,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                    tooltip: 'الانتقال إلى نمط السور النصي',
-                    onPressed: () async {
-                      final meta = await QuranRepository.getPageMetadata(_currentPage);
-                      if (meta != null && mounted) {
-                        final surah = await QuranRepository.getSurahById(meta.surahId);
-                        if (surah != null && mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => SurahReaderScreen(surah: surah, initialAyah: meta.startAyah),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.bookmark_border_rounded),
-                    tooltip: 'حفظ موضع القراءة الحالي',
-                    onPressed: () async {
-                      final meta = await QuranRepository.getPageMetadata(_currentPage);
-                      if (meta != null && mounted) {
-                        final added = await SettingsService.instance.toggleBookmark(meta.surahId, meta.startAyah);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(added
-                                  ? 'تمت إضافة سورة ${meta.surahName} (صفحة $_currentPage) إلى العلامات المرجعية'
-                                  : 'تمت إزالة العلامة المرجعية'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      }
-                    },
-                  ),
+                  if (!isCompactHeader) ...[
+                    IconButton(
+                      icon: const Icon(Icons.palette_outlined),
+                      tooltip: 'تغيير سمة القراءة',
+                      onPressed: _cycleTheme,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                      tooltip: 'الانتقال إلى نمط السور النصي',
+                      onPressed: _openSurahReaderMode,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.bookmark_border_rounded),
+                      tooltip: 'حفظ موضع القراءة الحالي',
+                      onPressed: _toggleCurrentPageBookmark,
+                    ),
+                  ],
                   IconButton(
                     icon: const Icon(Icons.find_in_page_outlined),
                     tooltip: 'الانتقال إلى صفحة...',
                     onPressed: _showJumpDialog,
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                    child: AppToolbarDropdown<int>(
-                      semanticLabel: 'مظهر صفحة المصحف',
-                      value: _themeModeIndex,
-                      options: const [
-                        AppDropdownOption(value: 0, label: 'تلقائي', icon: Icons.brightness_auto_rounded),
-                        AppDropdownOption(value: 1, label: 'ورقي مصحفي', icon: Icons.menu_book_rounded),
-                        AppDropdownOption(value: 2, label: 'ليلي داكن', icon: Icons.nightlight_round),
-                        AppDropdownOption(value: 3, label: 'نهاري ناصع', icon: Icons.wb_sunny_rounded),
+                  if (isCompactHeader)
+                    PopupMenuButton<_PageModeMenuAction>(
+                      tooltip: 'المزيد من خيارات المصحف',
+                      icon: const Icon(Icons.more_vert_rounded),
+                      onSelected: _handleHeaderMenuAction,
+                      itemBuilder: (context) => const [
+                        PopupMenuItem<_PageModeMenuAction>(
+                          value: _PageModeMenuAction.cycleTheme,
+                          child: Row(
+                            children: [
+                              Icon(Icons.palette_outlined, size: 20),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'تغيير سمة القراءة',
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<_PageModeMenuAction>(
+                          value: _PageModeMenuAction.switchToSurahMode,
+                          child: Row(
+                            children: [
+                              Icon(Icons.swap_horiz_rounded, size: 20),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'الانتقال إلى نمط السور النصي',
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<_PageModeMenuAction>(
+                          value: _PageModeMenuAction.toggleBookmark,
+                          child: Row(
+                            children: [
+                              Icon(Icons.bookmark_border_rounded, size: 20),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'حفظ موضع القراءة الحالي',
+                                  softWrap: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
-                      onChanged: (val) {
-                        setState(() {
-                          _themeModeIndex = val;
-                        });
-                      },
                     ),
-                  ),
                 ],
               )
             : null,
-        body: GestureDetector(
-          onTap: () {
-            setState(() {
-              _showControls = !_showControls;
-            });
-          },
-          child: Stack(
-            children: [
-              PageView.builder(
-                controller: _pageController,
-                itemCount: 604,
-                onPageChanged: _onPageChanged,
-                itemBuilder: (context, index) {
-                  final pageNum = index + 1;
-                  return _buildMushafPage(pageNum, pageBg, frameColor, textColor, isDark, isSepia);
-                },
+        body: Column(
+          children: [
+            if (_showControls)
+              _buildReadingControlsBar(
+                context: context,
+                isDark: isDark,
+                isSepia: isSepia,
+                frameColor: frameColor,
               ),
-
-              // Bottom Overlay Navigation Bar
-              if (_showControls)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E2522).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                      border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _showControls = !_showControls;
+                  });
+                },
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      itemCount: 604,
+                      onPageChanged: _onPageChanged,
+                      itemBuilder: (context, index) {
+                        final pageNum = index + 1;
+                        return _buildMushafPage(pageNum, pageBg, frameColor, textColor, isDark, isSepia);
+                      },
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
-                          tooltip: 'الصفحة السابقة',
-                          onPressed: _currentPage > 1 ? () => _jumpToPage(_currentPage - 1) : null,
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: _showJumpDialog,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'صفحة ${_toArabicIndic(_currentPage)} من ٦٠٤',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+
+                    // Bottom Overlay Navigation Bar
+                    if (_showControls)
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E2522).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back_ios_rounded, size: 20),
+                                tooltip: 'الصفحة السابقة',
+                                onPressed: _currentPage > 1 ? () => _jumpToPage(_currentPage - 1) : null,
+                              ),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: _showJumpDialog,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'صفحة ${_toArabicIndic(_currentPage)} من ٦٠٤',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      const Text(
+                                        'اضغط للقفز المباشر أو التمرير',
+                                        style: TextStyle(fontSize: 10, color: AppColors.mutedText),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'اضغط للقفز المباشر أو التمرير',
-                                  style: TextStyle(fontSize: 10, color: AppColors.mutedText),
-                                ),
-                              ],
-                            ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
+                                tooltip: 'الصفحة التالية',
+                                onPressed: _currentPage < 604 ? () => _jumpToPage(_currentPage + 1) : null,
+                              ),
+                            ],
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
-                          tooltip: 'الصفحة التالية',
-                          onPressed: _currentPage < 604 ? () => _jumpToPage(_currentPage + 1) : null,
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
