@@ -80,4 +80,119 @@ class ArabicNormalizer {
     if (cleaned.isEmpty) return null;
     return double.tryParse(cleaned);
   }
+
+  // =========================================================================
+  // Search-Only Uthmani-to-Imlaei Canonicalizer
+  // Never mutates canonical displayed Quran text and leaves normalize() intact.
+  // =========================================================================
+  static final RegExp _searchSpacersAndMarks = RegExp(
+    r'[\u200A\u2060\u0640\u06DD\u06DE\u06E9]',
+  );
+  static final RegExp _searchDiacriticsKeepDaggerAndSmallYeh = RegExp(
+    r'[\u0610-\u061A\u064B-\u065F\u06D6-\u06E6\u06E8-\u06ED\u08D3-\u08FF]',
+  );
+  static final List<(RegExp, String Function(Match))> _imlaeiDefectiveFixes = [
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل|ك)?ذالك(م|ما|ن)?(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}ذلك${m.group(3) ?? ''}',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل|ك)?هاذا(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}هذا',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل|ك)?هاذه(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}هذه',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل|ك)?هاذان(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}هذان',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل|ك)?هاولاء(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}هولاء',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ل)?لاكن(ا|ه|هم|كم|نا|ي)?(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}لكن${m.group(3) ?? ''}',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ب|ل|ف)?الرحمان(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}الرحمن',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?رحمان(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}رحمن',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?الاه(ا|ك|كم|نا|هم|ي|ين|ه)?(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}اله${m.group(3) ?? ''}',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?اولاءك(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}اوليك',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?اولائك(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}اوليك',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?السموات(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}السماوات',
+    ),
+    (
+      RegExp(r'(^|\s)(و|ف|ب|ل)?سموات(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}${m.group(2) ?? ''}سماوات',
+    ),
+    (
+      RegExp(r'(^|\s)ياايها(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}يا ايها',
+    ),
+    (
+      RegExp(r'(^|\s)يايها(?=\s|$)'),
+      (m) => '${m.group(1) ?? ''}يا ايها',
+    ),
+  ];
+
+  /// Search-only normalization aligning Uthmani script orthography (invisible
+  /// hair-space/word-joiner splitters, dagger alif, waw+dagger alif, standalone
+  /// hamza-alif, small high yeh, and classical defective-alif words) with
+  /// standard Arabic Imlaei search queries.
+  static String normalizeForQuranSearch(String text) {
+    if (text.isEmpty) return '';
+
+    String cleaned = text
+        .replaceAll(_searchSpacersAndMarks, '')
+        .replaceAll(_searchDiacriticsKeepDaggerAndSmallYeh, '')
+        .replaceAll('ى\u0670', 'ي')
+        .replaceAll('ی\u0670', 'ي')
+        .replaceAll('و\u0670ة', 'اة')
+        .replaceAll('و\u0670ا', 'ا')
+        .replaceAll('\u0670', 'ا')
+        .replaceAll('\u06E7', 'ي');
+
+    final sb = StringBuffer();
+    for (int i = 0; i < cleaned.length; i++) {
+      final char = cleaned[i];
+      if (looseLetterMap.containsKey(char)) {
+        sb.write(looseLetterMap[char]);
+      } else if (digitMap.containsKey(char)) {
+        sb.write(digitMap[char]);
+      } else {
+        sb.write(char);
+      }
+    }
+
+    String result = sb
+        .toString()
+        .replaceAll('ءا', 'ا')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+
+    for (final fix in _imlaeiDefectiveFixes) {
+      result = result.replaceAllMapped(fix.$1, fix.$2);
+    }
+
+    return result.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
 }

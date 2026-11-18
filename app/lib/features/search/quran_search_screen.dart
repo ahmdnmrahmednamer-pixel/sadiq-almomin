@@ -47,6 +47,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
   bool _isLoading = false;
   String _currentQuery = '';
+  String? _loadError;
 
   @override
   void initState() {
@@ -94,6 +95,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         _surahResults = [];
         _ayahResults = [];
         _isLoading = false;
+        _loadError = null;
       });
       return;
     }
@@ -101,50 +103,66 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     setState(() {
       _isLoading = true;
       _currentQuery = cleanQuery;
+      _loadError = null;
     });
 
-    // 1. Check direct reference (2:255, البقرة 255, آية الكرسي)
-    final refMatch = await QuranSearchService.instance.parseReference(cleanQuery);
-    Ayah? refAyah;
-    Surah? refSurah;
-    if (refMatch != null) {
-      refAyah = await QuranRepository.getAyah(refMatch.surahId, refMatch.ayahNumber);
-      if (_allSurahs.isNotEmpty) {
-        refSurah = _allSurahs.firstWhere(
-          (s) => s.id == refMatch.surahId,
-          orElse: () => _allSurahs.first,
-        );
+    try {
+      // 1. Check direct reference (2:255, البقرة 255, آية الكرسي)
+      final refMatch = await QuranSearchService.instance.parseReference(cleanQuery);
+      Ayah? refAyah;
+      Surah? refSurah;
+      if (refMatch != null) {
+        refAyah = await QuranRepository.getAyah(refMatch.surahId, refMatch.ayahNumber);
+        if (_allSurahs.isNotEmpty) {
+          refSurah = _allSurahs.firstWhere(
+            (s) => s.id == refMatch.surahId,
+            orElse: () => _allSurahs.first,
+          );
+        }
       }
-    }
 
-    // 2. Search Surahs
-    final surahs = await QuranRepository.searchSurahs(cleanQuery);
+      // 2. Search Surahs
+      final surahs = await QuranRepository.searchSurahs(cleanQuery);
 
-    // 3. Search Ayahs
-    final ayahs = await QuranSearchService.instance.searchAyahs(
-      cleanQuery,
-      surahFilter: _selectedSurahFilter,
-      limit: 100,
-    );
+      // 3. Search Ayahs
+      final ayahs = await QuranSearchService.instance.searchAyahs(
+        cleanQuery,
+        surahFilter: _selectedSurahFilter,
+        limit: 100,
+      );
 
-    // Save to history if search produced results
-    if (cleanQuery.length >= 2 && (refMatch != null || surahs.isNotEmpty || ayahs.isNotEmpty)) {
-      await QuranSearchService.instance.addToHistory(cleanQuery);
-      final updatedHistory = await QuranSearchService.instance.getSearchHistory();
+      // Save to history if search produced results
+      if (cleanQuery.length >= 2 && (refMatch != null || surahs.isNotEmpty || ayahs.isNotEmpty)) {
+        await QuranSearchService.instance.addToHistory(cleanQuery);
+        final updatedHistory = await QuranSearchService.instance.getSearchHistory();
+        if (mounted) {
+          setState(() => _history = updatedHistory);
+        }
+      }
+
       if (mounted) {
-        setState(() => _history = updatedHistory);
+        setState(() {
+          _referenceMatch = refMatch;
+          _referenceAyah = refAyah;
+          _referenceSurah = refSurah;
+          _surahResults = surahs;
+          _ayahResults = ayahs;
+          _isLoading = false;
+          _loadError = null;
+        });
       }
-    }
-
-    if (mounted) {
-      setState(() {
-        _referenceMatch = refMatch;
-        _referenceAyah = refAyah;
-        _referenceSurah = refSurah;
-        _surahResults = surahs;
-        _ayahResults = ayahs;
-        _isLoading = false;
-      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _referenceMatch = null;
+          _referenceAyah = null;
+          _referenceSurah = null;
+          _surahResults = [];
+          _ayahResults = [];
+          _isLoading = false;
+          _loadError = 'تعذر تحميل بيانات المصحف للبحث. يرجى المحاولة مرة أخرى.';
+        });
+      }
     }
   }
 
@@ -212,11 +230,30 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasResults = _referenceMatch != null || _surahResults.isNotEmpty || _ayahResults.isNotEmpty;
+    final hasReferenceCard =
+        _referenceMatch != null && _referenceAyah != null && _referenceSurah != null;
+    final hasVisibleSurahs =
+        (_scope == SearchScope.all || _scope == SearchScope.surahs) &&
+            _surahResults.isNotEmpty;
+    final hasVisibleAyahs =
+        (_scope == SearchScope.all || _scope == SearchScope.ayahs) &&
+            _ayahResults.isNotEmpty;
+    final hasVisibleResults =
+        hasReferenceCard || hasVisibleSurahs || hasVisibleAyahs;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+    final isLargeText = textScale >= 1.35;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('البحث في القرآن الكريم'),
+        toolbarHeight: isLargeText ? 80.0 : null,
+        titleSpacing: isLargeText ? 8 : null,
+        title: const Text(
+          'البحث في القرآن الكريم',
+          maxLines: 2,
+          softWrap: true,
+          overflow: TextOverflow.visible,
+          style: TextStyle(height: 1.2),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.mic_rounded),
@@ -282,46 +319,57 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  ChoiceChip(
-                    label: const Text('الكل', style: TextStyle(fontSize: 12)),
-                    selected: _scope == SearchScope.all,
-                    selectedColor: AppColors.primaryGreen,
-                    labelStyle: TextStyle(
-                      color: _scope == SearchScope.all ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
-                      fontWeight: _scope == SearchScope.all ? FontWeight.bold : FontWeight.normal,
+                  Expanded(
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        ChoiceChip(
+                          label: const Text('الكل', style: TextStyle(fontSize: 12)),
+                          selected: _scope == SearchScope.all,
+                          selectedColor: AppColors.primaryGreen,
+                          checkmarkColor: Colors.white,
+                          labelStyle: TextStyle(
+                            color: _scope == SearchScope.all ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
+                            fontWeight: _scope == SearchScope.all ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          onSelected: (_) => setState(() => _scope = SearchScope.all),
+                        ),
+                        ChoiceChip(
+                          label: Text(
+                            'الآيات ${_ayahResults.isNotEmpty ? "(${_ayahResults.length})" : ""}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          selected: _scope == SearchScope.ayahs,
+                          selectedColor: AppColors.primaryGreen,
+                          checkmarkColor: Colors.white,
+                          labelStyle: TextStyle(
+                            color: _scope == SearchScope.ayahs ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
+                            fontWeight: _scope == SearchScope.ayahs ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          onSelected: (_) => setState(() => _scope = SearchScope.ayahs),
+                        ),
+                        ChoiceChip(
+                          label: Text(
+                            'السور ${_surahResults.isNotEmpty ? "(${_surahResults.length})" : ""}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          selected: _scope == SearchScope.surahs,
+                          selectedColor: AppColors.primaryGreen,
+                          checkmarkColor: Colors.white,
+                          labelStyle: TextStyle(
+                            color: _scope == SearchScope.surahs ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
+                            fontWeight: _scope == SearchScope.surahs ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          onSelected: (_) => setState(() => _scope = SearchScope.surahs),
+                        ),
+                      ],
                     ),
-                    onSelected: (_) => setState(() => _scope = SearchScope.all),
                   ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text(
-                      'الآيات ${_ayahResults.isNotEmpty ? "(${_ayahResults.length})" : ""}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    selected: _scope == SearchScope.ayahs,
-                    selectedColor: AppColors.primaryGreen,
-                    labelStyle: TextStyle(
-                      color: _scope == SearchScope.ayahs ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
-                      fontWeight: _scope == SearchScope.ayahs ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    onSelected: (_) => setState(() => _scope = SearchScope.ayahs),
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: Text(
-                      'السور ${_surahResults.isNotEmpty ? "(${_surahResults.length})" : ""}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    selected: _scope == SearchScope.surahs,
-                    selectedColor: AppColors.primaryGreen,
-                    labelStyle: TextStyle(
-                      color: _scope == SearchScope.surahs ? Colors.white : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87),
-                      fontWeight: _scope == SearchScope.surahs ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    onSelected: (_) => setState(() => _scope = SearchScope.surahs),
-                  ),
-                  const Spacer(),
+                  const SizedBox(width: 4),
                   // Filter by Surah Button
                   PopupMenuButton<int?>(
                     tooltip: 'تصفية حسب السورة',
@@ -368,9 +416,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     )
                   : _currentQuery.isEmpty
                       ? _buildInitialState()
-                      : !hasResults
-                          ? _buildNoResultsState()
-                          : _buildResultsList(),
+                      : _loadError != null
+                          ? _buildErrorState()
+                          : !hasVisibleResults
+                              ? _buildNoResultsState()
+                              : _buildResultsList(),
             ),
           ],
         ),
@@ -385,21 +435,39 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         if (_history.isNotEmpty) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.history, color: AppColors.primaryGreen, size: 20),
-                  SizedBox(width: 8),
-                  Text('سجل البحث الأخير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                ],
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.history, color: AppColors.primaryGreen, size: 20),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'سجل البحث الأخير',
+                        softWrap: true,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               TextButton(
                 onPressed: () async {
                   await QuranSearchService.instance.clearHistory();
                   if (!mounted) return;
                   setState(() => _history = []);
                 },
-                child: const Text('مسح السجل', style: TextStyle(fontSize: 12, color: Colors.redAccent)),
+                child: Text(
+                  'مسح السجل',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFFFF8A80)
+                        : const Color(0xFFB71C1C),
+                  ),
+                ),
               ),
             ],
           ),
@@ -485,29 +553,84 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     );
   }
 
+  Widget _buildErrorState() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          key: const ValueKey('search_error_scroll_view'),
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight > 48 ? constraints.maxHeight - 48 : 0,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Color(0xFFB71C1C)),
+                  const SizedBox(height: 16),
+                  Text(
+                    _loadError ?? 'تعذر تحميل بيانات المصحف للبحث. يرجى المحاولة مرة أخرى.',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => _executeSearch(_currentQuery),
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    label: const Text(
+                      'إعادة المحاولة',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildNoResultsState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: AppColors.mutedText),
-            const SizedBox(height: 16),
-            Text(
-              'لم يتم العثور على نتائج لـ "$_currentQuery"',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              textAlign: TextAlign.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          key: const ValueKey('search_no_results_scroll_view'),
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight > 48 ? constraints.maxHeight - 48 : 0,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'تأكد من كتابة الكلمة بصورة صحيحة أو جرب البحث بكلمة واحدة أو بدون (ال) التعريف.',
-              style: TextStyle(color: AppColors.lightText, fontSize: 13),
-              textAlign: TextAlign.center,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.search_off, size: 64, color: AppColors.mutedText),
+                  const SizedBox(height: 16),
+                  Text(
+                    'لم يتم العثور على نتائج لـ "$_currentQuery"',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'تأكد من كتابة الكلمة بصورة صحيحة أو جرب البحث بكلمة واحدة أو بدون (ال) التعريف.',
+                    style: TextStyle(color: AppColors.lightText, fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -710,33 +833,35 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header: Surah and Ayah Info
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'سورة ${surah.nameAr} : آية ${ayah.ayahNumber}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12.5,
-                                  color: AppColors.primaryGreen,
-                                ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'سورة ${surah.nameAr} : آية ${ayah.ayahNumber}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.5,
+                                color: AppColors.primaryGreen,
                               ),
                             ),
-                          ],
-                        ),
-                        Text(
-                          'صفحة ${ayah.page} · جزء ${ayah.juz}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.lightText),
-                        ),
-                      ],
+                          ),
+                          Text(
+                            'صفحة ${ayah.page} · جزء ${ayah.juz}',
+                            style: const TextStyle(fontSize: 11, color: AppColors.lightText),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 8),
 
@@ -761,37 +886,43 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     const SizedBox(height: 10),
 
                     // Action Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton.icon(
-                          icon: const Icon(Icons.chrome_reader_mode_outlined, size: 16, color: AppColors.primaryGreen),
-                          label: const Text('التفسير', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
-                          onPressed: () => TafsirViewerSheet.show(context, surah: surah, ayah: ayah),
-                        ),
-                        TextButton.icon(
-                          icon: const Icon(Icons.auto_stories_rounded, size: 16, color: AppColors.primaryGreen),
-                          label: const Text('المصحف', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PageModeMushafScreen(initialPage: ayah.page),
-                              ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 16, color: AppColors.primaryGreen),
-                          tooltip: 'نسخ الآية',
-                          onPressed: () => _copyAyah(ayah, surah),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.share, size: 16, color: AppColors.primaryGreen),
-                          tooltip: 'مشاركة الآية',
-                          onPressed: () => _shareAyah(ayah, surah),
-                        ),
-                      ],
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          TextButton.icon(
+                            icon: const Icon(Icons.chrome_reader_mode_outlined, size: 16, color: AppColors.primaryGreen),
+                            label: const Text('التفسير', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
+                            onPressed: () => TafsirViewerSheet.show(context, surah: surah, ayah: ayah),
+                          ),
+                          TextButton.icon(
+                            icon: const Icon(Icons.auto_stories_rounded, size: 16, color: AppColors.primaryGreen),
+                            label: const Text('المصحف', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PageModeMushafScreen(initialPage: ayah.page),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.copy, size: 16, color: AppColors.primaryGreen),
+                            tooltip: 'نسخ الآية',
+                            onPressed: () => _copyAyah(ayah, surah),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.share, size: 16, color: AppColors.primaryGreen),
+                            tooltip: 'مشاركة الآية',
+                            onPressed: () => _shareAyah(ayah, surah),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

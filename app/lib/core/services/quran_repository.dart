@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/surah.dart';
 import '../models/juz.dart';
@@ -47,6 +48,16 @@ class QuranRepository {
   static Map<String, List<Ayah>>? _cachedAyahsBySurah;
   static Map<int, List<Ayah>>? _cachedAyahsByPage;
   static Map<int, PageMetadata>? _cachedPageMetadata;
+
+  @visibleForTesting
+  static void resetCachesForTesting() {
+    _cachedSurahs = null;
+    _cachedJuz = null;
+    _cachedAyahsBySurah = null;
+    _cachedAyahsByPage = null;
+    _cachedPageMetadata = null;
+    _cachedSurahsAyahs.clear();
+  }
 
   /// Loads all 114 Surahs from the bundled asset with try/catch safety
   static Future<List<Surah>> loadSurahs() async {
@@ -132,6 +143,9 @@ class QuranRepository {
   static Future<Map<int, List<Ayah>>> loadAllPages() async {
     if (_cachedAyahsByPage != null) return _cachedAyahsByPage!;
     final allMap = await _loadAllAyahsMap();
+    if (allMap.isEmpty) {
+      return const <int, List<Ayah>>{};
+    }
     final Map<int, List<Ayah>> pages = {};
     for (int p = 1; p <= 604; p++) {
       pages[p] = [];
@@ -206,29 +220,46 @@ class QuranRepository {
   /// In-memory search helper matching ArabicNormalizer specification
   static Future<List<Surah>> searchSurahs(String query) async {
     final surahs = await loadSurahs();
-    if (query.trim().isEmpty) return surahs;
-    final normalizedQuery = ArabicNormalizer.normalize(query, loose: true);
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return surahs;
+    final imlaeiQuery = ArabicNormalizer.normalizeForQuranSearch(trimmed);
+    final legacyQuery = ArabicNormalizer.normalize(trimmed, loose: true);
+    final strippedImlaei =
+        imlaeiQuery.replaceFirst(RegExp(r'^سوره\s+'), '').trim();
+    final strippedLegacy =
+        legacyQuery.replaceFirst(RegExp(r'^سوره\s+'), '').trim();
+    final effectiveImlaei =
+        strippedImlaei.isNotEmpty ? strippedImlaei : imlaeiQuery;
+    final effectiveLegacy =
+        strippedLegacy.isNotEmpty ? strippedLegacy : legacyQuery;
+    final lowerTrimmed = trimmed.toLowerCase();
     return surahs.where((s) {
-      final nameNorm = ArabicNormalizer.normalize(s.nameAr, loose: true);
+      final nameImlaei = ArabicNormalizer.normalizeForQuranSearch(s.nameAr);
+      final nameLegacy = ArabicNormalizer.normalize(s.nameAr, loose: true);
       final simpleNorm = s.nameSimple.toLowerCase();
       final idStr = s.id.toString();
-      return nameNorm.contains(normalizedQuery) ||
-             simpleNorm.contains(query.toLowerCase()) ||
-             idStr == query.trim();
+      return (effectiveImlaei.isNotEmpty && nameImlaei.contains(effectiveImlaei)) ||
+          (effectiveLegacy.isNotEmpty && nameLegacy.contains(effectiveLegacy)) ||
+          simpleNorm.contains(lowerTrimmed) ||
+          idStr == trimmed;
     }).toList();
   }
 
-  /// Full-text search across all 6,236 Ayahs
+  /// Full-text search across all 6,236 Ayahs (dual-key: Imlaei + legacy Uthmani-stripped)
   static Future<List<Ayah>> searchAyahs(String query, {int limit = 50}) async {
     if (query.trim().isEmpty) return [];
     final allMap = await _loadAllAyahsMap();
-    final normalizedQuery = ArabicNormalizer.normalize(query, loose: true);
+    final imlaeiQuery = ArabicNormalizer.normalizeForQuranSearch(query);
+    final legacyQuery = ArabicNormalizer.normalize(query, loose: true);
+    if (imlaeiQuery.isEmpty && legacyQuery.isEmpty) return [];
     final List<Ayah> matches = [];
 
     for (final ayahs in allMap.values) {
       for (final ayah in ayahs) {
-        final norm = ArabicNormalizer.normalize(ayah.textUthmani, loose: true);
-        if (norm.contains(normalizedQuery)) {
+        final imlaei = ArabicNormalizer.normalizeForQuranSearch(ayah.textUthmani);
+        final legacy = ArabicNormalizer.normalize(ayah.textUthmani, loose: true);
+        if ((imlaeiQuery.isNotEmpty && imlaei.contains(imlaeiQuery)) ||
+            (legacyQuery.isNotEmpty && legacy.contains(legacyQuery))) {
           matches.add(ayah);
           if (matches.length >= limit) return matches;
         }

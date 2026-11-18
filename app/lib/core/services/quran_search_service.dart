@@ -1,8 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/surah.dart';
 import '../models/ayah.dart';
 import '../text/arabic_normalizer.dart';
 import 'quran_repository.dart';
+
+class QuranSearchDataException implements Exception {
+  final String message;
+  const QuranSearchDataException(this.message);
+
+  @override
+  String toString() => 'QuranSearchDataException: $message';
+}
 
 class QuranReferenceMatch {
   final int surahId;
@@ -76,22 +85,40 @@ class QuranSearchService {
     return _normalizedAliasesCache!;
   }
 
-  /// Cached pre-normalized Ayah index per Surah ID so searchAyahs does not re-normalize
-  /// all 6,236 Ayahs from scratch on every keystroke (Bug #16 fix).
-  static Map<int, List<MapEntry<Ayah, String>>>? _normalizedSurahAyahsCache;
+  /// Cached dual-key normalized Ayah index per Surah ID:
+  /// - imlaeiKey: search-only Uthmani-to-Imlaei canonical form (fixes U+200A/U+2060, dagger alif, etc.)
+  /// - legacyKey: legacy Uthmani-stripped form (preserves 100% of existing legacy matches)
+  static Map<int, List<({Ayah ayah, String imlaeiKey, String legacyKey})>>?
+      _normalizedSurahAyahsCache;
 
-  Future<Map<int, List<MapEntry<Ayah, String>>>> _ensureNormalizedIndex() async {
-    if (_normalizedSurahAyahsCache != null) {
+  @visibleForTesting
+  static void resetCacheForTesting() {
+    _normalizedSurahAyahsCache = null;
+  }
+
+  Future<Map<int, List<({Ayah ayah, String imlaeiKey, String legacyKey})>>>
+      _ensureNormalizedIndex() async {
+    if (_normalizedSurahAyahsCache != null && _normalizedSurahAyahsCache!.isNotEmpty) {
       return _normalizedSurahAyahsCache!;
     }
     final pagesMap = await QuranRepository.loadAllPages();
-    final Map<int, List<MapEntry<Ayah, String>>> index = {};
+    final Map<int, List<({Ayah ayah, String imlaeiKey, String legacyKey})>> index = {};
+    final seenAyahIds = <int>{};
     for (int page = 1; page <= 604; page++) {
       final ayahs = pagesMap[page] ?? [];
       for (final ayah in ayahs) {
-        final norm = ArabicNormalizer.normalize(ayah.textUthmani, loose: true);
-        index.putIfAbsent(ayah.surahId, () => []).add(MapEntry(ayah, norm));
+        if (!seenAyahIds.add(ayah.id)) continue;
+        final imlaeiKey = ArabicNormalizer.normalizeForQuranSearch(ayah.textUthmani);
+        final legacyKey = ArabicNormalizer.normalize(ayah.textUthmani, loose: true);
+        index.putIfAbsent(ayah.surahId, () => []).add((
+          ayah: ayah,
+          imlaeiKey: imlaeiKey,
+          legacyKey: legacyKey,
+        ));
       }
+    }
+    if (index.isEmpty) {
+      throw const QuranSearchDataException('Failed to load Quran Ayah search index');
     }
     _normalizedSurahAyahsCache = index;
     return index;
@@ -168,7 +195,7 @@ class QuranSearchService {
     return null;
   }
 
-  /// Searches for Ayahs matching query across all 6,236 Ayahs using cached normalized index (FR-SRC-001)
+  /// Searches for Ayahs matching query across all 6,236 Ayahs using dual-key cached index (FR-SRC-001)
   Future<List<AyahSearchResult>> searchAyahs(
     String query, {
     int? surahFilter,
@@ -177,20 +204,28 @@ class QuranSearchService {
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) return [];
 
-    final normalizedQuery = ArabicNormalizer.normalize(cleanQuery, loose: true);
+    final imlaeiQuery = ArabicNormalizer.normalizeForQuranSearch(cleanQuery);
+    final legacyQuery = ArabicNormalizer.normalize(cleanQuery, loose: true);
+    if (imlaeiQuery.isEmpty && legacyQuery.isEmpty) return [];
     final surahs = await QuranRepository.loadSurahs();
-    if (surahs.isEmpty) return [];
+    if (surahs.isEmpty) {
+      throw const QuranSearchDataException('Failed to load Surahs metadata');
+    }
     final surahMap = {for (final s in surahs) s.id: s};
     final index = await _ensureNormalizedIndex();
 
     final List<AyahSearchResult> results = [];
+    bool matchesEntry(({Ayah ayah, String imlaeiKey, String legacyKey}) entry) {
+      return (imlaeiQuery.isNotEmpty && entry.imlaeiKey.contains(imlaeiQuery)) ||
+          (legacyQuery.isNotEmpty && entry.legacyKey.contains(legacyQuery));
+    }
 
     if (surahFilter != null) {
       final entries = index[surahFilter] ?? [];
       final surah = surahMap[surahFilter] ?? surahs.first;
       for (final entry in entries) {
-        if (entry.value.contains(normalizedQuery)) {
-          results.add(AyahSearchResult(ayah: entry.key, surah: surah, query: cleanQuery));
+        if (matchesEntry(entry)) {
+          results.add(AyahSearchResult(ayah: entry.ayah, surah: surah, query: cleanQuery));
           if (results.length >= limit) break;
         }
       }
@@ -199,8 +234,8 @@ class QuranSearchService {
         final entries = index[sId] ?? [];
         final surah = surahMap[sId] ?? surahs.first;
         for (final entry in entries) {
-          if (entry.value.contains(normalizedQuery)) {
-            results.add(AyahSearchResult(ayah: entry.key, surah: surah, query: cleanQuery));
+          if (matchesEntry(entry)) {
+            results.add(AyahSearchResult(ayah: entry.ayah, surah: surah, query: cleanQuery));
             if (results.length >= limit) return results;
           }
         }
