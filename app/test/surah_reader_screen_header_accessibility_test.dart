@@ -691,14 +691,12 @@ void main() {
         );
 
         // 5. Moved compact menu item 2 ('تغيير القارئ للتلاوة') at 360x800 @ 2.0x:
-        //    (a) Pointer open + pointer select -> SettingsReciterModal opens (exact baseline 118px out-of-scope multiset)
-        const expectedReciter2x = [
-          (
-            sourceLocation: 'settings_reciter_modal.dart:318:40',
-            direction: 'right',
-            roundedPixels: 118,
-          ),
-        ];
+        //    (a) Pointer open + pointer select -> SettingsReciterModal opens (ZERO overflows after Repair 16)
+        const expectedReciter2x = <({
+          String sourceLocation,
+          String direction,
+          int roundedPixels,
+        })>[];
 
         final reciterPointerErrors = <({String message, String fullDump})>[];
         FlutterError.onError = (details) {
