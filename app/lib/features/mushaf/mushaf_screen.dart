@@ -10,9 +10,6 @@ import '../search/widgets/quran_voice_search_sheet.dart';
 import 'surah_reader_screen.dart';
 import 'page_mode_mushaf_screen.dart';
 import '../khatma/khatma_screen.dart';
-import '../tajweed/tajweed_screen.dart';
-import 'memorization_screen.dart';
-import 'quran_notes_screen.dart';
 import 'quran_hub_screen.dart';
 
 class MushafScreen extends StatefulWidget {
@@ -110,16 +107,6 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const KhatmaScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.palette_outlined),
-              tooltip: 'أحكام التجويد ودليل ألوان المصحف',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const TajweedScreen()),
                 );
               },
             ),
@@ -245,63 +232,34 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                   ),
 
                   // Quick Quran Tools Bar
-                  Container(
-                    height: 38,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListView(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        _buildQuickActionChip(
-                          icon: Icons.psychology_rounded,
-                          label: 'المحفّظ والتكرار',
-                          color: const Color(0xFF2E7D32),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const MemorizationScreen()),
+                      child: Row(
+                        children: [
+                          _buildQuickActionChip(
+                            icon: Icons.bookmark_add_outlined,
+                            label: 'مخطط الختمات',
+                            color: AppColors.primaryGreen,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const KhatmaScreen()),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickActionChip(
-                          icon: Icons.edit_note_rounded,
-                          label: 'خواطري وملاحظاتي',
-                          color: const Color(0xFFB8860B),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const QuranNotesScreen()),
+                          const SizedBox(width: 8),
+                          _buildQuickActionChip(
+                            icon: Icons.search_rounded,
+                            label: 'البحث القرآني',
+                            color: const Color(0xFF1B4332),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const QuranSearchScreen()),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickActionChip(
-                          icon: Icons.palette_rounded,
-                          label: 'أحكام التجويد',
-                          color: const Color(0xFF16A085),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const TajweedScreen()),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickActionChip(
-                          icon: Icons.bookmark_add_outlined,
-                          label: 'مخطط الختمات',
-                          color: AppColors.primaryGreen,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const KhatmaScreen()),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildQuickActionChip(
-                          icon: Icons.search_rounded,
-                          label: 'البحث القرآني',
-                          color: const Color(0xFF1B4332),
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const QuranSearchScreen()),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 

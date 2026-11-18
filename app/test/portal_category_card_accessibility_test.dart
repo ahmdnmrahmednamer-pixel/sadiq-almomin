@@ -16,11 +16,14 @@ import 'package:almomin/core/services/sunan_rawatib_service.dart';
 import 'package:almomin/core/ui/portal_category_card.dart';
 import 'package:almomin/features/audio/audio_screen.dart';
 import 'package:almomin/features/mushaf/comparative_tafsir_screen.dart';
+import 'package:almomin/features/mushaf/memorization_screen.dart';
 import 'package:almomin/features/mushaf/mushaf_screen.dart';
 import 'package:almomin/features/mushaf/quran_hub_screen.dart';
+import 'package:almomin/features/mushaf/quran_notes_screen.dart';
 import 'package:almomin/features/mushaf/screens/quran_asbab_nuzul_screen.dart';
 import 'package:almomin/features/mushaf/screens/quran_irab_screen.dart';
 import 'package:almomin/features/search/quran_search_screen.dart';
+import 'package:almomin/features/tajweed/tajweed_screen.dart';
 
 Future<void> _loadBundledFonts() async {
   final cairoFile = File('assets/fonts/Cairo-Regular.ttf');
@@ -135,10 +138,17 @@ void _assertCardGeometryReadable(
     );
   }
   expect(
-    subtitleRect.width,
-    greaterThanOrEqualTo(cardRect.width * 0.45),
-    reason: 'Card "${card.title}" subtitle width (${subtitleRect.width}) was squeezed inside card width ${cardRect.width} at ${scale}x',
+    subtitleRect.height,
+    lessThanOrEqualTo(scale >= 1.35 ? 240.0 : 90.0),
+    reason: 'Card "${card.title}" subtitle height (${subtitleRect.height}) indicates vertical squeezing at ${scale}x',
   );
+  if (subtitleRect.height > singleLineThreshold) {
+    expect(
+      subtitleRect.width,
+      greaterThanOrEqualTo(cardRect.width * 0.45),
+      reason: 'Wrapped card "${card.title}" subtitle width (${subtitleRect.width}) was squeezed inside card width ${cardRect.width} at ${scale}x',
+    );
+  }
   expect(titleRect.top, greaterThanOrEqualTo(cardRect.top - 0.5));
   expect(subtitleRect.bottom, lessThanOrEqualTo(cardRect.bottom + 0.5));
   expect(titleRect.bottom, lessThanOrEqualTo(subtitleRect.top + 1.0),
@@ -192,19 +202,22 @@ void main() {
   });
 
   group('Repair 4: Shared PortalCategoryCard Adaptive Layout & Semantics', () {
-    testWidgets('QuranHubScreen actual appRouter renders all 6 PortalCategoryCards unclipped and unsqueezed at 360x800 and 412x915 at 1.0x and 2.0x', (tester) async {
+    testWidgets('QuranHubScreen actual appRouter renders all 9 PortalCategoryCards unclipped and unsqueezed at 360x800 and 412x915 at 1.0x and 2.0x', (tester) async {
       final semantics = tester.ensureSemantics();
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
       const quranTitles = [
-        'القرآن الكريم مكتوب',
-        'القرآن الكريم مسموع',
-        'البحث في القرآن',
+        'القرآن المكتوب',
+        'التلاوات',
+        'المحفّظ',
+        'التجويد',
+        'خواطري',
+        'البحث القرآني',
         'التفاسير',
         'الإعراب',
-        'أسباب نزول الآيات',
+        'أسباب النزول',
       ];
 
       const matrix = <(Size, double)>[
@@ -216,6 +229,8 @@ void main() {
 
       for (final (viewport, scale) in matrix) {
         tester.view.physicalSize = viewport;
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pump();
         appRouter.go('/mushaf');
         await tester.pumpWidget(_buildRouterApp(router: appRouter, textScale: scale));
         await tester.pumpAndSettle();
@@ -237,29 +252,34 @@ void main() {
         );
       }
 
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
       PrayerService.instance.stopLiveTicker();
       semantics.dispose();
     });
 
-    testWidgets('SemanticsAction.tap on every QuranHubScreen PortalCategoryCard opens the exact Quran route at 1.0x (real appRouter) and 2.0x (360x800 GoRouter)', (tester) async {
+    testWidgets('SemanticsAction.tap on every QuranHubScreen PortalCategoryCard opens the exact Quran route at 1.0x (real appRouter) and 2.0x (dispatch-only 360x800 probeRouter)', (tester) async {
       final semantics = tester.ensureSemantics();
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Part A: Real appRouter end-to-end semantic activation across all 6 Quran cards at 1.0x (preserving Quran search & tafsir)
+      // Part A: Real appRouter end-to-end semantic activation across all 9 Quran cards at 1.0x
       tester.view.physicalSize = const Size(800, 1400);
       appRouter.go('/mushaf');
       await tester.pumpWidget(_buildRouterApp(router: appRouter, textScale: 1.0));
       await tester.pumpAndSettle();
 
       final realChecks = <(String, Type)>[
-        ('القرآن الكريم مكتوب', MushafScreen),
-        ('القرآن الكريم مسموع', AudioScreen),
-        ('البحث في القرآن', QuranSearchScreen),
+        ('القرآن المكتوب', MushafScreen),
+        ('التلاوات', AudioScreen),
+        ('المحفّظ', MemorizationScreen),
+        ('التجويد', TajweedScreen),
+        ('خواطري', QuranNotesScreen),
+        ('البحث القرآني', QuranSearchScreen),
         ('التفاسير', ComparativeTafsirScreen),
         ('الإعراب', QuranIrabScreen),
-        ('أسباب نزول الآيات', QuranAsbabNuzulScreen),
+        ('أسباب النزول', QuranAsbabNuzulScreen),
       ];
 
       for (final (title, expectedScreen) in realChecks) {
@@ -277,7 +297,7 @@ void main() {
       }
       expect(tester.takeException(), isNull);
 
-      // Part B: Narrow 360x800 real QuranHubScreen at BOTH 1.0x and 2.0x verifying SemanticsAction.tap dispatches all 6 exact routes
+      // Part B (Dispatch-only probe): Narrow 360x800 real QuranHubScreen at BOTH 1.0x and 2.0x verifying SemanticsAction.tap dispatches all 9 exact routes
       tester.view.physicalSize = const Size(360, 800);
       for (final scale in [1.0, 2.0]) {
         final routeEvents = <String>[];
@@ -293,6 +313,9 @@ void main() {
             for (final path in const [
               '/mushaf-reader',
               '/audio',
+              '/memorization',
+              '/tajweed',
+              '/notes',
               '/search',
               '/comparative-tafsir',
               '/quran-irab',
@@ -316,12 +339,15 @@ void main() {
         await tester.pumpAndSettle();
 
         const routeChecks = <(String, String)>[
-          ('القرآن الكريم مكتوب', '/mushaf-reader'),
-          ('القرآن الكريم مسموع', '/audio'),
-          ('البحث في القرآن', '/search'),
+          ('القرآن المكتوب', '/mushaf-reader'),
+          ('التلاوات', '/audio'),
+          ('المحفّظ', '/memorization'),
+          ('التجويد', '/tajweed'),
+          ('خواطري', '/notes'),
+          ('البحث القرآني', '/search'),
           ('التفاسير', '/comparative-tafsir'),
           ('الإعراب', '/quran-irab'),
-          ('أسباب نزول الآيات', '/quran-asbab-nuzul'),
+          ('أسباب النزول', '/quran-asbab-nuzul'),
         ];
 
         for (final (title, expectedPath) in routeChecks) {
@@ -340,6 +366,8 @@ void main() {
         expect(tester.takeException(), isNull);
       }
 
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
       PrayerService.instance.stopLiveTicker();
       semantics.dispose();
     });

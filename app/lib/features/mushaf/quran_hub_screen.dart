@@ -6,13 +6,16 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/portal_category_card.dart';
 
 /// بوابة «القرآن الكريم وعلومه» (QuranHubScreen)
-/// مقسمة إلى ٦ محاور قرآنية رئيسية واضحة ومستقلة:
-/// 1. القرآن الكريم مكتوب
-/// 2. القرآن الكريم مسموع
-/// 3. البحث في القرآن
-/// 4. التفاسير
-/// 5. الإعراب
-/// 6. أسباب نزول الآيات
+/// مقسمة إلى ٩ محاور قرآنية مستقلة:
+/// 1. القرآن المكتوب
+/// 2. التلاوات
+/// 3. المحفّظ
+/// 4. التجويد
+/// 5. خواطري
+/// 6. البحث القرآني
+/// 7. التفاسير
+/// 8. الإعراب
+/// 9. أسباب النزول
 class QuranHubScreen extends StatelessWidget {
   final int initialTabIndex;
 
@@ -31,7 +34,12 @@ class QuranHubScreen extends StatelessWidget {
       child: Scaffold(
         drawer: const AppNavigationDrawer(),
         appBar: AppBar(
-          title: const Text('القرآن الكريم وعلومه'),
+          title: Semantics(
+            header: true,
+            label: 'القرآن الكريم وعلومه',
+            excludeSemantics: true,
+            child: const Text('القرآن الكريم'),
+          ),
           leading: Builder(
             builder: (ctx) => Semantics(
               label: 'open navigation menu',
@@ -98,7 +106,7 @@ class QuranHubScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'تلاوة، استماع، تدبر، إعراب، وأسباب نزول',
+                          'قراءة، تلاوات، حفظ، تجويد، وتدبر',
                           style: TextStyle(
                             color: Color(0xFFFFEFA6),
                             fontSize: 12,
@@ -114,64 +122,91 @@ class QuranHubScreen extends StatelessWidget {
 
             const SizedBox(height: 18),
 
-            // 1. القرآن الكريم مكتوب
+            // 1. القرآن المكتوب
             PortalCategoryCard(
               numberText: '١',
-              title: 'القرآن الكريم مكتوب',
-              subtitle: 'المصحف الشريف كاملاً بالرسم العثماني المعتمد مع قلب الصفحات وتفسير الآيات',
+              title: 'القرآن المكتوب',
+              subtitle: 'قراءة السور والأجزاء والصفحات والعلامات المرجعية',
               icon: Icons.menu_book_rounded,
               color: AppColors.primaryGreen,
-              badgeText: '٦٠٤ صفحات',
               onTap: () => context.push('/mushaf-reader'),
             ),
 
-            // 2. القرآن الكريم مسموع
+            // 2. التلاوات
             PortalCategoryCard(
               numberText: '٢',
-              title: 'القرآن الكريم مسموع',
-              subtitle: 'تلاوات خاشعة مرتلة ومجودة لأكثر من ٦٠ قارئاً من كبار القراء مع مشغل صوتي متكامل',
+              title: 'التلاوات',
+              subtitle: 'الاستماع لتلاوات القرآن الكريم',
               icon: Icons.record_voice_over_rounded,
               color: const Color(0xFF1E8260),
-              badgeText: '٦١ قارئاً',
               onTap: () => context.push('/audio'),
             ),
 
-            // 3. البحث في القرآن
+            // 3. المحفّظ
             PortalCategoryCard(
               numberText: '٣',
-              title: 'البحث في القرآن',
-              subtitle: 'محرك بحث فوري متقدم يبحث في الآيات والسور والكلمات بدقة وبدون إنترنت',
-              icon: Icons.search_rounded,
+              title: 'المحفّظ',
+              subtitle: 'تكرار الآيات ومتابعة الحفظ',
+              icon: Icons.psychology_rounded,
               color: const Color(0xFF2E7D32),
+              onTap: () => context.push('/memorization'),
+            ),
+
+            // 4. التجويد
+            PortalCategoryCard(
+              numberText: '٤',
+              title: 'التجويد',
+              subtitle: 'أحكام التلاوة ودليل ألوان المصحف',
+              icon: Icons.palette_rounded,
+              color: const Color(0xFF16A085),
+              onTap: () => context.push('/tajweed'),
+            ),
+
+            // 5. خواطري
+            PortalCategoryCard(
+              numberText: '٥',
+              title: 'خواطري',
+              subtitle: 'تدوين وحفظ التدبرات على الآيات',
+              icon: Icons.edit_note_rounded,
+              color: const Color(0xFFB8860B),
+              onTap: () => context.push('/notes'),
+            ),
+
+            // 6. البحث القرآني
+            PortalCategoryCard(
+              numberText: '٦',
+              title: 'البحث القرآني',
+              subtitle: 'البحث في الآيات والسور محلياً',
+              icon: Icons.search_rounded,
+              color: const Color(0xFF1B5E20),
               onTap: () => context.push('/search'),
             ),
 
-            // 4. التفاسير
+            // 7. التفاسير
             PortalCategoryCard(
-              numberText: '٤',
+              numberText: '٧',
               title: 'التفاسير',
-              subtitle: 'مقارنة ٩ تفاسير معتمدة (ابن كثير، السعدي، الطبري، القرطبي، الميسر، والبغوي)',
+              subtitle: 'عرض ومقارنة كتب التفسير للآيات',
               icon: Icons.auto_stories_rounded,
               color: const Color(0xFFB8893A),
-              badgeText: '٩ تفاسير',
               onTap: () => context.push('/comparative-tafsir'),
             ),
 
-            // 5. الإعراب
+            // 8. الإعراب
             PortalCategoryCard(
-              numberText: '٥',
+              numberText: '٨',
               title: 'الإعراب',
-              subtitle: 'إعراب مفصل لكل كلمة وآية في القرآن الكريم وبيان وجوه النحو والدلالة والبلاغة',
+              subtitle: 'إعراب الآيات وبيان وجوه النحو',
               icon: Icons.text_format_rounded,
               color: const Color(0xFF0F5B45),
               onTap: () => context.push('/quran-irab'),
             ),
 
-            // 6. أسباب نزول الآيات
+            // 9. أسباب النزول
             PortalCategoryCard(
-              numberText: '٦',
-              title: 'أسباب نزول الآيات',
-              subtitle: 'سياق التنزيل والوقائع والأحاديث النبوية الصحيحة في أسباب النزول للواحدي والسيوطي',
+              numberText: '٩',
+              title: 'أسباب النزول',
+              subtitle: 'عرض سياق تنزيل الآيات المتاحة',
               icon: Icons.history_edu_rounded,
               color: const Color(0xFF25739B),
               onTap: () => context.push('/quran-asbab-nuzul'),
