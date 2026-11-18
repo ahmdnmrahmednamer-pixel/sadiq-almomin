@@ -866,21 +866,9 @@ void main() {
             expect(tafsirWidget.initialAyah.page, 1);
             const expectedTafsirOverflows = <String, List<_ExpectedUnresolvedDestinationOverflow>>{
               '360_1x_kb': [],
-              '360_2x_kb': [
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                  direction: 'right',
-                  roundedPixels: 131,
-                ),
-              ],
+              '360_2x_kb': [],
               '412_1x_kb': [],
-              '412_2x_kb': [
-                (
-                  sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                  direction: 'right',
-                  roundedPixels: 79,
-                ),
-              ],
+              '412_2x_kb': [],
             };
             _assertOnlyKnownOutOfScopeDestinationOverflows(
               tafsirDestErrors,

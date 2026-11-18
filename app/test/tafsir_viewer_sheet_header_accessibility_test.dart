@@ -522,13 +522,7 @@ void main() {
             ayah: fatihaAyah2,
             isDark: false,
             captureName: 'repair18_after_360x800_2x_kb.png',
-            expectedFooterOverflows: const [
-              (
-                sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                direction: 'right',
-                roundedPixels: 131,
-              ),
-            ],
+            expectedFooterOverflows: const [],
           ),
           (
             label: '412x915_1x_kb',
@@ -550,13 +544,7 @@ void main() {
             ayah: fatihaAyah2,
             isDark: false,
             captureName: 'repair18_after_412x915_2x_kb.png',
-            expectedFooterOverflows: const [
-              (
-                sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                direction: 'right',
-                roundedPixels: 79,
-              ),
-            ],
+            expectedFooterOverflows: const [],
           ),
           (
             label: '360x800_2x_nokb',
@@ -567,13 +555,7 @@ void main() {
             ayah: fatihaAyah2,
             isDark: false,
             captureName: 'repair18_after_360x800_2x_nokb.png',
-            expectedFooterOverflows: const [
-              (
-                sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                direction: 'right',
-                roundedPixels: 131,
-              ),
-            ],
+            expectedFooterOverflows: const [],
           ),
           (
             label: '360x800_2x_kb_long_title',
@@ -584,13 +566,7 @@ void main() {
             ayah: alImranAyah200,
             isDark: false,
             captureName: 'repair18_after_360x800_2x_kb_long_title.png',
-            expectedFooterOverflows: const [
-              (
-                sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                direction: 'right',
-                roundedPixels: 189,
-              ),
-            ],
+            expectedFooterOverflows: const [],
           ),
           (
             label: '640x800_1x_wide',
@@ -612,13 +588,7 @@ void main() {
             ayah: fatihaAyah2,
             isDark: true,
             captureName: 'repair18_after_360x800_2x_dark.png',
-            expectedFooterOverflows: const [
-              (
-                sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-                direction: 'right',
-                roundedPixels: 131,
-              ),
-            ],
+            expectedFooterOverflows: const [],
           ),
         ];
 
@@ -678,10 +648,12 @@ void main() {
                 intersectKeyboard: true,
               );
 
-              final editionHeader = find.descendant(
-                of: find.byType(ListView),
-                matching: find.text(TafsirService.availableEditions.first.nameAr),
-              );
+              final editionHeader = find
+                  .descendant(
+                    of: find.byType(ListView),
+                    matching: find.text(TafsirService.availableEditions.first.nameAr),
+                  )
+                  .last;
               await _scrollListTargetIntoActualClip(
                 tester,
                 editionHeader,
@@ -906,18 +878,7 @@ void main() {
         _assertOnlyExactKnownFooterOverflows(
           errors,
           scenarioLabel: '360_2x_kb_header_actions',
-          expectedFooterMultiset: const [
-            (
-              sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-              direction: 'right',
-              roundedPixels: 131,
-            ),
-            (
-              sourceLocation: 'tafsir_viewer_sheet.dart:355:24',
-              direction: 'right',
-              roundedPixels: 131,
-            ),
-          ],
+          expectedFooterMultiset: const [],
         );
       },
     );
