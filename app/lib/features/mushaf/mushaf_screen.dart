@@ -12,8 +12,31 @@ import 'page_mode_mushaf_screen.dart';
 import '../khatma/khatma_screen.dart';
 import 'quran_hub_screen.dart';
 
+enum _MushafHeaderAction {
+  pageMode,
+  khatma,
+  voiceSearch,
+  quranHub,
+  quickSearch,
+}
+
 class MushafScreen extends StatefulWidget {
-  const MushafScreen({super.key});
+  /// Optional test seam for verifying compact/2.0x header action callback
+  /// dispatch without laying out unrelated destination screens at 2.0x.
+  @visibleForTesting
+  final WidgetBuilder? Function(String actionId, {String? searchQuery})?
+      headerDestinationBuilderForTesting;
+
+  /// Optional test seam for verifying voice search header callback dispatch.
+  @visibleForTesting
+  final Future<String?> Function(BuildContext context)?
+      voiceSearchLauncherForTesting;
+
+  const MushafScreen({
+    super.key,
+    this.headerDestinationBuilderForTesting,
+    this.voiceSearchLauncherForTesting,
+  });
 
   @override
   State<MushafScreen> createState() => _MushafScreenState();
@@ -78,86 +101,235 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
     }).join();
   }
 
+  void _openPageMode() {
+    final builder =
+        widget.headerDestinationBuilderForTesting?.call('pageMode') ??
+            (context) => PageModeMushafScreen(
+                  initialPage: SettingsService.instance.lastReadPageNumber,
+                );
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: builder),
+    );
+  }
+
+  void _openKhatma() {
+    final builder =
+        widget.headerDestinationBuilderForTesting?.call('khatma') ??
+            (context) => const KhatmaScreen();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: builder),
+    );
+  }
+
+  Future<void> _openVoiceSearch() async {
+    final launcher =
+        widget.voiceSearchLauncherForTesting ?? QuranVoiceSearchSheet.show;
+    final query = await launcher(context);
+    if (!mounted) return;
+    if (query != null && query.trim().isNotEmpty) {
+      final trimmed = query.trim();
+      final builder = widget.headerDestinationBuilderForTesting?.call(
+            'voiceSearchResult',
+            searchQuery: trimmed,
+          ) ??
+          (context) => QuranSearchScreen(initialQuery: trimmed);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: builder),
+      );
+    }
+  }
+
+  void _openQuranHub() {
+    final builder =
+        widget.headerDestinationBuilderForTesting?.call('quranHub') ??
+            (context) => const QuranHubScreen();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: builder),
+    );
+  }
+
+  void _openQuickSearch() {
+    final builder =
+        widget.headerDestinationBuilderForTesting?.call('quickSearch') ??
+            (context) => const QuranSearchScreen();
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: builder),
+    );
+  }
+
+  void _handleHeaderAction(_MushafHeaderAction action) {
+    switch (action) {
+      case _MushafHeaderAction.pageMode:
+        _openPageMode();
+        break;
+      case _MushafHeaderAction.khatma:
+        _openKhatma();
+        break;
+      case _MushafHeaderAction.voiceSearch:
+        _openVoiceSearch();
+        break;
+      case _MushafHeaderAction.quranHub:
+        _openQuranHub();
+        break;
+      case _MushafHeaderAction.quickSearch:
+        _openQuickSearch();
+        break;
+    }
+  }
+
+  PopupMenuItem<_MushafHeaderAction> _buildOverflowItem({
+    required _MushafHeaderAction value,
+    required IconData icon,
+    required String label,
+    required Color iconColor,
+  }) {
+    return PopupMenuItem<_MushafHeaderAction>(
+      value: value,
+      child: Directionality(
+        textDirection: SettingsService.instance.textDirection,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Icon(icon, color: iconColor, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  softWrap: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final textScale = MediaQuery.textScalerOf(context).scale(16) / 16.0;
+    final showAllInlineActions = screenWidth >= 600 && textScale < 1.35;
+    final showPrimarySearchInline = !showAllInlineActions && screenWidth >= 360 && textScale < 1.35;
+    final tabHeight = textScale >= 1.35 ? 60.0 : 46.0;
+
+    final overflowItems = <PopupMenuEntry<_MushafHeaderAction>>[
+      if (!showPrimarySearchInline)
+        _buildOverflowItem(
+          value: _MushafHeaderAction.quickSearch,
+          icon: Icons.search,
+          label: 'البحث القرآني السريع',
+          iconColor: colorScheme.primary,
+        ),
+      _buildOverflowItem(
+        value: _MushafHeaderAction.pageMode,
+        icon: Icons.auto_stories_rounded,
+        label: 'فتح المصحف بالصفحات الكاملة (604)',
+        iconColor: colorScheme.primary,
+      ),
+      _buildOverflowItem(
+        value: _MushafHeaderAction.khatma,
+        icon: Icons.bookmark_add_outlined,
+        label: 'مخطط الختمات والورد القرآني',
+        iconColor: colorScheme.primary,
+      ),
+      _buildOverflowItem(
+        value: _MushafHeaderAction.voiceSearch,
+        icon: Icons.mic_rounded,
+        label: 'البحث الصوتي عن الآيات',
+        iconColor: colorScheme.primary,
+      ),
+      _buildOverflowItem(
+        value: _MushafHeaderAction.quranHub,
+        icon: Icons.dashboard_customize_rounded,
+        label: 'بوابة علوم القرآن والتفاسير',
+        iconColor: colorScheme.primary,
+      ),
+    ];
+
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('المصحف الشريف'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.auto_stories_rounded),
-              tooltip: 'فتح المصحف بالصفحات الكاملة (604)',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PageModeMushafScreen(
-                      initialPage: SettingsService.instance.lastReadPageNumber,
-                    ),
+          centerTitle: showAllInlineActions,
+          titleSpacing: showAllInlineActions ? NavigationToolbar.kMiddleSpacing : 4,
+          title: Semantics(
+            header: true,
+            label: 'المصحف الشريف',
+            excludeSemantics: true,
+            child: const Text('المصحف الشريف'),
+          ),
+          actions: showAllInlineActions
+              ? [
+                  IconButton(
+                    icon: const Icon(Icons.auto_stories_rounded),
+                    tooltip: 'فتح المصحف بالصفحات الكاملة (604)',
+                    onPressed: _openPageMode,
                   ),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.bookmark_add_outlined),
-              tooltip: 'مخطط الختمات والورد القرآني',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const KhatmaScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.mic_rounded),
-              tooltip: 'البحث الصوتي عن الآيات',
-              onPressed: () async {
-                final query = await QuranVoiceSearchSheet.show(context);
-                if (!mounted) return;
-                if (query != null && query.trim().isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => QuranSearchScreen(initialQuery: query.trim()),
+                  IconButton(
+                    icon: const Icon(Icons.bookmark_add_outlined),
+                    tooltip: 'مخطط الختمات والورد القرآني',
+                    onPressed: _openKhatma,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.mic_rounded),
+                    tooltip: 'البحث الصوتي عن الآيات',
+                    onPressed: _openVoiceSearch,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.dashboard_customize_rounded),
+                    tooltip: 'بوابة علوم القرآن والتفاسير',
+                    onPressed: _openQuranHub,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    tooltip: 'البحث القرآني السريع',
+                    onPressed: _openQuickSearch,
+                  ),
+                ]
+              : [
+                  if (showPrimarySearchInline)
+                    IconButton(
+                      icon: const Icon(Icons.search),
+                      tooltip: 'البحث القرآني السريع',
+                      onPressed: _openQuickSearch,
                     ),
-                  );
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.dashboard_customize_rounded),
-              tooltip: 'بوابة علوم القرآن والتفاسير',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const QuranHubScreen()),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: 'البحث القرآني السريع',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const QuranSearchScreen()),
-                );
-              },
-            ),
-          ],
+                  PopupMenuButton<_MushafHeaderAction>(
+                    key: const ValueKey('mushaf_header_overflow_menu'),
+                    icon: const Icon(Icons.more_vert_rounded),
+                    tooltip: 'خيارات المصحف',
+                    constraints: BoxConstraints(
+                      minWidth: 220,
+                      maxWidth: (screenWidth - 32).clamp(220.0, 360.0),
+                    ),
+                    onSelected: _handleHeaderAction,
+                    itemBuilder: (_) => overflowItems,
+                  ),
+                ],
           bottom: TabBar(
             controller: _tabController,
             isScrollable: true,
-            indicatorColor: AppColors.accentGold,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            tabs: const [
-              Tab(text: 'السور (١١٤)'),
-              Tab(text: 'الأجزاء (٣٠)'),
-              Tab(text: 'صفحات المصحف (٦٠٤)'),
-              Tab(text: 'العلامات المرجعية'),
+            tabAlignment: TabAlignment.start,
+            indicatorColor: colorScheme.primary,
+            indicatorWeight: 3,
+            dividerColor: colorScheme.outlineVariant,
+            labelColor: colorScheme.primary,
+            unselectedLabelColor: colorScheme.onSurfaceVariant,
+            labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+            tabs: [
+              Tab(height: tabHeight, text: 'السور (١١٤)'),
+              Tab(height: tabHeight, text: 'الأجزاء (٣٠)'),
+              Tab(height: tabHeight, text: 'صفحات المصحف (٦٠٤)'),
+              Tab(height: tabHeight, text: 'العلامات المرجعية'),
             ],
           ),
         ),
