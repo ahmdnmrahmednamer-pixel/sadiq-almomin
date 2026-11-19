@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
@@ -29,7 +30,10 @@ class JadwalSource {
   JadwalSource({Dio? dio, Future<Map<String, dynamic>> Function()? loadIndex})
       : dio = dio ?? Dio(BaseOptions(connectTimeout: const Duration(seconds: 15), receiveTimeout: const Duration(seconds: 45))),
         loadIndex = loadIndex ?? _assetIndex;
-  static Future<Map<String, dynamic>> _assetIndex() async => jsonDecode(await rootBundle.loadString('assets/data/jadwal_verse_index.json')) as Map<String, dynamic>;
+  static Future<Map<String, dynamic>> _assetIndex() async {
+    final chunks = await Future.wait([for(var n=1;n<=2;n++) rootBundle.loadString('assets/data/jadwal_index_$n.b64')]);
+    return jsonDecode(utf8.decode(GZipDecoder().decodeBytes(base64Decode(chunks.map((c)=>c.trim()).join())))) as Map<String,dynamic>;
+  }
 
   // DOM parsing malformed table markup can reorder source paragraphs. Remove
   // markup in source order, then decode entities without reinterpreting tags.
