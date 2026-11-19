@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 
+import 'widgets/reader_bookmarks_sheet.dart';
+
 class _ShamelaPageData {
   final int bookId;
   final int pageId;
@@ -468,6 +470,23 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
     );
   }
 
+  Future<void> _showBookmarks() async {
+    final mark = await showReaderBookmarks(context,
+      documentId: 'shamela:${widget.bookId}', locationKind: 'online-page',
+      page: _currentPage,
+      scrollOffset: _scrollController.hasClients ? _scrollController.offset : 0,
+      pageLabel: 'الصفحة $_currentPage',
+    );
+    if (mark == null || !mounted) return;
+    await _loadPage(mark.page);
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients && _currentPage == mark.page && _errorMessage == null) {
+        _scrollController.jumpTo(mark.scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -502,6 +521,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.bookmarks_outlined),
+              tooltip: 'العلامات المرجعية',
+              onPressed: _showBookmarks,
+            ),
             IconButton(
               icon: const Icon(Icons.text_decrease_rounded),
               tooltip: 'تصغير الخط',
