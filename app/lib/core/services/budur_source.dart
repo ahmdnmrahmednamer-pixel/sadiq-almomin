@@ -228,6 +228,60 @@ class BudurSource {
       if (hits.length == 1 && hits.single.ayah == expected.$1)
         links[i] = [expected.$1];
     }
+    // Five inspected list headings name separate Quran words, not a
+    // contiguous quotation. Require the original paragraph and every whole-
+    // token occurrence (including both occurrences in the same verse).
+    const reviewedLists = <int, Map<String, Map<String, List<int>>>>{
+      2: {
+        "\" اليسر والعسر \" قرأ أبو جعفر بضم السين فيهما، والباقون بالإسكان.": {
+          "اليسر": [185],
+          "العسر": [185],
+        },
+        "\" فيغفر ويعذب \" قرأ الشامي وعاصم وأبو جعفر ويعقوب برفع الراء والباء من الفعلين والباقون بجزمهما.":
+            {
+          "فيغفر": [284],
+          "ويعذب": [284],
+        },
+      },
+      4: {
+        "\" نوله ونصله \" قرأ قالون ويعقوب وهشام بخلف عنه بكسر الهاء من غير صلة، وقرأ البصري وشعبة وحمزة وأبو جعفر بإسكانها، والباقون بكسرها مع الصلة، وهو الوجه الثاني لهشام.":
+            {
+          "نوله": [115],
+          "ونصله": [115],
+        },
+      },
+      10: {
+        "\" ولا أصغر ولا أكبر \" قرأ يعقوب وخلف وحمزة برفع الراء فيهما، والباقون بنصبها فيهما.":
+            {
+          "ولا أصغر": [61],
+          "ولا أكبر": [61],
+        },
+      },
+      36: {
+        "\" سدا، معا \" فتح السين فيهما حفص والأخوان وخلف، وضمها غيرهم.": {
+          "سدا": [9, 9],
+        },
+      },
+    };
+    for (var i = 0; i < texts.length; i++) {
+      final words = reviewedLists[surah.id]?[texts[i]];
+      if (words == null) continue;
+      var verified = true;
+      final verses = <int>{};
+      for (final word in words.entries) {
+        final hits = BudurVerseLinker.occurrences(word.key, ayahs)
+            .map((h) => h.ayah)
+            .toList();
+        if (hits.length != word.value.length ||
+            List.generate(hits.length, (j) => hits[j] == word.value[j])
+                .contains(false)) {
+          verified = false;
+          break;
+        }
+        verses.addAll(hits);
+      }
+      if (verified) links[i] = verses.toList()..sort();
+    }
     return [
       for (var i = 0; i < texts.length; i++)
         BudurPassage(texts[i], ranges[i][0], ranges[i][1], links[i])
