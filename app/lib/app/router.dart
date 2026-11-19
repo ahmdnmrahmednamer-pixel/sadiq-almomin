@@ -1,3 +1,4 @@
+import '../features/adhkar/adhkar_audio_screen.dart';
 import '../features/library/screens/riyad_alsalihin_screen.dart';
 import '../features/prayer/sunan_rawatib_screen.dart';
 import '../features/radio/islamic_radio_screen.dart';
@@ -542,6 +543,7 @@ final GoRouter appRouter = GoRouter(
         return const AdhkarHubScreen();
       },
     ),
+    _isolatedFeatureRoute(path: '/adhkar-audio', builder: (context, state) => const AdhkarAudioScreen()),
     _isolatedFeatureRoute(path: '/tasbih', builder: (context, state) => const TasbihScreen()),
     _isolatedFeatureRoute(path: '/qibla', builder: (context, state) => const QiblaCompassScreen()),
     _isolatedFeatureRoute(path: '/calendar', builder: (context, state) => const HijriCalendarScreen()),
