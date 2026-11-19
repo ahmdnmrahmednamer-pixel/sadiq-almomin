@@ -120,13 +120,15 @@ class HomeAdaptiveDashboardBanner extends StatelessWidget {
             ),
             TextButton.icon(
               icon: const Icon(Icons.manage_search_rounded, size: 17),
-              label: const Text('بحث شامل في ١٠ مكتبات', style: TextStyle(fontSize: 12)),
+              label: const Text('بحث شامل في ١٠ مكتبات',
+                  style: TextStyle(fontSize: 12)),
               onPressed: () => push(const UnifiedLibrarySearchScreen()),
             ),
           ],
         ),
         const SizedBox(height: 6),
         AdaptiveStructuredCollectionView(
+          showDescriptions: false,
           mode: currentMode,
           items: hubItems,
         ),
