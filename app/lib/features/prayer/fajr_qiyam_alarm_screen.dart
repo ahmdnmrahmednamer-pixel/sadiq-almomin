@@ -564,21 +564,30 @@ class _AlarmTonePicker extends StatefulWidget {
   State<_AlarmTonePicker> createState() => _AlarmTonePickerState();
 }
 
-class _AlarmTonePickerState extends State<_AlarmTonePicker> {
+class _AlarmTonePickerState extends State<_AlarmTonePicker>
+    with WidgetsBindingObserver {
   late final AudioPlayer _player;
   late String _draftId;
+  String? _previewId;
   StreamSubscription<PlayerState>? _stateSubscription;
+  bool _routeCurrent = true;
   int _request = 0;
   bool _loading = false;
   bool _playing = false;
   bool _closing = false;
   bool _disposed = false;
+  bool _stopFailed = false;
   Future<void> _pendingStop = Future<void>.value();
+  Future<void> _pendingLoad = Future<void>.value();
   String? _error;
+
+  bool get _hasPreviewToStop =>
+      (_previewId == _draftId && (_loading || _playing)) || _stopFailed;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _draftId = widget.savedId;
     _player = widget.playerFactory?.call() ?? AudioPlayer();
     _stateSubscription = _player.playerStateStream.listen((state) {
@@ -588,53 +597,88 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
             state.processingState != ProcessingState.completed &&
             state.processingState != ProcessingState.idle;
       });
-    }, onError: (Object error, StackTrace stack) {
-      _previewFailed();
-    });
+    },
+        // State-stream errors have no request identity. just_audio already filters
+        // these; the captured load/play futures handle each request's own failures.
+        onError: (Object error, StackTrace stack) {});
   }
 
-  Future<void> _stopPreview() async {
-    ++_request;
-    if (mounted && !_closing) {
-      setState(() {
-        _loading = false;
-        _playing = false;
-      });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+    if (_routeCurrent && !isCurrent) {
+      unawaited(_stopPreview().catchError((Object _) {}));
     }
-    // Stop only our player. FastAudioService.stop would also stop a newer owner.
-    _pendingStop = _pendingStop.catchError((Object _) {}).then((_) async {
-      if (!_disposed) await _player.stop();
-    });
-    await _pendingStop;
+    _routeCurrent = isCurrent;
   }
 
-  void _previewFailed() {
-    if (!mounted || _closing) return;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      unawaited(_stopPreview().catchError((Object _) {}));
+    }
+  }
+
+  Future<void> _stopPreview() {
+    if (_disposed) return Future<void>.value();
+    final request = ++_request;
+    if (mounted && !_closing) setState(() => _loading = false);
+    // Stop only our player, never a newer global audio owner.
+    _pendingStop = _pendingStop.catchError((Object _) {}).then((_) async {
+      if (_disposed) return;
+      try {
+        await _player.stop();
+        if (mounted && !_closing && request == _request) {
+          setState(() {
+            _playing = false;
+            _stopFailed = false;
+          });
+        }
+      } catch (_) {
+        if (mounted && !_closing && request == _request) {
+          setState(() {
+            _playing = _player.playing;
+            _stopFailed = true;
+            _error = 'تعذر إيقاف المعاينة. أعد محاولة الإيقاف.';
+          });
+        }
+        rethrow;
+      }
+    });
+    return _pendingStop;
+  }
+
+  void _previewFailed(int request) {
+    if (!mounted || _closing || request != _request) return;
     setState(() {
       _error = 'تعذر تشغيل النغمة. يمكنك المحاولة مجدداً أو اختيار نغمة أخرى.';
       _loading = false;
-      _playing = false;
     });
     unawaited(_stopPreview().catchError((Object _) {}));
   }
 
   Future<void> _preview() async {
-    if (_loading || _playing) {
+    if (_closing) return;
+    if (_hasPreviewToStop) {
       try {
         await _stopPreview();
       } catch (_) {
-        _previewFailed();
+        // _stopPreview keeps the Stop retry and the specific error visible.
       }
       return;
     }
-    final request = ++_request;
+    final stopped = _stopPreview();
+    final request = _request;
     final selectedId = _draftId;
+    _previewId = selectedId;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      await _pendingStop;
+      await stopped;
+      await _pendingLoad.catchError((Object _) {});
       if (!mounted || _closing || request != _request) return;
       final token = await FastAudioService.instance.claimAudioFocus(
         player: _player,
@@ -658,7 +702,8 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
                 FajrQiyamAlarmService.instance.getToneById(selectedId).trackId)
             .assetPath!;
       }
-      await _player.setAsset(asset);
+      _pendingLoad = _player.setAsset(asset).then<void>((_) {});
+      await _pendingLoad;
       if (!mounted ||
           _closing ||
           request != _request ||
@@ -667,10 +712,10 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
       }
       setState(() => _loading = false);
       unawaited(_player.play().catchError((Object _) {
-        if (request == _request) _previewFailed();
+        _previewFailed(request);
       }));
     } catch (_) {
-      if (request == _request) _previewFailed();
+      if (!_stopFailed) _previewFailed(request);
     } finally {
       if (mounted && !_closing && request == _request && _loading) {
         setState(() => _loading = false);
@@ -684,7 +729,18 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
     try {
       await _stopPreview();
     } catch (_) {
-      // Disposal below still tears down our own player if stop fails.
+      if (result != null) {
+        if (mounted) {
+          setState(() {
+            _closing = false;
+            _stopFailed = true;
+            _playing = _player.playing;
+            _error = 'تعذر إيقاف المعاينة. أعد محاولة الإيقاف ثم احفظ.';
+          });
+        }
+        return;
+      }
+      // Cancel can still dismiss: disposal independently attempts stop/dispose.
     }
     if (mounted) Navigator.of(context).pop(result);
   }
@@ -694,8 +750,10 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
     _closing = true;
     _disposed = true;
     ++_request;
-    unawaited(_stateSubscription?.cancel());
-    unawaited(_player.dispose());
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_stateSubscription?.cancel().catchError((Object _) {}));
+    unawaited(_player.stop().catchError((Object _) {}));
+    unawaited(_player.dispose().catchError((Object _) {}));
     super.dispose();
   }
 
@@ -755,11 +813,9 @@ class _AlarmTonePickerState extends State<_AlarmTonePicker> {
                 OutlinedButton.icon(
                   key: const ValueKey('alarm-tone-preview'),
                   onPressed: _closing ? null : _preview,
-                  icon:
-                      Icon(_loading || _playing ? Icons.stop : Icons.volume_up),
-                  label: Text(_loading || _playing
-                      ? 'إيقاف الاستماع'
-                      : 'الاستماع للنغمة'),
+                  icon: Icon(_hasPreviewToStop ? Icons.stop : Icons.volume_up),
+                  label: Text(
+                      _hasPreviewToStop ? 'إيقاف الاستماع' : 'الاستماع للنغمة'),
                 ),
                 if (_loading)
                   Semantics(
