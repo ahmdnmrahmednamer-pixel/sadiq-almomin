@@ -7,7 +7,8 @@ import 'app_dropdown_field.dart';
 enum ScreenStructureMode {
   classic('classic', 'التخطيط الكلاسيكي', Icons.view_agenda_outlined),
   bentoGrid('bento', 'شبكة البطاقات الذكية', Icons.grid_view_rounded),
-  magazine('magazine', 'تخطيط المجلة الموسعة', Icons.auto_awesome_mosaic_rounded),
+  magazine(
+      'magazine', 'تخطيط المجلة الموسعة', Icons.auto_awesome_mosaic_rounded),
   compact('compact', 'القائمة المدمجة السريعة', Icons.toc_rounded);
 
   final String id;
@@ -147,12 +148,14 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
   final List<StructuredScreenItem> items;
   final bool shrinkWrap;
   final ScrollPhysics? physics;
+  final bool showDescriptions;
 
   const AdaptiveStructuredCollectionView({
     super.key,
     required this.mode,
     required this.items,
     this.shrinkWrap = true,
+    this.showDescriptions = true,
     this.physics = const NeverScrollableScrollPhysics(),
   });
 
@@ -216,9 +219,8 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
 
       case ScreenStructureMode.classic:
         return Column(
-          children: items
-              .map((item) => _buildClassicCard(item, isDark))
-              .toList(),
+          children:
+              items.map((item) => _buildClassicCard(item, isDark)).toList(),
         );
     }
   }
@@ -291,17 +293,19 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 3),
-            Text(
-              item.subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11.5,
-                height: 1.35,
-                color: isDark ? Colors.white60 : Colors.black54,
+            if (showDescriptions && item.subtitle.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                item.subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.35,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -331,9 +335,8 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
                     end: Alignment.bottomLeft,
                   )
                 : null,
-            color: isFeatured
-                ? null
-                : (isDark ? AppTheme.darkCard : Colors.white),
+            color:
+                isFeatured ? null : (isDark ? AppTheme.darkCard : Colors.white),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isFeatured
@@ -386,18 +389,20 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
                         color: isFeatured ? Colors.white : null,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      item.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isFeatured
-                            ? Colors.white70
-                            : (isDark ? Colors.white60 : Colors.black54),
+                    if (showDescriptions && item.subtitle.isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        item.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isFeatured
+                              ? Colors.white70
+                              : (isDark ? Colors.white60 : Colors.black54),
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -423,12 +428,14 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
         item.title,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
-      subtitle: Text(
-        item.subtitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 11.5),
-      ),
+      subtitle: !showDescriptions || item.subtitle.isEmpty
+          ? null
+          : Text(
+              item.subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 11.5),
+            ),
       trailing: item.badgeText != null
           ? Text(
               item.badgeText!,
@@ -464,12 +471,14 @@ class AdaptiveStructuredCollectionView extends StatelessWidget {
           item.title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
-        subtitle: Text(
-          item.subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12),
-        ),
+        subtitle: !showDescriptions || item.subtitle.isEmpty
+            ? null
+            : Text(
+                item.subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 12),
+              ),
         trailing: item.trailing ??
             const Icon(
               Icons.arrow_forward_ios_rounded,
