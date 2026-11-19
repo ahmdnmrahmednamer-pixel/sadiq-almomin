@@ -9,6 +9,7 @@ import '../../core/services/settings_service.dart';
 import '../../core/audio/ayah_audio_player.dart';
 import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
+import 'widgets/ayah_interaction.dart';
 import 'widgets/ayah_linguistics_sheet.dart';
 import 'widgets/ayah_card_share_sheet.dart';
 import 'page_mode_mushaf_screen.dart';
@@ -621,14 +622,14 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
         final isBookmarked = SettingsService.instance.isBookmarked(widget.surah.id, ayah.ayahNumber);
         final spokenText = '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}';
 
-        return Semantics(
-          container: true,
+        return AyahInteraction(
+          isPlaying: isPlaying,
+          order: index.toDouble(),
           label: QuranAccessibilityService.buildAyahSemanticLabel(
             surahName: widget.surah.nameAr,
             ayahNumber: ayah.ayahNumber,
             uthmaniText: ayah.cleanTextUthmani,
           ),
-          hint: QuranAccessibilityService.ayahSemanticHint,
           onTap: () {
             if (isPlaying) {
               AyahAudioPlayer.instance.stop();
