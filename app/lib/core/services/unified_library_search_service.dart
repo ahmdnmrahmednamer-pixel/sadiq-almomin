@@ -11,13 +11,12 @@ import 'quran_sciences_service.dart';
 import 'asma_allah_shamail_service.dart';
 import 'islamic_history_service.dart';
 import 'egyptian_heritage_service.dart';
-import 'scholars_lectures_service.dart';
 import 'riyad_alsalihin_service.dart';
 import 'gharib_quran_service.dart';
 import 'islamic_mutoon_service.dart';
 import 'spiritual_mood_remedy_service.dart';
 
-/// محرك البحث الموسوعي الموحد عبر جميع المكتبات الإسلامية والعلمية والصوتية في التطبيق (١٣ موسوعة)
+/// محرك البحث الموسوعي الموحد عبر جميع المكتبات الإسلامية والعلمية والصوتية في التطبيق (١٢ موسوعة)
 class UnifiedLibrarySearchService {
   static final UnifiedLibrarySearchService instance =
       UnifiedLibrarySearchService._internal();
@@ -228,26 +227,6 @@ class UnifiedLibrarySearchService {
       }
     }
 
-    // 9. مجالس العلماء والدروس الصوتية (١١٥ شيخاً وعالماً)
-    if (selectedLibrary == 'الكل' ||
-        selectedLibrary == 'مجالس العلماء والدروس') {
-      for (final lec
-          in ScholarsLecturesService.instance.searchLectures(query: q)) {
-        results.add(
-          UnifiedLibrarySearchResult(
-            id: 'scholar_lec_${lec.id}',
-            libraryName: 'مجالس العلماء والدروس',
-            category: '${lec.scholarName} • ${lec.category.labelAr}',
-            title: lec.title,
-            snippet: lec.summary,
-            sourceReference: '${lec.seriesName} (${lec.durationFormatted})',
-            icon: Icons.mic_external_on_rounded,
-            accentColor: const Color(0xFF0F5B45),
-          ),
-        );
-      }
-    }
-
     // 10. رياض الصالحين والأدب المفرد
     if (selectedLibrary == 'الكل' || selectedLibrary == 'رياض الصالحين') {
       for (final entry in RiyadAlSalihinService.allEntries) {
@@ -343,7 +322,6 @@ class UnifiedLibrarySearchService {
 
   static const List<String> libraryFilters = [
     'الكل',
-    'مجالس العلماء والدروس',
     'الحديث النبوي',
     'رياض الصالحين',
     'الفقه الميسر',
