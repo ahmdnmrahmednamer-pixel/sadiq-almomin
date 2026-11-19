@@ -122,12 +122,12 @@ class AdhkarHubScreen extends StatelessWidget {
             // 1. أذكار الصباح والمساء واليوم
             PortalCategoryCard(
               numberText: '١',
-              title: 'أذكار الصباح والمساء واليوم',
+              title: 'الأذكار المكتوبة',
               subtitle: 'الأذكار المأثورة المستوعبة لحصن المسلم مع عدّاد تفاعلي والأحاديث النبوية المعتمدة',
               icon: Icons.wb_sunny_rounded,
               color: AppColors.primaryGreen,
               badgeText: 'حصن المسلم',
-              onTap: () => context.push('/adhkar'),
+              onTap: () => context.push('/adhkar?index=0'),
             ),
 
             // 2. المسبحة الإلكترونية الذكية
