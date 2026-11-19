@@ -260,6 +260,7 @@ class AyahAudioPlayer {
         currentPlayingKey.value = null;
         isPlaying.value = false;
         if (context.mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('تعذر تشغيل صوت القارئ ${reciter.nameAr}. يرجى التحقق من الاتصال بالإنترنت.'),
