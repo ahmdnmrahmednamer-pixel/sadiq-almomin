@@ -125,6 +125,15 @@ class IslamicLibraryScreen extends StatelessWidget {
               ),
             ),
 
+            PortalCategoryCard(
+              numberText: 'ق',
+              title: 'قارئ الكتب',
+              subtitle: 'الكتب المحمّلة',
+              icon: Icons.offline_pin_outlined,
+              color: AppColors.primaryGreen,
+              onTap: () => context.push('/downloaded-books'),
+            ),
+
             // 1. قصص الأنبياء
             PortalCategoryCard(
               numberText: '١',
