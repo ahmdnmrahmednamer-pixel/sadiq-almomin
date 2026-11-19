@@ -98,8 +98,7 @@ class _QuranIrabScreenState extends State<QuranIrabScreen> {
                   builder: (ctx) => AlertDialog(
                     title: const Text('عن إعراب القرآن وبيانه'),
                     content: const Text(
-                      'يقدم هذا القسم الإعراب النحوي التفصيلي لكل كلمة وآية في كتاب الله الكريم، '
-                      'مع بيان المعاني البلاغية والوجوه الإعرابية المعتمدة عند أئمة النحو والتفسير.',
+                      'يُعرض نص الإعراب بعد تحديد المصدر وربطه بالآيات. لم يُعتمد مصدر الإعراب بعد.',
                       style: TextStyle(height: 1.6),
                     ),
                     actions: [
@@ -299,7 +298,7 @@ class _QuranIrabScreenState extends State<QuranIrabScreen> {
                           const Divider(height: 20),
                           Text(
                             _linguistics?.grammar.summary ??
-                                'إعراب مفصل ومطرد لآيات الذكر الحكيم وفق قواعد النحو العربي المعتمدة.',
+                                'لم يُربط مصدر الإعراب بعد.',
                             style: const TextStyle(
                               fontSize: 14,
                               height: 1.7,
