@@ -815,10 +815,10 @@ void main() {
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 100));
           expect(clipboardCaptures, hasLength(1));
-          expect(clipboardCaptures.last, contains('سورة الفاتحة — الآية 2'));
+          expect(clipboardCaptures.last, contains('سورة الفاتحة، الآية 2'));
           expect(clipboardCaptures.last, contains('التفسير الميسر'));
           expect(
-            find.text('تم نسخ نص الآية والتفسير المعتمد إلى الحافظة'),
+            find.text('تم نسخ النص'),
             findsOneWidget,
           );
 
@@ -830,13 +830,13 @@ void main() {
           );
           await tester.pump();
           expect(clipboardCaptures, hasLength(2));
-          expect(clipboardCaptures.last, contains('سورة الفاتحة — الآية 2'));
+          expect(clipboardCaptures.last, contains('سورة الفاتحة، الآية 2'));
 
           // 3. Share button — pointer tap & SemanticsAction.tap deliver exact share payload
           await tester.tap(find.byTooltip('مشاركة التفسير'));
           await tester.pump();
           expect(shareCaptures, hasLength(1));
-          expect(shareCaptures.last, contains('سورة الفاتحة — الآية 2'));
+          expect(shareCaptures.last, contains('سورة الفاتحة، الآية 2'));
           expect(shareCaptures.last, contains('التفسير الميسر'));
 
           final shareNode = _findSemanticControl(tester, 'مشاركة التفسير');
@@ -846,7 +846,14 @@ void main() {
           );
           await tester.pump();
           expect(shareCaptures, hasLength(2));
-          expect(shareCaptures.last, contains('سورة الفاتحة — الآية 2'));
+          expect(shareCaptures.last, contains('سورة الفاتحة، الآية 2'));
+          // Both pointer and assistive actions must retain the actual verse and source text.
+          final expectedSource = await TafsirService.getTafsir(surahId: 1, ayahNumber: 2);
+          for (final payload in [...clipboardCaptures, ...shareCaptures]) {
+            expect(payload, contains(expectedSource.ayahText));
+            expect(payload, contains(expectedSource.tafsirText));
+            expect(payload, contains(expectedSource.editionName));
+          }
 
           // 4. Close button — pointer tap dismisses sheet
           await tester.tap(find.byTooltip('إغلاق'));

@@ -194,7 +194,6 @@ void main() {
         '/approved-sources',
         '/audio',
         '/settings',
-        '/hadith',
         '/zakat',
         '/khatma',
         '/daily-wird',
@@ -202,6 +201,10 @@ void main() {
       };
       for (final path in expectedFeaturePaths) {
         expect(featurePaths.contains(path), isTrue, reason: 'Expected root-isolated route $path to exist');
+      }
+      // These independent entries were intentionally removed in the current library plan.
+      for (final path in ['/hadith', '/hadith-detail', '/riyad-alsalihin', '/islamic-mutoon']) {
+        expect(featurePaths.contains(path), isFalse, reason: 'Retired library route $path must not return');
       }
     });
 
