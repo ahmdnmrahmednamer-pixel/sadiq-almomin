@@ -28,17 +28,15 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
         // Reciters Directory Sheet Launcher Row
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  context.tr('default_reciter'),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                    color: AppColors.secondaryGreen,
-                  ),
+              Text(
+                context.tr('default_reciter'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                  color: AppColors.secondaryGreen,
                 ),
               ),
               TextButton.icon(
