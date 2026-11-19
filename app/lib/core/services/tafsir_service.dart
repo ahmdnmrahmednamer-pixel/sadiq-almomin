@@ -22,6 +22,7 @@ class TafsirResult {
   final int ayahNumber;
   final String ayahText;
   final String tafsirText;
+  final bool hasSourceText;
 
   const TafsirResult({
     required this.editionId,
@@ -31,14 +32,15 @@ class TafsirResult {
     required this.ayahNumber,
     required this.ayahText,
     required this.tafsirText,
+    this.hasSourceText = true,
   });
 
   /// Formatted text for copying and sharing per FR-TAF-005
   String formatForShare(String surahName) {
-    return '﴿$ayahText﴾\n[سورة $surahName — الآية $ayahNumber]\n\n'
+    return '﴿$ayahText﴾\n[سورة $surahName، الآية $ayahNumber]\n\n'
         '📖 من $editionName ($author):\n'
         '$tafsirText\n\n'
-        '— تطبيق صديق المؤمن (بدون إنترنت وبدون إعلانات)';
+        'تطبيق صديق المؤمن';
   }
 }
 
@@ -126,76 +128,13 @@ class TafsirService {
     String editionId = 'muyassar',
   }) async {
     final ayah = await QuranRepository.getAyah(surahId, ayahNumber);
-    final surah = await QuranRepository.getSurahById(surahId);
-    final surahName = surah?.nameAr ?? 'السورة';
     final edition = getEdition(editionId);
-
     final rawTafseer = ayah?.tafseer;
-    String content;
-
-    if (rawTafseer != null && rawTafseer.trim().isNotEmpty) {
-      switch (editionId) {
-        case 'muyassar':
-          content = rawTafseer;
-          break;
-        case 'saadi':
-          content = '【تيسير الكريم الرحمن — السعدي】\n'
-              'المعنى الإجمالي: $rawTafseer\n\n'
-              '• الهدايات والمقاصد الإيمانية: يرشدنا الله تبارك وتعالى في هذه الآية من سورة $surahName إلى تحقيق العبودية الخالصة لله، والتأمل في عظيم حكمته ورحمته بعباده، والعمل بما يقتضيه الإيمان من الإخلاص، والصبر، وحسن التوكل على الله جل جلاله.';
-          break;
-        case 'ibn_kathir':
-          content = '【تفسير القرآن العظيم — الحافظ ابن كثير】\n'
-              'بيان المعنى بالمأثور: $rawTafseer\n\n'
-              '• الشواهد والآثار: يقرر الحافظ ابن كثير رحمه الله أن هذه الآية الكريمة من سورة $surahName جاءت موافقةً لمحكم الكتاب والسنة النبوية المطهرة في بيان توحيد الله، وصدق وعده ووعيده، وحثّ المؤمنين على الاستمساك بالهدي النبوي القويم.';
-          break;
-        case 'jalalayn':
-          content = '【تفسير الجلالين — المحلي والسيوطي】\n'
-              'بيان الألفاظ والنظم: $rawTafseer\n\n'
-              '• النكت البيانية والإعرابية: جاء نظم الآية الكريمة على أبلغ وجوه الإيجاز والإعجاز في اللسان العربي المبين، حيث تطابقت دلالات الألفاظ مع مقاصد التشريع في سورة $surahName.';
-          break;
-        case 'qurtubi':
-          content = '【الجامع لأحكام القرآن — الإمام القرطبي】\n'
-              'تأويل الآية الكريمة: $rawTafseer\n\n'
-              '• الأحكام الفقهية والمسائل المستنبطة:\n'
-              '١. وجوب امتثال أمر الله تعالى والوقوف عند حدوده المشروعة في سورة $surahName.\n'
-              '٢. اقتران الإيمان القلبي بالعمل الصالح وإخلاص النية لله رب العالمين.\n'
-              '٣. بيان عدل الله التام في الجزاء والحساب في الدنيا والآخرة.';
-          break;
-        case 'tabari':
-          content = '【جامع البيان في تأويل القرآن — الإمام الطبري】\n'
-              'القول في تأويل قوله تعالى: $rawTafseer\n\n'
-              '• الترجيح اللغوي والأثري: وأولى الأقوال بالصواب في تأويل هذه الآية ما دلّ عليه ظاهر التنزيل واستفاض به النقل عن الصحابة والتابعين في سورة $surahName، جارياً على سنن العرب في خطابها وبيانها.';
-          break;
-        case 'shaarawi':
-          content = '【خواطر فضيلة الشيخ محمد متولي الشعراوي حول الآية】\n'
-              'البيان الإيماني: $rawTafseer\n\n'
-              '• لطيفة قرآنية وبيانية: تأمل دقة اختيار اللفظ القرآني في هذه الآية من سورة $surahName؛ فكل حرف وكلمة في كتاب الله وضعها الحق سبحانه بميزان دقيق يوقظ الفطرة، ويعالج النفس البشرية، ويربط حركة الإنسان في الحياة بمنهج الله الذي خلقه وهو أعلم بما يصلحه.';
-          break;
-        case 'baghawi':
-          content = '【معالم التنزيل — الإمام البغوي】\n'
-              'تفسير الآية الكريمة: $rawTafseer\n\n'
-              '• الآثار وأقوال السلف: ذكر أهل التفسير من الصحابة والتابعين في معنى هذا النظم المبارك من سورة $surahName الإرشاد إلى طاعة الله والتزام أمره واجتناب نهيه.';
-          break;
-        case 'al_durrah':
-          content = '【تفسير القرآن الكريم وإعرابه وبيانه — الشيخ محمد علي طه الدرة】\n'
-              'المعنى والبيان: $rawTafseer\n\n'
-              '• الإعراب النحوي والدلالة اللغوية: اشتمل هذا النظم الجليل من سورة $surahName على دقائق الإعراب، وصحة المعاني ووجوه الفصاحة، مع تدقيق المفردات ومنازل الحروف ودلالة التركيب على كمال التنزيل وإعجاز القرآن الكريم.';
-          break;
-        case 'almukhtasar_audio':
-          content = '【المختصر الصوتي في تفسير القرآن الكريم — مركز تفسير للدراسات القرآنية】\n'
-              'خلاصة التفسير الميسر: $rawTafseer\n\n'
-              '• أصوات المشايخ المعتمدين: متاح الاستماع الكامل لسورة $surahName بأصوات أصحاب الفضيلة: الشيخ عبد الله الأسمري، الشيخ ساعد الغامدي، والشيخ عبد الرحمن الشايع عبر يوتيوب، أبل بودكاست، ساوندكلاود، وتيليجرام.';
-          break;
-        case 'waseet':
-        default:
-          content = '【التفسير الوسيط — مجمع البحوث الإسلامية بالأزهر الشريف】\n'
-              'الشرح التحليلي: $rawTafseer\n\n'
-              '• التوجيه التربوي والتشريعي: ترسم هذه الآية الكريمة من سورة $surahName منهج الاستقامة وتزكية النفوس وبناء المجتمع الصالح على أسس الحق والعدل والرحمة.';
-          break;
-      }
-    } else {
-      content = 'شرح وبيان معاني الآية الكريمة من سورة $surahName صادر وموثق عن أمهات كتب التفسير المعتمدة لخدمة كتاب الله عز وجل.';
-    }
+    // The bundled text is only the existing Muyassar. Never rename it as
+    // another book or append generated explanation to it.
+    final content = editionId == 'muyassar' && rawTafseer != null && rawTafseer.trim().isNotEmpty
+        ? rawTafseer
+        : 'لم يُربط نص هذا التفسير بهذه الآية بعد.';
 
     return TafsirResult(
       editionId: edition.id,
@@ -205,6 +144,7 @@ class TafsirService {
       ayahNumber: ayahNumber,
       ayahText: ayah?.cleanTextUthmani ?? '',
       tafsirText: content,
+      hasSourceText: editionId == 'muyassar' && rawTafseer != null && rawTafseer.trim().isNotEmpty,
     );
   }
 }
