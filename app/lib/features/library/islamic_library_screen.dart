@@ -4,6 +4,7 @@ import '../../app/widgets/app_navigation_drawer.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/ui/portal_category_card.dart';
+import 'shamela_library_screen.dart';
 
 /// بوابة «المكتبة الإسلامية ورياض العلم» (IslamicLibraryScreen)
 /// مقسمة إلى ٦ محاور علمية رئيسية واضحة ومستقلة:
@@ -110,6 +111,20 @@ class IslamicLibraryScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
+
+            // المكتبة الشاملة الشرعية
+            PortalCategoryCard(
+              numberText: 'ش',
+              title: 'المكتبة الشاملة الشرعية',
+              subtitle: 'بحث في الأقسام الشرعية وقراءة أونلاين وحفظ الكتب داخل التطبيق للقراءة دون اتصال',
+              icon: Icons.menu_book_rounded,
+              color: AppColors.primaryGreen,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const ShamelaLibraryScreen(),
+                ),
+              ),
+            ),
 
             // 1. رياض الصالحين وصحيح الحديث
             PortalCategoryCard(
