@@ -237,6 +237,96 @@ class _AudioScreenState extends State<AudioScreen> {
     _playSurah(prev);
   }
 
+  Future<void> _downloadSurah(Surah surah, ReciterInfo reciter) async {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('بدء تحميل سورة ${surah.nameAr} بصوت ${reciter.nameAr}...'),
+      duration: const Duration(seconds: 2),
+    ));
+    final ok = await AudioDownloadService.instance.downloadSurah(
+      reciterId: reciter.id,
+      surahId: surah.id,
+      surahName: 'سورة ${surah.nameAr}',
+    );
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
+        backgroundColor: AppColors.primaryGreen,
+      ));
+    }
+  }
+
+  void _showSurahAudioActions(Surah surah) {
+    // Bind download and cancellation to the recording named in this sheet.
+    final reciter = _currentReciter ?? SettingsService.instance.currentReciter;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => Directionality(
+        textDirection: SettingsService.instance.textDirection,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: AnimatedBuilder(
+              animation: AudioDownloadService.instance,
+              builder: (context, _) {
+                final downloads = AudioDownloadService.instance;
+                final downloaded = downloads.isDownloaded(reciter.id, surah.id);
+                final downloading = downloads.isDownloading(reciter.id, surah.id);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Semantics(
+                        header: true,
+                        child: Text('خيارات سورة ${surah.nameAr}',
+                            style: Theme.of(context).textTheme.titleLarge),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Text(reciter.nameAr),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.play_circle_outline),
+                      title: const Text('تشغيل أو إيقاف التلاوة'),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _playSurah(surah);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(downloading
+                          ? Icons.cancel_outlined
+                          : downloaded ? Icons.offline_pin_outlined : Icons.download_outlined),
+                      title: Text(downloading
+                          ? 'إلغاء التحميل'
+                          : downloaded ? 'السورة محملة للاستماع دون إنترنت' : 'تحميل السورة'),
+                      onTap: downloaded ? null : () {
+                        Navigator.pop(sheetContext);
+                        if (downloading) {
+                          downloads.cancelDownload(reciter.id, surah.id);
+                        } else {
+                          _downloadSurah(surah, reciter);
+                        }
+                      },
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      child: const Text('إغلاق'),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _selectReciter(ReciterInfo reciter) {
     setState(() => _currentReciter = reciter);
     SettingsService.instance.setSelectedReciter(reciter.id);
@@ -678,34 +768,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                       color: AppColors.mutedText,
                                       size: 22),
                                   tooltip: 'تحميل للاستماع بدون إنترنت',
-                                  onPressed: () async {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'بدء تحميل سورة ${surah.nameAr} بصوت ${reciter.nameAr}...'),
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                    final ok = await AudioDownloadService
-                                        .instance
-                                        .downloadSurah(
-                                      reciterId: reciter.id,
-                                      surahId: surah.id,
-                                      surahName: 'سورة ${surah.nameAr}',
-                                    );
-                                    if (!mounted) return;
-                                    if (ok) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
-                                          backgroundColor:
-                                              AppColors.primaryGreen,
-                                        ),
-                                      );
-                                    }
-                                  },
+                                  onPressed: () => _downloadSurah(surah, reciter),
                                 ),
                               const SizedBox(width: 2),
                               IconButton(
@@ -724,6 +787,7 @@ class _AudioScreenState extends State<AudioScreen> {
                             ],
                           ),
                           onTap: () => _playSurah(surah),
+                          onLongPress: () => _showSurahAudioActions(surah),
                         );
                       },
                     ),
