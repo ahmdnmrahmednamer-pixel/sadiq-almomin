@@ -112,7 +112,7 @@ void main() {
             .map((r) => Ayah.fromRow(Map<String, dynamic>.from(r)))
             .toList();
     var count = 0;
-    for (final n in [3, 5, 6, 13, 21, 23, 28, 32, 34, 53, 56]) {
+    for (final n in [3, 5, 6, 10, 11, 13, 18, 21, 23, 28, 30, 32, 34, 53, 56]) {
       final passages = BudurSource.passages(
           source, surahs.singleWhere((s) => s.id == n), ayahs(n));
       for (final p in passages) {
@@ -120,7 +120,8 @@ void main() {
           final target = BudurReferenceResolver.resolve(source, ref,
               surahs.singleWhere((s) => s.id == ref.surah), ayahs(ref.surah));
           expect(p.ayahs, isNotEmpty,
-              reason: 'reviewed reference must appear under its own verse');
+              reason:
+                  'reviewed reference must appear under its own verse n=$n text=${p.text}');
           if (n == 3) {
             expect(p.ayahs, [49]);
             final changed =
@@ -135,6 +136,21 @@ void main() {
           }
           if (n == 5) expect(p.ayahs, ref.quote == 'فمن اضطر' ? [3] : [110]);
           if (n == 28) expect(p.ayahs, ref.surah == 21 ? [5] : [41]);
+          if (n == 10) {
+            expect(p.ayahs, [59]);
+            final altered =
+                source.replaceFirst('" قل آلله "', '" MISSING_NEIGHBOR "');
+            final withoutNeighbor = BudurSource.passages(
+                altered, surahs.singleWhere((s) => s.id == 10), ayahs(10));
+            expect(
+                withoutNeighbor
+                    .singleWhere((candidate) => candidate.text == p.text)
+                    .ayahs,
+                isEmpty);
+          }
+          if (n == 11) expect(p.ayahs, [28]);
+          if (n == 18) expect(p.ayahs, [50]);
+          if (n == 30) expect(p.ayahs, [11]);
           if (n == 32) expect(p.ayahs, [24]);
           expect(target, isNotNull, reason: '$n ${ref.quote}');
           expect(target!.text, isNotEmpty);
@@ -152,6 +168,6 @@ void main() {
         }
       }
     }
-    expect(count, 14);
+    expect(count, 18);
   });
 }
