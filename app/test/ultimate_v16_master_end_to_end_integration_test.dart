@@ -204,7 +204,7 @@ void main() {
       }
     });
 
-    test('5. Fiqh Calculators, Voluntary Fasting Hijri White Days, and Unified Library 13-Encyclopedia Search', () async {
+    test('5. Fiqh Calculators, Voluntary Fasting Hijri White Days, and Unified Library Retained-Provider Search', () async {
       // Mawarith clamping & calculation
       final mawarith = MawarithCalculatorService.instance.calculate(
         estateValue: 240000,
@@ -270,8 +270,12 @@ void main() {
         await SettingsService.instance.setHijriAdjustmentDays(originalHijriAdj);
       }
 
-      // Unified Library 13 filters (all + 12 retained libraries)
-      expect(UnifiedLibrarySearchService.libraryFilters.length, equals(13));
+      // Exact retained providers, with retired providers intentionally absent.
+      expect(UnifiedLibrarySearchService.libraryFilters, orderedEquals([
+      'الكل', 'الفقه الميسر', 'علوم القرآن', 'غريب القرآن',
+      'أسماء الله والشمائل', 'التاريخ والسيرة', 'التراث المصري',
+      'قصص الأنبياء', 'التجويد ومواضيع القرآن', 'صيدلية القلوب',
+    ]));
       final results = await UnifiedLibrarySearchService.instance.search('الصلاة');
       expect(results, isNotEmpty);
     });

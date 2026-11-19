@@ -75,14 +75,14 @@ SemanticsNode _findSingleCardSemanticNode(WidgetTester tester, String title) {
   final matches = <SemanticsNode>[];
   for (final node in tester.semantics.simulatedAccessibilityTraversal()) {
     final label = node.getSemanticsData().label;
-    if (label.startsWith('$title،')) {
+    if (label == title || label.startsWith('$title،')) {
       matches.add(node);
     }
   }
   expect(
     matches.length,
     equals(1),
-    reason: 'Expected exactly 1 unique semantic node starting with "$title،" (got ${matches.length})',
+    reason: 'Expected exactly 1 unique semantic node for "$title" (got ${matches.length})',
   );
   return matches.single;
 }
@@ -119,8 +119,11 @@ void _assertCardGeometryReadable(
   final card = tester.widget<PortalCategoryCard>(cardFinder);
   final cardRect = tester.getRect(cardFinder);
   final titleRect = tester.getRect(find.descendant(of: cardFinder, matching: find.text(card.title)));
-  final subtitleRect =
-      tester.getRect(find.descendant(of: cardFinder, matching: find.text(card.subtitle)));
+  final subtitleFinder = find.descendant(of: cardFinder, matching: find.text(card.subtitle));
+  // The shared card now deliberately renders only its title and badge.
+  // Verify omission even when a caller still passes a nonempty description.
+  expect(subtitleFinder, findsNothing,
+      reason: 'Secondary descriptions must not return as visual subtitle nodes');
 
   // Title must never be squeezed into a narrow multi-line vertical column (e.g. 28px wide / 380px+ tall at 360px 2.0x)
   expect(
@@ -137,22 +140,10 @@ void _assertCardGeometryReadable(
       reason: 'Wrapped card "${card.title}" title width (${titleRect.width}) was squeezed inside card width ${cardRect.width} at ${scale}x',
     );
   }
-  expect(
-    subtitleRect.height,
-    lessThanOrEqualTo(scale >= 1.35 ? 240.0 : 90.0),
-    reason: 'Card "${card.title}" subtitle height (${subtitleRect.height}) indicates vertical squeezing at ${scale}x',
-  );
-  if (subtitleRect.height > singleLineThreshold) {
-    expect(
-      subtitleRect.width,
-      greaterThanOrEqualTo(cardRect.width * 0.45),
-      reason: 'Wrapped card "${card.title}" subtitle width (${subtitleRect.width}) was squeezed inside card width ${cardRect.width} at ${scale}x',
-    );
-  }
+  expect(titleRect.left, greaterThanOrEqualTo(cardRect.left - 0.5));
+  expect(titleRect.right, lessThanOrEqualTo(cardRect.right + 0.5));
+  expect(titleRect.bottom, lessThanOrEqualTo(cardRect.bottom + 0.5));
   expect(titleRect.top, greaterThanOrEqualTo(cardRect.top - 0.5));
-  expect(subtitleRect.bottom, lessThanOrEqualTo(cardRect.bottom + 0.5));
-  expect(titleRect.bottom, lessThanOrEqualTo(subtitleRect.top + 1.0),
-      reason: 'Title and subtitle must not overlap on card "${card.title}"');
 
   if (card.badgeText != null && card.badgeText!.trim().isNotEmpty) {
     final badgeRect = tester.getRect(
@@ -166,6 +157,9 @@ void _assertCardGeometryReadable(
   // Unique semantic label (no duplicated title) and native SemanticsAction.tap
   final node = _findSingleCardSemanticNode(tester, card.title);
   final data = node.getSemanticsData();
+  final badge = card.badgeText?.trim();
+  expect(data.label, equals([card.title, if (badge != null && badge.isNotEmpty) badge].join('، ')),
+      reason: 'The concise card label must retain its exact title and badge, without the retired subtitle');
   expect(data.hasAction(SemanticsAction.tap), isTrue,
       reason: 'Card "${card.title}" must expose SemanticsAction.tap');
   expect(
@@ -382,7 +376,7 @@ void main() {
       const hubChecks = <(String, List<String>)>[
         ('/prayer', ['مواقيت الصلاة واستوديو الأذان', 'بوصلة القبلة المشرفة', 'السنن الرواتب']),
         ('/adhkar-hub', ['الأذكار المكتوبة', 'المسبحة الإلكترونية الذكية', 'مواقيت وتنبيهات أذكار المسلم']),
-        ('/library', ['رياض الصالحين وصحيح الحديث', 'قصص الأنبياء المسموعة والمقروءة', 'إذاعة القرآن والتراث الإسلامي']),
+        ('/library', ['المكتبة الشاملة', 'قصص الأنبياء', 'الإذاعة والتراث']),
       ];
 
       for (final scale in [1.0, 2.0]) {

@@ -120,7 +120,11 @@ void main() {
       () async {
     await ScholarsLecturesService.instance.init();
     expect(ScholarsLecturesService.instance.allLectures, isNotEmpty);
-    expect(UnifiedLibrarySearchService.libraryFilters.length, 13);
+    expect(UnifiedLibrarySearchService.libraryFilters, orderedEquals([
+      'الكل', 'الفقه الميسر', 'علوم القرآن', 'غريب القرآن',
+      'أسماء الله والشمائل', 'التاريخ والسيرة', 'التراث المصري',
+      'قصص الأنبياء', 'التجويد ومواضيع القرآن', 'صيدلية القلوب',
+    ]));
     expect(UnifiedLibrarySearchService.libraryFilters,
         isNot(contains('مجالس العلماء والدروس')));
     for (final query in ['سمير مصطفى', 'الصلاة', 'الإخلاص']) {
@@ -133,7 +137,7 @@ void main() {
     }
     expect(
         search.searchAllLibraries('الإخلاص', selectedLibrary: 'رياض الصالحين'),
-        isNotEmpty);
+        isEmpty);
     expect(search.searchAllLibraries('الصمد', selectedLibrary: 'غريب القرآن'),
         isNotEmpty);
   });
@@ -261,7 +265,7 @@ void main() {
     expect(find.textContaining('مجالس كبار العلماء'), findsNothing);
     await tester.enterText(find.byType(TextField), 'مواريث');
     await tester.pumpAndSettle();
-    expect(find.textContaining('حاسبة المواريث'), findsWidgets);
+    expect(find.text('ميزان الفرائض والمواريث الشرعية'), findsWidgets);
     await tester.pumpWidget(const SizedBox());
     semantics.dispose();
     expect(tester.takeException(), isNull);

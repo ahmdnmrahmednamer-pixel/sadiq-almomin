@@ -21,9 +21,13 @@ void main() {
   });
 
   group('Ultimate v12.0 Comprehensive 16-Bug & 50-Location Feature Audit Verification Tests', () {
-    test('1. UnifiedLibrarySearchService indexes 12 retained libraries and excludes retired scholar lectures', () {
+    test('1. UnifiedLibrarySearchService indexes 9 retained libraries and excludes retired scholar lectures', () {
       final search = UnifiedLibrarySearchService.instance;
-      expect(search.libraryFilters.length, equals(13));
+      expect(search.libraryFilters, orderedEquals([
+      'الكل', 'الفقه الميسر', 'علوم القرآن', 'غريب القرآن',
+      'أسماء الله والشمائل', 'التاريخ والسيرة', 'التراث المصري',
+      'قصص الأنبياء', 'التجويد ومواضيع القرآن', 'صيدلية القلوب',
+    ]));
 
       // Search Scholars Lectures
       final samirResults = search.searchAllLibraries(
@@ -33,12 +37,12 @@ void main() {
       expect(samirResults, isEmpty);
       expect(search.libraryFilters, isNot(contains('مجالس العلماء والدروس')));
 
-      // Search Riyad Al-Salihin
+      // Retired providers remain unavailable even with a selected-library filter.
       final riyadResults = search.searchAllLibraries(
         'الإخلاص',
         selectedLibrary: 'رياض الصالحين',
       );
-      expect(riyadResults, isNotEmpty);
+      expect(riyadResults, isEmpty);
 
       // Search Gharib Quran
       final gharibResults = search.searchAllLibraries(
@@ -47,12 +51,12 @@ void main() {
       );
       expect(gharibResults, isNotEmpty);
 
-      // Search Mutoon
+      // Retired Mutoon provider
       final mutoonResults = search.searchAllLibraries(
         'النون الساكنة',
         selectedLibrary: 'المتون العلمية',
       );
-      expect(mutoonResults, isNotEmpty);
+      expect(mutoonResults, isEmpty);
 
       // Search Spiritual Remedy
       final remedyResults = search.searchAllLibraries(

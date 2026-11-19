@@ -28,7 +28,15 @@ void main() {
 
       // Verify Category Chips
       expect(find.byType(ChoiceChip), findsAtLeastNWidgets(5));
-      expect(find.widgetWithText(ChoiceChip, 'الكل (63)'), findsOneWidget);
+      // The all-categories total must agree with the independently visible category totals.
+      // Retired entries must not force the old hard-coded catalogue count to return.
+      final labels = tester.widgetList<ChoiceChip>(find.byType(ChoiceChip))
+          .map((chip) => (chip.label as Text).data!).toList();
+      final counts = labels.map((label) => int.parse(
+          RegExp(r'\((\d+)\)$').firstMatch(label)!.group(1)!)).toList();
+      expect(labels.first, startsWith('الكل ('));
+      expect(counts.first, greaterThan(0));
+      expect(counts.first, counts.skip(1).fold<int>(0, (sum, value) => sum + value));
       expect(find.textContaining('إشراقة اليوم'), findsAtLeastNWidgets(1));
       expect(find.textContaining('رحاب القرآن'), findsAtLeastNWidgets(1));
       expect(find.textContaining('محراب الصلاة'), findsAtLeastNWidgets(1));
@@ -55,7 +63,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should find Mawarith item
-      expect(find.textContaining('حاسبة المواريث'), findsAtLeastNWidgets(1));
+      expect(find.text('ميزان الفرائض والمواريث الشرعية'), findsAtLeastNWidgets(1));
 
       // Clear search
       await tester.tap(find.byIcon(Icons.clear_rounded));

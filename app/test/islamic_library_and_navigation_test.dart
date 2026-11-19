@@ -24,15 +24,17 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check AppBar Title
-      expect(find.text('المكتبة الإسلامية ورياض العلم'), findsOneWidget);
+      expect(find.text('رياض العلم'), findsOneWidget);
 
       // Check Portal Category Cards
-      expect(find.text('رياض الصالحين وصحيح الحديث'), findsOneWidget);
-      expect(find.text('قصص الأنبياء المسموعة والمقروءة'), findsOneWidget);
-      expect(find.text('المتون العلمية وأحكام التجويد'), findsOneWidget);
+      for (final title in ['المكتبة الشاملة', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'الإذاعة والتراث']) {
+        expect(find.text(title), findsOneWidget);
+      }
+      expect(find.text('رياض الصالحين وصحيح الحديث'), findsNothing);
+      expect(find.text('المتون العلمية وأحكام التجويد'), findsNothing);
     });
 
-    testWidgets('Renders HomeShortcutsList clean categorized grid with 8 retained spiritual doors', (tester) async {
+    testWidgets('Renders HomeShortcutsList clean categorized grid with 7 retained spiritual doors', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -59,14 +61,14 @@ void main() {
       expect(find.textContaining('مدارج التدبر'), findsOneWidget);
       expect(find.textContaining('باب الريّان'), findsOneWidget);
       expect(find.textContaining('رحلة الحرمين'), findsOneWidget);
-      expect(find.textContaining('مشكاة الحديث'), findsOneWidget);
+      expect(find.textContaining('مشكاة الحديث'), findsNothing);
       expect(find.textContaining('وِرد القرب'), findsOneWidget);
 
       // Check Daily Spotlight Card
       expect(find.text('قبس من قصص الوحي اليوم'), findsOneWidget);
     });
 
-    testWidgets('Home radio banner has scoped button semantics with truthful label, hint and excluded radio icon', (tester) async {
+    testWidgets('Home radio banner has scoped button semantics with truthful concise labels and excluded decorative icons', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -88,8 +90,10 @@ void main() {
 
       final radioSemanticsWidget = tester.widget<Semantics>(radioSemanticsFinder);
       expect(radioSemanticsWidget.properties.button, isTrue);
-      expect(radioSemanticsWidget.properties.label, contains('إذاعات القرآن الكريم'));
-      expect(radioSemanticsWidget.properties.hint, equals('الانتقال إلى إذاعات وتلاوات القرآن الكريم'));
+      expect(radioSemanticsWidget.properties.label,
+          equals('إذاعات القرآن الكريم، بث مباشر وتلاوات كبار القراء'));
+      expect(radioSemanticsWidget.properties.hint, isNull,
+          reason: 'Farag simplified secondary spoken hints, not the destination label');
 
       // Verify radio icon is explicitly excluded from semantics tree within the banner
       final bannerRadioIconFinder = find.descendant(
@@ -110,7 +114,8 @@ void main() {
         ),
       );
       expect(egyptSemantics.properties.button, isTrue);
-      expect(egyptSemantics.properties.hint, contains('الانتقال إلى واحة التراث المصري'));
+      expect(egyptSemantics.properties.label, contains('نسائم القاهرة'));
+      expect(egyptSemantics.properties.hint, isNull);
 
       // Verify decorative flag emoji is wrapped in ExcludeSemantics
       final emojiFinder = find.text('🇪🇬');
