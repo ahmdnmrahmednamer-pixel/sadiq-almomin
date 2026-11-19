@@ -152,7 +152,7 @@ void main() {
       expect(shellChildPaths.length, equals(6));
 
       final topLevelGoRoutes = topLevelRoutes.whereType<GoRoute>().toList();
-      final standalonePaths = {'/momen-duaa', '/duaa', '/onboarding', '/adhan-control'};
+      final standalonePaths = {'/momen-duaa', '/duaa', '/onboarding', '/adhan-control', '/scholars-audio'};
       final featureGoRoutes = topLevelGoRoutes
           .where((r) => !standalonePaths.contains(r.path))
           .toList();
@@ -170,6 +170,10 @@ void main() {
           reason: 'Feature route ${route.path} must target rootNavigatorKey for full-page isolation',
         );
       }
+
+      final retiredRoute = topLevelGoRoutes.singleWhere((r) => r.path == '/scholars-audio');
+      expect(retiredRoute.redirect, isNotNull);
+      expect(retiredRoute.builder, isNull);
 
       final featurePaths = featureGoRoutes.map((r) => r.path).toSet();
       const expectedFeaturePaths = {
@@ -189,7 +193,6 @@ void main() {
         '/qiraat',
         '/approved-sources',
         '/audio',
-        '/scholars-audio',
         '/settings',
         '/hadith',
         '/zakat',
