@@ -509,5 +509,25 @@ void main() {
       await t.pumpAndSettle();
       player = VoicePreviewPlayer();
     }
-  });
+  });  for (final kind in ['material', 'fullscreen', 'dialog', 'dialog-no-focus', 'material-no-focus']) {
+    testWidgets('route coverage without relying on secondary animation: $kind', (t) async {
+      await mount(t);
+      await listen(t);
+      final c = t.element(option(0));
+      final nav = Navigator.of(c);
+      Route<void> route;
+      if (kind.startsWith('dialog')) {
+        route = DialogRoute<void>(context: c, requestFocus: kind != 'dialog-no-focus', builder: (_) => const AlertDialog(content: Text('cover')));
+      } else {
+        route = MaterialPageRoute<void>(requestFocus: kind != 'material-no-focus', fullscreenDialog: kind == 'fullscreen', builder: (_) => const Scaffold(body: Text('cover')));
+      }
+      unawaited(nav.push(route));
+      await t.pumpAndSettle();
+      final active = player.active;
+      nav.pop();
+      await t.pumpAndSettle();
+      expect(active, isFalse, reason: kind);
+    });
+  }
+
 }
