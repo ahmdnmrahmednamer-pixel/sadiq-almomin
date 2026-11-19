@@ -60,6 +60,57 @@ void main() {
             ayahs)[2],
         isEmpty);
   });
+  test('immediate author both label requires exactly two complete occurrences',
+      () {
+    expect(
+        BudurVerseLinker.link(['" لفظ " معا SOURCE'], [false], sample(['لفظ'])),
+        [[]]);
+    expect(
+        BudurVerseLinker.link(
+            ['" لفظ " معا SOURCE'], [false], sample(['لفظ لفظ'])),
+        [
+          [1]
+        ]);
+    final two = sample(['لفظ', 'لفظ']);
+    expect(BudurVerseLinker.link(['" لفظ " معا SOURCE'], [false], two), [
+      [1, 2]
+    ]);
+    expect(BudurVerseLinker.link(['" لفظ " معا SOURCE'], [true], two), [[]]);
+    expect(
+        BudurVerseLinker.link(
+            ['" لفظ " معا SOURCE'], [false], sample(['لفظ', 'لفظ', 'لفظ'])),
+        [[]]);
+    expect(
+        BudurVerseLinker.link(['" لفظ " general prose ثم معا'], [false], two),
+        [[]]);
+    expect(BudurVerseLinker.link(['" لفظ، آخر " معا'], [false], two), [[]]);
+  });
+  test('quoted summary item never becomes an ordinary verse heading', () {
+    const surah = Surah(
+        id: 1,
+        nameAr: 'اختبار',
+        nameSimple: 'اختبار',
+        revelationPlace: 'makkah',
+        revelationOrder: 1,
+        ayahCount: 3,
+        hasBasmala: false,
+        pageStart: 1,
+        pageEnd: 1);
+    const text =
+        'سورة اختبار\n"نهاية ثابتة" آخر الربع.\nالممال\n"لفظ قديم" SUMMARY_ONLY\nالمدغم\n"مستأنف" NEXT_SECTION\nالجزء: 1 ¦ الصفحة: 1\nتصويبات للشيخ';
+    final results = BudurSource.passages(
+        text, surah, sample(['لفظ قديم', 'نهاية ثابتة', 'مستأنف']));
+    expect(results.firstWhere((p) => p.text.contains('SUMMARY_ONLY')).ayahs,
+        isEmpty);
+    expect(
+        results.firstWhere((p) => p.text.contains('NEXT_SECTION')).ayahs, [3]);
+    final doubtful = BudurSource.passages(
+        text.replaceFirst('نهاية ثابتة', 'غير مثبت'),
+        surah,
+        sample(['لفظ قديم', 'نهاية ثابتة', 'مستأنف']));
+    expect(doubtful.firstWhere((p) => p.text.contains('NEXT_SECTION')).ayahs,
+        isEmpty);
+  });
   test('word boundaries and within-verse repetitions are not unique', () {
     final ayahs = sample(['مرساة اولى', 'مكرر مكرر', 'مرساة اخيرة', 'ومكررون']);
     expect(BudurVerseLinker.occurrences('مكرر', ayahs).length, 2);
@@ -92,6 +143,34 @@ void main() {
           .toList();
       final result = BudurSource.passages(source, surah, ayahs);
       expect(result, isNotEmpty, reason: 'missing chapter ${surah.id}');
+      const actualBoth = <int, Map<String, List<int>>>{
+        6: {
+          'ذكر اسم الله': [118, 119],
+          'آلذكرين': [143, 144]
+        },
+        7: {
+          'تأتيهم': [163]
+        },
+        8: {
+          'بالعدوة': [42]
+        },
+        98: {
+          'البرية': [6, 7]
+        },
+        99: {
+          'يره': [7, 8]
+        },
+      };
+      for (final expected
+          in (actualBoth[surah.id] ?? const <String, List<int>>{}).entries) {
+        final q = BudurVerseLinker.normalize(expected.key);
+        final entry = result.singleWhere((p) =>
+            BudurVerseLinker.quotes(p.text).length == 1 &&
+            BudurVerseLinker.quotes(p.text).single == q &&
+            p.text.contains('معا'));
+        expect(entry.ayahs, expected.value,
+            reason: 'source both ${surah.id} ${expected.key}');
+      }
       passages += result.length;
       assigned += result.where((p) => p.ayahs.isNotEmpty).length;
       for (final p in result) {
