@@ -100,6 +100,8 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final originalLauncher = SupportService.urlLauncher;
+      addTearDown(() => SupportService.urlLauncher = originalLauncher);
       Uri? lastLaunchedUri;
       SupportService.urlLauncher = (Uri uri, {LaunchMode mode = LaunchMode.externalApplication}) async {
         lastLaunchedUri = uri;
@@ -125,6 +127,11 @@ void main() {
       // Scroll to and tap 'برامج المطور على المتجر'
       final playStoreItem = find.text('برامج المطور على المتجر');
       await tester.scrollUntilVisible(playStoreItem, 150, scrollable: scrollableFinder);
+      for (var attempt = 0; playStoreItem.hitTestable().evaluate().isEmpty && attempt < 8; attempt++) {
+        await tester.drag(scrollableFinder, const Offset(0, -160));
+        await tester.pumpAndSettle();
+      }
+      expect(playStoreItem.hitTestable(), findsOneWidget);
       await tester.tap(playStoreItem);
       await tester.pumpAndSettle();
 
@@ -141,10 +148,19 @@ void main() {
 
       final fbItem = find.text('حساب المطور على الفيس بوك');
       await tester.scrollUntilVisible(fbItem, 150, scrollable: scrollableFinder);
+      // Being built at the clipped bottom edge does not make the label tappable.
+      // Clear the previous launch so a missed tap cannot reuse the Store result.
+      lastLaunchedUri = null;
+      for (var attempt = 0; fbItem.hitTestable().evaluate().isEmpty && attempt < 8; attempt++) {
+        await tester.drag(scrollableFinder, const Offset(0, -160));
+        await tester.pumpAndSettle();
+      }
+      expect(fbItem.hitTestable(), findsOneWidget);
       await tester.tap(fbItem);
       await tester.pumpAndSettle();
 
-      expect(lastLaunchedUri.toString(), contains('facebook.com'));
+      expect(lastLaunchedUri, isNotNull);
+      expect(lastLaunchedUri.toString(), 'https://www.facebook.com/ahmdnmrahmednamer');
     });
 
     testWidgets('SettingsScreen renders clean header with navigation options', (tester) async {
@@ -159,7 +175,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check AppBar Title
-      expect(find.text('تهيئة الخشوع وإعدادات التطبيق'), findsOneWidget);
+      expect(find.descendant(of: find.byType(AppBar), matching: find.text('الإعدادات')), findsOneWidget);
       // Check Home action button
       expect(find.byIcon(Icons.home_rounded), findsOneWidget);
     });

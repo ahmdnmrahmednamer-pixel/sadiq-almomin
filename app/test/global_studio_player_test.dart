@@ -443,7 +443,8 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('المشغل الصوتي الاستوديو 🎙️'), findsOneWidget);
+      expect(find.text('المشغل الصوتي الاستوديو'), findsOneWidget);
+      expect(find.text('المشغل الصوتي الاستوديو 🎙️'), findsNothing);
       expect(find.text('سورة الكهف المباركة'), findsOneWidget);
       expect(find.text('الشيخ عبد الباسط عبد الصمد'), findsOneWidget);
       expect(find.textContaining('استماع بدون إنترنت'), findsOneWidget);
