@@ -197,6 +197,37 @@ class BudurSource {
     }
     final links = BudurVerseLinker.link(texts, blocks, ayahs,
         repeatedReviewed: verifiedRepeat);
+    // These three standalone author-reference paragraphs were inspected in
+    // their original source context. Exact paragraph identity plus a unique
+    // Quran occurrence permits their own navigation, not reopening a summary
+    // or supplying an inferred anchor to any other entry. In Maida the source
+    // heading is retained verbatim; its inspected local context corresponds to
+    // "وتبرئ" in verse 110, not the wording of the parallel verse in Al Imran.
+    const reviewedReferences = <int, Map<String, (int, String)>>{
+      3: {
+        "\" وأبرئ \" الوقف عليها كالوقف على يستهزئ بالبقرة. \" وأنبئكم \" فيها لحمزة تحقيق الأولى وتسهيلها، وعلى كل تسهيل الثانية وإبدالها ياء خالصة.":
+            (49, 'وأبرئ'),
+      },
+      5: {
+        "\" فمن اضطر \" تقدم ما فيه لكل القراء في سورة البقرة.": (
+          3,
+          'فمن اضطر'
+        ),
+        "\" وأبرئ \" فيه لحمزة وهشام وقفا ما في يستهزئ بالبقرة.": (
+          110,
+          'وتبرئ'
+        ),
+      },
+    };
+    for (var i = 0; i < texts.length; i++) {
+      final expected = reviewedReferences[surah.id]?[texts[i]];
+      if (expected == null) continue;
+      final qs = BudurVerseLinker.quotes(texts[i]);
+      if (qs.length != 1) continue;
+      final hits = BudurVerseLinker.occurrences(expected.$2, ayahs);
+      if (hits.length == 1 && hits.single.ayah == expected.$1)
+        links[i] = [expected.$1];
+    }
     return [
       for (var i = 0; i < texts.length; i++)
         BudurPassage(texts[i], ranges[i][0], ranges[i][1], links[i])
