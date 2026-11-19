@@ -77,6 +77,22 @@ class MockFailureStorePlatform extends SharedPreferencesStorePlatform {
   }
 }
 
+// Golden pixels are host-renderer-specific, not the app's target platform.
+// Keep the original Windows references unchanged. Other hosts need their own
+// reviewed references; never skip the comparison or fall back silently.
+String journalGoldenPath(String name, String operatingSystem) {
+  switch (operatingSystem) {
+    case 'windows':
+      return 'goldens/$name.png';
+    case 'linux':
+      return 'goldens/linux/$name.png';
+    default:
+      throw UnsupportedError(
+        'Journal golden references are not reviewed for $operatingSystem',
+      );
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -104,6 +120,20 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await loadArabicFonts();
+  });
+
+  test('Windows references retain the original paths', () {
+    expect(journalGoldenPath('part_a_compact', 'windows'), 'goldens/part_a_compact.png');
+    expect(journalGoldenPath('part_b_compact', 'windows'), 'goldens/part_b_compact.png');
+  });
+  test('Linux references use separate reviewed paths', () {
+    expect(journalGoldenPath('part_a_compact', 'linux'), 'goldens/linux/part_a_compact.png');
+    expect(journalGoldenPath('part_b_compact', 'linux'), 'goldens/linux/part_b_compact.png');
+  });
+  test('Unreviewed host platforms fail rather than skip or fall back', () {
+    for (final host in ['macos', 'android', 'ios', 'unknown']) {
+      expect(() => journalGoldenPath('part_a_compact', host), throwsUnsupportedError);
+    }
   });
 
   group('TadabburJournalScreen Widget Tests', () {
@@ -178,7 +208,7 @@ void main() {
       );
       await expectLater(
         find.byType(MaterialApp),
-        matchesGoldenFile('goldens/part_a_compact.png'),
+        matchesGoldenFile(journalGoldenPath('part_a_compact', Platform.operatingSystem)),
       );
 
       // Clear SnackBars before Part B
@@ -219,7 +249,7 @@ void main() {
       );
       await expectLater(
         find.byType(MaterialApp),
-        matchesGoldenFile('goldens/part_b_compact.png'),
+        matchesGoldenFile(journalGoldenPath('part_b_compact', Platform.operatingSystem)),
       );
 
       // Part C: Persisted success pops dialog
