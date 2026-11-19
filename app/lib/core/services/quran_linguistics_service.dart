@@ -193,7 +193,7 @@ class QuranLinguisticsService {
       ayahText: ayah?.cleanTextUthmani ?? '', wordMeanings: _extractWordMeanings(ayah?.cleanTextUthmani ?? ''),
       asbabNuzul: await _asbab(surahId,ayahNumber),
       grammar: AyahGrammar(surahId:surahId, ayahNumber:ayahNumber,
-        summary:'لم يُربط مصدر الإعراب بعد.'),
+        summary:'الجدول في إعراب القرآن الكريم، محمود صافي. افتح صفحات المصدر لقراءة الإعراب في سياقه.'),
     );
   }
   /// Extracts difficult words and lexicon meanings for an ayah
