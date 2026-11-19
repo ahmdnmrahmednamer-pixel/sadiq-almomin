@@ -4,6 +4,53 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/services/islamic_audio_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../adhkar/adhkar_audio_screen.dart';
+
+/// Shared held-state presentation. No old recording playback or download action.
+class LegacyAdhkarPlaybackNotice extends StatelessWidget {
+  const LegacyAdhkarPlaybackNotice({super.key, required this.track, this.compact = false, this.stopFailed = false, this.stopPending = false, this.onRetryStop});
+  final IslamicAudioTrack track;
+  final bool compact;
+  final bool stopFailed;
+  final bool stopPending;
+  final VoidCallback? onRetryStop;
+
+  @override
+  Widget build(BuildContext context) => Directionality(
+    textDirection: SettingsService.instance.textDirection,
+    child: Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      borderRadius: BorderRadius.circular(16),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('تسجيل قديم يحتاج مراجعة', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          if (stopFailed)
+            const Text('تعذر إيقاف الصوت الحالي. لن يبدأ تشغيل تسجيل آخر هنا حتى ينجح الإيقاف.'),
+          if (stopPending) const Text('جاري إيقاف الصوت الحالي...'),
+          if (stopFailed) TextButton.icon(
+            onPressed: onRetryStop,
+            icon: const Icon(Icons.stop_circle_outlined),
+            label: const Text('إعادة محاولة الإيقاف'),
+          ),
+          if (!compact) ...[
+            Text('اسم سابق في الفهرس، غير موثّق: ${track.title}'),
+            const SizedBox(height: 8),
+            const Text('حُجب تشغيل هذا التسجيل حتى مراجعة اسمه ومصدره. ملفاتك المحفوظة لم تُحذف.'),
+          ],
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.library_music_rounded),
+            label: const Text('فتح الأذكار المسموعة'),
+            onPressed: stopFailed || stopPending ? null : () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AdhkarAudioScreen())),
+          ),
+        ]),
+      ),
+    ),
+  );
+}
 
 /// Full-screen Luxury Islamic Audio Studio Player.
 class FullScreenStudioPlayer extends StatefulWidget {
@@ -37,6 +84,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
     );
 
     _audioService.addListener(_onAudioUpdate);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_audioService.containLegacyAdhkarPlayback());
+    });
     if (_audioService.isPlaying) {
       _rotationController.repeat();
     }
@@ -248,7 +298,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
     );
   }
 
-  void _showQueueSheet() {
+  Future<void> _showQueueSheet() async {
+    await _audioService.containLegacyAdhkarPlayback();
+    if (!mounted) return;
     final queue = _audioService.queue;
     showModalBottomSheet(
       context: context,
@@ -382,7 +434,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
   @override
   Widget build(BuildContext context) {
     final track = _audioService.currentTrack;
-    if (track == null) {
+    if (track == null || IslamicAudioService.isHeldLegacyAdhkar(track)) {
+      final held = track ?? _audioService.heldLegacyTrack;
+      if (held != null) return LegacyAdhkarPlaybackNotice(track: held, stopFailed: _audioService.legacyStopFailed, stopPending: _audioService.legacyStopPending, onRetryStop: _audioService.retryLegacyPlaybackStop);
       return const SizedBox.shrink();
     }
 
