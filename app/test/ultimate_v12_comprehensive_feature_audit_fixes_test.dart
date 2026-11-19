@@ -21,16 +21,17 @@ void main() {
   });
 
   group('Ultimate v12.0 Comprehensive 16-Bug & 50-Location Feature Audit Verification Tests', () {
-    test('1. UnifiedLibrarySearchService indexes all 13 encyclopedias including Scholars Lectures, Riyad Al-Salihin, Gharib Quran, Mutoon, and Spiritual Remedy', () {
+    test('1. UnifiedLibrarySearchService indexes 12 retained libraries and excludes retired scholar lectures', () {
       final search = UnifiedLibrarySearchService.instance;
-      expect(search.libraryFilters.length, equals(14));
+      expect(search.libraryFilters.length, equals(13));
 
       // Search Scholars Lectures
       final samirResults = search.searchAllLibraries(
         'سمير مصطفى',
         selectedLibrary: 'مجالس العلماء والدروس',
       );
-      expect(samirResults, isNotEmpty);
+      expect(samirResults, isEmpty);
+      expect(search.libraryFilters, isNot(contains('مجالس العلماء والدروس')));
 
       // Search Riyad Al-Salihin
       final riyadResults = search.searchAllLibraries(
