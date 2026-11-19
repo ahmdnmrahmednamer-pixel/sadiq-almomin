@@ -281,7 +281,14 @@ void main() {
         final node = _findSingleCardSemanticNode(tester, title);
         expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
         tester.binding.pipelineOwner.semanticsOwner!.performAction(node.id, SemanticsAction.tap);
-        await tester.pumpAndSettle();
+        if (expectedScreen == QuranIrabScreen) {
+          // This test owns real-router dispatch, not live Jadwal transport.
+          // A pending source legitimately animates its loading indicator.
+          await tester.pump();
+          await tester.pump(const Duration(seconds: 1));
+        } else {
+          await tester.pumpAndSettle();
+        }
 
         expect(find.byType(expectedScreen), findsOneWidget,
             reason: 'SemanticsAction.tap on "$title" must open $expectedScreen');
