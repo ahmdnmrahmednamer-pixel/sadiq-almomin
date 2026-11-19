@@ -30,7 +30,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   void initState() {
     super.initState();
     final categories = AdhkarService.instance.categories;
-    final initialIndex = widget.initialCategoryIndex.clamp(0, categories.isNotEmpty ? categories.length - 1 : 0);
+    final initialIndex = widget.initialCategoryIndex
+        .clamp(0, categories.isNotEmpty ? categories.length - 1 : 0);
     _tabController = TabController(
       length: categories.length,
       initialIndex: initialIndex,
@@ -68,7 +69,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
   }
 
   void _copyDhikr(DhikrItem item, BuildContext context) {
-    final text = '${item.text}\n${item.source != null ? "المصدر: ${item.source}\n" : ""}${item.virtue != null ? "الفضل: ${item.virtue}" : ""}';
+    final text =
+        '${item.text}\n${item.source != null ? "المصدر: ${item.source}\n" : ""}${item.virtue != null ? "الفضل: ${item.virtue}" : ""}';
     Clipboard.setData(ClipboardData(text: text)).catchError((_) {});
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -92,7 +94,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
               child: const Text('إلغاء'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.primaryGreen),
+              style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen),
               onPressed: () {
                 AdhkarService.instance.resetCategory(category);
                 Navigator.pop(ctx);
@@ -114,13 +117,16 @@ class _AdhkarScreenState extends State<AdhkarScreen>
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('حصن المسلم والأذكار'),
+          title: const Text('حصن المسلم والأذكار', maxLines: 2),
+          toolbarHeight:
+              MediaQuery.textScalerOf(context).scale(16) >= 22 ? 120 : 64,
           actions: [
             IconButton(
               icon: const Icon(Icons.volume_up_rounded),
               tooltip: 'المكتبة الصوتية للأذكار والأذان',
               onPressed: () {
-                IslamicAudioPlayerSheet.show(context, filter: IslamicAudioType.adhkar);
+                IslamicAudioPlayerSheet.show(context,
+                    filter: IslamicAudioType.adhkar);
               },
             ),
             IconButton(
@@ -140,9 +146,11 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             tabAlignment: TabAlignment.start,
             indicatorColor: AppColors.accentGold,
             indicatorWeight: 3,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            labelColor: isDark ? AppColors.softGold : AppColors.primaryGreen,
+            unselectedLabelColor:
+                isDark ? Colors.white70 : const Color(0xFF47534B),
+            labelStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             tabs: categories.map((cat) {
               return Tab(
                 icon: Icon(cat.icon, size: 20),
@@ -193,7 +201,10 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             gradient: LinearGradient(
               colors: isDark
                   ? [AppColors.darkSurface, const Color(0xFF263238)]
-                  : [category.primaryColor.withValues(alpha: 0.12), AppColors.softGold.withValues(alpha: 0.2)],
+                  : [
+                      category.primaryColor.withValues(alpha: 0.12),
+                      AppColors.softGold.withValues(alpha: 0.2)
+                    ],
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
             ),
@@ -218,7 +229,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.accentGold : category.primaryColor,
+                            color: isDark
+                                ? AppColors.accentGold
+                                : category.primaryColor,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -226,14 +239,16 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                           category.subtitle,
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark ? Colors.white70 : AppColors.mutedText,
+                            color:
+                                isDark ? Colors.white70 : AppColors.mutedText,
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: AppColors.accentGold),
+                    icon:
+                        const Icon(Icons.refresh, color: AppColors.accentGold),
                     tooltip: 'إعادة ضبط كل أذكار هذه القائمة',
                     onPressed: () => _confirmResetCategory(category),
                   ),
@@ -248,9 +263,12 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                       child: LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
                         minHeight: 10,
-                        backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                        backgroundColor:
+                            isDark ? Colors.white12 : Colors.black12,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          completedCount == totalCount ? Colors.green : AppColors.accentGold,
+                          completedCount == totalCount
+                              ? Colors.green
+                              : AppColors.accentGold,
                         ),
                       ),
                     ),
@@ -300,12 +318,17 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     if (category.id == 'sleep') trackId = 'adhkar_sleep';
     if (category.id == 'waking') trackId = 'adhkar_waking';
     if (category.id == 'home_mosque') trackId = 'adhkar_home_mosque';
-    if (category.id == 'prophetic_duas' || category.id == 'duas') trackId = 'prophetic_duas';
-    if (category.id == 'ruqyah' || category.id == 'distress_relief') trackId = 'ruqyah_shariah';
+    if (category.id == 'prophetic_duas' || category.id == 'duas') {
+      trackId = 'prophetic_duas';
+    }
+    if (category.id == 'ruqyah' || category.id == 'distress_relief') {
+      trackId = 'ruqyah_shariah';
+    }
 
     final track = IslamicAudioService.allTracks.firstWhere(
       (t) => t.id == trackId,
-      orElse: () => IslamicAudioService.allTracks.firstWhere((t) => t.type == IslamicAudioType.adhkar),
+      orElse: () => IslamicAudioService.allTracks
+          .firstWhere((t) => t.type == IslamicAudioType.adhkar),
     );
 
     final isCurrent = audioService.currentTrack?.id == track.id;
@@ -319,7 +342,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             : (isDark ? AppColors.darkCard : Colors.white),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isCurrent ? AppColors.accentGold : (isDark ? Colors.white12 : Colors.grey.shade200),
+          color: isCurrent
+              ? AppColors.accentGold
+              : (isDark ? Colors.white12 : Colors.grey.shade200),
           width: isCurrent ? 1.8 : 1.0,
         ),
       ),
@@ -327,24 +352,37 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         children: [
           Row(
             children: [
-              GestureDetector(
+              Semantics(
+                button: true,
+                label: isPlaying
+                    ? 'إيقاف مؤقت: ${category.title}'
+                    : 'استمع إلى ${category.title}',
                 onTap: () => audioService.playTrack(track),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isPlaying
-                          ? [const Color(0xFFD4AF37), const Color(0xFFB89628)]
-                          : [AppColors.primaryGreen, AppColors.secondaryGreen],
+                excludeSemantics: true,
+                child: GestureDetector(
+                  onTap: () => audioService.playTrack(track),
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isPlaying
+                            ? [const Color(0xFFD4AF37), const Color(0xFFB89628)]
+                            : [
+                                AppColors.primaryGreen,
+                                AppColors.secondaryGreen
+                              ],
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 26,
+                    child: Center(
+                      child: Icon(
+                        isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
                   ),
                 ),
@@ -354,26 +392,29 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Text('استمع إلى ${category.title} بصوت خاشع',
+                        style: const TextStyle(
+                            fontSize: 13.5, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      runSpacing: 6,
                       children: [
-                        Expanded(
-                          child: Text(
-                            'استمع إلى ${category.title} بصوت خاشع 🎧',
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
                         if (audioService.isDownloaded(track.id))
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
-                              'أوفلاين ⚡',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.green),
+                              'أوفلاين',
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.green),
                             ),
                           )
                         else if (audioService.isDownloading(track.id))
@@ -381,7 +422,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                              value: audioService.getDownloadProgress(track.id).clamp(0.0, 1.0),
+                              value: audioService
+                                  .getDownloadProgress(track.id)
+                                  .clamp(0.0, 1.0),
                               strokeWidth: 2,
                               color: AppColors.accentGold,
                             ),
@@ -391,28 +434,38 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: Colors.blue.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
-                                  'بث مباشر 🌐',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.blueAccent),
+                                  'بث مباشر',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.blueAccent),
                                 ),
                               ),
                               const SizedBox(width: 4),
                               IconButton(
-                                icon: const Icon(Icons.download_for_offline_outlined, size: 18, color: AppColors.primaryGreen),
+                                icon: const Icon(
+                                    Icons.download_for_offline_outlined,
+                                    size: 18,
+                                    color: AppColors.primaryGreen),
                                 tooltip: 'تحميل للاستماع دون إنترنت',
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
                                 onPressed: () async {
-                                  final ok = await audioService.downloadTrack(track.id);
+                                  final ok = await audioService
+                                      .downloadTrack(track.id);
                                   if (ok && mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('تم تنزيل ${category.title} بنجاح للاستماع دون إنترنت')),
+                                      SnackBar(
+                                          content: Text(
+                                              'تم تنزيل ${category.title} بنجاح للاستماع دون إنترنت')),
                                     );
                                   }
                                 },
@@ -429,8 +482,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                         color: isDark ? Colors.white60 : AppColors.mutedText,
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -445,14 +496,19 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
                 activeTrackColor: AppColors.primaryGreen,
-                inactiveTrackColor: isDark ? Colors.white12 : Colors.grey.shade300,
+                inactiveTrackColor:
+                    isDark ? Colors.white12 : Colors.grey.shade300,
                 thumbColor: AppColors.accentGold,
               ),
               child: Slider(
-                value: audioService.position.inSeconds
-                    .toDouble()
-                    .clamp(0.0, (audioService.duration.inSeconds > 0 ? audioService.duration.inSeconds.toDouble() : 1.0)),
-                max: audioService.duration.inSeconds > 0 ? audioService.duration.inSeconds.toDouble() : 1.0,
+                value: audioService.position.inSeconds.toDouble().clamp(
+                    0.0,
+                    (audioService.duration.inSeconds > 0
+                        ? audioService.duration.inSeconds.toDouble()
+                        : 1.0)),
+                max: audioService.duration.inSeconds > 0
+                    ? audioService.duration.inSeconds.toDouble()
+                    : 1.0,
                 onChanged: (val) {
                   audioService.seek(Duration(seconds: val.toInt()));
                 },
@@ -464,7 +520,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
     );
   }
 
-  Widget _buildDhikrCard(DhikrItem item, int displayIndex, String categoryTitle, bool isDark) {
+  Widget _buildDhikrCard(
+      DhikrItem item, int displayIndex, String categoryTitle, bool isDark) {
     final isCompleted = item.isCompleted;
 
     return Card(
@@ -475,7 +532,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         side: BorderSide(
           color: isCompleted
               ? Colors.green.withValues(alpha: 0.5)
-              : (isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06)),
+              : (isDark
+                  ? Colors.white12
+                  : Colors.black.withValues(alpha: 0.06)),
           width: isCompleted ? 1.5 : 1,
         ),
       ),
@@ -487,8 +546,11 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Bar: Dhikr number, Source, and Quick Actions
-            Row(
+            // Wrap source and actions without truncating the source at large text.
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 CircleAvatar(
                   radius: 13,
@@ -500,25 +562,20 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isCompleted ? Colors.white : AppColors.primaryGreen,
+                      color:
+                          isCompleted ? Colors.white : AppColors.primaryGreen,
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 if (item.source != null)
-                  Expanded(
-                    child: Text(
-                      item.source!,
+                  Text(item.source!,
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.softGold : AppColors.secondaryGreen,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                const Spacer(),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.softGold
+                              : AppColors.secondaryGreen)),
                 IconButton(
                   icon: const Icon(Icons.copy_rounded, size: 18),
                   tooltip: 'نسخ الذكر',
@@ -533,7 +590,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 ),
                 if (item.currentCount > 0)
                   IconButton(
-                    icon: const Icon(Icons.replay, size: 18, color: Colors.orange),
+                    icon: const Icon(Icons.replay,
+                        size: 18, color: Colors.orange),
                     tooltip: 'تصفير العداد',
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
@@ -549,7 +607,13 @@ class _AdhkarScreenState extends State<AdhkarScreen>
               item.text,
               textAlign: TextAlign.justify,
               style: TextStyle(
-                fontFamilyFallback: const ['Traditional Arabic', 'Amiri', 'Scheherazade New', 'serif'],
+                fontFamily: 'Amiri',
+                fontFamilyFallback: const [
+                  'Traditional Arabic',
+                  'Amiri',
+                  'Scheherazade New',
+                  'serif'
+                ],
                 fontSize: 19,
                 height: 1.85,
                 fontWeight: FontWeight.w500,
@@ -561,7 +625,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             if (item.virtue != null) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: isDark
                       ? AppColors.accentGold.withValues(alpha: 0.1)
@@ -575,7 +640,8 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.stars_rounded, size: 16, color: AppColors.accentGold),
+                    const Icon(Icons.stars_rounded,
+                        size: 16, color: AppColors.accentGold),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -584,7 +650,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
                           fontSize: 12.5,
                           height: 1.45,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.amber[200] : const Color(0xFF7A5800),
+                          color: isDark
+                              ? Colors.amber[200]
+                              : const Color(0xFF7A5800),
                         ),
                       ),
                     ),
@@ -594,68 +662,91 @@ class _AdhkarScreenState extends State<AdhkarScreen>
             ],
             const SizedBox(height: 14),
 
-            // Interactive Large Tap Counter Button
-            InkWell(
-              onTap: () {
-                AdhkarService.instance.incrementDhikr(item);
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: isCompleted
-                      ? Colors.green.withValues(alpha: isDark ? 0.25 : 0.15)
-                      : AppColors.primaryGreen.withValues(alpha: isDark ? 0.2 : 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isCompleted ? Colors.green : AppColors.primaryGreen,
-                    width: 1.2,
+            // Explicit semantic activation and wrapping preserve the counter at 2x.
+            Semantics(
+              button: true,
+              label: isCompleted
+                  ? 'اكتمل بحمد الله (${item.targetCount} / ${item.targetCount})'
+                  : 'اضغط للعد: ${item.currentCount} من ${item.targetCount}، متبقي ${item.remaining}',
+              onTap: () => AdhkarService.instance.incrementDhikr(item),
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: () {
+                  AdhkarService.instance.incrementDhikr(item);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? Colors.green.withValues(alpha: isDark ? 0.25 : 0.15)
+                        : AppColors.primaryGreen
+                            .withValues(alpha: isDark ? 0.2 : 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color:
+                          isCompleted ? Colors.green : AppColors.primaryGreen,
+                      width: 1.2,
+                    ),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (isCompleted) ...[
-                      const Icon(Icons.check_circle_rounded, color: Colors.green, size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        'اكتمل بحمد الله (${item.targetCount} / ${item.targetCount})',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ] else ...[
-                      const Icon(Icons.fingerprint_rounded, color: AppColors.primaryGreen, size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        'اضغط للعد: ${item.currentCount} من ${item.targetCount}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.accentGold : AppColors.primaryGreen,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentGold.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'متبقي ${item.remaining}',
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (isCompleted) ...[
+                        const Icon(Icons.check_circle_rounded,
+                            color: Colors.green, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'اكتمل بحمد الله (${item.targetCount} / ${item.targetCount})',
                           style: TextStyle(
-                            fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: isDark ? AppColors.accentGold : AppColors.primaryGreen,
+                            color: isDark
+                                ? const Color(0xFFB9F6CA)
+                                : const Color(0xFF1B5E20),
+                            fontSize: 15,
                           ),
                         ),
-                      ),
+                      ] else ...[
+                        const Icon(Icons.fingerprint_rounded,
+                            color: AppColors.primaryGreen, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'اضغط للعد: ${item.currentCount} من ${item.targetCount}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark
+                                ? AppColors.accentGold
+                                : AppColors.primaryGreen,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGold.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'متبقي ${item.remaining}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? AppColors.accentGold
+                                  : AppColors.primaryGreen,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
