@@ -35,7 +35,9 @@ class TafsirViewerSheet extends StatefulWidget {
 
 class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
   late int _currentAyahNumber;
-  String _selectedEditionId = 'muyassar';
+  late String _selectedEditionId;
+  int _requestVersion = 0;
+  String? _loadError;
   double _fontSize = 16.0;
   bool _isLoading = true;
   TafsirResult? _tafsirResult;
@@ -44,22 +46,24 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
   void initState() {
     super.initState();
     _currentAyahNumber = widget.initialAyah.ayahNumber;
+    _selectedEditionId = TafsirService.getEdition(SettingsService.instance.defaultTafsirEdition).id;
     _fontSize = (SettingsService.instance.mushafFontSize * 0.7).clamp(14.0, 26.0);
     _loadTafsir();
   }
 
   void _loadTafsir() async {
-    setState(() => _isLoading = true);
-    final res = await TafsirService.getTafsir(
-      surahId: widget.surah.id,
-      ayahNumber: _currentAyahNumber,
-      editionId: _selectedEditionId,
-    );
-    if (mounted) {
-      setState(() {
-        _tafsirResult = res;
-        _isLoading = false;
-      });
+    final version = ++_requestVersion;
+    final ayah = _currentAyahNumber;
+    final edition = _selectedEditionId;
+    setState(() { _isLoading = true; _loadError = null; _tafsirResult = null; });
+    try {
+      final res = await TafsirService.getTafsir(surahId:widget.surah.id,
+        ayahNumber:ayah, editionId:edition);
+      if (!mounted || version != _requestVersion) return;
+      setState(() { _tafsirResult = res; _isLoading = false; });
+    } catch (_) {
+      if (!mounted || version != _requestVersion) return;
+      setState(() { _loadError = 'تعذر تحميل التفسير. حاول مرة أخرى.'; _isLoading = false; });
     }
   }
 
@@ -78,19 +82,19 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
   }
 
   void _copyTafsir() {
-    if (_tafsirResult == null) return;
+    if (_tafsirResult == null || !_tafsirResult!.hasSourceText) return;
     final text = _tafsirResult!.formatForShare(widget.surah.nameAr);
     Clipboard.setData(ClipboardData(text: text)).catchError((_) {});
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('تم نسخ نص الآية والتفسير المعتمد إلى الحافظة'),
+        content: Text('تم نسخ النص'),
         duration: Duration(seconds: 2),
       ),
     );
   }
 
   void _shareTafsir() {
-    if (_tafsirResult == null) return;
+    if (_tafsirResult == null || !_tafsirResult!.hasSourceText) return;
     final text = _tafsirResult!.formatForShare(widget.surah.nameAr);
     try {
       Share.share(text);
@@ -314,7 +318,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4),
                                   child: Text(
-                                    _tafsirResult?.tafsirText ?? '',
+                                    _loadError ?? _tafsirResult?.tafsirText ?? '',
                                     textAlign: TextAlign.justify,
                                     style: TextStyle(
                                       fontSize: _fontSize,
@@ -431,7 +435,7 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
           Expanded(
             flex: 3,
             child: AppDropdownField<String>(
-              label: 'كتاب التفسير المعتمد',
+              label: 'التفسير',
               value: _selectedEditionId,
               dense: true,
               prefixIcon: Icons.auto_stories_rounded,
