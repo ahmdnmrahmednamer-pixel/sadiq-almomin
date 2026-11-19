@@ -135,7 +135,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       // ================= 2. قسم الصلاة والأذان والمؤذنون =================
       _DrawerItemData(
         title: 'أصوات الأذان والمؤذنون الـ 7 🕌',
-        subtitle: 'استماع وتخصيص أذان القطامي، المنشاوي، النقشبندي، عبد الباسط، الحصري، عباد، الدوسري',
+        subtitle:
+            'استماع وتخصيص أذان القطامي، المنشاوي، النقشبندي، عبد الباسط، الحصري، عباد، الدوسري',
         semanticLabel: 'أصوات الأذان وتخصيص المؤذنين',
         icon: Icons.mosque_rounded,
         color: const Color(0xFFD97706),
@@ -166,7 +167,17 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.access_time_filled_rounded,
         color: const Color(0xFF25739B),
         categoryKey: 'prayer',
-        keywords: ['مواقيت', 'صلاة', 'قبلة', 'كعبة', 'فجر', 'ظهر', 'عصر', 'مغرب', 'عشاء'],
+        keywords: [
+          'مواقيت',
+          'صلاة',
+          'قبلة',
+          'كعبة',
+          'فجر',
+          'ظهر',
+          'عصر',
+          'مغرب',
+          'عشاء'
+        ],
         onTap: () {
           Navigator.pop(context);
           context.go('/prayer');
@@ -207,7 +218,17 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.podcasts_rounded,
         color: const Color(0xFF0F5B45),
         categoryKey: 'scholars',
-        keywords: ['إذاعات', 'راديو', 'بث', 'قرآن', 'قراء', 'القاهرة', 'المنشاوي', 'الحصري', 'عبد الباسط'],
+        keywords: [
+          'إذاعات',
+          'راديو',
+          'بث',
+          'قرآن',
+          'قراء',
+          'القاهرة',
+          'المنشاوي',
+          'الحصري',
+          'عبد الباسط'
+        ],
         onTap: () {
           Navigator.pop(context);
           context.push('/islamic-radio');
@@ -274,7 +295,17 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.alarm_rounded,
         color: const Color(0xFFD97706),
         categoryKey: 'adhkar',
-        keywords: ['تنبيه', 'أذكار', 'مواقيت', 'وقت', 'صباح', 'مساء', 'نوم', 'إشعار', 'ساعة'],
+        keywords: [
+          'تنبيه',
+          'أذكار',
+          'مواقيت',
+          'وقت',
+          'صباح',
+          'مساء',
+          'نوم',
+          'إشعار',
+          'ساعة'
+        ],
         onTap: () {
           Navigator.pop(context);
           context.push('/settings');
@@ -330,7 +361,16 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.settings_suggest_rounded,
         color: const Color(0xFFB8893A),
         categoryKey: 'settings',
-        keywords: ['إعدادات', 'مظهر', 'ثيم', 'خط', 'تخصيص', 'أذان', 'أذكار', 'تهيئة الخشوع وإعدادات التطبيق'],
+        keywords: [
+          'إعدادات',
+          'مظهر',
+          'ثيم',
+          'خط',
+          'تخصيص',
+          'أذان',
+          'أذكار',
+          'تهيئة الخشوع وإعدادات التطبيق'
+        ],
         onTap: () {
           Navigator.pop(context);
           context.push('/settings');
@@ -343,7 +383,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.info_outline_rounded,
         color: AppColors.primaryGreen,
         categoryKey: 'settings',
-        keywords: ['عن التطبيق', 'معلومات', 'إصدار', 'وقف', 'صدقة جارية', 'رؤية', 'رسالة التطبيق'],
+        keywords: [
+          'عن التطبيق',
+          'معلومات',
+          'إصدار',
+          'وقف',
+          'صدقة جارية',
+          'رؤية',
+          'رسالة التطبيق'
+        ],
         onTap: () {
           Navigator.pop(context);
           showSettingsAboutModal(context);
@@ -369,7 +417,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.mail_outline_rounded,
         color: const Color(0xFF25739B),
         categoryKey: 'settings',
-        keywords: ['تواصل مع المطور', 'تواصل', 'مقترحات', 'دعم', 'مطور', 'رسالة', 'التواصل والمقترحات'],
+        keywords: [
+          'تواصل مع المطور',
+          'تواصل',
+          'مقترحات',
+          'دعم',
+          'مطور',
+          'رسالة',
+          'التواصل والمقترحات'
+        ],
         onTap: () {
           Navigator.pop(context);
           context.push('/support');
@@ -382,7 +438,15 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.shop_two_rounded,
         color: const Color(0xFF0284C7),
         categoryKey: 'settings',
-        keywords: ['برامج المطور على المتجر', 'متجر', 'جوجل بلاي', 'تطبيقات', 'store', 'google play', 'مطور'],
+        keywords: [
+          'برامج المطور على المتجر',
+          'متجر',
+          'جوجل بلاي',
+          'تطبيقات',
+          'store',
+          'google play',
+          'مطور'
+        ],
         onTap: () async {
           Navigator.pop(context);
           await SupportService.openDeveloperPlayStore(context: context);
@@ -395,7 +459,14 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         icon: Icons.facebook_rounded,
         color: const Color(0xFF1877F2),
         categoryKey: 'settings',
-        keywords: ['حساب المطور على الفيس بوك', 'فيسبوك', 'فيس بوك', 'facebook', 'مطور', 'تواصل'],
+        keywords: [
+          'حساب المطور على الفيس بوك',
+          'فيسبوك',
+          'فيس بوك',
+          'facebook',
+          'مطور',
+          'تواصل'
+        ],
         onTap: () async {
           Navigator.pop(context);
           await SupportService.openDeveloperFacebook(context: context);
@@ -432,15 +503,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         final normQuery = ArabicNormalizer.normalize(_searchQuery, loose: true);
         final filteredItems = allItems.where((item) {
           // Category filter
-          if (_selectedCategory != 'all' && item.categoryKey != _selectedCategory) {
+          if (_selectedCategory != 'all' &&
+              item.categoryKey != _selectedCategory) {
             return false;
           }
           // Search query filter
           if (normQuery.isEmpty) return true;
 
           final normTitle = ArabicNormalizer.normalize(item.title, loose: true);
-          final normSubtitle = ArabicNormalizer.normalize(item.subtitle, loose: true);
-          final normKeywords = item.keywords.map((k) => ArabicNormalizer.normalize(k, loose: true)).join(' ');
+          final normSubtitle =
+              ArabicNormalizer.normalize(item.subtitle, loose: true);
+          final normKeywords = item.keywords
+              .map((k) => ArabicNormalizer.normalize(k, loose: true))
+              .join(' ');
 
           return normTitle.contains(normQuery) ||
               normSubtitle.contains(normQuery) ||
@@ -470,7 +545,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             gradient: LinearGradient(
                               colors: isDark
                                   ? [AppColors.emerald900, AppColors.night900]
-                                  : [AppColors.emerald700, AppColors.emerald900],
+                                  : [
+                                      AppColors.emerald700,
+                                      AppColors.emerald900
+                                    ],
                               begin: Alignment.topRight,
                               end: Alignment.bottomLeft,
                             ),
@@ -485,8 +563,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                     height: 48,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: AppColors.accentGold.withValues(alpha: 0.18),
-                                      border: Border.all(color: AppColors.accentGold, width: 2),
+                                      color: AppColors.accentGold
+                                          .withValues(alpha: 0.18),
+                                      border: Border.all(
+                                          color: AppColors.accentGold,
+                                          width: 2),
                                     ),
                                     child: const Icon(
                                       Icons.mosque_rounded,
@@ -497,7 +578,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           context.tr('app_name'),
@@ -526,15 +608,19 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                               // Memorial Tribute Banner
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 7),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withValues(alpha: 0.25),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.35)),
+                                  border: Border.all(
+                                      color: AppColors.accentGold
+                                          .withValues(alpha: 0.35)),
                                 ),
                                 child: const Row(
                                   children: [
-                                    Icon(Icons.volunteer_activism_rounded, color: AppColors.accentGold, size: 15),
+                                    Icon(Icons.volunteer_activism_rounded,
+                                        color: AppColors.accentGold, size: 15),
                                     SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
@@ -567,7 +653,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           decoration: InputDecoration(
                             hintText: 'ابحث عن أي قسم أو خدمة في التطبيق...',
                             hintStyle: const TextStyle(fontSize: 12),
-                            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primaryGreen, size: 20),
+                            prefixIcon: const Icon(Icons.search_rounded,
+                                color: AppColors.primaryGreen, size: 20),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear, size: 18),
@@ -580,8 +667,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   )
                                 : null,
                             filled: true,
-                            fillColor: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade100,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            fillColor: isDark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : Colors.grey.shade100,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -593,7 +683,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                       // 3. Horizontal Category Filter Chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         child: Row(
                           children: [
                             _buildFilterChip('الكل', 'all'),
@@ -608,7 +699,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             const SizedBox(width: 6),
                             _buildFilterChip('📚 المكتبة', 'library'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('⚙️ الإعدادات والمطور', 'settings'),
+                            _buildFilterChip(
+                                '⚙️ الإعدادات والمطور', 'settings'),
                           ],
                         ),
                       ),
@@ -623,16 +715,22 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.search_off_rounded, size: 40, color: Colors.grey),
+                                      const Icon(Icons.search_off_rounded,
+                                          size: 40, color: Colors.grey),
                                       const SizedBox(height: 10),
                                       const Text(
                                         'لم نعثر على قسم مطابق لكلمات البحث',
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13),
                                       ),
                                       const SizedBox(height: 6),
                                       TextButton.icon(
-                                        icon: const Icon(Icons.grid_view_rounded, size: 16),
-                                        label: const Text('فتح الدليل الشامل (٥٨ شاشة)'),
+                                        icon: const Icon(
+                                            Icons.grid_view_rounded,
+                                            size: 16),
+                                        label: const Text(
+                                            'فتح الدليل الشامل (٥٨ شاشة)'),
                                         onPressed: () {
                                           Navigator.pop(context);
                                           context.push('/app-screen-directory');
@@ -644,7 +742,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                               )
                             : ListView.builder(
                                 physics: const BouncingScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 10),
                                 itemCount: filteredItems.length,
                                 itemBuilder: (context, index) {
                                   final item = filteredItems[index];
@@ -663,9 +762,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
                       // 5. Clean Footer
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+                          border: Border(
+                              top: BorderSide(
+                                  color: theme.colorScheme.outlineVariant)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -673,19 +775,23 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                             const Flexible(
                               child: Text(
                                 'إصدار رسمي v1.3.0',
-                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                style:
+                                    TextStyle(color: Colors.grey, fontSize: 11),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.favorite, color: AppColors.accentGold, size: 14),
+                                const Icon(Icons.favorite,
+                                    color: AppColors.accentGold, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
                                   'لوجه الله تعالى',
                                   style: TextStyle(
-                                    color: isDark ? AppColors.accentGold : AppColors.primaryGreen,
+                                    color: isDark
+                                        ? AppColors.accentGold
+                                        : AppColors.primaryGreen,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -745,8 +851,10 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
           color: isDark
-              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              ? theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.35)
+              : theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.4),
           border: Border.all(
             color: color.withValues(alpha: 0.2),
             width: 1.2,
@@ -757,7 +865,8 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           borderRadius: BorderRadius.circular(14),
           child: ListTile(
             dense: false,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             leading: Container(
               width: 40,
               height: 40,
@@ -770,18 +879,11 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
             title: Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
             ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                subtitle,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Colors.grey),
             onTap: onTap,
           ),
         ),
