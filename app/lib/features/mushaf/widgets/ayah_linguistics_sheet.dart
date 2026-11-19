@@ -150,7 +150,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                     ),
                   ),
                   IconButton(
-                    tooltip: 'فتح التفاسير الثمانية المعتمدة',
+                    tooltip: 'فتح التفسير',
                     icon: const Icon(Icons.auto_stories_rounded, color: AppColors.primaryGreen),
                     onPressed: () {
                       Navigator.pop(context);
