@@ -35,6 +35,12 @@ class BudurReferenceResolver {
       return const [BudurReference(12, 'تفتؤا')];
     if (surah == 18 && text == "\" للملائكة اسجدوا \" سبق في الإسراء مثله.")
       return const [BudurReference(17, 'للملائكة اسجدوا')];
+    if (surah == 16 &&
+        text ==
+            "\" يتفيؤا \" قرأ البصريان بتاء التأنيث، والباقون بياء التذكير وفيه لهشام وحمزة وقفا ما في تفتؤا لرسم الهمزة على واو.")
+      return const [BudurReference(12, 'تفتؤا')];
+    if (surah == 24 && text == "\" ويدرؤا \" مثل: تفتؤا وقفا لحمزة وهشام.")
+      return const [BudurReference(12, 'تفتؤا')];
     final quotes = BudurVerseLinker.quotes(text);
     if (quotes.length != 1) return const [];
     final q = quotes.single;
