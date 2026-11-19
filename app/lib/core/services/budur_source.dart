@@ -228,6 +228,25 @@ class BudurSource {
       if (hits.length == 1 && hits.single.ayah == expected.$1)
         links[i] = [expected.$1];
     }
+    // Three further standalone references were inspected against the two
+    // distinct Qasas loci and the Sajda locus. Context phrases are exact
+    // whole-token evidence, not a first-match search for the repeated word.
+    const reviewedAima = <int, Map<String, (int, String)>>{
+      28: {
+        "\" أئمة \" تقدم نظيره في سورة الأنبياء.": (5, 'ونجعلهم أئمة'),
+        "\" أئمة \" تقدم أول السورة.": (41, 'أئمة يدعون'),
+      },
+      32: {
+        "\" أئمة \" سبق حكمها قريبا في القصص.": (24, 'أئمة يهدون'),
+      },
+    };
+    for (var i = 0; i < texts.length; i++) {
+      final expected = reviewedAima[surah.id]?[texts[i]];
+      if (expected == null) continue;
+      final hits = BudurVerseLinker.occurrences(expected.$2, ayahs);
+      if (hits.length == 1 && hits.single.ayah == expected.$1)
+        links[i] = [expected.$1];
+    }
     // Five inspected list headings name separate Quran words, not a
     // contiguous quotation. Require the original paragraph and every whole-
     // token occurrence (including both occurrences in the same verse).
