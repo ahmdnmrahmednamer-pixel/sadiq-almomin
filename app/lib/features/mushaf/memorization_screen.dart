@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../core/models/surah.dart';
@@ -65,6 +66,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
 
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _ayahKeys = {};
+  int _autoscrollToken = 0;
 
   @override
   void initState() {
@@ -136,6 +138,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   }
 
   Future<void> _onSurahChanged(int newSurahId) async {
+    _autoscrollToken++;
     await _stopPlayback();
     setState(() => _isLoading = true);
 
@@ -209,6 +212,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   }
 
   Future<void> _pausePlayback() async {
+    _autoscrollToken++;
     _delayTimer?.cancel();
     await _player.pause();
     if (!mounted) return;
@@ -219,6 +223,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   }
 
   Future<void> _stopPlayback() async {
+    _autoscrollToken++;
     _delayTimer?.cancel();
     await _player.stop();
     if (!mounted) return;
@@ -345,18 +350,110 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
     });
   }
 
-  void _scrollToAyah(int index) {
-    if (!mounted) return;
-    final ctx = _ayahKeys[index]?.currentContext;
-    if (ctx != null && ctx.mounted) {
+  Future<void> _scrollToAyah(int index) async {
+    if (!mounted || !_scrollController.hasClients) return;
+    final token = ++_autoscrollToken;
+
+    // Check if target ayah context is already materialized
+    final immediateContext = _ayahKeys[index]?.currentContext;
+    if (immediateContext != null && immediateContext.mounted) {
       try {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: const Duration(milliseconds: 350),
+        await Scrollable.ensureVisible(
+          immediateContext,
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
           alignment: 0.3,
         );
       } catch (_) {}
+      return;
+    }
+
+    // Target is not yet materialized in the lazy ListView.
+    // Lazily advance scroll position until target item mounts in itemBuilder.
+    int attempts = 0;
+    const maxAttempts = 30; // bounded safety guard
+
+    while (attempts < maxAttempts) {
+      if (!mounted || token != _autoscrollToken || !_scrollController.hasClients || !_isPlaying) {
+        return;
+      }
+
+      // Check if target context has mounted
+      final ctx = _ayahKeys[index]?.currentContext;
+      if (ctx != null && ctx.mounted) {
+        try {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: 0.3,
+          );
+        } catch (_) {}
+        return;
+      }
+
+      final position = _scrollController.position;
+      final viewport = position.viewportDimension > 0 ? position.viewportDimension : 400.0;
+      final step = viewport * 0.75;
+
+      // Determine direction by checking currently mounted ayah keys
+      final mountedAyahIndices = _ayahKeys.entries
+          .where((e) => e.value.currentContext != null && e.value.currentContext!.mounted)
+          .map((e) => e.key)
+          .toList();
+
+      double delta;
+      if (mountedAyahIndices.isEmpty) {
+        delta = step;
+      } else {
+        final maxMounted = mountedAyahIndices.reduce(math.max);
+        final minMounted = mountedAyahIndices.reduce(math.min);
+        if (index > maxMounted) {
+          delta = step;
+        } else if (index < minMounted) {
+          delta = -step;
+        } else {
+          delta = index >= (minMounted + maxMounted) / 2 ? step : -step;
+        }
+      }
+
+      final targetOffset = (position.pixels + delta).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+
+      if ((targetOffset - position.pixels).abs() < 1.0) {
+        // Reached boundary of scroll extent
+        break;
+      }
+
+      try {
+        await _scrollController.animateTo(
+          targetOffset,
+          duration: const Duration(milliseconds: 100),
+          curve: Curves.easeOut,
+        );
+      } catch (_) {
+        // Animation was canceled (e.g. by new target, user drag, or pause)
+        return;
+      }
+
+      attempts++;
+    }
+
+    // Final check once scrolling settled
+    if (mounted && token == _autoscrollToken && _scrollController.hasClients && _isPlaying) {
+      final finalCtx = _ayahKeys[index]?.currentContext;
+      if (finalCtx != null && finalCtx.mounted) {
+        try {
+          await Scrollable.ensureVisible(
+            finalCtx,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignment: 0.3,
+          );
+        } catch (_) {}
+      }
     }
   }
 
@@ -487,6 +584,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
 
   @override
   void dispose() {
+    _autoscrollToken++;
     _delayTimer?.cancel();
     _playerStateSub?.cancel();
     _player.dispose();
@@ -499,18 +597,54 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final textScaler = MediaQuery.textScalerOf(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
+    final leadingWidth = canPop ? kToolbarHeight : 0.0;
+    const actionsWidth = 96.0; // 2 action buttons * 48px
+    const horizontalMargin = NavigationToolbar.kMiddleSpacing * 2; // 32.0 (16px per side)
+    final availableTitleWidth = screenWidth - leadingWidth - actionsWidth - horizontalMargin;
+
+    final titleStyle = theme.appBarTheme.titleTextStyle ??
+        theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold) ??
+        const TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
+
+    const titleText = 'المحفظ القرآني والتكرار الذكي';
+    final textPainter = TextPainter(
+      text: TextSpan(text: titleText, style: titleStyle),
+      textDirection: SettingsService.instance.textDirection,
+      textScaler: textScaler,
+    )..layout(maxWidth: math.max(60.0, availableTitleWidth));
+
+    final measuredTitleHeight = textPainter.height;
+    final adaptedToolbarHeight = math.max(kToolbarHeight, (measuredTitleHeight + 16.0).ceilToDouble());
+
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('المحفظ القرآني والتكرار الذكي'),
+          toolbarHeight: adaptedToolbarHeight,
+          leading: canPop
+              ? ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                  child: const BackButton(),
+                )
+              : null,
+          title: Text(
+            titleText,
+            style: titleStyle,
+            maxLines: 5,
+            softWrap: true,
+          ),
           actions: [
             IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               icon: const Icon(Icons.person_search_outlined),
               tooltip: 'تغيير القارئ',
               onPressed: _showReciterSelector,
             ),
             IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               icon: const Icon(Icons.info_outline),
               tooltip: 'عن المحفظ والإهداء',
               onPressed: () => showMemorizationDedicationDialog(context),
@@ -519,89 +653,91 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
-            : Column(
-                children: [
-                  // Dedicated Top Sticky Controls Panel
-                  MemorizationControlsPanel(
-                    isDark: isDark,
-                    surahs: _surahs,
-                    selectedSurahId: _selectedSurahId,
-                    currentSurah: _currentSurah,
-                    fromAyah: _fromAyah,
-                    toAyah: _toAyah,
-                    ayahRepeatTarget: _ayahRepeatTarget,
-                    rangeRepeatTarget: _rangeRepeatTarget,
-                    delaySeconds: _delaySeconds,
-                    hideMode: _hideMode,
-                    onSurahChanged: _onSurahChanged,
-                    onFromAyahChanged: (val) {
-                      setState(() {
-                        _fromAyah = val;
-                        _clampRange(_currentSurah?.ayahCount ?? 7);
-                        _filterRangeAyahs();
-                      });
-                    },
-                    onToAyahChanged: (val) {
-                      setState(() {
-                        _toAyah = val;
-                        _clampRange(_currentSurah?.ayahCount ?? 7);
-                        _filterRangeAyahs();
-                      });
-                    },
-                    onAyahRepeatChanged: (val) => setState(() => _ayahRepeatTarget = val),
-                    onRangeRepeatChanged: (val) => setState(() => _rangeRepeatTarget = val),
-                    onDelayChanged: (val) => setState(() => _delaySeconds = val),
-                    onHideModeChanged: (mode) {
-                      setState(() {
-                        _hideMode = mode;
-                        _revealedWords.clear();
-                      });
-                    },
-                    onRevealAllWords: _revealAllWords,
-                    onHideAllWords: _hideAllWords,
-                  ),
+            : ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: 80),
+                itemCount: 2 + (_rangeAyahs.isEmpty ? 1 : _rangeAyahs.length),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return MemorizationControlsPanel(
+                      isDark: isDark,
+                      surahs: _surahs,
+                      selectedSurahId: _selectedSurahId,
+                      currentSurah: _currentSurah,
+                      fromAyah: _fromAyah,
+                      toAyah: _toAyah,
+                      ayahRepeatTarget: _ayahRepeatTarget,
+                      rangeRepeatTarget: _rangeRepeatTarget,
+                      delaySeconds: _delaySeconds,
+                      hideMode: _hideMode,
+                      onSurahChanged: _onSurahChanged,
+                      onFromAyahChanged: (val) {
+                        setState(() {
+                          _fromAyah = val;
+                          _clampRange(_currentSurah?.ayahCount ?? 7);
+                          _filterRangeAyahs();
+                        });
+                      },
+                      onToAyahChanged: (val) {
+                        setState(() {
+                          _toAyah = val;
+                          _clampRange(_currentSurah?.ayahCount ?? 7);
+                          _filterRangeAyahs();
+                        });
+                      },
+                      onAyahRepeatChanged: (val) => setState(() => _ayahRepeatTarget = val),
+                      onRangeRepeatChanged: (val) => setState(() => _rangeRepeatTarget = val),
+                      onDelayChanged: (val) => setState(() => _delaySeconds = val),
+                      onHideModeChanged: (mode) {
+                        setState(() {
+                          _hideMode = mode;
+                          _revealedWords.clear();
+                        });
+                      },
+                      onRevealAllWords: _revealAllWords,
+                      onHideAllWords: _hideAllWords,
+                    );
+                  }
 
-                  // Ayahs Content List
-                  Expanded(
-                    child: _rangeAyahs.isEmpty
-                        ? const Center(child: Text('لا توجد آيات محددة'))
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.only(left: 14, right: 14, top: 8, bottom: 80),
-                            itemCount: _rangeAyahs.length + 1, // +1 for dedication banner at top
-                            itemBuilder: (context, index) {
-                              if (index == 0) {
-                                return const MemorizationDedicationBanner();
-                              }
+                  if (index == 1) {
+                    return const Padding(
+                      padding: EdgeInsets.fromLTRB(14, 8, 14, 0),
+                      child: MemorizationDedicationBanner(),
+                    );
+                  }
 
-                              final ayahIndex = index - 1;
-                              final ayah = _rangeAyahs[ayahIndex];
-                              _ayahKeys[ayahIndex] ??= GlobalKey();
+                  if (_rangeAyahs.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: Text('لا توجد آيات محددة')),
+                    );
+                  }
 
-                              final isCurrentPlaying = _isPlaying && _currentAyahIndex == ayahIndex;
+                  final ayahIndex = index - 2;
+                  final ayah = _rangeAyahs[ayahIndex];
+                  _ayahKeys[ayahIndex] ??= GlobalKey();
 
-                              return Container(
-                                key: _ayahKeys[ayahIndex],
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: MemorizationAyahCard(
-                                  ayah: ayah,
-                                  surahId: _selectedSurahId,
-                                  isCurrentPlaying: isCurrentPlaying,
-                                  isDelaying: _isDelaying,
-                                  remainingDelaySeconds: _remainingDelaySeconds,
-                                  currentAyahRepeat: _currentAyahRepeat,
-                                  ayahRepeatTarget: _ayahRepeatTarget,
-                                  hideMode: _hideMode,
-                                  revealedWords: _revealedWords,
-                                  isDark: isDark,
-                                  onToggleWordReveal: _toggleWordReveal,
-                                  onRateAyah: _rateAyah,
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                  final isCurrentPlaying = _isPlaying && _currentAyahIndex == ayahIndex;
+
+                  return Container(
+                    key: _ayahKeys[ayahIndex],
+                    margin: const EdgeInsets.only(left: 14, right: 14, top: 12),
+                    child: MemorizationAyahCard(
+                      ayah: ayah,
+                      surahId: _selectedSurahId,
+                      isCurrentPlaying: isCurrentPlaying,
+                      isDelaying: _isDelaying,
+                      remainingDelaySeconds: _remainingDelaySeconds,
+                      currentAyahRepeat: _currentAyahRepeat,
+                      ayahRepeatTarget: _ayahRepeatTarget,
+                      hideMode: _hideMode,
+                      revealedWords: _revealedWords,
+                      isDark: isDark,
+                      onToggleWordReveal: _toggleWordReveal,
+                      onRateAyah: _rateAyah,
+                    ),
+                  );
+                },
               ),
         bottomNavigationBar: MemorizationPlaybackBar(
           isDark: isDark,

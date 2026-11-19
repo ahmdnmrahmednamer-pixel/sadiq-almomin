@@ -527,7 +527,20 @@ void main() {
         // Switch modes and verify smooth state change
         final secondHalf = find.text('إخفاء النصف الثاني');
         await tester.ensureVisible(secondHalf);
+        await tester.pumpAndSettle();
         await tester.tap(secondHalf);
+        await tester.pumpAndSettle();
+
+        // In shared body scroll, user scrolls down to first verse card to verify masked verse flow
+        final scrollableFinder = find.byType(Scrollable).first;
+        final firstCard = find.byType(MemorizationAyahCard);
+        int scrollAttempts = 0;
+        while (firstCard.evaluate().isEmpty && scrollAttempts < 6) {
+          await tester.drag(scrollableFinder, const Offset(0, -300));
+          await tester.pumpAndSettle();
+          scrollAttempts++;
+        }
+        await tester.ensureVisible(firstCard.first);
         await tester.pumpAndSettle();
 
         expect(find.text('••••••'), findsWidgets);
