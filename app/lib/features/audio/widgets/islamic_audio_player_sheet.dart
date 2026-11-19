@@ -1,3 +1,4 @@
+import '../../adhkar/adhkar_audio_screen.dart';
 import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/islamic_audio_service.dart';
@@ -58,7 +59,12 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    const allTracks = IslamicAudioService.allTracks;
+    if (_selectedType == IslamicAudioType.adhkar) {
+      return SizedBox(height: MediaQuery.of(context).size.height * 0.92,
+        child: const AdhkarAudioScreen());
+    }
+    final allTracks = IslamicAudioService.allTracks
+        .where((track) => track.type != IslamicAudioType.adhkar).toList(growable: false);
     final filteredTracks = _selectedType == null
         ? allTracks
         : allTracks.where((t) => t.type == _selectedType).toList();
@@ -126,7 +132,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          'أصوات نقية مدمجة بالكامل تعمل بدون إنترنت 🎧',
+                          'تختلف مصادر التسجيلات وتوفرها دون إنترنت',
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
@@ -173,7 +179,7 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                   ),
                   const SizedBox(width: 8),
                   _buildFilterChip(
-                    'الأذكار الصوتية (${_audioService.getTracksByType(IslamicAudioType.adhkar).length})',
+                    'الأذكار المسموعة',
                     IslamicAudioType.adhkar,
                     Icons.auto_stories_rounded,
                   ),
@@ -413,8 +419,8 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                         // Footer Buttons: Default Adhan Setter
                         if (track.rawNotificationSound != null) ...[
                           const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          Wrap(
+                            alignment: WrapAlignment.end,
                             children: [
                               if (isDefaultAdhan)
                                 Container(
@@ -424,8 +430,8 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                                   ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  child: const Wrap(
+                                    crossAxisAlignment: WrapCrossAlignment.center,
                                     children: [
                                       Icon(Icons.check_circle_rounded, size: 14, color: AppColors.accentGold),
                                       SizedBox(width: 5),
@@ -464,8 +470,8 @@ class _IslamicAudioPlayerSheetState extends State<IslamicAudioPlayerSheet> {
                                         color: isDark ? Colors.white12 : Colors.grey.shade300,
                                       ),
                                     ),
-                                    child: const Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                    child: const Wrap(
+                                      crossAxisAlignment: WrapCrossAlignment.center,
                                       children: [
                                         Icon(Icons.notifications_active_outlined, size: 14, color: AppColors.primaryGreen),
                                         SizedBox(width: 5),
