@@ -70,7 +70,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Text(
-            'حدّد الأوقات المناسبة لك لتلقي إشعارات أذكار الصباح والمساء والنوم يومياً، لتكون في حفظ الله ومعيته طوال اليوم.',
+            'مواعيد تنبيهات الأذكار',
             style: TextStyle(
               fontSize: 12.5,
               color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
@@ -85,7 +85,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
           context: context,
           isDark: isDark,
           title: 'أذكار الصباح المباركة',
-          subtitle: 'حصن يومك وانشراح صدرك والبركة في رزقك',
+          subtitle: '',
           icon: Icons.wb_sunny_rounded,
           accentColor: const Color(0xFFD4AF37),
           isEnabled: pn.morningAdhkarEnabled,
@@ -114,7 +114,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
           context: context,
           isDark: isDark,
           title: 'أذكار المساء المباركة',
-          subtitle: 'حفظ الليل وسكينة الروح والأمان من كل سوء',
+          subtitle: '',
           icon: Icons.nights_stay_rounded,
           accentColor: const Color(0xFF1B4332),
           isEnabled: pn.eveningAdhkarEnabled,
@@ -143,7 +143,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
           context: context,
           isDark: isDark,
           title: 'أذكار وسنن النوم',
-          subtitle: 'تحصين المضجع والمأثور عن النبي ﷺ عند النوم',
+          subtitle: '',
           icon: Icons.hotel_rounded,
           accentColor: const Color(0xFF4A6B82),
           isEnabled: pn.sleepAdhkarEnabled,
@@ -219,7 +219,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                 title,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
               ),
-              subtitle: Text(
+              subtitle: subtitle.isEmpty ? null : Text(
                 subtitle,
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
