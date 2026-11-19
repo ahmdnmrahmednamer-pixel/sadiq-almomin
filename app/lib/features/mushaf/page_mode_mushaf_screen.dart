@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/audio/ayah_audio_player.dart';
 import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
+import 'widgets/ayah_interaction.dart';
 import 'surah_reader_screen.dart';
 import '../../core/services/quran_accessibility_service.dart';
 import '../../core/ui/app_dropdown_field.dart';
@@ -720,6 +721,62 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
             ),
           );
         }
+      }
+
+      // A continuous paragraph exposes separate text/number nodes on Android.
+      // Screen-reader mode uses one explicit focus target per complete verse.
+      if (MediaQuery.accessibleNavigationOf(context)) {
+        for (final ayah in surahAyahs) {
+          final isPlaying = playingKey == '$surahId:${ayah.ayahNumber}';
+          widgets.add(
+            AyahInteraction(
+              key: ValueKey('page-ayah-$surahId-${ayah.ayahNumber}'),
+              label:
+                  '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)}، الآية ${ayah.ayahNumber}، السورة $surahId',
+              isPlaying: isPlaying,
+              onTap: () {
+                if (isPlaying) {
+                  AyahAudioPlayer.instance.stop();
+                } else {
+                  AyahAudioPlayer.instance.playAyah(
+                    context,
+                    ayah.surahId,
+                    ayah.ayahNumber,
+                  );
+                }
+              },
+              onLongPress: () async {
+                final surah = await QuranRepository.getSurahById(ayah.surahId);
+                if (surah != null && context.mounted) {
+                  AyahActionSheet.show(context, surah: surah, ayah: ayah);
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: isPlaying
+                      ? AppColors.accentGold.withValues(alpha: 0.18)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${ayah.cleanTextUthmani} ﴿${SettingsService.instance.formatAyahNumber(ayah.ayahNumber)}﴾',
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(
+                    fontSize: _fontSize,
+                    height: 2.1,
+                    color: isPlaying ? AppColors.accentGold : textColor,
+                    fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        return;
       }
 
       // Continuous Ayah RichText: Ayah text followed immediately by its number (e.g. قل هو الله احد 1 الله الصمد 2)
