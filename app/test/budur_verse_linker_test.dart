@@ -189,12 +189,50 @@ void main() {
         36: {
           "\" سدا، معا \" فتح السين فيهما حفص والأخوان وخلف، وضمها غيرهم.": [9],
         },
+        39: {
+          "\" فتحت وفتحت \" خفف التاء فيهما الكوفيون وشددها غيرهم.": [71, 73],
+        },
+        64: {
+          "\" يكفر. ويدخله \" قرأ المدنيان والشامي بالنون في الفعلين والباقون بالياء التحتية فيهما.":
+              [9],
+        },
+        71: {
+          "\" ويؤخركم لا يؤخر \" أبدل ورش وأبو جعفر الهمزة واوا خالصة مطلقا، وكذلك حمزة عند الوقف.":
+              [4],
+        },
+        75: {
+          "\" تحبون وتذرون \" قرأ المكي والبصريان والشامي بياء الغيبة فيهما، والباقون بتاء الخطاب كذلك.":
+              [20, 21],
+        },
+        66: {
+          "\" امرأت الثلاثة وابنت \" رسمت كلها بالتاء ووقف عليها بالهاء المكي والبصريان والكسائي، والباقون بالتاء.":
+              [10, 11, 12],
+        },
       };
       for (final expected
           in (reviewedListAyahs[surah.id] ?? const <String, List<int>>{})
               .entries) {
         expect(result.singleWhere((p) => p.text == expected.key).ayahs,
             expected.value);
+      }
+      if (surah.id == 66) {
+        final reviewed = result
+            .singleWhere((p) => p.text.startsWith('" امرأت الثلاثة وابنت "'));
+        final changed = BudurSource.passages(
+            source.replaceFirst(
+                reviewed.text, '${reviewed.text} UNREVIEWED_CHANGE'),
+            surah,
+            ayahs);
+        expect(
+            changed
+                .singleWhere((p) => p.text.contains('UNREVIEWED_CHANGE'))
+                .ayahs,
+            isEmpty);
+        final noThird = BudurSource.passages(
+            source, surah, ayahs.where((a) => a.ayahNumber != 11).toList());
+        expect(
+            noThird.singleWhere((p) => p.text == reviewed.text).ayahs, isEmpty,
+            reason: 'all three source occurrences are required');
       }
       if (surah.id == 36) {
         final withoutEvidence = BudurSource.passages(
