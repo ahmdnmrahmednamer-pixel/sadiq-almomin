@@ -5,8 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/models/dhikr.dart';
 import '../../core/services/adhkar_service.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/islamic_audio_service.dart';
-import '../audio/widgets/islamic_audio_player_sheet.dart';
 import 'tasbih_screen.dart';
 import 'widgets/sharawi_post_prayer_card.dart';
 
@@ -37,19 +35,12 @@ class _AdhkarScreenState extends State<AdhkarScreen>
       initialIndex: initialIndex,
       vsync: this,
     );
-    IslamicAudioService.instance.init();
-    IslamicAudioService.instance.addListener(_onAudioUpdate);
   }
 
   @override
   void dispose() {
-    IslamicAudioService.instance.removeListener(_onAudioUpdate);
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _onAudioUpdate() {
-    if (mounted) setState(() {});
   }
 
   void _shareDhikr(DhikrItem item, String categoryTitle) {
@@ -121,14 +112,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
           toolbarHeight:
               MediaQuery.textScalerOf(context).scale(16) >= 22 ? 120 : 64,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.volume_up_rounded),
-              tooltip: 'المكتبة الصوتية للأذكار والأذان',
-              onPressed: () {
-                IslamicAudioPlayerSheet.show(context,
-                    filter: IslamicAudioType.adhkar);
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.touch_app_outlined),
               tooltip: 'السبحة الإلكترونية',
@@ -291,13 +274,9 @@ class _AdhkarScreenState extends State<AdhkarScreen>
 
         // Sheikh Al-Sha'rawi Post-Prayer Duaa Featured Card
         if (category.id == 'post_prayer') ...[
-          SharawiPostPrayerDuaaCard(isDark: isDark),
+          SharawiPostPrayerDuaaCard(isDark: isDark, textOnly: true),
           const SizedBox(height: 14),
         ],
-
-        // Audio Recitation Card for this Category (FR-AUD-006)
-        _buildAudioPlayerCardForCategory(category, isDark),
-        const SizedBox(height: 14),
 
         // List of Dhikr Cards
         ...category.items.asMap().entries.map((entry) {
@@ -307,216 +286,6 @@ class _AdhkarScreenState extends State<AdhkarScreen>
         }),
         const SizedBox(height: 60), // bottom space for FAB
       ],
-    );
-  }
-
-  Widget _buildAudioPlayerCardForCategory(DhikrCategory category, bool isDark) {
-    final audioService = IslamicAudioService.instance;
-    String trackId = 'adhkar_morning';
-    if (category.id == 'evening') trackId = 'adhkar_evening';
-    if (category.id == 'post_prayer') trackId = 'adhkar_post_prayer';
-    if (category.id == 'sleep') trackId = 'adhkar_sleep';
-    if (category.id == 'waking') trackId = 'adhkar_waking';
-    if (category.id == 'home_mosque') trackId = 'adhkar_home_mosque';
-    if (category.id == 'prophetic_duas' || category.id == 'duas') {
-      trackId = 'prophetic_duas';
-    }
-    if (category.id == 'ruqyah' || category.id == 'distress_relief') {
-      trackId = 'ruqyah_shariah';
-    }
-
-    final track = IslamicAudioService.allTracks.firstWhere(
-      (t) => t.id == trackId,
-      orElse: () => IslamicAudioService.allTracks
-          .firstWhere((t) => t.type == IslamicAudioType.adhkar),
-    );
-
-    final isCurrent = audioService.currentTrack?.id == track.id;
-    final isPlaying = isCurrent && audioService.isPlaying;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isCurrent
-            ? (isDark ? const Color(0xFF1B3D2F) : const Color(0xFFE8F5E9))
-            : (isDark ? AppColors.darkCard : Colors.white),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCurrent
-              ? AppColors.accentGold
-              : (isDark ? Colors.white12 : Colors.grey.shade200),
-          width: isCurrent ? 1.8 : 1.0,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Semantics(
-                button: true,
-                label: isPlaying
-                    ? 'إيقاف مؤقت: ${category.title}'
-                    : 'استمع إلى ${category.title}',
-                onTap: () => audioService.playTrack(track),
-                excludeSemantics: true,
-                child: GestureDetector(
-                  onTap: () => audioService.playTrack(track),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isPlaying
-                            ? [const Color(0xFFD4AF37), const Color(0xFFB89628)]
-                            : [
-                                AppColors.primaryGreen,
-                                AppColors.secondaryGreen
-                              ],
-                      ),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        isPlaying
-                            ? Icons.pause_rounded
-                            : Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('استمع إلى ${category.title} بصوت خاشع',
-                        style: const TextStyle(
-                            fontSize: 13.5, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        if (audioService.isDownloaded(track.id))
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'أوفلاين',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.green),
-                            ),
-                          )
-                        else if (audioService.isDownloading(track.id))
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              value: audioService
-                                  .getDownloadProgress(track.id)
-                                  .clamp(0.0, 1.0),
-                              strokeWidth: 2,
-                              color: AppColors.accentGold,
-                            ),
-                          )
-                        else
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Text(
-                                  'بث مباشر',
-                                  style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.blueAccent),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                icon: const Icon(
-                                    Icons.download_for_offline_outlined,
-                                    size: 18,
-                                    color: AppColors.primaryGreen),
-                                tooltip: 'تحميل للاستماع دون إنترنت',
-                                visualDensity: VisualDensity.compact,
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () async {
-                                  final ok = await audioService
-                                      .downloadTrack(track.id);
-                                  if (ok && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                          content: Text(
-                                              'تم تنزيل ${category.title} بنجاح للاستماع دون إنترنت')),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      track.subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white60 : AppColors.mutedText,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (isCurrent) ...[
-            const SizedBox(height: 8),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                activeTrackColor: AppColors.primaryGreen,
-                inactiveTrackColor:
-                    isDark ? Colors.white12 : Colors.grey.shade300,
-                thumbColor: AppColors.accentGold,
-              ),
-              child: Slider(
-                value: audioService.position.inSeconds.toDouble().clamp(
-                    0.0,
-                    (audioService.duration.inSeconds > 0
-                        ? audioService.duration.inSeconds.toDouble()
-                        : 1.0)),
-                max: audioService.duration.inSeconds > 0
-                    ? audioService.duration.inSeconds.toDouble()
-                    : 1.0,
-                onChanged: (val) {
-                  audioService.seek(Duration(seconds: val.toInt()));
-                },
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 
