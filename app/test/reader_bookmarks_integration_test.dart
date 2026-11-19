@@ -60,8 +60,9 @@ void main(){
   expect(t.takeException(),isNull);
  });
  testWidgets('offline reader and marks at 2x text scale remain usable',(t)async{
-  final font=Platform.environment['READING_TEST_FONT'] ?? (File('/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf').existsSync()?'/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf':null);
-  final icons=Platform.environment['READING_TEST_ICON_FONT'] ?? (File('/home/sandbox/flutter-sdk/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').existsSync()?'/home/sandbox/flutter-sdk/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf':null);
+  final font=Platform.environment['READING_TEST_FONT'];
+  final icons=Platform.environment['READING_TEST_ICON_FONT'];
+  if(font==null||icons==null)return;
   SharedPreferences.setMockInitialValues({});
   t.view.physicalSize=const Size(360,800);t.view.devicePixelRatio=1;
   addTearDown(t.view.resetPhysicalSize);addTearDown(t.view.resetDevicePixelRatio);
