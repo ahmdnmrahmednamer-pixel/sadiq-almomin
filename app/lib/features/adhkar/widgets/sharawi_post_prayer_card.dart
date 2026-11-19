@@ -11,11 +11,13 @@ import '../../../core/theme/app_theme.dart';
 /// والنص الكامل بالتشكيل الدقيق، مع أزرار المشاركة والنسخ.
 class SharawiPostPrayerDuaaCard extends StatefulWidget {
   final bool isDark;
+  final bool textOnly;
   final VoidCallback? onOpenFullLibrary;
 
   const SharawiPostPrayerDuaaCard({
     super.key,
     required this.isDark,
+    this.textOnly = false,
     this.onOpenFullLibrary,
   });
 
@@ -103,6 +105,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.textOnly) return _buildWrittenPrayers(context);
     final audioService = IslamicAudioService.instance;
     final position = _isThisTrackActive ? audioService.position : Duration.zero;
     final duration = _isThisTrackActive && audioService.duration > Duration.zero
@@ -465,6 +468,52 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildWrittenPrayers(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('أدعية مكتوبة',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          for (final entry in [
+            'دعاء الأذان والصلاة',
+            'دعاء ختام الصلاة والمناجاة'
+          ].asMap().entries) ...[
+            Semantics(
+                selected: _selectedTab == entry.key,
+                child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                        backgroundColor: _selectedTab == entry.key
+                            ? (widget.isDark
+                                ? const Color(0xFF234D39)
+                                : const Color(0xFFDCEDE2))
+                            : null),
+                    onPressed: () => setState(() => _selectedTab = entry.key),
+                    child: Text(entry.value, textAlign: TextAlign.center))),
+            const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 12),
+          SelectableText(_selectedTab == 0 ? duaaAudioText : duaaKhatmText,
+              style: const TextStyle(
+                  fontFamily: 'Amiri', fontSize: 19, height: 1.85)),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            OutlinedButton.icon(
+                onPressed: _copyDuaa,
+                icon: const Icon(Icons.copy),
+                label: const Text('نسخ')),
+            OutlinedButton.icon(
+                onPressed: _shareDuaa,
+                icon: const Icon(Icons.share),
+                label: const Text('مشاركة')),
+          ]),
+        ]),
       ),
     );
   }
