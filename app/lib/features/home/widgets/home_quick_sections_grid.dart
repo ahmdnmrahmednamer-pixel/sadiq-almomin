@@ -5,14 +5,12 @@ import '../../../core/theme/app_theme.dart';
 /// Quick Category Model
 class _QuickSectionItem {
   final String title;
-  final String subtitle;
   final IconData icon;
   final Color color;
   final String route;
 
   const _QuickSectionItem({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.color,
     required this.route,
@@ -27,35 +25,30 @@ class HomeQuickSectionsGrid extends StatelessWidget {
   static const List<_QuickSectionItem> _items = [
     _QuickSectionItem(
       title: 'المصحف الشريف',
-      subtitle: 'تلاوة، تفسير، وبحث قرآني',
       icon: Icons.menu_book_rounded,
       color: AppColors.primaryGreen,
       route: '/mushaf',
     ),
     _QuickSectionItem(
       title: 'الصلاة والقبلة',
-      subtitle: 'المواقيت والأذان والقبلة',
       icon: Icons.access_time_filled_rounded,
       color: Color(0xFF25739B),
       route: '/prayer',
     ),
     _QuickSectionItem(
       title: 'الأذكار والسبحة',
-      subtitle: 'حصن المسلم والأوراد اليومية',
       icon: Icons.volunteer_activism_rounded,
       color: Color(0xFF059669),
       route: '/adhkar-hub',
     ),
     _QuickSectionItem(
       title: 'المكتبة والحديث',
-      subtitle: 'رياض الصالحين والقصص والفقه',
       icon: Icons.auto_stories_rounded,
       color: Color(0xFFB45309),
       route: '/library',
     ),
     _QuickSectionItem(
       title: 'ختمة القرآن',
-      subtitle: 'خطة الختمة والمتابعة',
       icon: Icons.bookmark_added_rounded,
       color: Color(0xFF0F766E),
       route: '/khatma',
@@ -159,7 +152,7 @@ class HomeQuickSectionsGrid extends StatelessWidget {
     }
 
     return Semantics(
-      label: '${item.title}، ${item.subtitle}',
+      label: item.title,
       button: true,
       excludeSemantics: true,
       onTap: handleTap,
@@ -195,7 +188,8 @@ class HomeQuickSectionsGrid extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: item.color.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
-                    border: Border.all(color: item.color.withValues(alpha: 0.25)),
+                    border:
+                        Border.all(color: item.color.withValues(alpha: 0.25)),
                   ),
                   child: Icon(item.icon, color: item.color, size: 20),
                 ),
@@ -209,15 +203,6 @@ class HomeQuickSectionsGrid extends StatelessWidget {
                         fontSize: 13.5,
                         fontWeight: FontWeight.w900,
                         fontFamily: 'Cairo',
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      item.subtitle,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white60 : Colors.grey.shade600,
-                        height: 1.25,
                       ),
                     ),
                   ],
