@@ -8,11 +8,21 @@ import 'budur_verse_linker.dart';
 class BudurReference {
   final int surah;
   final String quote;
-  const BudurReference(this.surah, this.quote);
+  final String? exactText;
+  const BudurReference(this.surah, this.quote, {this.exactText});
 }
 
 class BudurReferenceResolver {
+  static const _qasasFirst = "\" أئمة \" تقدم نظيره في سورة الأنبياء.";
+  static const _qasasLater = "\" أئمة \" تقدم أول السورة.";
+  static const _sajda = "\" أئمة \" سبق حكمها قريبا في القصص.";
   static List<BudurReference> references(int surah, String text) {
+    if (surah == 28 && text == _qasasFirst)
+      return const [BudurReference(21, 'أئمة')];
+    if (surah == 28 && text == _qasasLater)
+      return const [BudurReference(28, 'أئمة', exactText: _qasasFirst)];
+    if (surah == 32 && text == _sajda)
+      return const [BudurReference(28, 'أئمة', exactText: _qasasFirst)];
     final quotes = BudurVerseLinker.quotes(text);
     if (quotes.length != 1) return const [];
     final q = quotes.single;
@@ -52,7 +62,9 @@ class BudurReferenceResolver {
     final q = BudurVerseLinker.normalize(reference.quote);
     final matches = BudurSource.passages(source, surah, ayahs).where((p) {
       final qs = BudurVerseLinker.quotes(p.text);
-      return qs.length == 1 && qs.single == q;
+      return qs.length == 1 &&
+          qs.single == q &&
+          (reference.exactText == null || p.text == reference.exactText);
     }).toList();
     // Never silently choose the first of several possible source entries.
     return matches.length == 1 ? matches.single : null;
