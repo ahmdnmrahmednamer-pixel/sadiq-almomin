@@ -12,8 +12,8 @@ void main() {
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
         home: const IslamicLibraryScreen()));
     await t.pump();
-    expect(find.text('المكتبة الشاملة الشرعية'), findsOneWidget);
-    final entry = find.text('المكتبة الشاملة الشرعية');
+    expect(find.text('المكتبة الشاملة'), findsOneWidget);
+    final entry = find.text('المكتبة الشاملة');
     await t.ensureVisible(entry);
     await t.tap(entry);
     await t.pumpAndSettle();
