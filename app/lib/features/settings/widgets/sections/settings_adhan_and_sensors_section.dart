@@ -43,11 +43,15 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.timer_rounded, color: AppColors.primaryGreen, size: 20),
+                  Icon(Icons.timer_rounded,
+                      color: AppColors.primaryGreen, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'تعديل دقائق التنبيه المسبق',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryGreen),
                   ),
                 ],
               ),
@@ -57,13 +61,17 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Material(
-                    color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.primaryGreen.withValues(alpha: 0.08)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? AppColors.accentGold : Colors.grey.shade200,
+                          color: isSelected
+                              ? AppColors.accentGold
+                              : Colors.grey.shade200,
                           width: isSelected ? 1.5 : 1.0,
                         ),
                       ),
@@ -71,31 +79,45 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.accentGold.withValues(alpha: 0.2) : AppColors.primaryGreen.withValues(alpha: 0.08),
+                            color: isSelected
+                                ? AppColors.accentGold.withValues(alpha: 0.2)
+                                : AppColors.primaryGreen
+                                    .withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            isSelected ? Icons.check_circle_rounded : Icons.timer_rounded,
-                            color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
+                            isSelected
+                                ? Icons.check_circle_rounded
+                                : Icons.timer_rounded,
+                            color: isSelected
+                                ? AppColors.accentGold
+                                : AppColors.primaryGreen,
                             size: 18,
                           ),
                         ),
                         title: Text(
                           '$min دقائق قبل الأذان',
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                            fontWeight:
+                                isSelected ? FontWeight.w900 : FontWeight.w700,
                             fontSize: 14.5,
                             color: isSelected ? AppColors.primaryGreen : null,
                           ),
                         ),
                         trailing: isSelected
                             ? Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withValues(alpha: 0.2),
+                                  color: AppColors.accentGold
+                                      .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
+                                child: const Text('المحدد ✓',
+                                    style: TextStyle(
+                                        color: AppColors.primaryGreen,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 11.5)),
                               )
                             : null,
                         onTap: () {
@@ -149,11 +171,15 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.nightlight_round, color: AppColors.accentGold, size: 20),
+                  Icon(Icons.nightlight_round,
+                      color: AppColors.accentGold, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'تعديل توقيت تنبيه قيام الليل',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.primaryGreen),
                   ),
                 ],
               ),
@@ -165,13 +191,17 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Material(
-                    color: isSelected ? AppColors.primaryGreen.withValues(alpha: 0.08) : Colors.transparent,
+                    color: isSelected
+                        ? AppColors.primaryGreen.withValues(alpha: 0.08)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? AppColors.accentGold : Colors.grey.shade200,
+                          color: isSelected
+                              ? AppColors.accentGold
+                              : Colors.grey.shade200,
                           width: isSelected ? 1.5 : 1.0,
                         ),
                       ),
@@ -179,31 +209,45 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.accentGold.withValues(alpha: 0.2) : AppColors.primaryGreen.withValues(alpha: 0.08),
+                            color: isSelected
+                                ? AppColors.accentGold.withValues(alpha: 0.2)
+                                : AppColors.primaryGreen
+                                    .withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            isSelected ? Icons.check_circle_rounded : Icons.access_time_filled_rounded,
-                            color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
+                            isSelected
+                                ? Icons.check_circle_rounded
+                                : Icons.access_time_filled_rounded,
+                            color: isSelected
+                                ? AppColors.accentGold
+                                : AppColors.primaryGreen,
                             size: 18,
                           ),
                         ),
                         title: Text(
                           label,
                           style: TextStyle(
-                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                            fontWeight:
+                                isSelected ? FontWeight.w900 : FontWeight.w700,
                             fontSize: 14.5,
                             color: isSelected ? AppColors.primaryGreen : null,
                           ),
                         ),
                         trailing: isSelected
                             ? Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentGold.withValues(alpha: 0.2),
+                                  color: AppColors.accentGold
+                                      .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Text('المحدد ✓', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w900, fontSize: 11.5)),
+                                child: const Text('المحدد ✓',
+                                    style: TextStyle(
+                                        color: AppColors.primaryGreen,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 11.5)),
                               )
                             : null,
                         onTap: () {
@@ -237,7 +281,8 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         ),
 
         SwitchListTile(
-          secondary: const Icon(Icons.alarm_on_rounded, color: AppColors.primaryGreen),
+          secondary:
+              const Icon(Icons.alarm_on_rounded, color: AppColors.primaryGreen),
           title: const Text('التنبيه المسبق قبل الأذان'),
           value: pn.preReminderEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -251,7 +296,8 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.primaryGreen.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.timer_rounded, color: AppColors.primaryGreen, size: 20),
+            child: const Icon(Icons.timer_rounded,
+                color: AppColors.primaryGreen, size: 20),
           ),
           title: const Text('تعديل دقائق التنبيه المسبق'),
           subtitle: Text('${pn.preReminderMinutes} دقائق قبل الأذان'),
@@ -259,7 +305,8 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           onTap: () => _showPreReminderPicker(context),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.nightlight_round, color: AppColors.accentGold),
+          secondary:
+              const Icon(Icons.nightlight_round, color: AppColors.accentGold),
           title: const Text('تنبيه قيام الليل والتهجد 🌙'),
           value: pn.qiyamReminderEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -273,7 +320,8 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.accentGold.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time_filled_rounded, color: AppColors.accentGold, size: 20),
+            child: const Icon(Icons.access_time_filled_rounded,
+                color: AppColors.accentGold, size: 20),
           ),
           title: const Text('تعديل توقيت تنبيه قيام الليل'),
           subtitle: Text('${pn.qiyamOffsetMinutes} دقيقة قبل الفجر'),
@@ -281,7 +329,8 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           onTap: () => _showQiyamOffsetPicker(context),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen),
+          secondary:
+              const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen),
           title: const Text('تذكير سنن يوم الجمعة المباركة 🕌'),
           value: pn.fridayReminderEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -294,12 +343,14 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           icon: Icons.sensors_rounded,
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.picture_in_picture_alt_rounded, color: AppColors.primaryGreen),
+          secondary: const Icon(Icons.picture_in_picture_alt_rounded,
+              color: AppColors.primaryGreen),
           title: const Text('الظهور فوق التطبيقات وشاشة القفل'),
           value: AdhanSensorGestureService.instance.overlayWindowEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
-          onChanged: (val) => AdhanSensorGestureService.instance.toggleOverlayWindow(val),
+          onChanged: (val) =>
+              AdhanSensorGestureService.instance.toggleOverlayWindow(val),
         ),
 
         SwitchListTile(
@@ -351,7 +402,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'تخصيص مؤذن كل صلاة من القائمة المنسدلة:',
+                  'مؤذن كل صلاة',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,
@@ -360,105 +411,14 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               ),
               TextButton.icon(
                 icon: const Icon(Icons.volume_up_rounded, size: 16),
-                label:
-                    const Text('معاينة الأصوات', style: TextStyle(fontSize: 12)),
+                label: const Text('معاينة الأصوات',
+                    style: TextStyle(fontSize: 12)),
                 onPressed: () => showSettingsAdhanVoiceModal(context),
               ),
             ],
           ),
         ),
-        ...['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'].map((pName) {
-          final currentVoice = pn.getPrayerVoice(pName);
-          final adhanTracks = IslamicAudioService.allTracks
-              .where((t) => t.type == IslamicAudioType.adhan && !t.id.contains('duaa') && !t.id.contains('sharawi'))
-              .toList();
-          final isPlayingThis = IslamicAudioService.instance.isPlaying &&
-              (IslamicAudioService.instance.currentTrack?.id == currentVoice ||
-                  IslamicAudioService.instance.currentTrack?.rawNotificationSound == currentVoice);
-          final prayerIcon = {
-            'الفجر': Icons.nights_stay_rounded,
-            'الظهر': Icons.wb_sunny_rounded,
-            'العصر': Icons.wb_twilight_rounded,
-            'المغرب': Icons.mode_night_rounded,
-            'العشاء': Icons.dark_mode_rounded,
-          }[pName] ?? Icons.mosque_rounded;
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: AppAudioDropdownField<String>(
-              label: 'مؤذن صلاة $pName',
-              value: adhanTracks.any((t) => t.id == currentVoice)
-                  ? currentVoice
-                  : adhanTracks.first.id,
-              dense: true,
-              prefixIcon: prayerIcon,
-              isPlaying: isPlayingThis,
-              previewButtonLabel: 'استماع',
-              previewTooltip: 'استماع عينة أذان صلاة $pName',
-              options: adhanTracks
-                  .map((t) => AppDropdownOption<String>(
-                        value: t.id,
-                        label: t.title,
-                      ))
-                  .toList(),
-              onChanged: (voiceId) async {
-                await pn.setPrayerCustomVoice(pName, voiceId);
-                if (IslamicAudioService.instance.isPlaying) {
-                  await IslamicAudioService.instance.playTrackById(voiceId);
-                }
-              },
-              onPreviewPressed: () {
-                if (isPlayingThis) {
-                  IslamicAudioService.instance.stop();
-                } else {
-                  IslamicAudioService.instance.playTrackById(currentVoice);
-                }
-              },
-            ),
-          );
-        }),
-
-        // Iqamah Voice Dropdown with Audio Preview
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Builder(
-            builder: (ctx) {
-              final isPlayingIqamah = IslamicAudioService.instance.isPlaying &&
-                  (IslamicAudioService.instance.currentTrack?.id == pn.selectedIqamahVoice ||
-                      IslamicAudioService.instance.currentTrack?.rawNotificationSound == pn.selectedIqamahVoice);
-
-              return AppAudioDropdownField<String>(
-                label: 'صوت إقامة الصلاة المعتمد',
-                value: pn.selectedIqamahVoice,
-                dense: true,
-                prefixIcon: Icons.hourglass_bottom_rounded,
-                isPlaying: isPlayingIqamah,
-                previewButtonLabel: 'استماع',
-                previewTooltip: 'استماع عينة صوت الإقامة',
-                options: IslamicAudioService.allTracks
-                    .where((t) => t.type == IslamicAudioType.iqamah)
-                    .map((t) => AppDropdownOption<String>(
-                          value: t.id,
-                          label: t.title,
-                        ))
-                    .toList(),
-                onChanged: (val) async {
-                  await pn.setIqamahVoice(val);
-                  if (IslamicAudioService.instance.isPlaying) {
-                    await IslamicAudioService.instance.playTrackById(val);
-                  }
-                },
-                onPreviewPressed: () {
-                  if (isPlayingIqamah) {
-                    IslamicAudioService.instance.stop();
-                  } else {
-                    IslamicAudioService.instance.playTrackById(pn.selectedIqamahVoice);
-                  }
-                },
-              );
-            },
-          ),
-        ),
+        const PrayerVoiceList(),
 
         // Pre-Reminder & Iqamah Offset Dropdowns
         Padding(
@@ -487,9 +447,10 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               Expanded(
                 child: AppDropdownField<int>(
                   label: context.tr('iqamah_offset'),
-                  value: [5, 10, 15, 20, 25, 30].contains(pn.iqamahOffsetMinutes)
-                      ? pn.iqamahOffsetMinutes
-                      : 15,
+                  value:
+                      [5, 10, 15, 20, 25, 30].contains(pn.iqamahOffsetMinutes)
+                          ? pn.iqamahOffsetMinutes
+                          : 15,
                   dense: true,
                   prefixIcon: Icons.notifications_paused_rounded,
                   options: const [
@@ -523,9 +484,6 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.accentGold),
           title: const Text('تشغيل دعاء الشيخ الشعراوي بعد الأذان 🎧',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'سماع دعاء «اللهم رب هذه الدعوة التامة» بصوت إمام الدعاة الشيخ الشعراوي عقب كل أذان تلقائياً',
-              style: TextStyle(fontSize: 12)),
           value: s.playSharawiDuaaAfterAdhan,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
@@ -551,9 +509,6 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.primaryGreen),
           title: const Text('تذكير السنن الرواتب المؤكدة (١٢ ركعة يومياً)',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'تذكير بسنن الفجر والظهر والمغرب والعشاء لبناء بيت في الجنة',
-              style: TextStyle(fontSize: 12)),
           value: s.sunanRawatibReminderEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
@@ -589,9 +544,6 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.primaryGreen),
           title: const Text('التسبيح بزر رفع الصوت في المسبحة (+١) 🔊',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'زيادة عداد السبحة وسليدر الحبات بمقدار (+١) مع كل ضغطة على زر رفع الصوت',
-              style: TextStyle(fontSize: 12)),
           value: s.tasbihVolumeButtonEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
@@ -603,9 +555,6 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
               color: AppColors.accentGold),
           title: const Text('إظهار سليدر حبات المسبحة التفاعلي 📿',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'شريط سحب تفاعلي يعرض تقدم التسبيحات ويتحرك مع زر رفع الصوت أو السحب اليدوي',
-              style: TextStyle(fontSize: 12)),
           value: s.tasbihSliderEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
