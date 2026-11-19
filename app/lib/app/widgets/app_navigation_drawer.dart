@@ -353,6 +353,20 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
 
+      _DrawerItemData(
+        title: 'قارئ الكتب',
+        subtitle: 'الكتب المحمّلة',
+        semanticLabel: 'قارئ الكتب، الكتب المحمّلة',
+        icon: Icons.offline_pin_outlined,
+        color: AppColors.primaryGreen,
+        categoryKey: 'library',
+        keywords: ['قارئ', 'كتب', 'تحميل', 'أوفلاين'],
+        onTap: () {
+          Navigator.pop(context);
+          context.push('/downloaded-books');
+        },
+      ),
+
       // ================= 6. قسم الإعدادات والتواصل والمطور =================
       _DrawerItemData(
         title: 'الإعدادات',
