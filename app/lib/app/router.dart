@@ -39,6 +39,7 @@ import '../features/home/home_screen.dart';
 import '../features/home/momen_duaa_screen.dart';
 import '../features/khatma/khatma_screen.dart';
 import '../features/library/islamic_library_screen.dart';
+import '../features/library/downloaded_books_screen.dart';
 import '../features/library/screens/asma_allah_shamail_screen.dart';
 import '../features/library/screens/fiqh_library_screen.dart';
 import '../features/library/screens/hajj_umrah_companion_screen.dart';
@@ -504,6 +505,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/scholars-audio', redirect: (context, state) => '/library'),
     _isolatedFeatureRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
     _isolatedFeatureRoute(path: '/islamic-radio', builder: (context, state) => const IslamicRadioScreen()),
+    _isolatedFeatureRoute(path: '/downloaded-books', builder: (context, state) => const DownloadedBooksScreen()),
     _isolatedFeatureRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
     _isolatedFeatureRoute(path: '/quran-sciences', builder: (context, state) => const QuranSciencesScreen()),
     _isolatedFeatureRoute(path: '/asma-shamail', builder: (context, state) => const AsmaAllahShamailScreen()),
