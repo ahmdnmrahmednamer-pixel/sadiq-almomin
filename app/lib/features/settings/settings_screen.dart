@@ -35,7 +35,8 @@ class SettingsScreen extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               leading: const IsolatedBackButton(),
-              title: Text(context.tr('settings_title')),
+              title:
+                  Text(s.isArabic ? 'الإعدادات' : context.tr('settings_title')),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.language_rounded),
