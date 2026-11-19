@@ -44,7 +44,9 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
               TextButton.icon(
                 icon: const Icon(Icons.manage_search_rounded, size: 16),
                 label: Text(
-                  s.isArabic ? 'دليل وبحث القراء (٦١ قارئاً)' : 'Reciters Directory',
+                  s.isArabic
+                      ? 'دليل وبحث القراء (٦١ قارئاً)'
+                      : 'Reciters Directory',
                   style: const TextStyle(fontSize: 12),
                 ),
                 onPressed: () => showSettingsReciterModal(context),
@@ -61,7 +63,8 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           ]),
           builder: (context, _) {
             final isPreviewing = AyahAudioPlayer.instance.isPlaying.value &&
-                AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_${s.selectedReciterId}';
+                AyahAudioPlayer.instance.currentPlayingKey.value ==
+                    'preview_${s.selectedReciterId}';
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -71,7 +74,8 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                 prefixIcon: Icons.record_voice_over_rounded,
                 isPlaying: isPreviewing,
                 previewButtonLabel: 'استماع عينة',
-                previewTooltip: 'استماع عينة صوتية للشيخ ${s.currentReciter.nameAr}',
+                previewTooltip:
+                    'استماع عينة صوتية للشيخ ${s.currentReciter.nameAr}',
                 options: SettingsService.availableReciters
                     .map((r) => AppDropdownOption<String>(
                           value: r.id,
@@ -82,7 +86,8 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                 onChanged: (val) async {
                   await s.setSelectedReciter(val);
                   if (AyahAudioPlayer.instance.isPlaying.value) {
-                    await AyahAudioPlayer.instance.playReciterPreview(s.currentReciter);
+                    await AyahAudioPlayer.instance
+                        .playReciterPreview(s.currentReciter);
                   }
                 },
                 onPreviewPressed: () {
@@ -187,8 +192,10 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                     AppDropdownOption(value: 22.0, label: '٢٢ نقطة (متوسط)'),
                     AppDropdownOption(value: 24.0, label: '٢٤ نقطة (قياسي)'),
                     AppDropdownOption(value: 28.0, label: '٢٨ نقطة (كبير)'),
-                    AppDropdownOption(value: 32.0, label: '٣٢ نقطة (واضح جداً)'),
-                    AppDropdownOption(value: 36.0, label: '٣٦ نقطة (كبير جداً)'),
+                    AppDropdownOption(
+                        value: 32.0, label: '٣٢ نقطة (واضح جداً)'),
+                    AppDropdownOption(
+                        value: 36.0, label: '٣٦ نقطة (كبير جداً)'),
                   ],
                   onChanged: (val) => s.setMushafFontSize(val),
                 ),
@@ -242,9 +249,6 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           title: Text(context.tr('auto_play_next'),
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'متابعة التلاوة والاستماع تباعاً دون توقف بعد انتهاء كل آية',
-              style: TextStyle(fontSize: 12)),
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.autoPlayNextAyah,
@@ -256,22 +260,17 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
           title: Text(context.tr('keep_screen_on'),
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'منع إطفاء الشاشة تلقائياً أثناء تلاوة القرآن ومتابعة الورد',
-              style: TextStyle(fontSize: 12)),
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.keepScreenOn,
           onChanged: (val) => s.toggleKeepScreenOn(val),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.wifi_rounded, color: AppColors.primaryGreen),
+          secondary:
+              const Icon(Icons.wifi_rounded, color: AppColors.primaryGreen),
           title: Text(context.tr('wifi_only'),
               style:
                   const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
-          subtitle: const Text(
-              'توفير باقة بيانات الجوال عند تنزيل السور الكاملة',
-              style: TextStyle(fontSize: 12)),
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
           value: s.downloadOverWifiOnly,
