@@ -84,9 +84,102 @@ class IslamicAudioTrack {
 
 class IslamicAudioService extends ChangeNotifier {
   static final IslamicAudioService instance = IslamicAudioService._internal();
-  IslamicAudioService._internal();
+  IslamicAudioService._internal() : _player = AudioPlayer();
+  @visibleForTesting
+  IslamicAudioService.forTesting(AudioPlayer player) : _player = player;
 
-  final AudioPlayer _player = AudioPlayer();
+  /// Exact old catalog recordings held pending source/name review.
+  /// The namespaced asset-only section is separate. Sharawi's alarm ID is
+  /// deliberately preserved, not certified by this containment boundary.
+  static const heldLegacyAdhkarIds = <String>{
+    'adhkar_morning', 'adhkar_evening', 'adhkar_post_prayer', 'adhkar_sleep',
+    'adhkar_waking', 'adhkar_home_mosque', 'prophetic_duas', 'ruqyah_shariah',
+    'dua_khatm_abdulbasit', 'dua_khatm_minshawi', 'dua_qunoot_afasy',
+    'dua_faraj_sharawi', 'dua_rizq_sharawi',
+    'ibtihal_naqshbandi_mawlay', 'ibtihal_tobar_subhan',
+  };
+  static bool isHeldLegacyAdhkar(IslamicAudioTrack track) =>
+      heldLegacyAdhkarIds.contains(track.id);
+  IslamicAudioTrack? _heldLegacyTrack;
+  IslamicAudioTrack? get heldLegacyTrack => _heldLegacyTrack;
+  Future<void>? _legacyStopPending;
+  bool _legacyStopFailed = false;
+  bool get legacyStopFailed => _legacyStopFailed;
+  bool get _needsLegacyContainment => _legacyStopPending != null ||
+      (_currentTrack != null && isHeldLegacyAdhkar(_currentTrack!)) ||
+      _queue.any(isHeldLegacyAdhkar);
+
+  /// Removes only held items from the ephemeral queue, never stored files.
+  /// Stops a previously active held item before a later play can begin.
+  Future<void> containLegacyAdhkarPlayback() async {
+    final selectedId = _currentTrack?.id ??
+        (_currentIndex >= 0 && _currentIndex < _queue.length
+            ? _queue[_currentIndex].id : null);
+    final priorIndex = _currentIndex;
+    final retained = _queue.where((t) => !isHeldLegacyAdhkar(t)).toList();
+    final removed = retained.length != _queue.length;
+    if (removed) {
+      _heldLegacyTrack ??= _queue.firstWhere(isHeldLegacyAdhkar);
+      _queue = retained;
+      final index = _queue.indexWhere((t) => t.id == selectedId);
+      _currentIndex = _queue.isEmpty ? -1 :
+          (index >= 0 ? index : priorIndex.clamp(0, _queue.length - 1));
+    }
+    final heldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    if (heldCurrent) {
+      _heldLegacyTrack = _currentTrack;
+      _currentTrack = null;
+      _isPlaying = false;
+      _isBuffering = false;
+      _position = Duration.zero;
+      _legacyStopPending ??= disableNativePlayerForTesting
+          ? Future<void>.value() : _player.stop();
+    }
+    if (removed || heldCurrent) notifyListeners();
+    final pending = _legacyStopPending;
+    if (pending != null) {
+      try {
+        await pending;
+        if (identical(_legacyStopPending, pending)) _legacyStopPending = null;
+      } catch (_) {
+        _legacyStopFailed = true;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> retryLegacyPlaybackStop() async {
+    if (!_legacyStopFailed) return;
+    _legacyStopFailed = false;
+    _legacyStopPending = disableNativePlayerForTesting
+        ? Future<void>.value() : _player.stop();
+    notifyListeners();
+    await containLegacyAdhkarPlayback();
+    notifyListeners();
+  }
+  bool get legacyStopPending => _legacyStopPending != null && !_legacyStopFailed;
+
+  @visibleForTesting
+  void seedPlaybackSnapshotForTesting({
+    required List<IslamicAudioTrack> queue,
+    required int currentIndex,
+    required bool playing,
+  }) {
+    if (!disableNativePlayerForTesting) {
+      throw StateError('Snapshot seeding requires disabled native playback');
+    }
+    if (currentIndex < 0 || currentIndex >= queue.length) {
+      throw RangeError.index(currentIndex, queue);
+    }
+    _queue = List.of(queue);
+    _currentIndex = currentIndex;
+    _currentTrack = _queue[currentIndex];
+    _isPlaying = playing;
+    _isBuffering = false;
+    _heldLegacyTrack = null;
+  }
+
+  final AudioPlayer _player;
   final AudioPlayer _sfxPlayer = AudioPlayer();
   final Dio _dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 25),
@@ -1418,6 +1511,7 @@ class IslamicAudioService extends ChangeNotifier {
   ];
 
   Future<void> init() async {
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (_isInitialized) return;
 
     await _playerStateSub?.cancel();
@@ -1429,6 +1523,10 @@ class IslamicAudioService extends ChangeNotifier {
       _isBuffering = state.processingState == ProcessingState.buffering ||
           state.processingState == ProcessingState.loading;
 
+      if (_currentTrack != null && isHeldLegacyAdhkar(_currentTrack!)) {
+        unawaited(containLegacyAdhkarPlayback());
+        return;
+      }
       if (state.processingState == ProcessingState.completed) {
         if (_stopAtTrackEnd) {
           cancelSleepTimer();
@@ -1748,6 +1846,14 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playTrack(IslamicAudioTrack track) async {
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (_legacyStopFailed) return;
+    if (isHeldLegacyAdhkar(track)) {
+      _heldLegacyTrack = track;
+      notifyListeners();
+      return;
+    }
+    _heldLegacyTrack = null;
     if (_currentTrack?.id == track.id && _isPlaying) {
       await pause();
       return;
@@ -1846,6 +1952,8 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> resume() async {
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (_legacyStopFailed || _currentTrack == null) return;
     if (disableNativePlayerForTesting) {
       _isPlaying = true;
       notifyListeners();
@@ -1898,12 +2006,29 @@ class IslamicAudioService extends ChangeNotifier {
 
   Future<void> playQueue(List<IslamicAudioTrack> tracks, {int startIndex = 0}) async {
     if (tracks.isEmpty) return;
+    final selected = tracks[startIndex.clamp(0, tracks.length - 1)];
     _queue = List.from(tracks);
     _currentIndex = startIndex.clamp(0, _queue.length - 1);
-    await playTrack(_queue[_currentIndex]);
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (_queue.isEmpty) return;
+    if (isHeldLegacyAdhkar(selected)) {
+      _heldLegacyTrack = selected;
+      notifyListeners();
+      return;
+    }
+    _currentIndex = _queue.indexWhere((t) => t.id == selected.id);
+    await playTrack(selected);
   }
 
   Future<void> playNext() async {
+    final hadHeldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    final remainingAfter = _currentIndex >= 0 && _currentIndex < _queue.length
+        ? _queue.skip(_currentIndex + 1).where((t) => !isHeldLegacyAdhkar(t)).toList() : <IslamicAudioTrack>[];
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (hadHeldCurrent && remainingAfter.isNotEmpty) {
+      await playTrack(remainingAfter.first);
+      return;
+    }
     if (_queue.isEmpty) return;
     if (_currentIndex < _queue.length - 1) {
       _currentIndex++;
@@ -1915,6 +2040,14 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playPrevious() async {
+    final hadHeldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    final remainingBefore = _currentIndex > 0 && _currentIndex <= _queue.length
+        ? _queue.take(_currentIndex).where((t) => !isHeldLegacyAdhkar(t)).toList() : <IslamicAudioTrack>[];
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (hadHeldCurrent && remainingBefore.isNotEmpty) {
+      await playTrack(remainingBefore.last);
+      return;
+    }
     if (_queue.isEmpty) return;
     if (_position.inSeconds > 3) {
       await seek(Duration.zero);
@@ -2033,10 +2166,8 @@ class IslamicAudioService extends ChangeNotifier {
       await playTrack(initialTrack);
       return;
     }
-    _queue = List<IslamicAudioTrack>.from(tracks);
-    final idx = _queue.indexWhere((t) => t.id == initialTrack.id);
-    _currentIndex = idx >= 0 ? idx : 0;
-    await playTrack(_queue[_currentIndex]);
+    final idx = tracks.indexWhere((t) => t.id == initialTrack.id);
+    await playQueue(tracks, startIndex: idx >= 0 ? idx : 0);
   }
 
   Future<void> setPlaybackSpeed(double speed) async {

@@ -1,4 +1,5 @@
 import '../../../core/services/settings_service.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../../../core/services/islamic_audio_service.dart';
@@ -27,6 +28,9 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
     );
 
     _audioService.addListener(_onAudioStateChange);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_audioService.containLegacyAdhkarPlayback());
+    });
     if (_audioService.isPlaying) {
       _rotationController.repeat();
     }
@@ -75,7 +79,14 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
   @override
   Widget build(BuildContext context) {
     final track = _audioService.currentTrack;
-    if (track == null) {
+    if (track == null || IslamicAudioService.isHeldLegacyAdhkar(track)) {
+      final held = track ?? _audioService.heldLegacyTrack;
+      if (held != null) {
+        return ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.35),
+        child: LegacyAdhkarPlaybackNotice(track: held, compact: true, stopFailed: _audioService.legacyStopFailed, stopPending: _audioService.legacyStopPending, onRetryStop: _audioService.retryLegacyPlaybackStop),
+        );
+      }
       return const SizedBox.shrink();
     }
 
