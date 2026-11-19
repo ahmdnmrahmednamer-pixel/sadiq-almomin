@@ -1,4 +1,6 @@
 import 'quran_repository.dart';
+import 'verse_source_client.dart';
+import 'package:flutter/foundation.dart';
 
 class TafsirEdition {
   final String id;
@@ -23,6 +25,7 @@ class TafsirResult {
   final String ayahText;
   final String tafsirText;
   final bool hasSourceText;
+  final String? sourceUrl;
 
   const TafsirResult({
     required this.editionId,
@@ -33,6 +36,7 @@ class TafsirResult {
     required this.ayahText,
     required this.tafsirText,
     this.hasSourceText = true,
+    this.sourceUrl,
   });
 
   /// Formatted text for copying and sharing per FR-TAF-005
@@ -40,11 +44,20 @@ class TafsirResult {
     return '﴿$ayahText﴾\n[سورة $surahName، الآية $ayahNumber]\n\n'
         '📖 من $editionName ($author):\n'
         '$tafsirText\n\n'
+        '${sourceUrl == null ? '' : 'المصدر: $sourceUrl\n'}'
         'تطبيق صديق المؤمن';
   }
 }
 
 class TafsirService {
+  static AlQuranCloudTafsirClient _client = AlQuranCloudTafsirClient();
+  @visibleForTesting
+  static void setClientForTesting(AlQuranCloudTafsirClient? client) {
+    _client = client ?? AlQuranCloudTafsirClient();
+  }
+  static const _liveEditions = {
+    'jalalayn': 'ar.jalalayn', 'qurtubi': 'ar.qurtubi', 'baghawi': 'ar.baghawi',
+  };
   static const List<TafsirEdition> availableEditions = [
     TafsirEdition(
       id: 'muyassar',
@@ -129,6 +142,21 @@ class TafsirService {
   }) async {
     final ayah = await QuranRepository.getAyah(surahId, ayahNumber);
     final edition = getEdition(editionId);
+    final liveId = _liveEditions[editionId];
+    if (liveId != null) {
+      try {
+        final source = await _client.fetch(editionId:liveId, surah:surahId, ayah:ayahNumber);
+        return TafsirResult(editionId:edition.id, editionName:edition.nameAr,
+          author:edition.authorAr, surahId:surahId, ayahNumber:ayahNumber,
+          ayahText:ayah?.cleanTextUthmani ?? '', tafsirText:source.text,
+          sourceUrl:source.sourceUrl);
+      } catch (_) {
+        return TafsirResult(editionId:edition.id, editionName:edition.nameAr,
+          author:edition.authorAr, surahId:surahId, ayahNumber:ayahNumber,
+          ayahText:ayah?.cleanTextUthmani ?? '', hasSourceText:false,
+          tafsirText:'تعذر تحميل نص هذا التفسير. تحقق من الاتصال وأعد المحاولة.');
+      }
+    }
     final rawTafseer = ayah?.tafseer;
     // The bundled text is only the existing Muyassar. Never rename it as
     // another book or append generated explanation to it.
