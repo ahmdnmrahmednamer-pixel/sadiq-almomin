@@ -311,6 +311,9 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
                               ),
                               const SizedBox(height: 12),
 
+                              if (_tafsirResult?.sourceUrl != null)
+                                SelectableText('المصدر: ${_tafsirResult!.sourceUrl}',
+                                  style: const TextStyle(fontSize:11, color:AppColors.mutedText)),
                               // Exegesis Content Text
                               Semantics(
                                 container: true,
