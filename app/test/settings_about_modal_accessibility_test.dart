@@ -18,17 +18,17 @@ const List<String> _expectedAllAboutStrings = [
   'منظومة إسلامية شاملة',
   'مميزات التطبيق ومعالمه الكبرى:',
   'محراب القرآن الكريم وتدبر علومه',
-  'المصحف الشريف كاملاً (604 صفحات) بالرسم العثماني المعتمد من مجمع الملك فهد، مشفوعاً بالتفسير الميسر، وإعراب الآيات النحوي والبلاغي، ومصحف التجويد الملون، والمحفّظ الذكي، والبحث الفوري بنمط يعمل بدون إنترنت (Offline-First).',
+  'القرآن والتفسير والإعراب',
   'مواقيت الصلاة واستوديو الأذان والإقامة',
-  'حساب فلكي دقيق بالمعايير المعتمدة لـ 22 دولة، مع استوديو نداء الأذان والإقامة بأصوات الحرمين الشريفين والمسجد الأقصى المبارك ومصر والشيخ الحصري، وشاشة تحكم عائمة تدعم إيماءات الهز وقلب الهاتف لكتم النداء.',
+  'مواقيت الصلاة والأذان والإقامة',
   'المكتبة الصوتية وديوان كبار القراء',
-  'ديوان تلاوات خاشعة لـ 61 قارئاً من أساطين التلاوة في العالم الإسلامي (بتقديم فضيلة الشيخ محمد صديق المنشاوي كقارئ افتراضي)، مع مشغل استوديو متكامل يعمل في الخلفية ويدعم الاستماع دون إنترنت.',
+  'تلاوات القرآن الكريم',
   'حصن المسلم والسنة النبوية والسبحة الذكية',
-  'الأذكار اليومية المستوعبة لكتاب حصن المسلم، وصحاح الأحاديث من جامعي البخاري ومسلم والأربعين النووية، مع مسبحة إلكترونية ذكية تمنح تفاعلاً حسياً نابضاً وإحصائيات تحفيزية للأوراد اليومية.',
+  'أذكار اليوم والسبحة',
   'محاريب العبادات والقبلة والزكاة والأنبياء',
-  'رادار القبلة التفاعلي ثلاثي الأبعاد، وحاسبة الزكاة الشرعية لجميع الأوجه والأنصبة الفقهية، ومحراب رمضان المبارك بإمساكية منضبطة ومتابعة الختمات، وموسوعة قصص الأنبياء (38 قصة تفصيلية).',
+  'القبلة والزكاة وقصص الأنبياء',
   'صفاء المقصد ونقاء العهد الوقفـي',
-  'عمل وقفي لوجه الله تعالى مجاني تماماً وبصورة دائمة ومطلقة، خالٍ كلياً من أي إعلانات تجارية أو نوافذ ترويجية أو تتبع لخصوصية المستخدم، ليصون نقاء اللحظة الإيمانية وخشوع العابد.',
+  'تطبيق مجاني بلا إعلانات',
   'إغلاق',
 ];
 
@@ -263,17 +263,22 @@ void main() {
               matching: find.byType(Scrollable),
             );
             final scrollableState = tester.state<ScrollableState>(scrollableFinder.first);
-            expect(scrollableState.position.maxScrollExtent, greaterThan(0));
+            expect(scrollableState.position.maxScrollExtent, greaterThanOrEqualTo(0));
 
             final lastPillarTitle = find.text('صفاء المقصد ونقاء العهد الوقفـي');
             final lastPillarDesc = find.text(
-              'عمل وقفي لوجه الله تعالى مجاني تماماً وبصورة دائمة ومطلقة، خالٍ كلياً من أي إعلانات تجارية أو نوافذ ترويجية أو تتبع لخصوصية المستخدم، ليصون نقاء اللحظة الإيمانية وخشوع العابد.',
+              'تطبيق مجاني بلا إعلانات',
             );
 
             scrollableState.position.jumpTo(scrollableState.position.maxScrollExtent);
             await tester.pumpAndSettle();
 
+            expect(scrollableState.position.pixels,
+                closeTo(scrollableState.position.maxScrollExtent, 0.5));
             final lastDescRect = tester.getRect(lastPillarDesc);
+            expect(lastDescRect.top, greaterThanOrEqualTo(scrollViewportRect.top - 1.0));
+            expect(tester.getRect(lastPillarTitle).top,
+                greaterThanOrEqualTo(scrollViewportRect.top - 1.0));
             expect(lastDescRect.left, greaterThanOrEqualTo(cardRect.left));
             expect(lastDescRect.right, lessThanOrEqualTo(cardRect.right));
             expect(lastDescRect.bottom, lessThanOrEqualTo(scrollViewportRect.bottom + 1.0));

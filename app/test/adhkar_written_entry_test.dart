@@ -90,8 +90,10 @@ void main() {
         .map((c) => c.items.map((i) => i.text).toList())
         .toList();
     final card = find.text('الأذكار المكتوبة');
-    await tester.ensureVisible(card);
+    final target = find.ancestor(of: card, matching: find.byType(InkWell)).first;
+    await tester.ensureVisible(target);
     await tester.pumpAndSettle();
+    expect(target.hitTestable(), findsOneWidget);
     await tester
         .tap(find.ancestor(of: card, matching: find.byType(InkWell)).first);
     await tester.pumpAndSettle();
@@ -141,8 +143,10 @@ void main() {
         await tester.pumpAndSettle();
         await mount(tester, width: width, scale: scale);
         final card = find.text('الأذكار المكتوبة');
-        await tester.ensureVisible(card);
+        final target = find.ancestor(of: card, matching: find.byType(InkWell)).first;
+        await tester.ensureVisible(target);
         await tester.pumpAndSettle();
+        expect(target.hitTestable(), findsOneWidget);
         await capture(tester, 'hub-${width.toInt()}-${scale.toInt()}');
         await tester
             .tap(find.ancestor(of: card, matching: find.byType(InkWell)).first);

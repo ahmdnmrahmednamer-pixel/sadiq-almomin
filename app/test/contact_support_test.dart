@@ -200,7 +200,15 @@ void main() {
         scrollable: find.byWidgetPredicate((w) => w is Scrollable && (w.axisDirection == AxisDirection.down || w.axisDirection == AxisDirection.up)),
       );
       expect(tile, findsOneWidget);
-      expect(find.textContaining('إرسال اقتراح، ملاحظة، أو إبلاغ عن مشكلة بريدياً للمطور'), findsOneWidget);
+      final supportTile = find.ancestor(of: tile, matching: find.byType(ListTile));
+      expect(supportTile, findsOneWidget);
+      expect(tester.widget<ListTile>(supportTile).subtitle, isNull);
+      await tester.ensureVisible(supportTile);
+      await tester.pumpAndSettle();
+      expect(supportTile.hitTestable(), findsOneWidget);
+      await tester.tap(supportTile);
+      await tester.pumpAndSettle();
+      expect(find.byType(ContactSupportScreen), findsOneWidget);
     });
   });
 }

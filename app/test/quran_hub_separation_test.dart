@@ -234,14 +234,14 @@ SemanticsNode _findSingleCardSemanticNode(WidgetTester tester, String title) {
   final matches = <SemanticsNode>[];
   for (final node in tester.semantics.simulatedAccessibilityTraversal()) {
     final label = node.getSemanticsData().label;
-    if (label.startsWith('$title،')) {
+    if (label == title || label.startsWith('$title،')) {
       matches.add(node);
     }
   }
   expect(
     matches.length,
     equals(1),
-    reason: 'Expected exactly 1 semantic node starting with "$title،" (found ${matches.length})',
+    reason: 'Expected exactly 1 semantic node for exact title or title plus badge "$title" (found ${matches.length})',
   );
   return matches.single;
 }

@@ -452,24 +452,24 @@ void main() {
 
       expect(find.text('كبار العلماء'), findsNothing);
 
-      await _performSemanticTapByLabel(tester, 'ختمة القرآن، خطة الختمة والمتابعة');
+      await _performSemanticTapByLabel(tester, 'ختمة القرآن');
       expect(find.byType(KhatmaScreen), findsOneWidget);
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
 
-      await _performSemanticTapByLabel(tester, 'المصحف الشريف، تلاوة، تفسير، وبحث قرآني');
+      await _performSemanticTapByLabel(tester, 'المصحف الشريف');
       expect(find.byType(QuranHubScreen), findsOneWidget);
       await resetToHomeTop();
 
-      await _performSemanticTapByLabel(tester, 'الصلاة والقبلة، المواقيت والأذان والقبلة');
+      await _performSemanticTapByLabel(tester, 'الصلاة والقبلة');
       expect(find.byType(HomeScreen), findsNothing);
       await resetToHomeTop();
 
-      await _performSemanticTapByLabel(tester, 'الأذكار والسبحة، حصن المسلم والأوراد اليومية');
+      await _performSemanticTapByLabel(tester, 'الأذكار والسبحة');
       expect(find.byType(HomeScreen), findsNothing);
       await resetToHomeTop();
 
-      await _performSemanticTapByLabel(tester, 'المكتبة والحديث، رياض الصالحين والقصص والفقه');
+      await _performSemanticTapByLabel(tester, 'المكتبة والحديث');
       expect(find.byType(HomeScreen), findsNothing);
       await resetToHomeTop();
 
@@ -586,12 +586,12 @@ void main() {
         await verifyRouteTap('فهرس المصحف والأجزاء', '/mushaf-reader');
         await verifyRouteTap('حصن المسلم، الأذكار والأدعية', '/adhkar?index=0');
         await verifyRouteTap('السبحة الذكية، عداد الورد والتسبيح', '/tasbih');
-        await verifyRouteTap('المصحف الشريف، تلاوة، تفسير، وبحث قرآني', '/mushaf', isPush: false);
-        await verifyRouteTap('الصلاة والقبلة، المواقيت والأذان والقبلة', '/prayer', isPush: false);
-        await verifyRouteTap('الأذكار والسبحة، حصن المسلم والأوراد اليومية', '/adhkar-hub', isPush: false);
-        await verifyRouteTap('المكتبة والحديث، رياض الصالحين والقصص والفقه', '/library', isPush: false);
+        await verifyRouteTap('المصحف الشريف', '/mushaf', isPush: false);
+        await verifyRouteTap('الصلاة والقبلة', '/prayer', isPush: false);
+        await verifyRouteTap('الأذكار والسبحة', '/adhkar-hub', isPush: false);
+        await verifyRouteTap('المكتبة والحديث', '/library', isPush: false);
         expect(find.text('كبار العلماء'), findsNothing);
-        await verifyRouteTap('ختمة القرآن، خطة الختمة والمتابعة', '/khatma');
+        await verifyRouteTap('ختمة القرآن', '/khatma');
         await verifyRouteTap('الإعدادات', '/settings');
 
         // Verify Info button exposes SemanticsAction.tap at 360x800 (open modal at 1.0x;

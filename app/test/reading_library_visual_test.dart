@@ -1,16 +1,15 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../lib/core/ui/portal_category_card.dart';
-import '../lib/features/library/islamic_library_screen.dart';
+import 'package:almomin/core/ui/portal_category_card.dart';
+import 'package:almomin/features/library/islamic_library_screen.dart';
 
 void main() {
-  testWidgets('library removes duplicate book cards, preserves study tool and five sections', (tester) async {
+  testWidgets('library removes duplicate book cards, preserves existing sections and independent downloaded-book reader', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(360, 900);
     tester.view.devicePixelRatio = 1;
@@ -41,7 +40,8 @@ void main() {
     expect(find.text('متابعة حفظ المتون العلمية'), findsNothing);
     final list = tester.widget<ListView>(find.byType(ListView).first);
     final children = (list.childrenDelegate as SliverChildListDelegate).children;
-    expect(children.whereType<PortalCategoryCard>().length, 5);
+    expect(children.whereType<PortalCategoryCard>().map((card) => card.title),
+        equals(['المكتبة الشاملة', 'قارئ الكتب', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'الإذاعة والتراث']));
     expect(tester.takeException(), isNull);
     if (fontPath != null) {
       await tester.runAsync(() async {
