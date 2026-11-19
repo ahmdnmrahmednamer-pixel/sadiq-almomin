@@ -58,6 +58,45 @@ void main() {
             source, const BudurReference(3, 'لفظ'), surah, ayahs),
         isNull);
   });
+  test(
+      'an explicitly reviewed target identity disambiguates only that paragraph',
+      () {
+    const surah = Surah(
+        id: 2,
+        nameAr: 'اختبار',
+        nameSimple: 'اختبار',
+        revelationPlace: 'makkah',
+        revelationOrder: 1,
+        ayahCount: 1,
+        hasBasmala: false,
+        pageStart: 1,
+        pageEnd: 1);
+    final ayahs = [
+      Ayah.fromRow({
+        'id': 1,
+        'surah_id': 2,
+        'ayah_number': 1,
+        'juz': 1,
+        'page': 1,
+        'text_uthmani': 'لفظ'
+      })
+    ];
+    const source =
+        'سورة اختبار\n"لفظ" SOURCE_ONE\n"لفظ" SOURCE_TWO\nتصويبات للشيخ';
+    final resolved = BudurReferenceResolver.resolve(
+        source,
+        const BudurReference(2, 'لفظ', exactText: '"لفظ" SOURCE_ONE'),
+        surah,
+        ayahs);
+    expect(resolved?.text, '"لفظ" SOURCE_ONE');
+    expect(
+        BudurReferenceResolver.resolve(
+            source,
+            const BudurReference(2, 'لفظ', exactText: '"لفظ" MISSING'),
+            surah,
+            ayahs),
+        isNull);
+  });
   test('reviewed author references resolve to unique original source passages',
       () {
     final path = Platform.environment['BUDUR_REFERENCE_SOURCE'];
@@ -73,7 +112,7 @@ void main() {
             .map((r) => Ayah.fromRow(Map<String, dynamic>.from(r)))
             .toList();
     var count = 0;
-    for (final n in [3, 5, 6, 13, 21, 23, 34, 53, 56]) {
+    for (final n in [3, 5, 6, 13, 21, 23, 28, 32, 34, 53, 56]) {
       final passages = BudurSource.passages(
           source, surahs.singleWhere((s) => s.id == n), ayahs(n));
       for (final p in passages) {
@@ -95,6 +134,8 @@ void main() {
                     'reviewed override must require original paragraph identity');
           }
           if (n == 5) expect(p.ayahs, ref.quote == 'فمن اضطر' ? [3] : [110]);
+          if (n == 28) expect(p.ayahs, ref.surah == 21 ? [5] : [41]);
+          if (n == 32) expect(p.ayahs, [24]);
           expect(target, isNotNull, reason: '$n ${ref.quote}');
           expect(target!.text, isNotEmpty);
           expect(target.firstPage, greaterThan(0));
@@ -111,6 +152,6 @@ void main() {
         }
       }
     }
-    expect(count, 11);
+    expect(count, 14);
   });
 }
