@@ -43,13 +43,6 @@ class HomeShortcutsList extends StatelessWidget {
               children: [
                 _buildSpiritualDoorTile(
                   context,
-                  title: context.tr('scholars_gatherings'),
-                  icon: Icons.mic_external_on_rounded,
-                  color: AppColors.emerald700,
-                  onTap: () => context.push('/scholars-audio'),
-                ),
-                _buildSpiritualDoorTile(
-                  context,
                   title: context.tr('spiritual_mood_remedy'),
                   icon: Icons.favorite_rounded,
                   color: const Color(0xFF1E8260),
