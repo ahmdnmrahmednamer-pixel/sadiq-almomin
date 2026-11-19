@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:almomin/core/services/budur_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/services/audio_tafsir_service.dart';
@@ -7,6 +8,15 @@ import 'package:almomin/core/services/tafsir_service.dart';
 import 'package:almomin/features/library/screens/approved_sources_screen.dart';
 import 'package:almomin/features/mushaf/screens/audio_tafsir_screen.dart';
 import 'package:almomin/features/mushaf/screens/qiraat_mushaf_screen.dart';
+
+class UnavailableBudur extends BudurSource {
+  int calls = 0;
+  @override
+  Future<String> load() async {
+    calls++;
+    throw const FormatException('synthetic source unavailable');
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -63,42 +73,46 @@ void main() {
       expect(audio.nameAr, contains('المختصر الصوتي'));
     });
 
-    testWidgets('ApprovedSourcesScreen renders all 3 authoritative sources cards', (tester) async {
+    testWidgets('Sources screen separates connected sources from unlinked grammar', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
+      tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-
       await tester.pumpWidget(const MaterialApp(home: ApprovedSourcesScreen()));
       await tester.pumpAndSettle();
-
-      expect(find.text('المصادر والمراجع القرآنية المعتمدة'), findsAtLeastNWidgets(1));
-      expect(find.textContaining('مصحف الصحابة في القراءات العشر المتواترة'), findsOneWidget);
-      expect(find.textContaining('المختصر في تفسير القرآن الكريم صوتياً'), findsOneWidget);
-
-      // Scroll to reveal third card if needed
-      await tester.drag(find.byType(ListView), const Offset(0, -400));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('تفسير القرآن الكريم وإعرابه وبيانه'), findsOneWidget);
-      expect(find.textContaining('محمد علي طه الدرة'), findsOneWidget);
+      expect(find.text('المصادر'), findsOneWidget);
+      expect(find.text('البدور الزاهرة، عبد الفتاح القاضي'), findsOneWidget);
+      expect(find.text('الميسر، الجلالين، القرطبي، البغوي'), findsOneWidget);
+      expect(find.text('لباب النقول، جلال الدين السيوطي'), findsOneWidget);
+      expect(find.text('المصدر لم يُعتمد بعد'), findsOneWidget);
+      expect(find.textContaining('ولم تُربط بالآيات بعد'), findsOneWidget);
+      expect(find.text('المختصر في تفسير القرآن الكريم'), findsOneWidget);
+      expect(find.text('فتح القراءات'), findsOneWidget);
+      expect(find.text('فتح الإعراب'), findsOneWidget);
+      expect(find.text('فتح التفسير الصوتي'), findsOneWidget);
     });
 
-    testWidgets('QiraatMushafScreen renders tabs and reciters list', (tester) async {
+    testWidgets('Qiraat source failure exposes retry without invented reciter tabs', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
+      tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(const MaterialApp(home: QiraatMushafScreen()));
+      final source = UnavailableBudur();
+      await tester.pumpWidget(MaterialApp(home: QiraatMushafScreen(source: source)));
       await tester.pumpAndSettle();
-
-      expect(find.text('مصحف القراءات العشر المتواترة'), findsAtLeastNWidgets(1));
-      expect(find.text('القراء العشرة ورواتهم'), findsOneWidget);
-      expect(find.text('رموز الشاطبية والدرة'), findsOneWidget);
-      expect(find.text('أصول القراءات'), findsOneWidget);
-      expect(find.text('فرش الحروف والتوجيه'), findsOneWidget);
-      expect(find.text('الإمام نافع المدني'), findsOneWidget);
+      expect(source.calls, 1);
+      expect(find.text('القراءات'), findsOneWidget);
+      expect(find.text('البدور الزاهرة'), findsOneWidget);
+      expect(find.text('عبد الفتاح القاضي · الشاطبية والدرة'), findsOneWidget);
+      expect(find.text(BudurSource.bookUrl), findsOneWidget);
+      expect(find.text('تعذر تحميل نص البدور الزاهرة. تحقق من الاتصال وأعد المحاولة.'), findsOneWidget);
+      expect(find.text('القراء العشرة ورواتهم'), findsNothing);
+      expect(find.text('الإمام نافع المدني'), findsNothing);
+      await tester.tap(find.text('إعادة المحاولة'));
+      await tester.pumpAndSettle();
+      expect(source.calls, 2);
+      expect(find.text('إعادة المحاولة'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('AudioTafsirScreen renders 3 scholars and platform links', (tester) async {

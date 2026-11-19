@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'quran_linguistics_test.dart' show FixtureLubab;
+import 'package:almomin/core/services/verse_source_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/services/islamic_audio_service.dart';
 import 'package:almomin/core/services/quran_accessibility_service.dart';
@@ -8,12 +10,31 @@ import 'package:almomin/core/services/riyad_alsalihin_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/ui/app_dropdown_field.dart';
 
+// Synthetic source-client fixture, not a claim about either book's contents.
+class FixtureTafsir extends AlQuranCloudTafsirClient {
+  final List<(String, int, int)> calls = [];
+  @override
+  Future<VerseSourceText> fetch({required String editionId,
+      required int surah, required int ayah}) async {
+    calls.add((editionId, surah, ayah));
+    return VerseSourceText(providerId: 'fixture', bookId: editionId,
+        text: 'SYNTHETIC_$editionId', sourceUrl: 'https://fixture.invalid/$editionId',
+        surah: surah, firstAyah: ayah, lastAyah: ayah);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('صديق المؤمن Master v5.0 — 10-Phase Engineering Suite', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
+      QuranLinguisticsService.setSourceForTesting(FixtureLubab([]));
+    });
+
+    tearDown(() {
+      QuranLinguisticsService.setSourceForTesting(null);
+      TafsirService.setClientForTesting(null);
     });
 
     test('Phase 2: HD Audio Engine provides remote HD streams + 44.1kHz Stereo fallbacks for Adhan & Duas', () {
@@ -61,16 +82,20 @@ void main() {
       expect(opt.label, 'التفسير الميسر');
     });
 
-    test('Phase 5: TafsirService provides 8 authoritative Tafsirs and QuranLinguisticsService analyzes I\'rab & Asbab Al-Nuzul', () async {
+    test('Phase 5: Selected tafsir source identity is preserved and unlinked grammar stays unavailable', () async {
       expect(TafsirService.availableEditions.length >= 9, isTrue);
 
+      final source = FixtureTafsir();
+      TafsirService.setClientForTesting(source);
       final jalalayn = await TafsirService.getTafsir(
         surahId: 1,
         ayahNumber: 1,
         editionId: 'jalalayn',
       );
       expect(jalalayn.editionName, contains('الجلالين'));
-      expect(jalalayn.tafsirText, isNotEmpty);
+      expect(jalalayn.tafsirText, 'SYNTHETIC_ar.jalalayn');
+      expect(jalalayn.hasSourceText, isTrue);
+      expect(jalalayn.sourceUrl, 'https://fixture.invalid/ar.jalalayn');
 
       final qurtubi = await TafsirService.getTafsir(
         surahId: 2,
@@ -78,6 +103,8 @@ void main() {
         editionId: 'qurtubi',
       );
       expect(qurtubi.editionName, contains('القرطبي'));
+      expect(qurtubi.tafsirText, 'SYNTHETIC_ar.qurtubi');
+      expect(source.calls, [('ar.jalalayn', 1, 1), ('ar.qurtubi', 2, 255)]);
 
       final linguistics = await QuranLinguisticsService.getDetails(
         surahId: 2,
@@ -85,8 +112,11 @@ void main() {
       );
       expect(linguistics.asbabNuzul.title, isNotEmpty);
       expect(linguistics.grammar.summary, isNotEmpty);
-      expect(linguistics.grammar.words, isNotEmpty);
-      expect(linguistics.grammar.rhetoricSummary, isNotEmpty);
+      expect(linguistics.grammar.words, isEmpty);
+      expect(linguistics.grammar.summary, 'لم يُربط مصدر الإعراب بعد.');
+      expect(linguistics.asbabNuzul.hasSourceText, isFalse);
+      expect(linguistics.asbabNuzul.hasSpecificIncident, isFalse);
+      expect(linguistics.grammar.rhetoricSummary, isEmpty);
     });
 
     test('Phase 6: RiyadAlSalihinService contains all 19 Books of Riyad As-Salihin + Hisn Al-Muslim + Al-Adab Al-Mufrad + Jawami Al-Dua', () async {

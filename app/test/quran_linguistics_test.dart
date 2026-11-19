@@ -4,34 +4,61 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/models/surah.dart';
 import 'package:almomin/core/models/ayah.dart';
 import 'package:almomin/core/services/quran_linguistics_service.dart';
+import 'package:almomin/core/services/lubab_source.dart';
 import 'package:almomin/features/mushaf/widgets/ayah_linguistics_sheet.dart';
 import 'package:almomin/features/mushaf/widgets/ayah_action_sheet.dart';
+
+// Synthetic transport input, never a religious narration or app data.
+class FixtureLubab extends LubabSource {
+  final List<LubabEntry> entries;
+  final bool fail;
+  final List<(int, int)> calls = [];
+  FixtureLubab(this.entries, {this.fail = false});
+  @override
+  Future<List<LubabEntry>> fetch(int surah, int ayah) async {
+    calls.add((surah, ayah));
+    if (fail) throw const FormatException('synthetic source revision mismatch');
+    return entries;
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    QuranLinguisticsService.setSourceForTesting(FixtureLubab([]));
   });
 
-  group('QuranLinguisticsService Unit Tests (FR-QUR-005 & FR-QUR-006)', () {
-    test('Resolves specific authentic Asbab al-Nuzul for Surat Al-Ikhlas', () async {
-      final res = await QuranLinguisticsService.getDetails(surahId: 112, ayahNumber: 1);
+  tearDown(() => QuranLinguisticsService.setSourceForTesting(null));
 
-      expect(res.asbabNuzul.hasSpecificIncident, isTrue);
-      expect(res.asbabNuzul.title.contains('نسب الله'), isTrue);
-      expect(res.asbabNuzul.source.contains('الترمذي') || res.asbabNuzul.source.contains('أحمد'), isTrue);
-      expect(res.asbabNuzul.narration.contains('انسب لنا ربك'), isTrue);
+  group('QuranLinguisticsService Unit Tests (FR-QUR-005 & FR-QUR-006)', () {
+    test('Returns exact source text and page scope without authenticating an incident', () async {
+      final source = FixtureLubab([
+        const LubabEntry('SYNTHETIC_SOURCE_112_1\nSOURCE_NOTE', [7, 8]),
+      ]);
+      QuranLinguisticsService.setSourceForTesting(source);
+      final res = await QuranLinguisticsService.getDetails(surahId: 112, ayahNumber: 1);
+      expect(source.calls, [(112, 1)]);
+      expect(res.asbabNuzul.hasSourceText, isTrue);
+      expect(res.asbabNuzul.hasSpecificIncident, isFalse);
+      expect(res.asbabNuzul.narration, 'SYNTHETIC_SOURCE_112_1\nSOURCE_NOTE');
+      expect(res.asbabNuzul.source, contains('7، 8'));
+      expect(res.asbabNuzul.source, contains(LubabSource.sourceUrl));
+      expect(res.asbabNuzul.source, contains('ليس حكمًا على صحة الرواية'));
     });
 
-    test('Resolves specific authentic Asbab al-Nuzul for Surat Al-Kawthar and Al-Masad', () async {
-      final kawthar = await QuranLinguisticsService.getDetails(surahId: 108, ayahNumber: 1);
-      expect(kawthar.asbabNuzul.hasSpecificIncident, isTrue);
-      expect(kawthar.asbabNuzul.narration.contains('العاص بن وائل') || kawthar.asbabNuzul.narration.contains('أبتر'), isTrue);
-
-      final masad = await QuranLinguisticsService.getDetails(surahId: 111, ayahNumber: 1);
-      expect(masad.asbabNuzul.hasSpecificIncident, isTrue);
-      expect(masad.asbabNuzul.narration.contains('الصفا') || masad.asbabNuzul.narration.contains('أبي لهب'), isTrue);
+    test('Source errors are unavailable, not an invented cause for the selected verse', () async {
+      final source = FixtureLubab([], fail: true);
+      QuranLinguisticsService.setSourceForTesting(source);
+      for (final surah in [108, 111]) {
+        final res = await QuranLinguisticsService.getDetails(surahId: surah, ayahNumber: 1);
+        expect(res.asbabNuzul.hasSpecificIncident, isFalse);
+        expect(res.asbabNuzul.hasSourceText, isFalse);
+        expect(res.asbabNuzul.narration,
+            'تعذر تحميل نص المصدر أو تغيّرت نسخته. هذا لا يعني عدم وجود سبب نزول لهذه الآية.');
+      }
+      expect(source.calls, [(108, 1), (111, 1)]);
     });
 
     test('Provides classical Ghareeb vocabulary dictionary meanings', () async {
@@ -44,10 +71,12 @@ void main() {
       expect(samadMeaning.meaning.contains('يُصمد إليه في الحوائج'), isTrue);
     });
 
-    test('Resolves foundational scholarly rule for ayahs without specific historical incident', () async {
-      // Surah 18, Ayah 10 (or general ayah)
+    test('An unmapped verse is not declared to have no historical cause', () async {
       final res = await QuranLinguisticsService.getDetails(surahId: 18, ayahNumber: 10);
-      expect(res.asbabNuzul.narration.contains('النزول') || res.asbabNuzul.narration.contains('تشريعاً'), isTrue);
+      expect(res.asbabNuzul.hasSourceText, isFalse);
+      expect(res.asbabNuzul.hasSpecificIncident, isFalse);
+      expect(res.asbabNuzul.narration,
+          'لم يُثبت ربط هذا الموضع في الفهرس بعد. هذا لا يعني عدم وجود سبب نزول لهذه الآية.');
     });
 
     test('Formats linguistics results for share and copy per FR-QUR-006', () async {
@@ -55,7 +84,9 @@ void main() {
       final shareText = res.formatForShare('الإخلاص');
 
       expect(shareText.contains('سورة الإخلاص'), isTrue);
-      expect(shareText.contains('سبب النزول'), isTrue);
+      expect(shareText.contains('نص المصدر (لباب النقول، السيوطي)'), isTrue);
+      expect(shareText, contains('لم يُثبت ربط هذا الموضع'));
+      expect(shareText, contains('لم يُربط مصدر الإعراب بعد.'));
       expect(shareText.contains('الإعراب والدلالة النحوية'), isTrue);
       expect(shareText.contains('تطبيق صديق المؤمن'), isTrue);
     });
@@ -117,13 +148,16 @@ void main() {
       await tester.tap(find.text('أسباب النزول'));
       await tester.pumpAndSettle();
 
-      expect(find.text('سؤال المشركين عن نسب الله وصفته'), findsOneWidget);
+      expect(find.text('لباب النقول'), findsOneWidget);
+      expect(find.textContaining('لم يُثبت ربط هذا الموضع'), findsOneWidget);
+      expect(find.text('سؤال المشركين عن نسب الله وصفته'), findsNothing);
 
       // Switch to I'rab Tab
       await tester.tap(find.text('إعراب الآية'));
       await tester.pumpAndSettle();
 
       expect(find.text('الإعراب الإجمالي للآية:'), findsOneWidget);
+      expect(find.text('لم يُربط مصدر الإعراب بعد.'), findsOneWidget);
     });
 
     testWidgets('AyahActionSheet includes dedicated buttons for Meanings, Asbab, and Irab', (tester) async {

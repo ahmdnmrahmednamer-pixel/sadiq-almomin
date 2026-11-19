@@ -60,7 +60,7 @@ void main() {
       expect(s.isHouseInParadiseCompleted(date: testDate), isTrue);
     });
 
-    test('New Feature 2: Comparative Tafsir Engine supports all 9 authoritative Tafsirs side-by-side', () async {
+    test('New Feature 2: Catalogue retains edition identities without fabricating unlinked tafsir text', () async {
       expect(TafsirService.availableEditions.length >= 9, isTrue);
       final ids = TafsirService.availableEditions.map((e) => e.id).toSet();
       expect(
@@ -80,7 +80,15 @@ void main() {
 
       final r1 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'ibn_kathir');
       final r2 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'shaarawi');
-      expect(r1.tafsirText, isNot(equals(r2.tafsirText)));
+      for (final result in [r1, r2]) {
+        expect(result.hasSourceText, isFalse);
+        expect(result.tafsirText, 'لم يُربط نص هذا التفسير بهذه الآية بعد.');
+        expect(result.sourceUrl, isNull);
+      }
+      expect(r1.editionId, 'ibn_kathir');
+      expect(r2.editionId, 'shaarawi');
+      expect(r1.editionName, contains('ابن كثير'));
+      expect(r2.editionName, contains('الشعراوي'));
     });
 
     test('New Feature 3: IslamicMutoonService provides 4 foundational Matn books and persists memorization', () async {
