@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/models/ayah.dart';
 import '../../../core/models/memorization_item.dart';
 import '../../../core/services/memorization_service.dart';
+import '../../../core/services/settings_service.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// Ayah card with interactive word-level masking and spaced-repetition Leitner rating buttons.
@@ -118,79 +119,137 @@ class MemorizationAyahCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Ayah Text with Interactive Masking
-            Wrap(
-              spacing: 6,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: List.generate(words.length, (wordIdx) {
-                final isRevealed = revealedWords.contains('${ayah.ayahNumber}:$wordIdx');
-                final isMasked = MemorizationMaskHelper.isWordMasked(
-                  wordIndex: wordIdx,
-                  totalWords: words.length,
-                  mode: hideMode,
-                  isRevealed: isRevealed,
-                );
+            if (hideMode == MemorizationHideMode.none)
+              Semantics(
+                container: true,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Text(
+                    '${ayah.cleanTextUthmani} ﴿${SettingsService.instance.formatAyahNumber(ayah.ayahNumber)}﴾',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      height: 1.8,
+                      fontWeight: isCurrentPlaying ? FontWeight.bold : FontWeight.w500,
+                      fontFamilyFallback: const ['Traditional Arabic', 'Amiri', 'serif'],
+                    ),
+                  ),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 6,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ...List.generate(words.length, (wordIdx) {
+                    final isRevealed = revealedWords.contains('${ayah.ayahNumber}:$wordIdx');
+                    final isEligible = MemorizationMaskHelper.isWordMasked(
+                      wordIndex: wordIdx,
+                      totalWords: words.length,
+                      mode: hideMode,
+                      isRevealed: false,
+                    );
+                    final isMasked = isEligible && !isRevealed;
 
-                if (isMasked) {
-                  // Interactive blurred / hidden pill
-                  return InkWell(
-                    onTap: () => onToggleWordReveal(ayah.ayahNumber, wordIdx),
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: isDark ? 0.25 : 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.35)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.touch_app, size: 12, color: AppColors.mutedText),
-                          SizedBox(width: 4),
-                          Text(
-                            '••••••',
-                            style: TextStyle(
-                              letterSpacing: 2,
-                              color: AppColors.mutedText,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                    if (isMasked) {
+                      // Interactive blurred / hidden pill with clear indexed label and zero hidden text leakage
+                      return Semantics(
+                        label: 'الكلمة ${wordIdx + 1} مخفية، انقر للإظهار',
+                        button: true,
+                        onTap: () => onToggleWordReveal(ayah.ayahNumber, wordIdx),
+                        excludeSemantics: true,
+                        child: InkWell(
+                          onTap: () => onToggleWordReveal(ayah.ayahNumber, wordIdx),
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: isDark ? 0.25 : 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.grey.withValues(alpha: 0.35)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.touch_app, size: 12, color: AppColors.mutedText),
+                                SizedBox(width: 4),
+                                Text(
+                                  '••••••',
+                                  style: TextStyle(
+                                    letterSpacing: 2,
+                                    color: AppColors.mutedText,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                // Visible word (or user-revealed word)
-                return InkWell(
-                  onTap: () {
-                    if (hideMode != MemorizationHideMode.none) {
-                      onToggleWordReveal(ayah.ayahNumber, wordIdx);
+                        ),
+                      );
                     }
-                  },
-                  borderRadius: BorderRadius.circular(4),
-                  child: Container(
+
+                    // Naturally visible plain text (words not subject to masking in this mode)
+                    if (!isEligible) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                        child: Text(
+                          words[wordIdx],
+                          style: TextStyle(
+                            fontSize: 20,
+                            height: 1.8,
+                            fontWeight: isCurrentPlaying ? FontWeight.bold : FontWeight.w500,
+                            fontFamilyFallback: const ['Traditional Arabic', 'Amiri', 'serif'],
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Revealed word (eligible word revealed by user tap; can be tapped again to re-hide)
+                    return Semantics(
+                      label: 'الكلمة ${wordIdx + 1}: ${words[wordIdx]}، مظهرة، انقر للإخفاء',
+                      button: true,
+                      onTap: () => onToggleWordReveal(ayah.ayahNumber, wordIdx),
+                      excludeSemantics: true,
+                      child: InkWell(
+                        onTap: () => onToggleWordReveal(ayah.ayahNumber, wordIdx),
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentGold.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            words[wordIdx],
+                            style: TextStyle(
+                              fontSize: 20,
+                              height: 1.8,
+                              fontWeight: isCurrentPlaying ? FontWeight.bold : FontWeight.w500,
+                              color: AppColors.accentGold,
+                              fontFamilyFallback: const ['Traditional Arabic', 'Amiri', 'serif'],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: isRevealed ? AppColors.accentGold.withValues(alpha: 0.2) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
                     child: Text(
-                      words[wordIdx],
+                      '﴿${SettingsService.instance.formatAyahNumber(ayah.ayahNumber)}﴾',
                       style: TextStyle(
                         fontSize: 20,
                         height: 1.8,
                         fontWeight: isCurrentPlaying ? FontWeight.bold : FontWeight.w500,
-                        color: isRevealed ? AppColors.accentGold : null,
                         fontFamilyFallback: const ['Traditional Arabic', 'Amiri', 'serif'],
                       ),
                     ),
                   ),
-                );
-              }),
-            ),
+                ],
+              ),
             const SizedBox(height: 12),
 
             // Rating / Leitner Evaluation Buttons (FR-MEM-003)
@@ -200,8 +259,10 @@ class MemorizationAyahCard extends StatelessWidget {
                 color: Colors.black.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   _buildRatingButton(
                     label: 'متقن',
