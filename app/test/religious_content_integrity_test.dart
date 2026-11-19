@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import '../lib/core/services/verse_source_client.dart';
+import '../lib/core/services/lubab_source.dart';
 import 'verse_source_client_test.dart' show FixtureAdapter;
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
@@ -16,9 +17,11 @@ import '../lib/core/services/settings_service.dart';
 import '../lib/core/models/ayah.dart';
 import '../lib/features/mushaf/widgets/tafsir_viewer_sheet.dart';
 import 'reader_accessibility_integration_test.dart' show surah;
+class FixedLubab extends LubabSource { final List<LubabEntry> entries; FixedLubab(this.entries); @override Future<List<LubabEntry>> fetch(int s,int a)async=>entries; }
 void main(){
  TestWidgetsFlutterBinding.ensureInitialized();
  setUp(()async{
+  QuranLinguisticsService.setSourceForTesting(FixedLubab([]));
   TafsirService.setClientForTesting(AlQuranCloudTafsirClient(dio:Dio(BaseOptions(baseUrl:'https://api.alquran.cloud/v1'))..httpClientAdapter=FixtureAdapter({'surah':{'number':99}})));
   SharedPreferences.setMockInitialValues({'default_tafsir_edition':'qurtubi'});await SettingsService.instance.init(forceReload:true);QuranRepository.resetCachesForTesting();
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',(m)async{
@@ -28,7 +31,7 @@ void main(){
    return value==null?null:ByteData.sublistView(utf8.encode(jsonEncode(value)));
   });
  });
- tearDown((){QuranRepository.resetCachesForTesting();TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',null);});
+ tearDown((){QuranLinguisticsService.setSourceForTesting(null);TafsirService.setClientForTesting(null);QuranRepository.resetCachesForTesting();TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',null);});
  test('bundled Muyassar is returned verbatim only as Muyassar',()async{
   final a=await TafsirService.getTafsir(surahId:1,ayahNumber:1);expect(a.tafsirText,'VERBATIM_LOCAL_TEXT');
   for(final e in TafsirService.availableEditions.where((e)=>e.id!='muyassar')){
@@ -45,7 +48,12 @@ void main(){
   expect(result.hasSourceText,isFalse);expect(result.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));
  });
  test('removed linguistics never supplies guessed grammar or another verse cause',()async{
-  final d=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);expect(d.grammar.words,isEmpty);expect(d.wordMeanings,isEmpty);expect(d.grammar.rhetoricSummary,isEmpty);expect(d.asbabNuzul.source,contains('لم'));expect(d.asbabNuzul.narration,contains('لا يعني'));
+  final d=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);expect(d.grammar.words,isEmpty);expect(d.wordMeanings,isEmpty);expect(d.grammar.rhetoricSummary,isEmpty);expect(d.asbabNuzul.hasSourceText,isFalse);expect(d.asbabNuzul.narration,contains('لا يعني'));
+ });
+ test('source entry stays verbatim and is never labelled a confirmed incident',()async{
+  QuranLinguisticsService.setSourceForTesting(FixedLubab([const LubabEntry('VERBATIM_SOURCE_ENTRY\nNOTE',[7,8])]));
+  final result=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);
+  expect(result.asbabNuzul.narration,'VERBATIM_SOURCE_ENTRY\nNOTE');expect(result.asbabNuzul.hasSourceText,isTrue);expect(result.asbabNuzul.hasSpecificIncident,isFalse);expect(result.asbabNuzul.source,contains('7، 8'));
  });
  testWidgets('tafsir sheet starts from stored preferred edition',(t)async{
   await SettingsService.instance.setDefaultTafsirEdition('qurtubi');
