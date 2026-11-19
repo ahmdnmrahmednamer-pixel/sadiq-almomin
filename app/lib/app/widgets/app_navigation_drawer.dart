@@ -283,9 +283,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 5. قسم المكتبة الإسلامية والقصص والفقه =================
       _DrawerItemData(
-        title: 'المكتبة الإسلامية والحديث النبوي 📚',
-        subtitle: 'رياض الصالحين، صحيح الحديث، وقصص الأنبياء',
-        semanticLabel: 'المكتبة الإسلامية والحديث النبوي',
+        title: 'رياض العلم',
+        subtitle: 'المكتبة والأدوات',
+        semanticLabel: 'رياض العلم',
         icon: Icons.auto_stories_rounded,
         color: const Color(0xFFB45309),
         categoryKey: 'library',
