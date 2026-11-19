@@ -41,6 +41,28 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
   late AnimationController _pulseController;
   DateTime? _lastIntenseVibeTime;
 
+  bool _isCheckingDirection = false;
+  bool _hasRequestedCheck = false;
+
+  Future<void> _checkDirection() async {
+    if (_isCheckingDirection || PrayerService.instance.isLoading) return;
+    setState(() {
+      _isCheckingDirection = true;
+      _hasRequestedCheck = true;
+      if (!_hasLiveHeading) {
+        _invalidateSensorHeading();
+        _initCompass();
+      }
+    });
+    try {
+      // This explicit action uses the existing GPS permission/error flow.
+      // The compass remains automatic; an old sensor heading is never reused.
+      await PrayerService.instance.requestGpsLocation();
+    } finally {
+      if (mounted) setState(() => _isCheckingDirection = false);
+    }
+  }
+
   DateTime _now() => (widget.nowProviderForTesting ?? DateTime.now)();
 
   bool get _hasLiveHeading {
@@ -344,9 +366,46 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
               ],
             ),
             body: SafeArea(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.only(top: 12, bottom: 20),
-                children: [
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'أمسك الهاتف أفقياً بعيداً عن المعادن. تحقّق من موقعك وقراءة البوصلة، ثم اتبع النتيجة أسفل الزر.',
+                          style: TextStyle(fontSize: 13, height: 1.5),
+                        ),
+                        const SizedBox(height: 10),
+                        FilledButton.icon(
+                          key: const ValueKey('qibla_check_direction_button'),
+                          onPressed: _isCheckingDirection || service.isLoading
+                              ? null
+                              : _checkDirection,
+                          icon: ExcludeSemantics(
+                            child: Icon(_isCheckingDirection
+                                ? Icons.hourglass_top_rounded
+                                : Icons.explore_outlined),
+                          ),
+                          label: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              _isCheckingDirection
+                                  ? 'جارٍ التحقق من الموقع والقبلة'
+                                  : (_hasRequestedCheck
+                                      ? 'إعادة التحقق من القبلة'
+                                      : 'تحقق من اتجاه القبلة'),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   // Location and Bearing Summary Card
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -813,6 +872,7 @@ class _QiblaCompassScreenState extends State<QiblaCompassScreen>
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),
