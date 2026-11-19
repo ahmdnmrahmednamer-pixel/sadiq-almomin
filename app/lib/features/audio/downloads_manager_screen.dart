@@ -224,7 +224,8 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('مركز التنزيلات والاستماع دون إنترنت', style: TextStyle(fontWeight: FontWeight.w900)),
+          toolbarHeight: MediaQuery.textScalerOf(context).scale(20) * 4 + 16,
+          title: const Text('مركز التنزيلات والاستماع دون إنترنت', softWrap: true, maxLines: 4, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
           centerTitle: true,
         ),
         body: AnimatedBuilder(
@@ -285,10 +286,13 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.spaceBetween,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(8),
@@ -308,17 +312,19 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                             ),
                             Text(
                               formattedCombined,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
+                                color: isDark ? Theme.of(context).colorScheme.onSurface : AppColors.primaryGreen,
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          alignment: WrapAlignment.spaceBetween,
                           children: [
                             Text(
                               'إجمالي المحمل: $totalCustomDownloadedCount ملفات (${quranDownloads.length} سور • ${storyDownloads.length} قصص • ${adhkarDownloads.length} أذكار)',
@@ -414,7 +420,9 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryGreen),
+      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).colorScheme.onSurface : AppColors.primaryGreen),
     );
   }
 
@@ -536,6 +544,41 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
   }
 
   Widget _buildAdhkarTrackCard(BuildContext context, IslamicAudioTrack track, bool isDark) {
+    if (track.type == IslamicAudioType.adhkar) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('اسم قديم في الفهرس، غير موثّق: ${track.title}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+            const SizedBox(height: 8),
+            Text('ملف محفوظ لم تُراجع مطابقته للاسم. لا يُشغّل من هنا.',
+                style: TextStyle(fontSize: 11.5, color: isDark ? Colors.white70 : AppColors.mutedText)),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.library_music_rounded),
+              label: const Text('فتح الأذكار المسموعة'),
+              onPressed: () => IslamicAudioPlayerSheet.show(context, filter: IslamicAudioType.adhkar),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                tooltip: 'حذف التنزيل',
+                onPressed: () => _confirmDeleteAdhkar(track),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
