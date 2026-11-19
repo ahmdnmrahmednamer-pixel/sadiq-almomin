@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:just_audio/just_audio.dart';
+import '../../../core/audio/fast_audio_service.dart';
 import 'adhan_voice_option.dart';
 import '../../../core/text/arabic_normalizer.dart';
 import '../../../core/services/settings_service.dart';
@@ -135,7 +138,7 @@ class PrayerVoiceList extends StatelessWidget {
 /// Interactive Dropdown/Picker Sheet for choosing a Sheikh for a specific prayer
 /// Allows listening to any Sheikh's voice before selecting him
 void showPrayerMuezzinDropdownPicker(BuildContext context, String prayerName,
-    {bool isIqamah = false}) {
+    {bool isIqamah = false, AudioPlayer Function()? previewPlayerFactory}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -143,6 +146,7 @@ void showPrayerMuezzinDropdownPicker(BuildContext context, String prayerName,
     builder: (ctx) => _PrayerMuezzinPickerSheet(
       prayerName: prayerName,
       isIqamah: isIqamah,
+      previewPlayerFactory: previewPlayerFactory,
     ),
   );
 }
@@ -150,10 +154,12 @@ void showPrayerMuezzinDropdownPicker(BuildContext context, String prayerName,
 class _PrayerMuezzinPickerSheet extends StatefulWidget {
   final String prayerName;
   final bool isIqamah;
+  final AudioPlayer Function()? previewPlayerFactory;
 
   const _PrayerMuezzinPickerSheet({
     required this.prayerName,
     this.isIqamah = false,
+    this.previewPlayerFactory,
   });
 
   @override
@@ -161,38 +167,227 @@ class _PrayerMuezzinPickerSheet extends StatefulWidget {
       _PrayerMuezzinPickerSheetState();
 }
 
-class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
+class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
+    with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  String? _currentlyPlayingTrackId;
+  late final AudioPlayer _previewPlayer;
+  StreamSubscription<PlayerState>? _previewState;
+  Animation<double>? _coveredRoute;
+  int _previewRequest = 0;
+  String? _previewTrackId;
+  String? _previewError;
+  bool _previewPlaying = false;
+  bool _previewLoading = false;
+  bool _previewStopFailed = false;
+  bool _closing = false;
+  bool _disposed = false;
+  Future<void> _pendingStop = Future<void>.value();
+  Future<void> _pendingLoad = Future<void>.value();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _previewPlayer = widget.previewPlayerFactory?.call() ?? AudioPlayer();
+    _previewState = _previewPlayer.playerStateStream.listen(
+      (state) {
+        if (!mounted || _closing) return;
+        setState(() {
+          _previewPlaying =
+              state.playing &&
+              state.processingState != ProcessingState.completed &&
+              state.processingState != ProcessingState.idle;
+        });
+      },
+      // just_audio's playerStateStream suppresses playback errors. Do not let
+      // an untagged late stream error cancel a newer request. The captured
+      // setUrl/play futures below own error handling for their request.
+      onError: (Object error, StackTrace stack) {},
+    );
+    // Download status still comes from the catalog service, not our preview.
     IslamicAudioService.instance.init();
   }
 
   @override
-  void dispose() {
-    IslamicAudioService.instance.stop();
-    _searchController.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _coveredRoute?.removeStatusListener(_routeStatus);
+    _coveredRoute = ModalRoute.of(context)?.secondaryAnimation;
+    _coveredRoute?.addStatusListener(_routeStatus);
+  }
+
+  void _routeStatus(AnimationStatus status) {
+    if (status == AnimationStatus.forward) {
+      unawaited(_stopPreview().catchError((Object _) {}));
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      unawaited(_stopPreview().catchError((Object _) {}));
+    }
+  }
+
+  Future<void> _stopPreview({bool preparePlayback = false}) {
+    if (_disposed) return Future<void>.value();
+    final request = ++_previewRequest;
+    if (mounted && !_closing) {
+      setState(() => _previewLoading = false);
+    }
+    // Never stop the global focus owner: it may have changed since Listen.
+    _pendingStop = _pendingStop.catchError((Object _) {}).then((_) async {
+      if (_disposed) return;
+      try {
+        await _previewPlayer.stop();
+        if (mounted && !_closing && request == _previewRequest) {
+          setState(() {
+            _previewPlaying = false;
+            if (!preparePlayback) _previewTrackId = null;
+            _previewStopFailed = false;
+          });
+        }
+      } catch (_) {
+        if (mounted && !_closing && request == _previewRequest) {
+          setState(() {
+            _previewStopFailed = true;
+            _previewPlaying = _previewPlayer.playing;
+            _previewError = 'تعذر إيقاف المعاينة. أعد محاولة الإيقاف.';
+          });
+        }
+        rethrow;
+      }
+    });
+    return _pendingStop;
+  }
+
+  void _previewFailed(int request) {
+    if (!mounted || _closing || request != _previewRequest) return;
+    setState(
+      () => _previewError =
+          'تعذر تشغيل الصوت عبر الإنترنت. تحقق من اتصالك ثم حاول مرة أخرى.',
+    );
+    unawaited(_stopPreview().catchError((Object _) {}));
   }
 
   Future<void> _playPreview(IslamicAudioTrack track) async {
-    final audio = IslamicAudioService.instance;
-    if (_currentlyPlayingTrackId == track.id && audio.isPlaying) {
-      await audio.stop();
-      if (mounted) setState(() => _currentlyPlayingTrackId = null);
-    } else {
-      if (mounted) setState(() => _currentlyPlayingTrackId = track.id);
-      final ok = await audio.playOnlinePreview(track);
-      if (!ok && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'تعذر تشغيل الصوت عبر الإنترنت. تحقق من اتصالك ثم حاول مرة أخرى.')));
+    if (_closing) return;
+    if (_previewTrackId == track.id && (_previewPlaying || _previewLoading || _previewStopFailed)) {
+      try {
+        await _stopPreview();
+      } catch (_) {
+        _previewFailed(_previewRequest);
+      }
+      return;
+    }
+    final stopped = _stopPreview(preparePlayback: true);
+    final request = _previewRequest;
+    setState(() {
+      _previewTrackId = track.id;
+      _previewLoading = true;
+      _previewError = null;
+    });
+    try {
+      await stopped;
+      await _pendingLoad.catchError((Object _) {});
+      if (!mounted || _closing || request != _previewRequest) return;
+      final focus = FastAudioService.instance;
+      final token = await focus.claimAudioFocus(
+        player: _previewPlayer,
+        onStopOther: _stopPreview,
+      );
+      bool current() =>
+          mounted &&
+          !_closing &&
+          request == _previewRequest &&
+          token == focus.activePlaybackToken;
+      if (!current()) return;
+      final urls = [
+        if (track.remoteUrl != null) track.remoteUrl!,
+        ...track.fallbackUrls,
+      ].where((url) => url.trim().isNotEmpty).toList();
+      for (final url in urls) {
+        if (!current()) return;
+        try {
+          // Online preview only. No local-file fallback or background download.
+          _pendingLoad = _previewPlayer
+              .setUrl(url, headers: FastAudioService.fastStreamingHeaders)
+              .then<void>((_) {});
+          await _pendingLoad;
+          if (!current()) return;
+          setState(() => _previewLoading = false);
+          unawaited(
+            _previewPlayer.play().catchError((Object _) {
+              _previewFailed(request);
+            }),
+          );
+          return;
+        } catch (_) {
+          _pendingLoad = Future<void>.value();
+          if (!current()) return;
+        }
+      }
+      _previewFailed(request);
+    } catch (_) {
+      _previewFailed(request);
+    } finally {
+      if (mounted &&
+          !_closing &&
+          request == _previewRequest &&
+          _previewLoading) {
+        setState(() => _previewLoading = false);
       }
     }
+  }
+
+  Future<void> _assign(IslamicAudioTrack track) async {
+    if (_closing) return;
+    setState(() => _closing = true);
+    try {
+      await _stopPreview();
+      if (!mounted) return;
+      final notifications = PrayerNotificationService.instance;
+      if (widget.isIqamah) {
+        await notifications.setSelectedIqamahVoice(track.id);
+      } else if (widget.prayerName == 'الكل') {
+        await notifications.setAllPrayersVoice(track.id);
+      } else {
+        await notifications.setPrayerVoice(widget.prayerName, track.id);
+      }
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'تم تعيين ${adhanVoiceLabel(track)}: ${widget.prayerName}',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _closing = false;
+          _previewError = 'تعذر إيقاف المعاينة أو حفظ الاختيار. أعد المحاولة.';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _closing = true;
+    _disposed = true;
+    ++_previewRequest;
+    WidgetsBinding.instance.removeObserver(this);
+    _coveredRoute?.removeStatusListener(_routeStatus);
+    unawaited(_previewState?.cancel().catchError((Object _) {}));
+    // Attempt both operations independently so a rejected or delayed stop does
+    // not prevent disposal. Neither operation can stop a newer focus owner.
+    unawaited(_previewPlayer.stop().catchError((Object _) {}));
+    unawaited(_previewPlayer.dispose().catchError((Object _) {}));
+    _searchController.dispose();
+    super.dispose();
   }
 
   List<IslamicAudioTrack> _getFilteredTracks() {
@@ -232,7 +427,12 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
   Widget build(BuildContext context) {
     final audio = IslamicAudioService.instance;
     final notifications = PrayerNotificationService.instance;
-    return Directionality(
+    return Focus(
+      autofocus: true,
+      onFocusChange: (hasFocus) {
+        if (!hasFocus) unawaited(_stopPreview().catchError((Object _) {}));
+      },
+      child: Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: SafeArea(
         child: Container(
@@ -268,6 +468,9 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                       labelText: 'بحث باسم المؤذن',
                       prefixIcon: Icon(Icons.search))),
             ),
+            if (_previewError != null)
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Semantics(liveRegion: true, child: Text(_previewError!))),
             Expanded(
                 child: AnimatedBuilder(
               animation: Listenable.merge([audio, notifications]),
@@ -292,27 +495,13 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
                       selected: selected == track.id ||
                           selected == track.rawNotificationSound,
                       playing:
-                          audio.currentTrack?.id == track.id && audio.isPlaying,
+                          _previewTrackId == track.id &&
+                              (_previewPlaying || _previewLoading || _previewStopFailed),
                       downloaded:
                           track.isBundled || audio.isDownloaded(track.id),
                       downloading: audio.isDownloading(track.id),
                       onListen: () => _playPreview(track),
-                      onAssign: () async {
-                        await audio.stop();
-                        if (widget.isIqamah) {
-                          await notifications.setSelectedIqamahVoice(track.id);
-                        } else if (widget.prayerName == 'الكل') {
-                          await notifications.setAllPrayersVoice(track.id);
-                        } else {
-                          await notifications.setPrayerVoice(
-                              widget.prayerName, track.id);
-                        }
-                        if (!context.mounted) return;
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(
-                                'تم تعيين ${adhanVoiceLabel(track)}: ${widget.prayerName}')));
-                      },
+                      onAssign: () => _assign(track),
                       onDownload: () async {
                         final ok = await audio.downloadTrack(track.id);
                         if (!context.mounted) return;
@@ -329,6 +518,6 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet> {
           ]),
         ),
       ),
-    );
+    ));
   }
 }
