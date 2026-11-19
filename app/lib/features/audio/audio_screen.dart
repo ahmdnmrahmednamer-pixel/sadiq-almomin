@@ -1,5 +1,5 @@
 import '../../core/audio/ayah_audio_player.dart';
-import '../../core/ui/app_dropdown_field.dart';
+import 'widgets/recitation_reciter_selector.dart';
 import '../../core/text/arabic_normalizer.dart';
 import 'scholars_audio_library_screen.dart';
 import 'dart:async';
@@ -237,156 +237,61 @@ class _AudioScreenState extends State<AudioScreen> {
     _playSurah(prev);
   }
 
-  void _showReciterPicker() {
-    String reciterSearch = '';
-    String selectedCategory = 'الكل';
+  void _selectReciter(ReciterInfo reciter) {
+    setState(() => _currentReciter = reciter);
+    SettingsService.instance.setSelectedReciter(reciter.id);
+    if (AyahAudioPlayer.instance.isPlaying.value) {
+      AyahAudioPlayer.instance.playReciterPreview(reciter);
+    }
+  }
 
+  void _showReciterPicker() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            const all = SettingsService.availableReciters;
-            final filtered = all.where((r) {
-              final normRec = ArabicNormalizer.normalize(reciterSearch, loose: true);
-              final matchesQuery = reciterSearch.isEmpty ||
-                  r.nameAr.contains(reciterSearch) ||
-                  ArabicNormalizer.normalize(r.nameAr, loose: true).contains(normRec) ||
-                  r.id.contains(reciterSearch.toLowerCase());
-              final matchesCat = selectedCategory == 'الكل' || r.style == selectedCategory;
-              return matchesQuery && matchesCat;
-            }).toList();
-
-            return Directionality(
-              textDirection: SettingsService.instance.textDirection,
-              child: Container(
-                height: MediaQuery.of(context).size.height * 0.8,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade400,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'اختر القارئ (٦١ قارئاً معتمداً)',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentGold.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text('${filtered.length} قارئ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'ابحث باسم القارئ (مثل: الحصري، المنشاوي، عبد الباسط)...',
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        filled: true,
-                        fillColor: Colors.grey.withValues(alpha: 0.06),
-                      ),
-                      onChanged: (val) {
-                        setModalState(() {
-                          reciterSearch = val.trim();
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    // Category Chips
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: ['الكل', 'مرتل', 'مجود', 'المعلم', 'تلاوة خاشعة'].map((cat) {
-                          final isSel = selectedCategory == cat;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 6.0),
-                            child: FilterChip(
-                              label: Text(cat),
-                              selected: isSel,
-                              selectedColor: AppColors.accentGold.withValues(alpha: 0.25),
-                              checkmarkColor: AppColors.primaryGreen,
-                              onSelected: (_) {
-                                setModalState(() {
-                                  selectedCategory = cat;
-                                });
-                              },
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: ListView.separated(
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (context, idx) {
-                          final reciter = filtered[idx];
-                          final isSelected = (_currentReciter?.id ?? SettingsService.instance.selectedReciterId) == reciter.id;
-
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isSelected ? AppColors.accentGold : AppColors.primaryGreen.withValues(alpha: 0.1),
-                              child: Icon(
-                                Icons.record_voice_over,
-                                color: isSelected ? Colors.white : AppColors.primaryGreen,
-                                size: 20,
-                              ),
-                            ),
-                            title: Text(
-                              reciter.nameAr,
-                              style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                            ),
-                            subtitle: Text(
-                              'رواية حفص عن عاصم — ${reciter.style}',
-                              style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                            ),
-                            trailing: isSelected
-                                ? const Icon(Icons.check_circle, color: AppColors.accentGold)
-                                : null,
-                            onTap: () async {
-                              await SettingsService.instance.setSelectedReciter(reciter.id);
-                              if (!mounted) return;
-                              setState(() {
-                                _currentReciter = reciter;
-                              });
-                              if (!ctx.mounted) return;
-                              Navigator.pop(ctx);
-                              final targetSurah = _currentSurah ?? (_allSurahs.isNotEmpty ? _allSurahs.first : null);
-                              if (targetSurah != null) {
-                                await _playSurah(targetSurah, forceReload: true);
-                              }
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Directionality(
+            textDirection: SettingsService.instance.textDirection,
+            child: AnimatedBuilder(
+              animation: Listenable.merge([
+                AyahAudioPlayer.instance.isPlaying,
+                AyahAudioPlayer.instance.currentPlayingKey,
+              ]),
+              builder: (context, _) {
+                final current =
+                    _currentReciter ?? SettingsService.instance.currentReciter;
+                final previewing = AyahAudioPlayer.instance.isPlaying.value &&
+                    AyahAudioPlayer.instance.currentPlayingKey.value ==
+                        'preview_${current.id}';
+                return RecitationReciterSelector(
+                  reciter: current,
+                  isPreviewing: previewing,
+                  onChanged: (reciter) async {
+                    await SettingsService.instance
+                        .setSelectedReciter(reciter.id);
+                    if (!mounted) return;
+                    setState(() => _currentReciter = reciter);
+                    if (!ctx.mounted) return;
+                    Navigator.pop(ctx);
+                    final target = _currentSurah ??
+                        (_allSurahs.isNotEmpty ? _allSurahs.first : null);
+                    if (target != null) {
+                      await _playSurah(target, forceReload: true);
+                    }
+                  },
+                  onPreview: () =>
+                      AyahAudioPlayer.instance.playReciterPreview(current),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -495,28 +400,31 @@ class _AudioScreenState extends State<AudioScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المكتبة الصوتية والتلاوات'),
+        title: const Text('التلاوات'),
         actions: [
           IconButton(
             icon: const Icon(Icons.download_for_offline_outlined),
-            tooltip: 'إدارة التنزيلات والاستماع دون إنترنت',
+            tooltip: 'التنزيلات',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const DownloadsManagerScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const DownloadsManagerScreen()),
               );
             },
           ),
           IconButton(
             icon: Icon(
               _sleepTimerMinutes != null ? Icons.alarm_on : Icons.alarm,
-              color: _sleepTimerMinutes != null ? AppColors.accentGold : Colors.white,
+              color: _sleepTimerMinutes != null
+                  ? AppColors.accentGold
+                  : Colors.white,
             ),
             tooltip: 'مؤقت النوم',
             onPressed: _showSleepTimerDialog,
           ),
           IconButton(
             icon: const Icon(Icons.person_search),
-            tooltip: 'تغيير القارئ (٦١ قارئاً معتمداً)',
+            tooltip: 'تغيير القارئ',
             onPressed: _showReciterPicker,
           ),
           IconButton(
@@ -524,7 +432,8 @@ class _AudioScreenState extends State<AudioScreen> {
             tooltip: 'موسوعة دروس ومحاضرات الشيوخ والعلماء (١١٥ شيخاً)',
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ScholarsAudioLibraryScreen()),
+                MaterialPageRoute(
+                    builder: (_) => const ScholarsAudioLibraryScreen()),
               );
             },
           ),
@@ -539,268 +448,287 @@ class _AudioScreenState extends State<AudioScreen> {
         textDirection: SettingsService.instance.textDirection,
         child: Column(
           children: [
-            // Reciter Info Banner with Dropdown & Sample Preview
-            AnimatedBuilder(
-              animation: Listenable.merge([
-                AyahAudioPlayer.instance.isPlaying,
-                AyahAudioPlayer.instance.currentPlayingKey,
-              ]),
-              builder: (context, _) {
-                final curReciter = _currentReciter ?? SettingsService.instance.currentReciter;
-                final isPreviewing = AyahAudioPlayer.instance.isPlaying.value &&
-                    AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_${curReciter.id}';
-
-                return Container(
-                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF16251E)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: AppColors.primaryGreen.withValues(alpha: 0.2),
-                      width: 1.2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppAudioDropdownField<String>(
-                        label: 'اختر الشيخ / القارئ (٦١ قارئاً معتمداً)',
-                        value: curReciter.id,
-                        prefixIcon: Icons.record_voice_over_rounded,
-                        isPlaying: isPreviewing,
-                        previewButtonLabel: 'استماع عينة',
-                        previewTooltip: 'استماع عينة صوتية للشيخ ${curReciter.nameAr}',
-                        options: SettingsService.availableReciters
-                            .map((r) => AppDropdownOption<String>(
-                                  value: r.id,
-                                  label: r.nameAr,
-                                  subtitle: r.style,
-                                ))
-                            .toList(),
-                        onChanged: (newReciterId) {
-                          final r = SettingsService.availableReciters.firstWhere(
-                            (x) => x.id == newReciterId,
-                            orElse: () => SettingsService.availableReciters.first,
-                          );
-                          setState(() {
-                            _currentReciter = r;
-                          });
-                          SettingsService.instance.setSelectedReciter(newReciterId);
-                          if (AyahAudioPlayer.instance.isPlaying.value) {
-                            AyahAudioPlayer.instance.playReciterPreview(r);
-                          }
-                        },
-                        onPreviewPressed: () {
-                          AyahAudioPlayer.instance.playReciterPreview(curReciter);
-                        },
-                      ),
-                      const SizedBox(height: 6),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          'القارئ الحالي: ${curReciter.nameAr} — ${curReciter.style} (اضغط استماع عينة لتجربة الصوت فوراً)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white60
-                                : AppColors.mutedText,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'ابحث باسم السورة (مثل: الكهف، يس، البقرة)...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.primaryGreen),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                        tooltip: 'إغلاق أو مسح',
-                          icon: const Icon(Icons.clear),
-                          onPressed: () => _filterSurahs(''),
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: isDark ? const Color(0xFF1E2522) : AppColors.primaryGreen.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                ),
-                onChanged: _filterSurahs,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Surahs List
             Expanded(
-              child: _isLoadingSurahs
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filteredSurahs.isEmpty
-                      ? const Center(child: Text('لا توجد سور مطابقة لبحثك'))
-                      : ListView.separated(
-                          itemCount: _filteredSurahs.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
-                          itemBuilder: (context, idx) {
-                            final surah = _filteredSurahs[idx];
-                            final isPlayingThis = _currentSurah?.id == surah.id;
-                            final isDownloaded = AudioDownloadService.instance.isDownloaded(reciter.id, surah.id);
-                            final isDownloading = AudioDownloadService.instance.isDownloading(reciter.id, surah.id);
-                            final downloadProgress = AudioDownloadService.instance.getDownloadProgress(reciter.id, surah.id);
+              child: CustomScrollView(
+                slivers: [
+                  // Keep the selectors in the same scroll view as the surahs so
+                  // large text and short screens do not trap the list below them.
+                  SliverToBoxAdapter(
+                      child: AnimatedBuilder(
+                    animation: Listenable.merge([
+                      AyahAudioPlayer.instance.isPlaying,
+                      AyahAudioPlayer.instance.currentPlayingKey,
+                    ]),
+                    builder: (context, _) {
+                      final curReciter = _currentReciter ??
+                          SettingsService.instance.currentReciter;
+                      final isPreviewing = AyahAudioPlayer
+                              .instance.isPlaying.value &&
+                          AyahAudioPlayer.instance.currentPlayingKey.value ==
+                              'preview_${curReciter.id}';
 
-                            return ListTile(
-                              tileColor: isPlayingThis
-                                  ? (isDark ? AppColors.accentGold.withValues(alpha: 0.15) : AppColors.accentGold.withValues(alpha: 0.12))
-                                  : null,
-                              leading: CircleAvatar(
-                                backgroundColor: isPlayingThis
-                                    ? AppColors.accentGold
-                                    : (isDark ? Colors.white12 : AppColors.primaryGreen.withValues(alpha: 0.08)),
-                                child: Text(
-                                  '${surah.id}',
-                                  style: TextStyle(
-                                    color: isPlayingThis ? Colors.black : (isDark ? AppColors.softGold : AppColors.primaryGreen),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                'سورة ${surah.nameAr}',
-                                style: TextStyle(
-                                  fontWeight: isPlayingThis ? FontWeight.bold : FontWeight.w600,
-                                  color: isPlayingThis ? AppColors.secondaryGreen : null,
-                                ),
-                              ),
-                              subtitle: Row(
-                                children: [
-                                  Text(
-                                    '${surah.isMakki ? "مكية" : "مدنية"} — آياتها ${surah.ayahCount} — ص ${surah.pageStart}',
-                                    style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
-                                  ),
-                                  if (isDownloaded) ...[
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.check_circle, size: 10, color: Colors.green),
-                                          SizedBox(width: 3),
-                                          Text(
-                                            'أوفلاين',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isDownloading)
-                                    SizedBox(
-                                      width: 34,
-                                      height: 34,
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          CircularProgressIndicator(
-                                            value: downloadProgress > 0 ? downloadProgress.clamp(0.0, 1.0) : null,
-                                            strokeWidth: 2.5,
-                                            color: AppColors.primaryGreen,
-                                          ),
-                                          IconButton(
-                                            padding: EdgeInsets.zero,
-                                            icon: const Icon(Icons.close, size: 14, color: Colors.redAccent),
-                                            tooltip: 'إلغاء التحميل',
-                                            onPressed: () {
-                                              AudioDownloadService.instance.cancelDownload(reciter.id, surah.id);
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  else if (isDownloaded)
-                                    IconButton(
-                                      icon: const Icon(Icons.offline_pin_rounded, color: Colors.green, size: 22),
-                                      tooltip: 'السورة محملة (استماع بدون إنترنت)',
-                                      onPressed: () => _playSurah(surah),
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: const Icon(Icons.download_for_offline_outlined, color: AppColors.mutedText, size: 22),
-                                      tooltip: 'تحميل للاستماع بدون إنترنت',
-                                      onPressed: () async {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('بدء تحميل سورة ${surah.nameAr} بصوت ${reciter.nameAr}...'),
-                                            duration: const Duration(seconds: 2),
-                                          ),
-                                        );
-                                        final ok = await AudioDownloadService.instance.downloadSurah(
-                                          reciterId: reciter.id,
-                                          surahId: surah.id,
-                                          surahName: 'سورة ${surah.nameAr}',
-                                        );
-                                        if (!mounted) return;
-                                        if (ok) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
-                                              backgroundColor: AppColors.primaryGreen,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                    ),
-                                  const SizedBox(width: 2),
-                                  IconButton(
-                                    tooltip: 'تشغيل أو إيقاف الصوت',
-                                    icon: Icon(
-                                      isPlayingThis && _audioPlayer.playing
-                                          ? Icons.pause_circle_filled
-                                          : Icons.play_circle_fill,
-                                      color: isPlayingThis ? AppColors.accentGold : AppColors.primaryGreen,
-                                      size: 34,
-                                    ),
-                                    onPressed: () => _playSurah(surah),
-                                  ),
-                                ],
-                              ),
-                              onTap: () => _playSurah(surah),
-                            );
-                          },
+                      return Container(
+                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF16251E)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color:
+                                AppColors.primaryGreen.withValues(alpha: 0.2),
+                            width: 1.2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            RecitationReciterSelector(
+                              reciter: curReciter,
+                              isPreviewing: isPreviewing,
+                              onChanged: _selectReciter,
+                              onPreview: () => AyahAudioPlayer.instance
+                                  .playReciterPreview(curReciter),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  )),
+
+                  // Search Bar
+                  SliverToBoxAdapter(
+                      child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText:
+                            'ابحث باسم السورة (مثل: الكهف، يس، البقرة)...',
+                        prefixIcon: const Icon(Icons.search,
+                            color: AppColors.primaryGreen),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                tooltip: 'إغلاق أو مسح',
+                                icon: const Icon(Icons.clear),
+                                onPressed: () => _filterSurahs(''),
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: isDark
+                            ? const Color(0xFF1E2522)
+                            : AppColors.primaryGreen.withValues(alpha: 0.06),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 16),
+                      ),
+                      onChanged: _filterSurahs,
+                    ),
+                  )),
+                  const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                  // Surahs List
+                  if (_isLoadingSurahs)
+                    const SliverFillRemaining(
+                        child: Center(child: CircularProgressIndicator()))
+                  else if (_filteredSurahs.isEmpty)
+                    const SliverFillRemaining(
+                        child: Center(child: Text('لا توجد سور مطابقة لبحثك')))
+                  else
+                    SliverList.separated(
+                      itemCount: _filteredSurahs.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, idx) {
+                        final surah = _filteredSurahs[idx];
+                        final isPlayingThis = _currentSurah?.id == surah.id;
+                        final isDownloaded = AudioDownloadService.instance
+                            .isDownloaded(reciter.id, surah.id);
+                        final isDownloading = AudioDownloadService.instance
+                            .isDownloading(reciter.id, surah.id);
+                        final downloadProgress = AudioDownloadService.instance
+                            .getDownloadProgress(reciter.id, surah.id);
+
+                        return ListTile(
+                          tileColor: isPlayingThis
+                              ? (isDark
+                                  ? AppColors.accentGold.withValues(alpha: 0.15)
+                                  : AppColors.accentGold
+                                      .withValues(alpha: 0.12))
+                              : null,
+                          leading: CircleAvatar(
+                            backgroundColor: isPlayingThis
+                                ? AppColors.accentGold
+                                : (isDark
+                                    ? Colors.white12
+                                    : AppColors.primaryGreen
+                                        .withValues(alpha: 0.08)),
+                            child: Text(
+                              '${surah.id}',
+                              style: TextStyle(
+                                color: isPlayingThis
+                                    ? Colors.black
+                                    : (isDark
+                                        ? AppColors.softGold
+                                        : AppColors.primaryGreen),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            'سورة ${surah.nameAr}',
+                            style: TextStyle(
+                              fontWeight: isPlayingThis
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                              color: isPlayingThis
+                                  ? AppColors.secondaryGreen
+                                  : null,
+                            ),
+                          ),
+                          subtitle: Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              Text(
+                                '${surah.isMakki ? "مكية" : "مدنية"} — آياتها ${surah.ayahCount} — ص ${surah.pageStart}',
+                                style: const TextStyle(
+                                    fontSize: 12, color: AppColors.mutedText),
+                              ),
+                              if (isDownloaded) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.check_circle,
+                                          size: 10, color: Colors.green),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'أوفلاين',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (isDownloading)
+                                SizedBox(
+                                  width: 34,
+                                  height: 34,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        value: downloadProgress > 0
+                                            ? downloadProgress.clamp(0.0, 1.0)
+                                            : null,
+                                        strokeWidth: 2.5,
+                                        color: AppColors.primaryGreen,
+                                      ),
+                                      IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: const Icon(Icons.close,
+                                            size: 14, color: Colors.redAccent),
+                                        tooltip: 'إلغاء التحميل',
+                                        onPressed: () {
+                                          AudioDownloadService.instance
+                                              .cancelDownload(
+                                                  reciter.id, surah.id);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              else if (isDownloaded)
+                                IconButton(
+                                  icon: const Icon(Icons.offline_pin_rounded,
+                                      color: Colors.green, size: 22),
+                                  tooltip: 'السورة محملة (استماع بدون إنترنت)',
+                                  onPressed: () => _playSurah(surah),
+                                )
+                              else
+                                IconButton(
+                                  icon: const Icon(
+                                      Icons.download_for_offline_outlined,
+                                      color: AppColors.mutedText,
+                                      size: 22),
+                                  tooltip: 'تحميل للاستماع بدون إنترنت',
+                                  onPressed: () async {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'بدء تحميل سورة ${surah.nameAr} بصوت ${reciter.nameAr}...'),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                    final ok = await AudioDownloadService
+                                        .instance
+                                        .downloadSurah(
+                                      reciterId: reciter.id,
+                                      surahId: surah.id,
+                                      surahName: 'سورة ${surah.nameAr}',
+                                    );
+                                    if (!mounted) return;
+                                    if (ok) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
+                                          backgroundColor:
+                                              AppColors.primaryGreen,
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              const SizedBox(width: 2),
+                              IconButton(
+                                tooltip: 'تشغيل أو إيقاف الصوت',
+                                icon: Icon(
+                                  isPlayingThis && _audioPlayer.playing
+                                      ? Icons.pause_circle_filled
+                                      : Icons.play_circle_fill,
+                                  color: isPlayingThis
+                                      ? AppColors.accentGold
+                                      : AppColors.primaryGreen,
+                                  size: 34,
+                                ),
+                                onPressed: () => _playSurah(surah),
+                              ),
+                            ],
+                          ),
+                          onTap: () => _playSurah(surah),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
 
             // Bottom Player Bar
