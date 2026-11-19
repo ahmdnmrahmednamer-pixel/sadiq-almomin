@@ -638,17 +638,6 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF2E7D32),
         keywords: ['كفارة', 'فدية', 'يمين', 'زكاة الفطر'],
       ),
-      AppDirectoryItem(
-        id: 'scholars_audio',
-        title: context.tr('scholars_gatherings'),
-        subtitle: 'مجالس كبار العلماء (١١٥ عالماً و ٧٠٨ محاضرات صوتية)',
-        category: 'رياض العلم',
-        categoryKey: 'library',
-        route: '/scholars-audio',
-        icon: Icons.mic_external_on_rounded,
-        color: AppColors.emerald700,
-        keywords: ['علماء', 'شيوخ', 'محاضرات', 'ابن باز', 'ابن عثيمين', 'الشعراوي'],
-      ),
       const AppDirectoryItem(
         id: 'islamic_radio',
         title: 'إذاعات القرآن الكريم (MP3Quran)',
