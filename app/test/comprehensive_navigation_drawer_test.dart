@@ -49,13 +49,8 @@ void main() {
       expect(find.text('أصوات الأذان والمؤذنون الـ 7 🕌'), findsOneWidget);
       expect(find.text('دعاء الشيخ الشعراوي بعد الأذان 🎧'), findsOneWidget);
 
-      // Verify Scholars Audio Library & Islamic Radio
-      await tester.scrollUntilVisible(
-        find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'),
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
-      expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsOneWidget);
+      // Retired scholars library must not be advertised; radio stays.
+      expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsNothing);
 
       await tester.scrollUntilVisible(
         find.text('إذاعات القرآن الكريم (MP3Quran) 📻'),
