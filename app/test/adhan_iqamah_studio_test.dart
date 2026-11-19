@@ -17,28 +17,34 @@ void main() {
   });
 
   group('Adhan & Iqamah Studio Unit & Preferences Tests', () {
-    test('getAdhanVoiceName returns verified authentic title for all supported keys', () {
-      expect(getAdhanVoiceName('adhan_makkah'), contains('مكة المكرمة'));
-      expect(getAdhanVoiceName('adhan_madinah'), contains('المدينة المنورة'));
-      expect(getAdhanVoiceName('adhan_aqsa'), contains('القدس الشريف'));
-      expect(getAdhanVoiceName('adhan_abdulbasit'), contains('عبد الباسط عبد الصمد'));
-      expect(getAdhanVoiceName('adhan_afasy'), contains('مشاري بن راشد العفاسي'));
-      expect(getAdhanVoiceName('adhan_turkey'), contains('تركيا'));
-      expect(getAdhanVoiceName('adhan_dubai'), contains('دبي'));
-      expect(getAdhanVoiceName('adhan_sham'), contains('الأموي'));
-      expect(getAdhanVoiceName('takbeerat'), contains('تكبيرات'));
+    test('Voice names are concise and omit descriptive subtitles', () {
+      for (final track in IslamicAudioService.allTracks
+          .where((t) => t.type == IslamicAudioType.adhan)) {
+        final label = getAdhanVoiceName(track.id);
+        expect(label, isNotEmpty);
+        if (track.muezzinName != null && track.muezzinName!.isNotEmpty) {
+          expect(label, contains(track.muezzinName!));
+        }
+        expect(label.contains(track.subtitle), isFalse);
+      }
     });
 
-    test('getIqamahVoiceName returns verified authentic title for all Iqama keys', () {
+    test(
+        'getIqamahVoiceName returns verified authentic title for all Iqama keys',
+        () {
       expect(getIqamahVoiceName('iqamah_makkah'), contains('المسجد الحرام'));
       expect(getIqamahVoiceName('iqamah_madinah'), contains('المدينة المنورة'));
-      expect(getIqamahVoiceName('iqamah_afasy'), contains('مشاري بن راشد العفاسي'));
-      expect(getIqamahVoiceName('iqamah_abdulbasit'), contains('عبد الباسط عبد الصمد'));
+      expect(getIqamahVoiceName('iqamah_afasy'),
+          contains('مشاري بن راشد العفاسي'));
+      expect(getIqamahVoiceName('iqamah_abdulbasit'),
+          contains('عبد الباسط عبد الصمد'));
       expect(getIqamahVoiceName('iqamah_cairo'), contains('القاهرة'));
       expect(getIqamahVoiceName('iqamah_short'), contains('سريعة'));
     });
 
-    test('PrayerNotificationService manages selectedIqamahVoice persistence correctly', () async {
+    test(
+        'PrayerNotificationService manages selectedIqamahVoice persistence correctly',
+        () async {
       final service = PrayerNotificationService.instance;
       await service.init();
 
@@ -55,39 +61,52 @@ void main() {
       expect(prefs.getString('notif_selected_iqamah'), 'iqamah_abdulbasit');
     });
 
-    test('IslamicAudioService tracks catalog includes rich variety of HD Adhans and Iqamas', () {
-      final adhans = IslamicAudioService.allTracks.where((t) => t.type == IslamicAudioType.adhan).toList();
-      final iqamahs = IslamicAudioService.allTracks.where((t) => t.type == IslamicAudioType.iqamah).toList();
+    test(
+        'IslamicAudioService tracks catalog includes rich variety of HD Adhans and Iqamas',
+        () {
+      final adhans = IslamicAudioService.allTracks
+          .where((t) => t.type == IslamicAudioType.adhan)
+          .toList();
+      final iqamahs = IslamicAudioService.allTracks
+          .where((t) => t.type == IslamicAudioType.iqamah)
+          .toList();
 
       expect(adhans.length, greaterThanOrEqualTo(15));
       expect(iqamahs.length, greaterThanOrEqualTo(5));
 
       final adhanIds = adhans.map((t) => t.id).toList();
-      expect(adhanIds, containsAll([
-        'adhan_makkah',
-        'adhan_madinah',
-        'adhan_aqsa',
-        'adhan_abdulbasit',
-        'adhan_afasy',
-        'adhan_fajr_afasy',
-        'adhan_turkey',
-        'adhan_dubai',
-        'adhan_sham',
-      ]));
+      expect(
+          adhanIds,
+          containsAll([
+            'adhan_makkah',
+            'adhan_madinah',
+            'adhan_aqsa',
+            'adhan_abdulbasit',
+            'adhan_afasy',
+            'adhan_fajr_afasy',
+            'adhan_turkey',
+            'adhan_dubai',
+            'adhan_sham',
+          ]));
 
       final iqamahIds = iqamahs.map((t) => t.id).toList();
-      expect(iqamahIds, containsAll([
-        'iqamah_full',
-        'iqamah_madinah',
-        'iqamah_afasy',
-        'iqamah_abdulbasit',
-        'iqamah_cairo',
-        'iqamah_short',
-      ]));
+      expect(
+          iqamahIds,
+          containsAll([
+            'iqamah_full',
+            'iqamah_madinah',
+            'iqamah_afasy',
+            'iqamah_abdulbasit',
+            'iqamah_cairo',
+            'iqamah_short',
+          ]));
     });
 
-    test('PrayerNotificationService iqamah scheduling and test notification pass consistent raw sound (short, known, nullraw, unknown, test vs schedule)', () async {
-      const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+    test(
+        'PrayerNotificationService iqamah scheduling and test notification pass consistent raw sound (short, known, nullraw, unknown, test vs schedule)',
+        () async {
+      const channel =
+          MethodChannel('dexterous.com/flutter/local_notifications');
       final calls = <MethodCall>[];
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -157,10 +176,13 @@ void main() {
         await notifService.schedulePrayerNotifications(testPrayerData);
 
         final iqamahCall = calls.firstWhere(
-          (c) => c.method == 'zonedSchedule' &&
-              ((c.arguments as Map)['payload'] as String? ?? '').startsWith('type=iqamah'),
+          (c) =>
+              c.method == 'zonedSchedule' &&
+              ((c.arguments as Map)['payload'] as String? ?? '')
+                  .startsWith('type=iqamah'),
         );
-        final platformSpecifics = (iqamahCall.arguments as Map)['platformSpecifics'] as Map;
+        final platformSpecifics =
+            (iqamahCall.arguments as Map)['platformSpecifics'] as Map;
         return platformSpecifics['sound'] as String?;
       }
 
@@ -168,10 +190,13 @@ void main() {
         calls.clear();
         await notifService.sendTestIqamahNotification(customVoice: voiceKey);
         final testCall = calls.firstWhere(
-          (c) => c.method == 'show' &&
-              ((c.arguments as Map)['payload'] as String? ?? '').startsWith('type=iqamah'),
+          (c) =>
+              c.method == 'show' &&
+              ((c.arguments as Map)['payload'] as String? ?? '')
+                  .startsWith('type=iqamah'),
         );
-        final platformSpecifics = (testCall.arguments as Map)['platformSpecifics'] as Map;
+        final platformSpecifics =
+            (testCall.arguments as Map)['platformSpecifics'] as Map;
         return platformSpecifics['sound'] as String?;
       }
 
@@ -186,7 +211,8 @@ void main() {
       expect(await getScheduledIqamahSound('iqamah_afasy'), equals('iqamah'));
 
       // 4. unknown: unlisted voice key falls back to 'iqamah'
-      expect(await getScheduledIqamahSound('unknown_voice_key'), equals('iqamah'));
+      expect(
+          await getScheduledIqamahSound('unknown_voice_key'), equals('iqamah'));
 
       // 5. test vs schedule consistency: both must use 'iqamah'
       final testSound = await getTestIqamahSound('iqamah_short');
@@ -197,7 +223,9 @@ void main() {
   });
 
   group('Adhan & Iqamah Studio Widget Rendering Tests', () {
-    testWidgets('Renders studio sheet with Adhan and Iqamah tabs, search, and action cards', (tester) async {
+    testWidgets(
+        'Renders studio sheet with Adhan and Iqamah tabs, search, and action cards',
+        (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -209,7 +237,8 @@ void main() {
             body: Builder(
               builder: (ctx) => Center(
                 child: ElevatedButton(
-                  onPressed: () => showSettingsAdhanVoiceModal(ctx, initialTab: 0),
+                  onPressed: () =>
+                      showSettingsAdhanVoiceModal(ctx, initialTab: 0),
                   child: const Text('افتح استوديو الأصوات'),
                 ),
               ),
@@ -222,11 +251,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // 1. Verify Header and Subtitle
-      expect(find.text('مؤذنو الصلوات الخمس 🕌'), findsOneWidget);
-      expect(find.textContaining('تخصيص مؤذن مستقل لكل صلاة'), findsOneWidget);
+      expect(find.text('مؤذنو الصلوات الخمس'), findsOneWidget);
+      expect(find.textContaining('تخصيص مؤذن مستقل لكل صلاة'), findsNothing);
 
       // 2. Verify Unified Muezzin option
-      expect(find.text('مؤذن موحد'), findsOneWidget);
+      expect(find.text('مؤذن لجميع الصلوات'), findsOneWidget);
 
       // 3. Verify the 5 prayer cards
       expect(find.text('صلاة الفجر'), findsOneWidget);
@@ -236,7 +265,11 @@ void main() {
       expect(find.text('صلاة العشاء'), findsOneWidget);
 
       // 4. Verify change buttons
-      expect(find.textContaining('تغيير المؤذن'), findsWidgets);
+      await tester.tap(find.text('صلاة الفجر'));
+      await tester.pumpAndSettle();
+      expect(find.text('مؤذن الفجر'), findsOneWidget);
+      expect(find.text('استماع'), findsWidgets);
+      expect(find.text('تعيين'), findsWidgets);
     });
   });
 }
