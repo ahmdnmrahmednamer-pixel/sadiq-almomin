@@ -42,6 +42,7 @@ class AppDropdownField<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18.2;
     final uniqueOptions = <AppDropdownOption<T>>[];
     final seenValues = <T>{};
     for (final opt in options) {
@@ -64,94 +65,104 @@ class AppDropdownField<T> extends StatelessWidget {
       hint: 'قائمة منسدلة، انقر لاختيار عنصر آخر',
       child: Directionality(
         textDirection: SettingsService.instance.textDirection,
-        child: DropdownButtonFormField<T>(
-          initialValue: effectiveValue,
-          isExpanded: true,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColors.primaryGreen,
-          ),
-          dropdownColor: isDark ? const Color(0xFF1A2420) : Colors.white,
-          style: TextStyle(
-            fontFamily: 'Amiri',
-            fontSize: dense ? 13.5 : 14.5,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF18221E),
-          ),
-          decoration: InputDecoration(
-            labelText: label,
-            helperText: helperText,
-            isDense: dense,
-            filled: true,
-            fillColor: isDark
-                ? const Color(0xFF16201C)
-                : AppColors.primaryGreen.withValues(alpha: 0.04),
-            prefixIcon: prefixIcon != null
-                ? ExcludeSemantics(
-                    child: Icon(
-                      prefixIcon,
-                      color: AppColors.primaryGreen,
-                      size: dense ? 18 : 20,
-                    ),
-                  )
-                : null,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: dense ? 10 : 12,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: AppColors.primaryGreen.withValues(alpha: 0.25),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (largeText) ...[
+              Text(label, style: Theme.of(context).textTheme.labelLarge),
+              const SizedBox(height: 8),
+            ],
+            DropdownButtonFormField<T>(
+              itemHeight: kMinInteractiveDimension,
+              initialValue: effectiveValue,
+              isExpanded: true,
+              icon: const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: AppColors.primaryGreen,
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(
-                color: AppColors.primaryGreen.withValues(alpha: 0.25),
+              dropdownColor: isDark ? const Color(0xFF1A2420) : Colors.white,
+              style: TextStyle(
+                fontFamily: 'Amiri',
+                fontSize: dense ? 13.5 : 14.5,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF18221E),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(
-                color: AppColors.accentGold,
-                width: 1.6,
-              ),
-            ),
-          ),
-          items: uniqueOptions.map((opt) {
-            return DropdownMenuItem<T>(
-              value: opt.value,
-              child: Row(
-                children: [
-                  if (opt.icon != null) ...[
-                    ExcludeSemantics(
-                      child: Icon(
-                        opt.icon,
-                        size: 18,
-                        color: AppColors.primaryGreen,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: Text(
-                      opt.subtitle != null && opt.subtitle!.isNotEmpty
-                          ? '${opt.label} (${opt.subtitle})'
-                          : opt.label,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
+              decoration: InputDecoration(
+                labelText: largeText ? null : label,
+                helperText: helperText,
+                isDense: dense,
+                filled: true,
+                fillColor: isDark
+                    ? const Color(0xFF16201C)
+                    : AppColors.primaryGreen.withValues(alpha: 0.04),
+                prefixIcon: prefixIcon != null
+                    ? ExcludeSemantics(
+                        child: Icon(
+                          prefixIcon,
+                          color: AppColors.primaryGreen,
+                          size: dense ? 18 : 20,
+                        ),
+                      )
+                    : null,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: dense ? 10 : 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(
+                    color: AppColors.primaryGreen.withValues(alpha: 0.25),
                   ),
-                ],
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(
+                    color: AppColors.primaryGreen.withValues(alpha: 0.25),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(
+                    color: AppColors.accentGold,
+                    width: 1.6,
+                  ),
+                ),
               ),
-            );
-          }).toList(),
-          onChanged: (newVal) {
-            if (newVal != null) {
-              onChanged(newVal);
-            }
-          },
+              items: uniqueOptions.map((opt) {
+                return DropdownMenuItem<T>(
+                  value: opt.value,
+                  child: Row(
+                    children: [
+                      if (opt.icon != null) ...[
+                        ExcludeSemantics(
+                          child: Icon(
+                            opt.icon,
+                            size: 18,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: Text(
+                          opt.subtitle != null && opt.subtitle!.isNotEmpty
+                              ? '${opt.label} (${opt.subtitle})'
+                              : opt.label,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (newVal) {
+                if (newVal != null) {
+                  onChanged(newVal);
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -233,7 +244,8 @@ class AppToolbarDropdown<T> extends StatelessWidget {
                   children: [
                     if (opt.icon != null) ...[
                       ExcludeSemantics(
-                        child: Icon(opt.icon, size: 15, color: AppColors.primaryGreen),
+                        child: Icon(opt.icon,
+                            size: 15, color: AppColors.primaryGreen),
                       ),
                       const SizedBox(width: 6),
                     ],
@@ -256,7 +268,6 @@ class AppToolbarDropdown<T> extends StatelessWidget {
     );
   }
 }
-
 
 /// Dropdown selector with a dedicated audio preview button right beside it.
 /// Enables selecting a Sheikh (Reciter) or Muezzin (Adhan voice) from the dropdown
@@ -311,7 +322,8 @@ class AppAudioDropdownField<T> extends StatelessWidget {
         // 2. Audio Preview Button right beside the Dropdown
         Semantics(
           button: true,
-          label: previewTooltip ?? (isPlaying ? 'إيقاف الاستماع' : 'استماع عينة من $label'),
+          label: previewTooltip ??
+              (isPlaying ? 'إيقاف الاستماع' : 'استماع عينة من $label'),
           child: Container(
             margin: EdgeInsets.only(bottom: helperText != null ? 20 : 0),
             child: Material(
@@ -323,12 +335,16 @@ class AppAudioDropdownField<T> extends StatelessWidget {
                           colors: [Color(0xFFDC2626), Color(0xFFB91C1C)],
                         )
                       : const LinearGradient(
-                          colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
+                          colors: [
+                            AppColors.primaryGreen,
+                            AppColors.secondaryGreen
+                          ],
                         ),
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: (isPlaying ? Colors.red : AppColors.primaryGreen).withValues(alpha: 0.3),
+                      color: (isPlaying ? Colors.red : AppColors.primaryGreen)
+                          .withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -346,7 +362,9 @@ class AppAudioDropdownField<T> extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isPlaying ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
+                          isPlaying
+                              ? Icons.stop_circle_rounded
+                              : Icons.play_circle_fill_rounded,
                           color: Colors.white,
                           size: dense ? 18 : 20,
                         ),
