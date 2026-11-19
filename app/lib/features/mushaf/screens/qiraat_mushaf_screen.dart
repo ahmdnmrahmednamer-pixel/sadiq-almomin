@@ -52,12 +52,13 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
               for(var n=1;n<=_count;n++)DropdownMenuItem(value:n,child:Text('$n'))],
             onChanged:_busy?null:(v){if(v!=null)setState(()=>_ayah=v);})),
         ])),
-        const Padding(padding:EdgeInsets.all(12),child:Text('مواضع النص بحسب اللفظ. الإحالات والأصول العامة تُقرأ في سياق السورة.')),
+        const Padding(padding:EdgeInsets.all(12),child:Text('ربط بالاقتباس وسياق الموضع. الأصول والإحالات العامة ليست خريطة مكتملة لكل أحكام الآية.')),
         Expanded(child:_busy?const Center(child:CircularProgressIndicator()):_error!=null?
           Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(_error!),TextButton(onPressed:_load,child:const Text('إعادة المحاولة'))])):
-          shown.isEmpty?const Center(child:Padding(padding:EdgeInsets.all(24),child:Text('لم يُثبت ربط لفظي لهذا الموضع. لا يعني ذلك عدم وجود حكم في الكتاب. اختر السورة كاملة لقراءة السياق.'))):
+          shown.isEmpty?const Center(child:Padding(padding:EdgeInsets.all(24),child:Text('لم يكتمل ربط هذا الموضع بعد. لا يعني ذلك عدم وجوده في الكتاب. سياق السورة متاح إلى حين إكمال الربط.'))):
           ListView.builder(padding:const EdgeInsets.all(16),itemCount:shown.length,itemBuilder:(c,i){final p=shown[i];return Card(child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
             Text(p.firstPage==p.lastPage?'ص ${p.firstPage}':'ص ${p.firstPage} إلى ${p.lastPage}',style:Theme.of(context).textTheme.labelMedium),
+            if(p.ayahs.length>1)const Text('مقطع ذو مواضع متعددة؛ ليس كل ما فيه خاصًا بكل آية.'),
             const SizedBox(height:8),SelectableText(p.text,style:const TextStyle(fontSize:18,height:1.8)),
           ])));})),
         const Padding(padding:EdgeInsets.all(8),child:SelectableText(BudurSource.bookUrl,style:TextStyle(fontSize:12))),
