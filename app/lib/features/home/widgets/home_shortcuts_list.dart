@@ -85,13 +85,6 @@ class HomeShortcutsList extends StatelessWidget {
                 ),
                 _buildSpiritualDoorTile(
                   context,
-                  title: context.tr('hadith_library'),
-                  icon: Icons.collections_bookmark_rounded,
-                  color: const Color(0xFF0D5C46),
-                  onTap: () => context.push('/hadith'),
-                ),
-                _buildSpiritualDoorTile(
-                  context,
                   title: context.tr('daily_wird'),
                   icon: Icons.task_alt_rounded,
                   color: const Color(0xFF27AE60),
