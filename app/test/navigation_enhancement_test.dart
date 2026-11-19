@@ -50,7 +50,7 @@ void main() {
       expect(find.text('الصلاة والقبلة'), findsOneWidget);
       expect(find.text('الأذكار والسبحة'), findsOneWidget);
       expect(find.text('المكتبة والحديث'), findsOneWidget);
-      expect(find.text('كبار العلماء'), findsOneWidget);
+      expect(find.text('كبار العلماء'), findsNothing);
       expect(find.text('ختمة القرآن'), findsOneWidget);
 
       PrayerService.instance.stopLiveTicker();
