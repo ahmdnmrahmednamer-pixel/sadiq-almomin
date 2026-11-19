@@ -247,7 +247,7 @@ class BudurSource {
       if (hits.length == 1 && hits.single.ayah == expected.$1)
         links[i] = [expected.$1];
     }
-    // Five inspected list headings name separate Quran words, not a
+    // Inspected list headings name separate Quran words, not a
     // contiguous quotation. Require the original paragraph and every whole-
     // token occurrence (including both occurrences in the same verse).
     const reviewedLists = <int, Map<String, Map<String, List<int>>>>{
@@ -279,6 +279,41 @@ class BudurSource {
       36: {
         "\" سدا، معا \" فتح السين فيهما حفص والأخوان وخلف، وضمها غيرهم.": {
           "سدا": [9, 9],
+        },
+      },
+      39: {
+        "\" فتحت وفتحت \" خفف التاء فيهما الكوفيون وشددها غيرهم.": {
+          "فتحت": [71],
+          "وفتحت": [73],
+        },
+      },
+      64: {
+        "\" يكفر. ويدخله \" قرأ المدنيان والشامي بالنون في الفعلين والباقون بالياء التحتية فيهما.":
+            {
+          "يكفر": [9],
+          "ويدخله": [9],
+        },
+      },
+      71: {
+        "\" ويؤخركم لا يؤخر \" أبدل ورش وأبو جعفر الهمزة واوا خالصة مطلقا، وكذلك حمزة عند الوقف.":
+            {
+          "ويؤخركم": [4],
+          "لا يؤخر": [4],
+        },
+      },
+      75: {
+        "\" تحبون وتذرون \" قرأ المكي والبصريان والشامي بياء الغيبة فيهما، والباقون بتاء الخطاب كذلك.":
+            {
+          "تحبون": [20],
+          "وتذرون": [21],
+        },
+      },
+      66: {
+        "\" امرأت الثلاثة وابنت \" رسمت كلها بالتاء ووقف عليها بالهاء المكي والبصريان والكسائي، والباقون بالتاء.":
+            {
+          "امرأت": [10, 11],
+          "وامرأت": [10],
+          "ابنت": [12],
         },
       },
     };
