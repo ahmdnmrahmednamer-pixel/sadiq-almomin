@@ -290,7 +290,8 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
           elevation: 0,
           title: const Row(
             children: [
-              Text('📻 ', style: TextStyle(fontSize: 20)),
+              ExcludeSemantics(child: Icon(Icons.radio_rounded, size: 20, color: Colors.white)),
+              SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'إذاعات القرآن الكريم',
@@ -298,6 +299,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
                     fontSize: 19,
+                    color: Colors.white,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -352,13 +354,15 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                'باقة الإذاعات المختارة (${stations.length})',
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white70 : Colors.black87,
+                              Expanded(
+                                child: Text(
+                                  'باقة الإذاعات المختارة (${stations.length})',
+                                  style: TextStyle(
+                                    fontFamily: 'Amiri',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? Colors.white70 : Colors.black87,
+                                  ),
                                 ),
                               ),
                             ],
@@ -397,7 +401,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
       color: AppColors.primaryGreen,
       padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
       child: Container(
-        height: 44,
+        constraints: const BoxConstraints(minHeight: 44),
         decoration: BoxDecoration(
           color: isDark ? AppTheme.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -410,6 +414,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
           ],
         ),
         child: TextField(
+          key: const Key('quran_radio_search'),
           controller: _searchController,
           onChanged: (val) {
             setState(() {
@@ -417,8 +422,9 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
             });
           },
           decoration: InputDecoration(
-            hintText: 'ابحث عن إذاعة، قارئ، تفسير، أو موضوع...',
-            hintStyle: TextStyle(
+            labelText: 'ابحث عن إذاعة أو قارئ أو سورة...',
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            labelStyle: TextStyle(
               fontFamily: 'Amiri',
               fontSize: 13.5,
               color: isDark ? Colors.white38 : Colors.grey.shade500,
@@ -512,7 +518,8 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
   Widget _buildCairoFeaturedCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
-    final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final isAndroid = station.streamUrl.contains('8s5u5tpdtwzuv') &&
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
     return Container(
       decoration: BoxDecoration(
@@ -551,7 +558,10 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // شارة ترحيل الإنترنت وتنبيه أندرويد
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -576,11 +586,10 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
-                        'ترحيل إنترنت غير رسمي',
+                        'الموقع الرسمي',
                         style: TextStyle(color: Colors.white70, fontSize: 11),
                       ),
                     ),
-                    const Spacer(),
                     AnimatedBuilder(
                       animation: _radioService,
                       builder: (context, _) {
@@ -678,8 +687,8 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                           isAndroid
                               ? 'غير مدعوم على أندرويد (غير مشفر)'
                               : (isThisBuffering
-                                  ? 'جاري الاتصال بالتسجيل...'
-                                  : (isThisPlaying ? 'إيقاف مؤقت' : 'استماع للتسجيل')),
+                                  ? 'جاري الاتصال بالبث...'
+                                  : (isThisPlaying ? 'إيقاف مؤقت' : 'استماع للبث')),
                           style: const TextStyle(
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.bold,
@@ -705,11 +714,15 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
     );
   }
 
+  String _originLabel(IslamicRadioStation station) => station.countryOrOrigin
+      .replaceAll(RegExp(r'[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1FAFF}\u{FE0F}]', unicode: true), '')
+      .trim();
+
   /// بطاقة محطة إذاعية عادية
   Widget _buildStationCard(IslamicRadioStation station, bool isDark) {
     final isThisPlaying = _currentStation?.id == station.id && _isPlaying;
     final isThisBuffering = _currentStation?.id == station.id && _isBuffering;
-    final isCairoUnsupported = station.id == 'radio_cairo_live' &&
+    final isCairoUnsupported = station.streamUrl.contains('8s5u5tpdtwzuv') &&
         (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
     return Card(
@@ -760,7 +773,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                 child: Semantics(
                   label: isCairoUnsupported
                       ? '${station.name}، غير متاح على أجهزة أندرويد لعدم التشفير'
-                      : '${station.name}، ${station.categoryName}، ${station.countryOrOrigin}',
+                      : '${station.name}، ${station.categoryName}، ${_originLabel(station)}',
                   hint: isCairoUnsupported
                       ? 'غير مدعوم على أندرويد'
                       : (isThisPlaying ? 'انقر لإيقاف البث' : 'انقر لبدء الاستماع'),
@@ -768,23 +781,22 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              station.name,
-                              style: TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: 15.5,
-                                fontWeight: FontWeight.bold,
-                                color: isThisPlaying
-                                    ? AppColors.primaryGreen
-                                    : (isDark ? Colors.white : Colors.black87),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          Text(
+                            station.name,
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.bold,
+                              color: isThisPlaying
+                                  ? AppColors.primaryGreen
+                                  : (isDark ? Colors.white : Colors.black87),
                             ),
+                            softWrap: true,
                           ),
+                          const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -794,7 +806,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              station.countryOrOrigin,
+              _originLabel(station),
                               style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -809,8 +821,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                           color: isDark ? Colors.white54 : Colors.grey.shade600,
                           height: 1.3,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        softWrap: true,
                       ),
                     ],
                   ),
@@ -968,7 +979,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '• ${station.countryOrOrigin}',
+                        '• ${_originLabel(station)}',
                         style: const TextStyle(fontSize: 10.5, color: Colors.grey),
                       ),
                     ],
@@ -1068,7 +1079,7 @@ class _IslamicRadioScreenState extends State<IslamicRadioScreen>
             Text(
               _favoritesOnly
                   ? 'اضغط على رمز القلب بجوار أي إذاعة لإضافتها هنا'
-                  : 'جرب البحث بكلمة أخرى مثل (القاهرة، المنشاوي، تفسير، أذكار...)',
+                  : 'جرب البحث بكلمة أخرى مثل (القاهرة، المنشاوي، الحصري، البقرة...)',
               style: TextStyle(
                 fontFamily: 'Amiri',
                 fontSize: 13,

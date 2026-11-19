@@ -202,12 +202,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       // ================= 3. قسم مكتبة العلماء والدروس =================
       _DrawerItemData(
         title: 'إذاعات القرآن الكريم (MP3Quran) 📻',
-        subtitle: 'بث إذاعي متواصل لكبار القراء، التفسير، الفتاوى، والأذكار والرقية',
+        subtitle: 'بث إذاعات القرآن الكريم وتلاوات كبار القراء',
         semanticLabel: 'إذاعات القرآن الكريم',
         icon: Icons.podcasts_rounded,
         color: const Color(0xFF0F5B45),
         categoryKey: 'scholars',
-        keywords: ['إذاعات', 'راديو', 'بث', 'قرآن', 'قراء', 'تفسير', 'فتاوى'],
+        keywords: ['إذاعات', 'راديو', 'بث', 'قرآن', 'قراء', 'القاهرة', 'المنشاوي', 'الحصري', 'عبد الباسط'],
         onTap: () {
           Navigator.pop(context);
           context.push('/islamic-radio');

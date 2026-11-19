@@ -32,54 +32,32 @@ class IslamicRadioService extends ChangeNotifier {
       icon: Icons.record_voice_over_rounded,
     ),
     IslamicRadioCategory(
-      type: IslamicRadioCategoryType.sunnahHadith,
-      title: 'السنة النبوية والحديث',
-      icon: Icons.auto_stories_rounded,
-    ),
-    IslamicRadioCategory(
-      type: IslamicRadioCategoryType.tafseerFatwa,
-      title: 'التفسير والفتاوى وعلوم القرآن',
-      icon: Icons.menu_book_rounded,
-    ),
-    IslamicRadioCategory(
-      type: IslamicRadioCategoryType.adhkarRoqyah,
-      title: 'الأذكار والرقية الشرعية',
-      icon: Icons.volunteer_activism_rounded,
-    ),
-    IslamicRadioCategory(
       type: IslamicRadioCategoryType.khushooSurahs,
       title: 'تلاوات خاشعة وسور مختارة',
       icon: Icons.spa_rounded,
     ),
   ];
 
-  /// قائمة الإذاعات المعتمدة الحية والمفحوصة شبكياً
-  /// المصدر: كتالوج MP3Quran الرسمي الموثق v3 (https://mp3quran.net/api/v3/radios?language=ar)
-  /// تاريخ التحقق الميداني المباشر (Snapshot): 2026-11-15 (HTTP 200 Audio Streams Only)
-  ///
-  /// توثيق أمني وفني حول بث إذاعة القاهرة:
-  /// تعيد خوادم منصة Radiojar (مثل stream.radiojar.com و n0c.radiojar.com) توجيه طلبات HTTPS عبر
-  /// إعادة توجيه (HTTP 302) إلى بروتوكول HTTP غير مشفر (Cleartext HTTP: Mini2's Broadcast).
-  /// وحفاظاً على المعايير الأمنية الصارمة للتطبيق وعدم إضعاف أمان نظام أندرويد عبر تمكين Cleartext Traffic،
-  /// فإن هذا البث غير متاح على أجهزة أندرويد، ومعرض للحجب لمتطلبات App Transport Security (ATS) على iOS، لحين توفر بث رسمي مشفر (HTTPS).
+  /// Catalog retained for saved favorite compatibility. Only Quran categories
+  /// are exposed by getStations. Cairo uses its official site's HTTPS player:
+  /// https://misrquran.gov.eg/home (verified 2026-11-19).
+  /// Other streams: https://mp3quran.net/api/v3/radios?language=ar
   static const List<IslamicRadioStation> defaultStations = [
     // -------------------------------------------------------------
     // ١. إذاعات القرآن العامة والبث المباشر
     // -------------------------------------------------------------
     IslamicRadioStation(
       id: 'radio_cairo_live',
-      name: 'إذاعة القرآن الكريم من القاهرة (غير مدعوم على أندرويد)',
+      name: 'إذاعة القرآن الكريم من القاهرة',
       category: IslamicRadioCategoryType.generalLive,
       categoryName: 'إذاعات القرآن الكريم',
-      subtitle: 'بث ترحيلي يعيد التوجيه لبروتوكول غير مشفر HTTP — غير مدعوم على أندرويد التزاماً بسياسات الأمان',
-      streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
-      fallbackUrls: [
-        'https://n0c.radiojar.com/8s5u5tpdtwzuv',
-      ],
-      countryOrOrigin: 'غير مدعوم بأندرويد ⚠️',
+      subtitle: 'البث المباشر من الموقع الرسمي لإذاعة القرآن الكريم من القاهرة عبر اتصال مشفر',
+      streamUrl: 'https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8',
+      fallbackUrls: [],
+      countryOrOrigin: 'مصر',
       accentColor: Color(0xFF0F5B45),
       icon: Icons.radio_rounded,
-      tags: ['القاهرة', 'ترحيل غير رسمي', 'إنترنت', 'مصر'],
+      tags: ['القاهرة', 'القرآن الكريم', 'بث مباشر', 'مصر'],
     ),
     // MP3Quran ID: 108
     IslamicRadioStation(
@@ -769,6 +747,11 @@ class IslamicRadioService extends ChangeNotifier {
     notifyListeners();
   }
 
+  static bool isQuranCategory(IslamicRadioCategoryType category) =>
+      category == IslamicRadioCategoryType.generalLive ||
+      category == IslamicRadioCategoryType.reciters ||
+      category == IslamicRadioCategoryType.khushooSurahs;
+
   /// تصفية المحطات حسب التصنيف والبحث والمفضلة
   List<IslamicRadioStation> getStations({
     IslamicRadioCategoryType category = IslamicRadioCategoryType.all,
@@ -778,6 +761,7 @@ class IslamicRadioService extends ChangeNotifier {
     final cleanQuery = ArabicNormalizer.normalize(query.trim(), loose: true);
 
     return defaultStations.where((station) {
+      if (!isQuranCategory(station.category)) return false;
       if (favoritesOnly && !_favoriteIds.contains(station.id)) {
         return false;
       }

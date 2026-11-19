@@ -170,7 +170,7 @@ class HomeShortcutsList extends StatelessWidget {
     return Semantics(
       key: const Key('home_islamic_radio_banner_semantics'),
       button: true,
-      label: 'إذاعات القرآن الكريم، بث إذاعي متواصل لكبار القراء، التفسير وعلوم القرآن، الأذكار والرقية الشرعية',
+      label: 'إذاعات القرآن الكريم، بث مباشر وتلاوات كبار القراء',
       hint: 'الانتقال إلى إذاعات وتلاوات القرآن الكريم',
       child: InkWell(
         onTap: () => context.push('/islamic-radio'),
@@ -251,7 +251,7 @@ class HomeShortcutsList extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'بث إذاعي لكبار القراء • التفسير وعلوم القرآن • الأذكار والرقية',
+                      'بث القرآن الكريم • تلاوات كبار القراء',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.white70,
