@@ -27,7 +27,7 @@ class FailingPreferences extends InMemorySharedPreferencesStore {
 }
 
 class ReminderPlayer extends AudioPlayer {
-  bool disposed = false, active = false, failLoad = false, failStop = false;
+  bool disposed = false, active = false, failLoad = false, failStop = false, failDispose = false;
   int plays = 0, stops = 0;
   Completer<void>? loadGate, stopGate;
   final paths = <String>[];
@@ -62,6 +62,7 @@ class ReminderPlayer extends AudioPlayer {
   @override
   Future<void> dispose() async {
     disposed = true;
+    if (failDispose) throw StateError('dispose');
     active = false;
   }
 }
@@ -585,5 +586,70 @@ void main() {
     expect(find.text('الاستغفار والحوقلة'), findsOneWidget);
     expect(find.textContaining('اسمح بإشعارات'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });  testWidgets('r50 no-focus material cover stops owned reminder preview', (tester) async {
+    final player = ReminderPlayer();
+    await mount(tester, player: player, width: 500, scale: 1);
+    await tester.ensureVisible(find.text('استماع إلى الصوت').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('استماع إلى الصوت').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('تشغيل المعاينة'));
+    await tester.pumpAndSettle();
+    expect(player.active, isTrue);
+    final nav = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaited(nav.push(MaterialPageRoute<void>(requestFocus: false,
+        builder: (_) => const Scaffold(body: Text('next')))));
+    await tester.pumpAndSettle();
+    final active = player.active;
+    nav.pop();
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox());
+    expect(active, isFalse);
   });
+
+  testWidgets('disposed reminder focus callback is inert for a newer owner', (tester) async {
+    final player = ReminderPlayer();
+    await mount(tester, player: player, width: 500, scale: 1);
+    await tester.ensureVisible(find.text('استماع إلى الصوت').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('استماع إلى الصوت').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('تشغيل المعاينة'));
+    await tester.pumpAndSettle();
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    expect(player.disposed, isTrue);
+    final stops = player.stops;
+    final newer = ReminderPlayer();
+    await FastAudioService.instance.claimAudioFocus(player: newer);
+    await newer.play();
+    await tester.pumpAndSettle();
+    expect(player.stops, stops);
+    expect(newer.active, isTrue);
+    await newer.dispose();
+  });
+  for (final failStop in [false, true]) {
+    testWidgets('disposal independently attempts cleanup, stop rejected=$failStop', (tester) async {
+      final player = ReminderPlayer();
+      await mount(tester, player: player, width: 500, scale: 1);
+      await tester.ensureVisible(find.text('استماع إلى الصوت').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('استماع إلى الصوت').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('تشغيل المعاينة'));
+      await tester.pumpAndSettle();
+      player.failStop = failStop;
+      player.failDispose = true;
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+      expect(player.disposed, isTrue);
+      expect(tester.takeException(), isNull);
+      if (!failStop) expect(player.active, isFalse);
+      // Both rejected calls cannot establish physical silence.
+      player.failStop = false;
+      player.failDispose = false;
+      await player.dispose();
+    });
+  }
+
 }
