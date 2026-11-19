@@ -27,13 +27,13 @@ void main() {
 
       final cairo = stations.firstWhere((s) => s.id == 'radio_cairo_live');
       expect(cairo.name, contains('القاهرة'));
-      expect(cairo.streamUrl, contains('radiojar.com'));
-      // Honest unverified community relay status documented
-      expect(cairo.subtitle, contains('غير مدعوم على أندرويد'));
-      expect(cairo.countryOrOrigin, contains('غير مدعوم بأندرويد'));
+      expect(cairo.streamUrl, startsWith('https://service.webvideocore.net/'));
+      expect(cairo.streamUrl, endsWith('.m3u8'));
+      expect(cairo.subtitle, contains('الموقع الرسمي'));
+      expect(cairo.countryOrOrigin, 'مصر');
       // Cairo must NOT fall back to generic /mix
       expect(cairo.fallbackUrls.any((u) => u.contains('/radio/mix')), isFalse);
-      expect(cairo.fallbackUrls.isNotEmpty, isTrue);
+      expect(cairo.fallbackUrls, isEmpty);
 
       // No station other than radio_general_recitations should have /mix as fallback
       for (final s in stations) {
@@ -96,34 +96,14 @@ void main() {
       expect(eid.fallbackUrls, contains('https://qurango.net/radio/eid'));
     });
 
-    test('Categories contain all expected sections including Sunnah and Hadith', () {
+    test('Categories expose Quran radio and recitations only', () {
       const categories = IslamicRadioService.categories;
-      expect(categories.length, equals(7));
-
-      final sunnah = categories.firstWhere(
-        (c) => c.type == IslamicRadioCategoryType.sunnahHadith,
-      );
-      expect(sunnah.title, contains('السنة'));
-
-      final reciters = categories.firstWhere(
-        (c) => c.type == IslamicRadioCategoryType.reciters,
-      );
-      expect(reciters.title, contains('القراء'));
-
-      final tafseer = categories.firstWhere(
-        (c) => c.type == IslamicRadioCategoryType.tafseerFatwa,
-      );
-      expect(tafseer.title, contains('التفسير'));
-
-      final adhkar = categories.firstWhere(
-        (c) => c.type == IslamicRadioCategoryType.adhkarRoqyah,
-      );
-      expect(adhkar.title, contains('الأذكار'));
-
-      final khushoo = categories.firstWhere(
-        (c) => c.type == IslamicRadioCategoryType.khushooSurahs,
-      );
-      expect(khushoo.title, contains('خاشعة'));
+      expect(categories.map((c) => c.type).toSet(), {
+        IslamicRadioCategoryType.all,
+        IslamicRadioCategoryType.generalLive,
+        IslamicRadioCategoryType.reciters,
+        IslamicRadioCategoryType.khushooSurahs,
+      });
     });
 
     test('Filtering by category returns matching stations accurately', () {
@@ -139,10 +119,7 @@ void main() {
       final sunnahStations = service.getStations(
         category: IslamicRadioCategoryType.sunnahHadith,
       );
-      expect(sunnahStations.length, greaterThanOrEqualTo(5));
-      for (final s in sunnahStations) {
-        expect(s.category, equals(IslamicRadioCategoryType.sunnahHadith));
-      }
+      expect(sunnahStations, isEmpty);
     });
 
     test('Search by reciter name and keyword matches correctly', () {
@@ -153,12 +130,10 @@ void main() {
       expect(minshawiResults.any((s) => s.name.contains('المنشاوي')), isTrue);
 
       final bukhariResults = service.getStations(query: 'البخاري');
-      expect(bukhariResults.isNotEmpty, isTrue);
-      expect(bukhariResults.any((s) => s.name.contains('البخاري')), isTrue);
+      expect(bukhariResults, isEmpty);
 
       final roqyahResults = service.getStations(query: 'الرقية');
-      expect(roqyahResults.isNotEmpty, isTrue);
-      expect(roqyahResults.any((s) => s.name.contains('الرقية')), isTrue);
+      expect(roqyahResults, isEmpty);
     });
   });
 
@@ -1029,7 +1004,7 @@ void main() {
       expect(find.text('استماع متواصل'), findsNothing);
     });
 
-    testWidgets('D Cairo is disabled/unsupported on Android in IslamicRadioScreen', (tester) async {
+    testWidgets('Official Cairo HTTPS source remains enabled on Android', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       try {
         await tester.binding.setSurfaceSize(const Size(800, 1400));
@@ -1044,15 +1019,12 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // In Cairo featured card:
-        expect(find.text('غير مدعوم على أندرويد (غير مشفر)'), findsOneWidget);
-        expect(find.text('غير مدعوم على أندرويد'), findsWidgets);
-
-        // Find button with 'غير مدعوم على أندرويد (غير مشفر)' and verify onPressed is null
+        expect(find.textContaining('غير مدعوم على أندرويد'), findsNothing);
+        expect(find.text('الموقع الرسمي'), findsOneWidget);
         final cairoBtn = tester.widget<ElevatedButton>(
-          find.widgetWithText(ElevatedButton, 'غير مدعوم على أندرويد (غير مشفر)'),
+          find.widgetWithText(ElevatedButton, 'استماع للبث'),
         );
-        expect(cairoBtn.onPressed, isNull, reason: 'Cairo play button must be disabled on Android');
+        expect(cairoBtn.onPressed, isNotNull);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
