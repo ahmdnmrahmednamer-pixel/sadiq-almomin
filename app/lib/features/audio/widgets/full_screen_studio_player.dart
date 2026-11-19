@@ -200,7 +200,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
             color: Theme.of(ctx).scaffoldBackgroundColor,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Column(
+          child: SingleChildScrollView(child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -212,13 +212,15 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 ),
               ),
               const SizedBox(height: 16),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              const Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Icon(Icons.bedtime_rounded, color: AppColors.accentGold, size: 20),
                   SizedBox(width: 8),
                   Text(
                     'مؤقت النوم الذكي (إيقاف تلقائي)',
+                    textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -232,8 +234,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         'متبقي: ${_audioService.sleepTimerRemainingSeconds != null ? _formatDuration(Duration(seconds: _audioService.sleepTimerRemainingSeconds!)) : ""}',
@@ -274,9 +277,9 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                       },
                     );
                   }),
-                  ActionChip(
-                    avatar: const Icon(Icons.stop_circle_outlined, size: 16),
-                    label: const Text('عند نهاية السورة/المقطع'),
+                  SizedBox(width: double.infinity, child: OutlinedButton.icon(
+                    icon: const Icon(Icons.stop_circle_outlined, size: 16),
+                    label: const Text('عند نهاية السورة/المقطع', textAlign: TextAlign.center),
                     onPressed: () {
                       _audioService.setSleepTimer(999, stopAtTrackEnd: true);
                       Navigator.pop(ctx);
@@ -287,12 +290,12 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                         ),
                       );
                     },
-                  ),
+                  )),
                 ],
               ),
               const SizedBox(height: 16),
             ],
-          ),
+          )),
         ),
       ),
     );
@@ -326,8 +329,11 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                 ),
               ),
               const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   const Text(
                     'قائمة التشغيل الحالية',
@@ -341,10 +347,10 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                     ),
                     child: Text(
                       '${queue.length} مقطع',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGreen,
+                        color: Theme.of(ctx).brightness == Brightness.dark ? AppColors.accentGold : AppColors.primaryGreen,
                       ),
                     ),
                   ),
@@ -360,7 +366,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                           final item = queue[idx];
                           final isCurrent = _audioService.currentTrack?.id == item.id;
 
-                          return ListTile(
+                          return Material(type: MaterialType.transparency, child: ListTile(
                             leading: Container(
                               width: 36,
                               height: 36,
@@ -380,7 +386,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               item.title,
                               style: TextStyle(
                                 fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
-                                color: isCurrent ? AppColors.secondaryGreen : null,
+                                color: isCurrent ? (Theme.of(ctx).brightness == Brightness.dark ? AppColors.accentGold : AppColors.secondaryGreen) : null,
                               ),
                             ),
                             subtitle: Text(
@@ -395,7 +401,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               _audioService.playTrack(item);
                               Navigator.pop(ctx);
                             },
-                          );
+                          ));
                         },
                       ),
               ),
@@ -495,10 +501,11 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                 tooltip: 'تصغير المشغل',
                                 onPressed: () => Navigator.of(context).pop(),
                               ),
-                              Column(
+                              Expanded(child: Column(
                                 children: [
                                   const Text(
-                                    'المشغل الصوتي الاستوديو 🎙️',
+                                    'المشغل الصوتي الاستوديو',
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
@@ -514,6 +521,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                     ),
                                     child: const Text(
                                       'تطبيق صديق المؤمن — استماع بدون إنترنت',
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         color: Color(0xFFD4AF37),
@@ -522,7 +530,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                     ),
                                   ),
                                 ],
-                              ),
+                              )),
                               IconButton(
                                 icon: const Icon(Icons.queue_music_rounded, color: AppColors.accentGold),
                                 tooltip: 'قائمة التشغيل',
@@ -863,8 +871,11 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        child: Wrap(
+                          alignment: WrapAlignment.spaceAround,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             // Speed
                             TextButton.icon(
