@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'package:just_audio/just_audio.dart';
+import '../../../../core/audio/fast_audio_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/notifications/prayer_notification_service.dart';
 import '../../../../core/theme/app_theme.dart';
-import 'settings_section_header.dart';
 
 /// Section: User-customizable Morning, Evening, and Sleep Adhkar Notification Timings
 class SettingsAdhkarRemindersSection extends StatelessWidget {
-  const SettingsAdhkarRemindersSection({super.key});
+  const SettingsAdhkarRemindersSection({super.key, this.previewPlayerFactory});
+  @visibleForTesting
+  final AudioPlayer Function()? previewPlayerFactory;
 
   Future<void> _pickMorningTime(BuildContext context) async {
     final pn = PrayerNotificationService.instance;
@@ -58,7 +62,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SettingsSectionHeader(
+        const _ReminderSectionHeader(
           title: 'مواقيت وتنبيهات أذكار المسلم',
           icon: Icons.alarm_rounded,
         ),
@@ -80,7 +84,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
         _buildAdhkarCard(
           context: context,
           isDark: isDark,
-          title: 'أذكار الصباح المباركة ☀️',
+          title: 'أذكار الصباح المباركة',
           subtitle: 'حصن يومك وانشراح صدرك والبركة في رزقك',
           icon: Icons.wb_sunny_rounded,
           accentColor: const Color(0xFFD4AF37),
@@ -109,7 +113,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
         _buildAdhkarCard(
           context: context,
           isDark: isDark,
-          title: 'أذكار المساء المباركة 🌙',
+          title: 'أذكار المساء المباركة',
           subtitle: 'حفظ الليل وسكينة الروح والأمان من كل سوء',
           icon: Icons.nights_stay_rounded,
           accentColor: const Color(0xFF1B4332),
@@ -138,7 +142,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
         _buildAdhkarCard(
           context: context,
           isDark: isDark,
-          title: 'أذكار وسنن النوم 🛏️',
+          title: 'أذكار وسنن النوم',
           subtitle: 'تحصين المضجع والمأثور عن النبي ﷺ عند النوم',
           icon: Icons.hotel_rounded,
           accentColor: const Color(0xFF4A6B82),
@@ -162,6 +166,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
         ),
 
         const SizedBox(height: 12),
+        _ShortAudioReminders(previewPlayerFactory: previewPlayerFactory),
         const Divider(),
       ],
     );
@@ -230,49 +235,10 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            const Icon(Icons.access_time_filled_rounded,
-                                size: 18, color: AppColors.primaryGreen),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'الموعد:',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.primaryGreen.withValues(alpha: 0.3),
-                                  ),
-                                ),
-                                child: Text(
-                                  currentTimeStr,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 13.5,
-                                    color: AppColors.primaryGreen,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                  Wrap(spacing: 8, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+                    Icon(Icons.access_time_filled_rounded, size:18, color: isDark ? const Color(0xFF77D4B2) : AppColors.primaryGreen),
+                    const Text('الموعد:', style:TextStyle(fontSize:13,fontWeight:FontWeight.w700)),
+                    Text(currentTimeStr, style:TextStyle(fontWeight:FontWeight.w900,fontSize:13.5,color:isDark ? const Color(0xFF77D4B2) : AppColors.primaryGreen)),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryGreen,
@@ -289,8 +255,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
                             style: TextStyle(fontSize: 12)),
                         onPressed: onPickTime,
                       ),
-                    ],
-                  ),
+                  ]),
                   const SizedBox(height: 10),
                   const Text(
                     'مواعيد شائعة مقترحة:',
@@ -339,4 +304,238 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
     ),
   );
 }
+}
+
+class _ReminderSectionHeader extends StatelessWidget {
+  const _ReminderSectionHeader({required this.title,required this.icon});
+  final String title;
+  final IconData icon;
+  @override
+  Widget build(BuildContext context) {
+    final color=Theme.of(context).brightness==Brightness.dark?const Color(0xFF77D4B2):AppColors.primaryGreen;
+    return Padding(padding:const EdgeInsets.fromLTRB(16,18,16,8),child:Semantics(header:true,child:Row(children:[Icon(icon,color:color,size:20),const SizedBox(width:10),Expanded(child:Text(title,style:TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:color)))])));
+  }
+}
+
+String _frequencyLabel(ShortReminderFrequency value) => switch(value) {
+  ShortReminderFrequency.off => 'إيقاف',
+  ShortReminderFrequency.halfHourly => 'كل ٣٠ دقيقة',
+  ShortReminderFrequency.hourly => 'كل ساعة',
+  ShortReminderFrequency.twoHourly => 'كل ساعتين',
+  ShortReminderFrequency.daily => 'كل ٢٤ ساعة',
+};
+
+class _ShortAudioReminders extends StatelessWidget {
+  const _ShortAudioReminders({this.previewPlayerFactory});
+  final AudioPlayer Function()? previewPlayerFactory;
+  @override
+  Widget build(BuildContext context) {
+    final service = PrayerNotificationService.instance;
+    return AnimatedBuilder(
+        animation: service,
+        builder: (context, _) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const _ReminderSectionHeader(
+                    title: 'التذكير الصوتي القصير',
+                    icon: Icons.notifications_active_outlined),
+                const Padding(padding:EdgeInsets.all(16),child:Text('إشعارات بصوت قصير. قد تتأخر أو تصمت حسب إعدادات الجهاز.')),
+                const ExpansionTile(title:Text('الصوت والتوقيت'),children:[Padding(padding:EdgeInsets.all(16),child:Text('ليست أذكاراً كاملة. التوقيت يديره الجهاز. الصوت يتبع إذن الإشعارات وإعدادات القناة والصامت وعدم الإزعاج. تغيير التكرار لا يغيّر صوت قناة سبق إنشاؤها.'))]),
+                if (!service.masterEnabled)
+                  const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text(
+                          'التنبيهات العامة مغلقة. لن تُجدول هذه التذكيرات حتى تفتحها.')),
+                for (final key
+                    in PrayerNotificationService.shortReminderIds.keys)
+                  Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                                key == 'salawat'
+                                    ? 'الصلاة على النبي'
+                                    : 'الاستغفار والحوقلة',
+                                style: Theme.of(context).textTheme.titleMedium),
+                            Wrap(spacing: 8, children: [
+                              for (final value in ShortReminderFrequency.values)
+                                ChoiceChip(
+                                    label: Text(_frequencyLabel(value), semanticsLabel: '${key == 'salawat' ? 'الصلاة على النبي' : 'الاستغفار والحوقلة'}، ${_frequencyLabel(value)}'),
+                                    selected:
+                                        service.shortFrequency(key) == value,
+                                    onSelected: service.shortReminderBusy
+                                        ? null
+                                        : (_) async {
+                                            try {
+                                              await service
+                                                  .setShortReminderFrequency(
+                                                      key, value);
+                                            } catch (_) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            'تعذر حفظ التكرار. أعد المحاولة.')));
+                                              }
+                                            }
+                                          }),
+                            ]),
+                            if (service.shortReminderBusy)
+                              const Text('جاري تحديث التذكير...'),
+                            if (service.shortReminderError(key) != null) ...[
+                              Text(service.shortReminderError(key)!,
+                                  semanticsLabel:
+                                      service.shortReminderError(key)),
+                              TextButton(
+                                  onPressed: service.shortReminderBusy
+                                      ? null
+                                      : service.scheduleShortReminders,
+                                  child: const Text('إعادة محاولة التحديث')),
+                            ],
+                            OutlinedButton.icon(
+                                onPressed: () => showDialog<void>(
+                                    context: context,
+                                    builder: (_) => _ShortReminderPreview(
+                                        reminderKey: key, player: previewPlayerFactory?.call())),
+                                icon: const Icon(Icons.headphones),
+                                label: const Text('استماع إلى الصوت')),
+                          ])),
+              ],
+            ));
+  }
+}
+
+class _ShortReminderPreview extends StatefulWidget {
+  const _ShortReminderPreview({required this.reminderKey, this.player});
+  final AudioPlayer? player;
+  final String reminderKey;
+  @override
+  State<_ShortReminderPreview> createState() => _ShortReminderPreviewState();
+}
+
+class _ShortReminderPreviewState extends State<_ShortReminderPreview> with WidgetsBindingObserver {
+  Animation<double>? _routeAnimation;
+  void _routeStatus(AnimationStatus status) { if(status == AnimationStatus.forward) unawaited(_stop()); }
+  @override
+  void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
+  @override
+  void didChangeDependencies() { super.didChangeDependencies(); _routeAnimation?.removeStatusListener(_routeStatus); _routeAnimation = ModalRoute.of(context)?.secondaryAnimation; _routeAnimation?.addStatusListener(_routeStatus); }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) { if(state != AppLifecycleState.resumed) unawaited(_stop()); }
+  late final AudioPlayer _player = widget.player ?? AudioPlayer();
+  int _generation = 0;
+  bool _busy = false;
+  bool _stopFailed = false;
+  String? _error;
+  Future<void>? _pendingStop;
+  Future<void> _stop() {
+    final pending = _pendingStop;
+    if (pending != null) return pending;
+    final generation = ++_generation;
+    if (mounted) setState(() => _busy = true);
+    return _pendingStop = _performStop(generation).whenComplete(() {
+      _pendingStop = null;
+    });
+  }
+
+  Future<void> _performStop(int generation) async {
+    try {
+      await _player.stop();
+      if (mounted && generation == _generation) {
+        setState(() {
+          _stopFailed = false;
+          _error = null;
+        });
+      }
+    } catch (_) {
+      if (mounted && generation == _generation) {
+        setState(() {
+          _stopFailed = true;
+          _error = 'تعذر إيقاف المعاينة. أعد محاولة الإيقاف.';
+        });
+      }
+    } finally {
+      if (mounted && generation == _generation) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _play() async {
+    if (_busy || _pendingStop != null || _stopFailed) return;
+    final generation = ++_generation;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final focus = FastAudioService.instance;
+      final token =
+          await focus.claimAudioFocus(player: _player, onStopOther: _stop);
+      if (!mounted ||
+          generation != _generation ||
+          focus.activePlaybackToken != token) {
+        return;
+      }
+      await _player.setAsset('assets/audio/reminder_${widget.reminderKey}.mp3');
+      if (!mounted ||
+          generation != _generation ||
+          focus.activePlaybackToken != token) {
+        return;
+      }
+      await _player.play();
+    } catch (_) {
+      if (mounted && generation == _generation) {
+        setState(() {
+          _error = 'تعذر تشغيل المعاينة.';
+        });
+      }
+    } finally {
+      if (mounted && generation == _generation) {
+        setState(() {
+          _busy = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    ++_generation;
+    WidgetsBinding.instance.removeObserver(this);
+    _routeAnimation?.removeStatusListener(_routeStatus);
+    unawaited(_player.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(autofocus:true,onFocusChange:(hasFocus) { if(!hasFocus) unawaited(_stop()); }, child:AlertDialog(
+        title: Text(widget.reminderKey == 'salawat'
+            ? 'الصلاة على النبي'
+            : 'الاستغفار والحوقلة'),
+        content: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('معاينة فقط، لا تغيّر التذكير.'),
+          if (_error != null) Text(_error!),
+          TextButton.icon(
+              onPressed: _busy || _stopFailed ? null : _play,
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('تشغيل المعاينة')),
+          TextButton.icon(
+              onPressed: _pendingStop == null ? _stop : null,
+              icon: const Icon(Icons.stop),
+              label: const Text('إيقاف المعاينة')),
+        ])),
+        actions: [
+          TextButton(
+              onPressed: _pendingStop != null ? null : () async {
+                await _stop();
+                if (context.mounted && _error == null) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('إغلاق'))
+        ],
+      ));
 }

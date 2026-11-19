@@ -29,6 +29,8 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
   }
 }
 
+enum ShortReminderFrequency { off, halfHourly, hourly, twoHourly, daily }
+
 enum AdhanSoundMode {
   fullAdhan,
   takbeerat,
@@ -48,6 +50,117 @@ class PrayerNotificationService extends ChangeNotifier {
 
   static final StreamController<String> _adhanEventStream = StreamController<String>.broadcast();
   static Stream<String> get adhanEventStream => _adhanEventStream.stream;
+
+  final Map<String, ShortReminderFrequency> _shortFrequencies = {
+    'salawat': ShortReminderFrequency.off,
+    'istighfar': ShortReminderFrequency.off,
+  };
+  final Map<String, String?> _shortErrors = {};
+  bool _shortBusy = false;
+  Future<void>? _shortOperation;
+  int _shortGeneration = 0;
+  bool get shortReminderBusy => _shortBusy;
+  ShortReminderFrequency shortFrequency(String key) =>
+      _shortFrequencies[key] ?? ShortReminderFrequency.off;
+  String? shortReminderError(String key) => _shortErrors[key];
+  static const shortReminderIds = {'salawat': 805, 'istighfar': 806};
+
+  Future<void>? _shortPreferenceOperation;
+  Future<void> setShortReminderFrequency(String key, ShortReminderFrequency value) async {
+    if (!shortReminderIds.containsKey(key)) throw ArgumentError.value(key);
+    final prior = _shortPreferenceOperation;
+    final gate = Completer<void>();
+    _shortPreferenceOperation = gate.future;
+    try {
+      if (prior != null) await prior;
+      final prefs = await SharedPreferences.getInstance();
+      try {
+        final saved = await prefs.setString('notif_short_${key}_frequency', value.name);
+        if (!saved) throw StateError('Reminder preference was not saved');
+      } catch (_) {
+        await prefs.reload();
+        rethrow;
+      }
+      _shortFrequencies[key] = value;
+      await scheduleShortReminders();
+    } finally {
+      if (!gate.isCompleted) gate.complete();
+      if (identical(_shortPreferenceOperation, gate.future)) _shortPreferenceOperation = null;
+    }
+  }
+
+  Future<void> scheduleShortReminders() async {
+    final generation = ++_shortGeneration;
+    final prior = _shortOperation;
+    final gate = Completer<void>();
+    _shortOperation = gate.future;
+    _shortBusy = true;
+    notifyListeners();
+    try {
+      if (prior != null) await prior;
+      if (generation != _shortGeneration) return;
+      for (final entry in shortReminderIds.entries) {
+        final key = entry.key;
+        try {
+          await _localNotifications.cancel(entry.value);
+          if (generation != _shortGeneration) return;
+          _shortErrors[key] = null;
+          final frequency = shortFrequency(key);
+          if (!_masterEnabled ||
+              !_isInitialized ||
+              frequency == ShortReminderFrequency.off) { continue; }
+          final android =
+              _localNotifications.resolvePlatformSpecificImplementation<
+                  AndroidFlutterLocalNotificationsPlugin>();
+          final allowed = await android?.areNotificationsEnabled();
+          if (generation != _shortGeneration) return;
+          if (allowed != true) {
+            _shortErrors[key] =
+                'لم يتم تفعيل التذكير. اسمح بإشعارات التطبيق من إعدادات الجهاز ثم أعد المحاولة.';
+            continue;
+          }
+          await _localNotifications.periodicallyShowWithDuration(
+            entry.value,
+            key == 'salawat' ? 'الصلاة على النبي' : 'الاستغفار والحوقلة',
+            key == 'salawat'
+                ? 'اللهم صل وسلم على نبينا محمد'
+                : 'أستغفر الله وأتوب إليه. لا حول ولا قوة إلا بالله',
+            switch (frequency) {
+              ShortReminderFrequency.halfHourly => const Duration(minutes: 30),
+              ShortReminderFrequency.hourly => const Duration(hours: 1),
+              ShortReminderFrequency.twoHourly => const Duration(hours: 2),
+              ShortReminderFrequency.daily => const Duration(days: 1),
+              ShortReminderFrequency.off => throw StateError('disabled'),
+            },
+            NotificationDetails(
+                android: AndroidNotificationDetails(
+              'short_${key}_reminder_v1',
+              key == 'salawat'
+                  ? 'تذكير الصلاة على النبي'
+                  : 'تذكير الاستغفار والحوقلة',
+              importance: Importance.high,
+              priority: Priority.high,
+              sound: RawResourceAndroidNotificationSound('reminder_$key'),
+              playSound: true,
+            )),
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            payload: 'type=short_reminder&kind=$key',
+          );
+          if (generation != _shortGeneration) return;
+        } catch (_) {
+          _shortErrors[key] =
+              'تعذر تحديث التذكير. قد يبقى الإعداد السابق فعالاً. أعد المحاولة.';
+        }
+      }
+    } finally {
+      if (!gate.isCompleted) gate.complete();
+      if (identical(_shortOperation, gate.future)) {
+        _shortOperation = null;
+        _shortBusy = false;
+      }
+      notifyListeners();
+    }
+  }
 
   bool _masterEnabled = true;
   AdhanSoundMode _soundMode = AdhanSoundMode.fullAdhan;
@@ -240,6 +353,12 @@ class PrayerNotificationService extends ChangeNotifier {
     }
 
     final prefs = await SharedPreferences.getInstance();
+    for (final key in shortReminderIds.keys) {
+      final stored = prefs.getString('notif_short_${key}_frequency');
+      _shortFrequencies[key] = ShortReminderFrequency.values.firstWhere(
+          (value) => value.name == stored,
+          orElse: () => ShortReminderFrequency.off);
+    }
     _masterEnabled = prefs.getBool('notif_master_enabled') ?? true;
     _preReminderEnabled = prefs.getBool('notif_pre_reminder_enabled') ?? true;
     _preReminderMinutes = prefs.getInt('notif_pre_reminder') ?? 10;
@@ -302,6 +421,7 @@ class PrayerNotificationService extends ChangeNotifier {
     } catch (_) {}
 
     _isInitialized = true;
+    await scheduleShortReminders();
     try {
       scheduleAdhkarReminders();
     } catch (_) {}
@@ -386,6 +506,11 @@ class PrayerNotificationService extends ChangeNotifier {
 
   void _handlePayloadNavigation(String payload) {
     try {
+      final reminderUri = Uri.parse('app://reminder?$payload');
+      if (reminderUri.queryParameters['type'] == 'short_reminder') {
+        appRouter.push('/settings');
+        return;
+      }
       if (payload.contains('type=adhkar')) {
         final uri = Uri.parse('app://adhkar?$payload');
         final cat = uri.queryParameters['category'];
@@ -665,16 +790,33 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
+  Future<void>? _masterOperation;
   Future<void> toggleMaster(bool enabled) async {
-    _masterEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notif_master_enabled', enabled);
-    if (!enabled) {
-      await cancelAll();
-    } else {
-      rescheduleCurrentPrayers();
+    final prior = _masterOperation;
+    final gate = Completer<void>();
+    _masterOperation = gate.future;
+    try {
+      if (prior != null) await prior;
+      final prefs = await SharedPreferences.getInstance();
+      try {
+        final saved = await prefs.setBool('notif_master_enabled', enabled);
+        if (!saved) throw StateError('Master preference was not saved');
+      } catch (_) {
+        await prefs.reload();
+        rethrow;
+      }
+      _masterEnabled = enabled;
+      if (!enabled) {
+        await cancelAll();
+      } else {
+        rescheduleCurrentPrayers();
+      }
+      await scheduleShortReminders();
+      notifyListeners();
+    } finally {
+      if (!gate.isCompleted) gate.complete();
+      if (identical(_masterOperation, gate.future)) _masterOperation = null;
     }
-    notifyListeners();
   }
 
   Future<void> togglePrayer(String prayerName, bool enabled) async {
@@ -1736,6 +1878,9 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> cancelAll() async {
+    ++_shortGeneration;
+    final shortPending = _shortOperation;
+    if (shortPending != null) await shortPending;
     final int generation = ++_derivedScheduleGeneration;
     await _serializeDerivedOp<void>(() async {
       if (generation != _derivedScheduleGeneration) return;
