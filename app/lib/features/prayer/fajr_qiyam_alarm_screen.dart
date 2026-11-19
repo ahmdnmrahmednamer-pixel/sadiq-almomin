@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:just_audio/just_audio.dart';
+import '../../core/audio/fast_audio_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/localization/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +13,10 @@ import '../../core/ui/app_dropdown_field.dart';
 
 /// شاشة ضبط «منبّه الاستعداد لصلاة الفجر ومنبّه قيام الليل الذكي»
 class FajrQiyamAlarmScreen extends StatefulWidget {
-  const FajrQiyamAlarmScreen({super.key});
+  const FajrQiyamAlarmScreen({super.key, this.previewPlayerFactory});
+
+  @visibleForTesting
+  final AudioPlayer Function()? previewPlayerFactory;
 
   @override
   State<FajrQiyamAlarmScreen> createState() => _FajrQiyamAlarmScreenState();
@@ -19,38 +25,55 @@ class FajrQiyamAlarmScreen extends StatefulWidget {
 class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
   final FajrQiyamAlarmService _alarmService = FajrQiyamAlarmService.instance;
   final IslamicAudioService _audioService = IslamicAudioService.instance;
-  String? _previewingToneId;
-
   @override
   void initState() {
     super.initState();
     _alarmService.init();
   }
 
-  @override
-  void dispose() {
-    _audioService.stop();
-    super.dispose();
+  Future<void> _pickTone({required bool isQiyam}) async {
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (_) => _AlarmTonePicker(
+        isQiyam: isQiyam,
+        savedId:
+            isQiyam ? _alarmService.qiyamToneId : _alarmService.preFajrToneId,
+        playerFactory: widget.previewPlayerFactory,
+      ),
+    );
+    if (chosen == null || !mounted) return;
+    try {
+      if (isQiyam) {
+        await _alarmService.setQiyamTone(chosen);
+      } else {
+        await _alarmService.setPreFajrTone(chosen);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('تم حفظ نغمة المنبّه'),
+      ));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('تعذر إتمام حفظ النغمة. راجع إعداد المنبّه.'),
+      ));
+    }
   }
 
-  Future<void> _toggleTonePreview(String toneId) async {
-    if (_previewingToneId == toneId && _audioService.isPlaying) {
-      await _audioService.stop();
-      await _audioService.stopSfx();
-      if (mounted) setState(() => _previewingToneId = null);
-      return;
-    }
-    setState(() => _previewingToneId = toneId);
-    await _alarmService.previewTone(toneId);
-    if (!mounted) return;
-    final tone = _alarmService.getToneById(toneId);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('جاري سماع نغمة: ${tone.title} 🔊'),
-        backgroundColor: AppColors.primaryGreen,
-        duration: const Duration(seconds: 2),
-      ),
+  Widget _toneChoice({required bool isQiyam, required String selectedId}) {
+    final tone = _alarmService.getToneById(selectedId);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(tone.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          key: ValueKey(isQiyam ? 'qiyam-tone-picker' : 'fajr-tone-picker'),
+          onPressed: () => _pickTone(isQiyam: isQiyam),
+          icon: const ExcludeSemantics(child: Icon(Icons.music_note_rounded)),
+          label: Text(isQiyam ? 'اختيار نغمة قيام الليل' : 'اختيار نغمة الفجر'),
+        ),
+      ],
     );
   }
 
@@ -86,7 +109,6 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                 if (!mounted) return;
                 await _audioService.stopSfx();
                 if (!mounted) return;
-                setState(() => _previewingToneId = null);
               },
             ),
           ],
@@ -312,7 +334,8 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                         nextPreFajrWake != null
                             ? 'يوقظك قبل الفجر بـ $mins دقيقة (${_alarmService.formatTimeAr(nextPreFajrWake)}) لتتوضأ وتدرك الصلاة في وقتها'
                             : 'يوقظك قبل الفجر بـ $mins دقيقة فور تحديد موقعك عبر GPS',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
@@ -332,7 +355,8 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
             const SizedBox(height: 8),
             AppDropdownField<int>(
               label: 'اختر مدة الاستيقاظ قبل أذان الفجر',
-              value: [10, 15, 20, 25, 30, 45, 60, 90].contains(mins) ? mins : 30,
+              value:
+                  [10, 15, 20, 25, 30, 45, 60, 90].contains(mins) ? mins : 30,
               dense: true,
               prefixIcon: Icons.alarm_on_rounded,
               options: [10, 15, 20, 25, 30, 45, 60, 90]
@@ -354,70 +378,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                   _alarmService.setPreFajrMinutesBefore(val.round()),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'اختر نغمة منبّه الاستعداد للفجر (اضغط 🔊 لسماع النغمة فوراً):',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-            ),
-            const SizedBox(height: 8),
-            ...FajrQiyamAlarmService.availableTones.map((tone) {
-              final isSelected = selectedToneId == tone.id;
-              final isPreviewing =
-                  _previewingToneId == tone.id && _audioService.isPlaying;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primaryGreen.withValues(alpha: 0.08)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.accentGold
-                        : Colors.grey.withValues(alpha: 0.25),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: ListTile(
-                  dense: true,
-                  leading: Radio<String>(
-                    value: tone.id,
-                    groupValue: selectedToneId,
-                    activeColor: AppColors.primaryGreen,
-                    onChanged: (v) {
-                      if (v != null) _alarmService.setPreFajrTone(v);
-                    },
-                  ),
-                  title: Text(
-                    tone.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-                  ),
-                  subtitle: Text(tone.subtitle, style: const TextStyle(fontSize: 11.5)),
-                  trailing: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          isPreviewing ? Colors.white : AppColors.primaryGreen,
-                      backgroundColor: isPreviewing
-                          ? AppColors.primaryGreen
-                          : Colors.transparent,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    ),
-                    icon: Icon(
-                      isPreviewing ? Icons.stop_rounded : Icons.volume_up_rounded,
-                      size: 16,
-                    ),
-                    label: Text(
-                      isPreviewing ? 'إيقاف' : 'سماع 🔊',
-                      style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () => _toggleTonePreview(tone.id),
-                  ),
-                  onTap: () => _alarmService.setPreFajrTone(tone.id),
-                ),
-              ),
-            );
-            }),
+            _toneChoice(isQiyam: false, selectedId: selectedToneId),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
@@ -493,7 +454,8 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                                 ? 'موعد التنبيه القادم: ${_alarmService.formatTimeAr(nextQiyamWake)} (بداية الثلث الأخير: ${_alarmService.formatTimeAr(lastThirdStart)})'
                                 : 'موعد التنبيه الثابت القادم: ${_alarmService.formatTimeAr(nextQiyamWake)}')
                             : 'فعّل GPS لحساب الثلث الأخير من الليل، أو اختر وقتاً ثابتاً',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
@@ -558,42 +520,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
               ),
             ],
             const SizedBox(height: 12),
-            const Text(
-              'نغمة منبّه قيام الليل:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-            ),
-            const SizedBox(height: 8),
-            ...FajrQiyamAlarmService.availableTones.take(5).map((tone) {
-              final isSelected = selectedToneId == tone.id;
-              final isPreviewing =
-                  _previewingToneId == tone.id && _audioService.isPlaying;
-              return ListTile(
-                selected: isSelected,
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Radio<String>(
-                  value: tone.id,
-                  groupValue: selectedToneId,
-                  activeColor: AppColors.primaryGreen,
-                  onChanged: (v) {
-                    if (v != null) _alarmService.setQiyamTone(v);
-                  },
-                ),
-                title: Text(
-                  tone.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                trailing: IconButton(
-                  tooltip: 'تشغيل أو إيقاف الصوت',
-                  icon: Icon(
-                    isPreviewing ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
-                    color: AppColors.primaryGreen,
-                  ),
-                  onPressed: () => _toggleTonePreview(tone.id),
-                ),
-                onTap: () => _alarmService.setQiyamTone(tone.id),
-              );
-            }),
+            _toneChoice(isQiyam: true, selectedId: selectedToneId),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
@@ -616,6 +543,242 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Draft tone selection. This route owns only its preview player, never the
+/// scheduler or saved preferences. It never stops the global focus owner on exit.
+class _AlarmTonePicker extends StatefulWidget {
+  const _AlarmTonePicker({
+    required this.isQiyam,
+    required this.savedId,
+    this.playerFactory,
+  });
+  final bool isQiyam;
+  final String savedId;
+  final AudioPlayer Function()? playerFactory;
+
+  @override
+  State<_AlarmTonePicker> createState() => _AlarmTonePickerState();
+}
+
+class _AlarmTonePickerState extends State<_AlarmTonePicker> {
+  late final AudioPlayer _player;
+  late String _draftId;
+  StreamSubscription<PlayerState>? _stateSubscription;
+  int _request = 0;
+  bool _loading = false;
+  bool _playing = false;
+  bool _closing = false;
+  bool _disposed = false;
+  Future<void> _pendingStop = Future<void>.value();
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _draftId = widget.savedId;
+    _player = widget.playerFactory?.call() ?? AudioPlayer();
+    _stateSubscription = _player.playerStateStream.listen((state) {
+      if (!mounted || _closing) return;
+      setState(() {
+        _playing = state.playing &&
+            state.processingState != ProcessingState.completed &&
+            state.processingState != ProcessingState.idle;
+      });
+    }, onError: (Object error, StackTrace stack) {
+      _previewFailed();
+    });
+  }
+
+  Future<void> _stopPreview() async {
+    ++_request;
+    if (mounted && !_closing) {
+      setState(() {
+        _loading = false;
+        _playing = false;
+      });
+    }
+    // Stop only our player. FastAudioService.stop would also stop a newer owner.
+    _pendingStop = _pendingStop.catchError((Object _) {}).then((_) async {
+      if (!_disposed) await _player.stop();
+    });
+    await _pendingStop;
+  }
+
+  void _previewFailed() {
+    if (!mounted || _closing) return;
+    setState(() {
+      _error = 'تعذر تشغيل النغمة. يمكنك المحاولة مجدداً أو اختيار نغمة أخرى.';
+      _loading = false;
+      _playing = false;
+    });
+    unawaited(_stopPreview().catchError((Object _) {}));
+  }
+
+  Future<void> _preview() async {
+    if (_loading || _playing) {
+      try {
+        await _stopPreview();
+      } catch (_) {
+        _previewFailed();
+      }
+      return;
+    }
+    final request = ++_request;
+    final selectedId = _draftId;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await _pendingStop;
+      if (!mounted || _closing || request != _request) return;
+      final token = await FastAudioService.instance.claimAudioFocus(
+        player: _player,
+        onStopOther: _stopPreview,
+      );
+      if (!mounted ||
+          _closing ||
+          request != _request ||
+          token != FastAudioService.instance.activePlaybackToken) {
+        return;
+      }
+      final String asset;
+      if (selectedId == 'approaching_fajr') {
+        // This catalog entry uses the existing spoken reminder rather than its
+        // fallback trackId (adhan_fajr). Match the service's real preview source.
+        asset = 'assets/audio/approaching_fajr.mp3';
+      } else {
+        asset = IslamicAudioService.allTracks
+            .firstWhere((track) =>
+                track.id ==
+                FajrQiyamAlarmService.instance.getToneById(selectedId).trackId)
+            .assetPath!;
+      }
+      await _player.setAsset(asset);
+      if (!mounted ||
+          _closing ||
+          request != _request ||
+          token != FastAudioService.instance.activePlaybackToken) {
+        return;
+      }
+      setState(() => _loading = false);
+      unawaited(_player.play().catchError((Object _) {
+        if (request == _request) _previewFailed();
+      }));
+    } catch (_) {
+      if (request == _request) _previewFailed();
+    } finally {
+      if (mounted && !_closing && request == _request && _loading) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _finish(String? result) async {
+    if (_closing) return;
+    setState(() => _closing = true);
+    try {
+      await _stopPreview();
+    } catch (_) {
+      // Disposal below still tears down our own player if stop fails.
+    }
+    if (mounted) Navigator.of(context).pop(result);
+  }
+
+  @override
+  void dispose() {
+    _closing = true;
+    _disposed = true;
+    ++_request;
+    unawaited(_stateSubscription?.cancel());
+    unawaited(_player.dispose());
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: SettingsService.instance.textDirection,
+      child: AlertDialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        title: Text(widget.isQiyam ? 'نغمة قيام الليل' : 'نغمة الفجر'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                    'اختر النغمة واستمع إليها، ثم اضغط حفظ. الاستماع لا يغير إعداداتك.'),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  key: const ValueKey('alarm-tone-dropdown'),
+                  initialValue: _draftId,
+                  isExpanded: true,
+                  itemHeight: null,
+                  decoration: const InputDecoration(
+                      labelText: 'النغمة', border: OutlineInputBorder()),
+                  selectedItemBuilder: (context) => FajrQiyamAlarmService
+                      .availableTones
+                      .map((tone) => Text(tone.title,
+                          maxLines: 1, overflow: TextOverflow.ellipsis))
+                      .toList(),
+                  items: FajrQiyamAlarmService.availableTones
+                      .map((tone) => DropdownMenuItem(
+                          value: tone.id,
+                          child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(tone.title))))
+                      .toList(),
+                  onChanged: _closing
+                      ? null
+                      : (id) {
+                          if (id == null) return;
+                          unawaited(_stopPreview().catchError((Object _) {}));
+                          setState(() {
+                            _draftId = id;
+                            _error = null;
+                          });
+                        },
+                ),
+                const SizedBox(height: 8),
+                ExcludeSemantics(
+                    child: Text(FajrQiyamAlarmService.instance
+                        .getToneById(_draftId)
+                        .title)),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  key: const ValueKey('alarm-tone-preview'),
+                  onPressed: _closing ? null : _preview,
+                  icon:
+                      Icon(_loading || _playing ? Icons.stop : Icons.volume_up),
+                  label: Text(_loading || _playing
+                      ? 'إيقاف الاستماع'
+                      : 'الاستماع للنغمة'),
+                ),
+                if (_loading)
+                  Semantics(
+                      liveRegion: true, child: const Text('جار تحميل النغمة')),
+                if (_error != null)
+                  Semantics(liveRegion: true, child: Text(_error!)),
+              ],
+            ),
+          ),
+        ),
+        actionsOverflowDirection: VerticalDirection.down,
+        actions: [
+          TextButton(
+              onPressed: _closing ? null : () => _finish(null),
+              child: const Text('إلغاء')),
+          FilledButton(
+              onPressed: _closing ? null : () => _finish(_draftId),
+              child: const Text('حفظ')),
+        ],
       ),
     );
   }
