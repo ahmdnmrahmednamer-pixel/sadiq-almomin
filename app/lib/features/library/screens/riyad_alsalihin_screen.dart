@@ -7,6 +7,7 @@ import '../../../core/services/islamic_audio_service.dart';
 import '../../../core/services/quran_accessibility_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/app_dropdown_field.dart';
+import '../../adhkar/adhkar_audio_screen.dart';
 
 class RiyadAlSalihinScreen extends StatefulWidget {
   final String initialEncyclopediaId;
@@ -54,7 +55,8 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('رياض الصالحين والموسوعات الجامعة'),
+          toolbarHeight: MediaQuery.textScalerOf(context).scale(20) * 4 + 16,
+          title: const Text('رياض الصالحين والموسوعات الجامعة', softWrap: true, maxLines: 4, style: TextStyle(fontSize: 20)),
           actions: [
             IconButton(
               icon: Icon(
@@ -240,9 +242,6 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
 
   Widget _buildEntryCard(RiyadEntry entry, bool isDark) {
     final isSaved = RiyadAlSalihinService.instance.isBookmarked(entry.id);
-    final isAudioPlaying = entry.audioTrackId != null &&
-        IslamicAudioService.instance.currentTrack?.id == entry.audioTrackId &&
-        IslamicAudioService.instance.isPlaying;
 
     return Semantics(
       container: true,
@@ -404,16 +403,17 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Icon(Icons.lightbulb_outline_rounded, size: 17, color: AppColors.accentGold),
-                        SizedBox(width: 6),
+                        const Icon(Icons.lightbulb_outline_rounded, size: 17, color: AppColors.accentGold),
+                        const SizedBox(width: 6),
                         Text(
                           'الشرح والفوائد التربوية والعملية:',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
-                            color: AppColors.primaryGreen,
+                            color: isDark ? Colors.white : AppColors.primaryGreen,
                           ),
                         ),
                       ],
@@ -422,6 +422,7 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
                     Text(
                       entry.sharhAndBenefits,
                       style: TextStyle(
+                        fontFamily: 'Amiri',
                         fontSize: (_fontSize - 3).clamp(13.5, 20.0),
                         height: 1.65,
                       ),
@@ -431,28 +432,20 @@ class _RiyadAlSalihinScreenState extends State<RiyadAlSalihinScreen> {
               ),
               const SizedBox(height: 10),
 
+              if (entry.audioTrackId != null) ...[
+                const Text('قسم صوتي مستقل، وليس تسجيلاً لهذا النص.'),
+                const SizedBox(height: 8),
+              ],
               // Action Buttons (Audio + Copy + Share)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                alignment: WrapAlignment.end,
                 children: [
                   if (entry.audioTrackId != null)
                     TextButton.icon(
-                      icon: Icon(
-                        isAudioPlaying ? Icons.stop_circle_rounded : Icons.volume_up_rounded,
-                        color: AppColors.primaryGreen,
-                        size: 18,
-                      ),
-                      label: Text(
-                        isAudioPlaying ? 'إيقاف الصوت' : 'استماع صوتي HD',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
-                      ),
-                      onPressed: () {
-                        if (isAudioPlaying) {
-                          IslamicAudioService.instance.stop();
-                        } else {
-                          IslamicAudioService.instance.playTrackById(entry.audioTrackId!);
-                        }
-                      },
+                      icon: const Icon(Icons.library_music_rounded, size: 18),
+                      label: const Text('فتح الأذكار المسموعة'),
+                      onPressed: () => Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => const AdhkarAudioScreen())),
                     ),
                   TextButton.icon(
                     icon: const Icon(Icons.copy_rounded, size: 17),
