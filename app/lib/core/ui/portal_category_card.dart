@@ -27,7 +27,7 @@ class PortalCategoryCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final trimmedBadge = badgeText?.trim();
     final hasBadge = trimmedBadge != null && trimmedBadge.isNotEmpty;
-    final semanticLabel = [title, if (hasBadge) trimmedBadge, if (subtitle.trim().isNotEmpty) subtitle].join('، ');
+    final semanticLabel = [title, if (hasBadge) trimmedBadge].join('، ');
 
     final iconBox = Container(
       width: 52,
@@ -88,15 +88,6 @@ class PortalCategoryCard extends StatelessWidget {
         fontSize: 16,
         fontWeight: FontWeight.w900,
         letterSpacing: 0.2,
-      ),
-    );
-
-    final subtitleText = Text(
-      subtitle,
-      style: TextStyle(
-        fontSize: 12.5,
-        color: isDark ? Colors.white70 : Colors.grey.shade600,
-        height: 1.35,
       ),
     );
 
@@ -175,10 +166,6 @@ class PortalCategoryCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         titleText,
-                        if (subtitle.trim().isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          subtitleText,
-                        ],
                       ],
                     );
                   }
@@ -202,10 +189,6 @@ class PortalCategoryCard extends StatelessWidget {
                                 if (badgePill != null) badgePill,
                               ],
                             ),
-                            if (subtitle.trim().isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              subtitleText,
-                            ],
                           ],
                         ),
                       ),
