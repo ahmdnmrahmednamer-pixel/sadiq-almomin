@@ -25,6 +25,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
   late int _selectedSurahId;
   late int _selectedAyah;
   bool _isLoading = true;
+  int _requestVersion=0;
   Surah? _currentSurah;
   AsbabNuzul? _asbabNuzul;
   final TextEditingController _searchController = TextEditingController();
@@ -46,6 +47,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
   Future<void> _loadSurahs() async {
     final list = await QuranRepository.loadSurahs();
     if (!mounted) return;
+    if(list.isEmpty){setState(()=>_isLoading=false);return;}
     setState(() {
       _surahs = list;
       _currentSurah = list.firstWhere(
@@ -58,11 +60,13 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
   }
 
   Future<void> _loadData() async {
+    final version=++_requestVersion;
+    setState(()=>_asbabNuzul=null);
     final result = await QuranLinguisticsService.getDetails(
       surahId: _selectedSurahId,
       ayahNumber: _selectedAyah,
     );
-    if (!mounted) return;
+    if (!mounted || version!=_requestVersion) return;
     setState(() {
       _asbabNuzul = result.asbabNuzul;
     });
@@ -105,9 +109,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                   builder: (ctx) => AlertDialog(
                     title: const Text('عن أسباب نزول الآيات'),
                     content: const Text(
-                      'يُعنى هذا القسم ببيان الوقائع والأحداث التي نزلت بشأنها الآيات الكريمة '
-                      'استناداً إلى كتب الحديث الصحاح وأمهات كتب أسباب النزول كالإمام الواحدي '
-                      'ولباب النقول للإمام السيوطي، مما يعين على تدبر المعاني وفهم مقاصد الشريعة.',
+                      'نص لباب النقول للسيوطي من الموسوعة القرآنية. الفهرس ينقل إلى عنوان الآية في الكتاب، ولا يحكم على صحة الرواية. المقطع قد يشمل سياق ما بعدها.',
                       style: TextStyle(height: 1.6),
                     ),
                     actions: [
@@ -126,7 +128,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
             ? const Center(
                 child: CircularProgressIndicator(color: AppColors.primaryGreen),
               )
-            : SingleChildScrollView(
+            : _surahs.isEmpty ? const Center(child:Text('تعذر تحميل فهرس السور.')) : SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -264,7 +266,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            _asbabNuzul?.title ?? 'سياق نزول الآية الكريمة',
+                            _asbabNuzul?.title ?? 'نص المصدر',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 16,
@@ -315,7 +317,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                               const SizedBox(width: 10),
                               const Expanded(
                                 child: Text(
-                                  'الرواية وسياق النزول المأثور:',
+                                  'نص المصدر:',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 15,
@@ -365,7 +367,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'المصدر: ${_asbabNuzul?.source ?? "أسباب النزول المعتمدة"}',
+                                    'المصدر: ${_asbabNuzul?.source ?? "لم يُحمّل المصدر"}',
                                     style: const TextStyle(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
@@ -400,7 +402,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'فائدة أصولية:',
+                                  'نطاق المصدر:',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 13.5,
@@ -409,7 +411,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                                 ),
                                 SizedBox(height: 4),
                                 Text(
-                                  '«العبرة بعموم اللفظ لا بخصوص السبب»؛ فالحكم القرآني عام وشامل لكل أفراد الأمة إلى قيام الساعة.',
+                                  'قد يضم نص المؤلف روايات وتعليقات وإحالات. عدم ظهور مقطع ليس نفيًا لسبب نزول.',
                                   style: TextStyle(fontSize: 12, height: 1.6),
                                 ),
                               ],
