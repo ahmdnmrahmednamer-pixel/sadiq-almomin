@@ -1,8 +1,6 @@
 import '../features/adhkar/adhkar_audio_screen.dart';
-import '../features/library/screens/riyad_alsalihin_screen.dart';
 import '../features/prayer/sunan_rawatib_screen.dart';
 import '../features/radio/islamic_radio_screen.dart';
-import '../features/library/screens/islamic_mutoon_screen.dart';
 import '../features/zakat/mawarith_calculator_screen.dart';
 import '../features/mushaf/tadabbur_journal_screen.dart';
 import '../features/mushaf/comparative_tafsir_screen.dart';
@@ -37,8 +35,6 @@ import '../features/library/screens/approved_sources_screen.dart';
 import '../features/prayer/prayer_times_detail_screen.dart';
 import '../features/backup/backup_restore_screen.dart';
 import '../features/egypt/egyptian_heritage_screen.dart';
-import '../features/hadith/hadith_detail_screen.dart';
-import '../features/hadith/hadith_library_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/home/momen_duaa_screen.dart';
 import '../features/khatma/khatma_screen.dart';
@@ -569,20 +565,6 @@ final GoRouter appRouter = GoRouter(
     ),
     _isolatedFeatureRoute(path: '/zakat', builder: (context, state) => const ZakatScreen()),
     _isolatedFeatureRoute(
-      path: '/hadith',
-      builder: (context, state) {
-        final bookId = state.uri.queryParameters['bookId'];
-        return HadithLibraryScreen(initialBookId: bookId);
-      },
-    ),
-    _isolatedFeatureRoute(
-      path: '/hadith-detail',
-      builder: (context, state) {
-        final id = int.tryParse(state.uri.queryParameters['id'] ?? '1') ?? 1;
-        return HadithDetailScreen(hadithId: id);
-      },
-    ),
-    _isolatedFeatureRoute(
       path: '/topics',
       builder: (context, state) {
         final catStr = state.uri.queryParameters['category'];
@@ -654,14 +636,6 @@ final GoRouter appRouter = GoRouter(
     _isolatedFeatureRoute(
       path: '/sunan-rawatib',
       builder: (context, state) => const SunanRawatibScreen(),
-    ),
-    _isolatedFeatureRoute(
-      path: '/riyad-alsalihin',
-      builder: (context, state) => const RiyadAlSalihinScreen(),
-    ),
-    _isolatedFeatureRoute(
-      path: '/islamic-mutoon',
-      builder: (context, state) => const IslamicMutoonScreen(),
     ),
     _isolatedFeatureRoute(
       path: '/mawarith-calculator',
