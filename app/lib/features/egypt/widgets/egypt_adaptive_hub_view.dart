@@ -18,7 +18,8 @@ class EgyptAdaptiveHubView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final service = EgyptianHeritageService.instance;
-    final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
     final liveStationsCount = isAndroid
         ? service.radioStations.where((s) => s.id != 'eqr_cairo_main').length
         : service.radioStations.length;
@@ -28,8 +29,8 @@ class EgyptAdaptiveHubView extends StatelessWidget {
         id: 'eg_hub_radio',
         title: 'إذاعة القرآن الكريم من القاهرة',
         subtitle: isAndroid
-            ? '$liveStationsCount محطات إذاعية لتراث كبار القراء (إذاعة القاهرة غير متاحة على أندرويد لعدم التشفير)'
-            : '$liveStationsCount محطات إذاعية تشمل إذاعة القاهرة وتراث أعلام دولة التلاوة',
+            ? '$liveStationsCount محطات، إذاعة القاهرة غير متاحة على أندرويد'
+            : '$liveStationsCount محطات',
         badgeText: isAndroid ? 'تراث القراء' : 'تراث القاهرة',
         category: 'البث الإذاعي الحي',
         icon: Icons.radio_rounded,
@@ -40,7 +41,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
         id: 'eg_hub_ibtihalat',
         title: 'مدرسة الابتهالات وخواطر الشيخ الشعراوي',
         subtitle:
-            '${service.ibtihalat.length} ابتهالات خالدة (النقشبندي، طوبار، عمران، الفشني) + ${service.shaarawiReflections.length} خواطر وأدعية للشعراوي',
+            '${service.ibtihalat.length} ابتهالات، ${service.shaarawiReflections.length} تسجيلات للشعراوي',
         badgeText: 'صوتيات وكلمات',
         category: 'التراث الروحي',
         icon: Icons.music_note_rounded,
@@ -50,8 +51,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
       StructuredScreenItem(
         id: 'eg_hub_mosques',
         title: 'دليل مساجد مصر التاريخية ومآذن المحروسة',
-        subtitle:
-            '${service.historicMosques.length} مساجد تاريخية كبرى مع حساب المسافة بالكيلومتر وضبط المواقيت والقبلة بلمسة واحدة',
+        subtitle: '${service.historicMosques.length} مساجد',
         badgeText: '١٠ مساجد',
         category: 'المعالم الإسلامية',
         icon: Icons.mosque_rounded,
@@ -61,8 +61,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
       StructuredScreenItem(
         id: 'eg_hub_fatwas',
         title: 'موسوعة فتاوى دار الإفتاء المصرية والأزهر',
-        subtitle:
-            '${service.darAlIftaRulings.length} أبواب فقهية معاصرة تهم الأسرة المصرية في الشهادات البنكية، الذهب، الشبكة، والزكاة',
+        subtitle: '${service.darAlIftaRulings.length} موضوعات',
         badgeText: 'دار الإفتاء',
         category: 'الفتاوى المعتمدة',
         icon: Icons.gavel_rounded,
