@@ -9,7 +9,6 @@ import '../features/mushaf/surah_reader_screen.dart';
 import '../features/stories/story_detail_screen.dart';
 import '../features/tajweed/rule_detail_screen.dart';
 import '../features/home/screens/app_screen_directory_screen.dart';
-import '../features/audio/scholars_audio_library_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/localization/app_localizations.dart';
@@ -504,11 +503,8 @@ final GoRouter appRouter = GoRouter(
     // Root-isolated full-page feature & detail routes (outside MainScaffold / bottom nav)
     _isolatedFeatureRoute(path: '/mushaf-reader', builder: (context, state) => const MushafScreen()),
     _isolatedFeatureRoute(path: '/audio', builder: (context, state) => const AudioScreen()),
-    _isolatedFeatureRoute(
-      path: '/scholars-audio',
-      includeMiniPlayer: false,
-      builder: (context, state) => const ScholarsAudioLibraryScreen(),
-    ),
+    // Preserve old links without keeping the retired library reachable.
+    GoRoute(path: '/scholars-audio', redirect: (context, state) => '/library'),
     _isolatedFeatureRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
     _isolatedFeatureRoute(path: '/islamic-radio', builder: (context, state) => const IslamicRadioScreen()),
     _isolatedFeatureRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
