@@ -82,15 +82,15 @@ class _ComprehensiveLibrariesPortalState
         category: gScholars,
         icon: Icons.manage_search_rounded,
         accentColor: AppColors.primaryGreen,
-        onTap: () => push(const UnifiedLibrarySearchScreen(), '/library-search'),
+        onTap: () =>
+            push(const UnifiedLibrarySearchScreen(), '/library-search'),
       ),
 
       // ================= الروضة ٢: مشكاة النبوة والسيرة والقصص =================
       StructuredScreenItem(
         id: 'lib_asma_shamail',
         title: 'أسماء الله الحسنى والشمائل المحمدية',
-        subtitle:
-            'معاني الأسماء الحسنى والدعاء بها مع شمائل النبي ﷺ وأخلاقه',
+        subtitle: 'معاني الأسماء الحسنى والدعاء بها مع شمائل النبي ﷺ وأخلاقه',
         badgeText: '٩٩ اسماً',
         category: gProphethood,
         icon: Icons.stars_rounded,
@@ -100,8 +100,7 @@ class _ComprehensiveLibrariesPortalState
       StructuredScreenItem(
         id: 'lib_islamic_history',
         title: 'السيرة النبوية وتراجم الصحابة والأعلام',
-        subtitle:
-            'الغزوات، الخلفاء الراشدون، أمهات المؤمنين، وأئمة الهدى',
+        subtitle: 'الغزوات، الخلفاء الراشدون، أمهات المؤمنين، وأئمة الهدى',
         badgeText: 'السيرة والتاريخ',
         category: gProphethood,
         icon: Icons.history_edu_rounded,
@@ -129,7 +128,8 @@ class _ComprehensiveLibrariesPortalState
         category: gQuran,
         icon: Icons.compare_arrows_rounded,
         accentColor: const Color(0xFF1B4332),
-        onTap: () => push(const ComparativeTafsirScreen(), '/comparative-tafsir'),
+        onTap: () =>
+            push(const ComparativeTafsirScreen(), '/comparative-tafsir'),
       ),
       StructuredScreenItem(
         id: 'lib_gharib_quran',
@@ -201,13 +201,13 @@ class _ComprehensiveLibrariesPortalState
       StructuredScreenItem(
         id: 'lib_mawarith_calc',
         title: context.tr('mawarith_calc'),
-        subtitle:
-            'حساب الفروض والتركات بالأدلة القرآنية من سورة النساء',
+        subtitle: 'حساب الفروض والتركات بالأدلة القرآنية من سورة النساء',
         badgeText: 'علم الفرائض',
         category: gFiqh,
         icon: Icons.calculate_rounded,
         accentColor: const Color(0xFF27AE60),
-        onTap: () => push(const MawarithCalculatorScreen(), '/mawarith-calculator'),
+        onTap: () =>
+            push(const MawarithCalculatorScreen(), '/mawarith-calculator'),
       ),
 
       // ================= الروضة ٥: تزكية القلوب ومواسم الخيرات =================
@@ -296,7 +296,8 @@ class _ComprehensiveLibrariesPortalState
                 options: [
                   AppDropdownOption(
                     value: 'garden_all',
-                    label: '🌿 ${context.tr('garden_all')} (${allItems.length})',
+                    label:
+                        '🌿 ${context.tr('garden_all')} (${allItems.length})',
                   ),
                   AppDropdownOption(
                     value: 'garden_scholars',
@@ -391,6 +392,7 @@ class _ComprehensiveLibrariesPortalState
         const SizedBox(height: 14),
 
         AdaptiveStructuredCollectionView(
+          showDescriptions: false,
           mode: widget.layoutMode,
           items: filteredItems,
         ),
