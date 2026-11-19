@@ -247,6 +247,39 @@ class BudurSource {
       if (hits.length == 1 && hits.single.ayah == expected.$1)
         links[i] = [expected.$1];
     }
+    // Repeated headings here are disambiguated only by inspected adjacent
+    // original source entries, not a default first-occurrence rule.
+    const reviewedContexts = <int, Map<String, (int, String, String)>>{
+      10: {
+        "\" أرأيتم \" سبق قريبا.": (
+          59,
+          'ما أنزل الله لكم من رزق',
+          '" قل آلله "'
+        )
+      },
+      11: {"\" أرأيتم \" سبق في يونس.": (28, 'فعميت عليكم', '" وآتاني "')},
+      18: {
+        "\" للملائكة اسجدوا \" سبق في الإسراء مثله.": (
+          50,
+          'للملائكة اسجدوا',
+          '" بدلا "'
+        )
+      },
+      30: {
+        "\" يبدؤا \" فيه لحمزة وهشام وقفا خمسة أوجه تقدمت في تفتؤا بيوسف.": (
+          11,
+          'ثم إليه ترجعون',
+          '" ترجعون "'
+        )
+      },
+    };
+    for (var i = 0; i + 1 < texts.length; i++) {
+      final expected = reviewedContexts[surah.id]?[texts[i]];
+      if (expected == null || !texts[i + 1].startsWith(expected.$3)) continue;
+      final hits = BudurVerseLinker.occurrences(expected.$2, ayahs);
+      if (hits.length == 1 && hits.single.ayah == expected.$1)
+        links[i] = [expected.$1];
+    }
     // Inspected list headings name separate Quran words, not a
     // contiguous quotation. Require the original paragraph and every whole-
     // token occurrence (including both occurrences in the same verse).
