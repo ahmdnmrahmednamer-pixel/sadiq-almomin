@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:almomin/core/ui/app_dropdown_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,6 +66,24 @@ void main() {
         File('lib/features/library/islamic_library_screen.dart')
             .readAsStringSync(),
         contains('ShamelaLibraryScreen'));
+  });
+
+  testWidgets('Large text dropdown keeps full label above its selected name', (tester) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(frame(SingleChildScrollView(child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: AppDropdownField<String>(label: 'ترجمة معاني القرآن الكريم', value: 'one',
+        options: const [AppDropdownOption(value: 'one', label: 'اللغة العربية والقراءة المختارة ذات الاسم الطويل')],
+        onChanged: (_) {}),
+    )), scale: 2));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final input = tester.widget<DropdownButtonFormField<String>>(find.byType(DropdownButtonFormField<String>));
+    expect(input.decoration.labelText, isNull);
+    expect(find.text('ترجمة معاني القرآن الكريم'), findsOneWidget);
   });
 
   testWidgets('Navigation cards expose the name, not filler, to every user',
