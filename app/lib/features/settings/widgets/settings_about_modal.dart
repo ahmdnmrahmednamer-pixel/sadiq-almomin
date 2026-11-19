@@ -67,7 +67,8 @@ void showSettingsAboutModal(BuildContext context) {
           insetPadding: useCompactChrome
               ? const EdgeInsets.symmetric(horizontal: 16, vertical: 20)
               : const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
           titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
           contentPadding: isLargeText
               ? const EdgeInsets.fromLTRB(16, 16, 16, 6)
@@ -124,7 +125,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.menu_book_rounded,
                       iconColor: const Color(0xFF1E7E34),
                       title: 'محراب القرآن الكريم وتدبر علومه',
-                      description: 'المصحف الشريف كاملاً (604 صفحات) بالرسم العثماني المعتمد من مجمع الملك فهد، مشفوعاً بالتفسير الميسر، وإعراب الآيات النحوي والبلاغي، ومصحف التجويد الملون، والمحفّظ الذكي، والبحث الفوري بنمط يعمل بدون إنترنت (Offline-First).',
+                      description: 'القرآن والتفسير والإعراب',
                     ),
 
                     // 2. Prayer & Adhan Studio
@@ -134,7 +135,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.access_time_filled_rounded,
                       iconColor: const Color(0xFFD97706),
                       title: 'مواقيت الصلاة واستوديو الأذان والإقامة',
-                      description: 'حساب فلكي دقيق بالمعايير المعتمدة لـ 22 دولة، مع استوديو نداء الأذان والإقامة بأصوات الحرمين الشريفين والمسجد الأقصى المبارك ومصر والشيخ الحصري، وشاشة تحكم عائمة تدعم إيماءات الهز وقلب الهاتف لكتم النداء.',
+                      description: 'مواقيت الصلاة والأذان والإقامة',
                     ),
 
                     // 3. Audio Library & Reciters
@@ -144,7 +145,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.record_voice_over_rounded,
                       iconColor: const Color(0xFF2563EB),
                       title: 'المكتبة الصوتية وديوان كبار القراء',
-                      description: 'ديوان تلاوات خاشعة لـ 61 قارئاً من أساطين التلاوة في العالم الإسلامي (بتقديم فضيلة الشيخ محمد صديق المنشاوي كقارئ افتراضي)، مع مشغل استوديو متكامل يعمل في الخلفية ويدعم الاستماع دون إنترنت.',
+                      description: 'تلاوات القرآن الكريم',
                     ),
 
                     // 4. Adhkar, Hadith & Smart Tasbih
@@ -154,7 +155,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.fingerprint_rounded,
                       iconColor: const Color(0xFF7C3AED),
                       title: 'حصن المسلم والسنة النبوية والسبحة الذكية',
-                      description: 'الأذكار اليومية المستوعبة لكتاب حصن المسلم، وصحاح الأحاديث من جامعي البخاري ومسلم والأربعين النووية، مع مسبحة إلكترونية ذكية تمنح تفاعلاً حسياً نابضاً وإحصائيات تحفيزية للأوراد اليومية.',
+                      description: 'أذكار اليوم والسبحة',
                     ),
 
                     // 5. Worship Services, Qibla & Zakat
@@ -164,7 +165,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.explore_rounded,
                       iconColor: const Color(0xFF059669),
                       title: 'محاريب العبادات والقبلة والزكاة والأنبياء',
-                      description: 'رادار القبلة التفاعلي ثلاثي الأبعاد، وحاسبة الزكاة الشرعية لجميع الأوجه والأنصبة الفقهية، ومحراب رمضان المبارك بإمساكية منضبطة ومتابعة الختمات، وموسوعة قصص الأنبياء (38 قصة تفصيلية).',
+                      description: 'القبلة والزكاة وقصص الأنبياء',
                     ),
 
                     // 6. Purity of Purpose & No-Ads Pledge
@@ -174,7 +175,7 @@ void showSettingsAboutModal(BuildContext context) {
                       icon: Icons.verified_user_rounded,
                       iconColor: const Color(0xFF0F766E),
                       title: 'صفاء المقصد ونقاء العهد الوقفـي',
-                      description: 'عمل وقفي لوجه الله تعالى مجاني تماماً وبصورة دائمة ومطلقة، خالٍ كلياً من أي إعلانات تجارية أو نوافذ ترويجية أو تتبع لخصوصية المستخدم، ليصون نقاء اللحظة الإيمانية وخشوع العابد.',
+                      description: 'تطبيق مجاني بلا إعلانات',
                     ),
                   ],
                 ),
@@ -188,7 +189,8 @@ void showSettingsAboutModal(BuildContext context) {
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primaryGreen,
                 minimumSize: const Size(48, 48),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
               ),
               child: const Text(
                 'إغلاق',
@@ -244,7 +246,9 @@ Widget _buildFeaturePillar({
       color: isDark ? const Color(0xFF1E2824) : const Color(0xFFFBFBFB),
       borderRadius: BorderRadius.circular(14),
       border: Border.all(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.06),
       ),
       boxShadow: [
         BoxShadow(
