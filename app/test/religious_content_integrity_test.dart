@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
+import '../lib/core/services/verse_source_client.dart';
+import 'verse_source_client_test.dart' show FixtureAdapter;
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +19,7 @@ import 'reader_accessibility_integration_test.dart' show surah;
 void main(){
  TestWidgetsFlutterBinding.ensureInitialized();
  setUp(()async{
+  TafsirService.setClientForTesting(AlQuranCloudTafsirClient(dio:Dio(BaseOptions(baseUrl:'https://api.alquran.cloud/v1'))..httpClientAdapter=FixtureAdapter({'surah':{'number':99}})));
   SharedPreferences.setMockInitialValues({'default_tafsir_edition':'qurtubi'});await SettingsService.instance.init(forceReload:true);QuranRepository.resetCachesForTesting();
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',(m)async{
    final p=utf8.decode(m!.buffer.asUint8List());
@@ -28,8 +32,17 @@ void main(){
  test('bundled Muyassar is returned verbatim only as Muyassar',()async{
   final a=await TafsirService.getTafsir(surahId:1,ayahNumber:1);expect(a.tafsirText,'VERBATIM_LOCAL_TEXT');
   for(final e in TafsirService.availableEditions.where((e)=>e.id!='muyassar')){
-   final b=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:e.id);expect(b.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));expect(b.tafsirText,contains('لم يُربط'));
+   final b=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:e.id);expect(b.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));expect(b.hasSourceText,isFalse);
   }
+ });
+ test('live selected book passes through exact source and source URL',()async{
+  TafsirService.setClientForTesting(AlQuranCloudTafsirClient(dio:Dio(BaseOptions(baseUrl:'https://api.alquran.cloud/v1'))..httpClientAdapter=FixtureAdapter({'surah':{'number':1},'numberInSurah':1,'edition':{'identifier':'ar.qurtubi','type':'tafsir'},'text':'VERBATIM_REMOTE_TEXT'})));
+  final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
+  expect(result.tafsirText,'VERBATIM_REMOTE_TEXT');expect(result.hasSourceText,isTrue);expect(result.sourceUrl,endsWith('/ayah/1:1/ar.qurtubi'));
+ });
+ test('source failure never falls back to another book',()async{
+  final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
+  expect(result.hasSourceText,isFalse);expect(result.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));
  });
  test('removed linguistics never supplies guessed grammar or another verse cause',()async{
   final d=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);expect(d.grammar.words,isEmpty);expect(d.wordMeanings,isEmpty);expect(d.grammar.rhetoricSummary,isEmpty);expect(d.asbabNuzul.source,contains('لم'));expect(d.asbabNuzul.narration,contains('لا يعني'));
