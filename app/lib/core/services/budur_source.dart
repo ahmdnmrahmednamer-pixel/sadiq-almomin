@@ -168,6 +168,33 @@ class BudurSource {
       return false;
     }
 
+    // A summary after an author's end-of-quarter marker describes the
+    // preceding range. Quoted items inside that summary are not normal verse
+    // headings. Resume only when the full next quotation is proved to occur
+    // strictly after a uniquely identified source marker. A doubtful marker
+    // keeps the summary unassigned rather than borrowing a standard hizb grid.
+    var summary = false;
+    int? quarterEnd;
+    for (var i = 0; i < texts.length; i++) {
+      final text = texts[i];
+      if (text.startsWith('الممال') || text.startsWith('المدغم'))
+        summary = true;
+      final qs = BudurVerseLinker.quotes(text);
+      if (summary && qs.isNotEmpty && quarterEnd != null) {
+        final candidates =
+            qs.expand((q) => BudurVerseLinker.occurrences(q, ayahs)).toList();
+        if (candidates.isNotEmpty &&
+            qs.every(
+                (q) => BudurVerseLinker.occurrences(q, ayahs).isNotEmpty) &&
+            candidates.every((c) => c.ayah > quarterEnd!)) summary = false;
+      }
+      if (summary) blocks[i] = true;
+      if (text.contains('آخر الربع') || text.contains('منتهى الربع')) {
+        final candidates =
+            qs.expand((q) => BudurVerseLinker.occurrences(q, ayahs)).toList();
+        quarterEnd = candidates.length == 1 ? candidates.single.ayah : null;
+      }
+    }
     final links = BudurVerseLinker.link(texts, blocks, ayahs,
         repeatedReviewed: verifiedRepeat);
     return [
