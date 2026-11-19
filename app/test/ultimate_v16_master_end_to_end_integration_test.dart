@@ -270,8 +270,8 @@ void main() {
         await SettingsService.instance.setHijriAdjustmentDays(originalHijriAdj);
       }
 
-      // Unified Library 14 filters (all + 13 encyclopedias)
-      expect(UnifiedLibrarySearchService.libraryFilters.length, equals(14));
+      // Unified Library 13 filters (all + 12 retained libraries)
+      expect(UnifiedLibrarySearchService.libraryFilters.length, equals(13));
       final results = await UnifiedLibrarySearchService.instance.search('الصلاة');
       expect(results, isNotEmpty);
     });
