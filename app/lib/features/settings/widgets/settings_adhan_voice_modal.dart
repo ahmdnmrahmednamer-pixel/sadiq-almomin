@@ -173,7 +173,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
   String _searchQuery = '';
   late final AudioPlayer _previewPlayer;
   StreamSubscription<PlayerState>? _previewState;
-  Animation<double>? _coveredRoute;
+  bool _routeCurrent = true;
   int _previewRequest = 0;
   String? _previewTrackId;
   String? _previewError;
@@ -212,15 +212,11 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _coveredRoute?.removeStatusListener(_routeStatus);
-    _coveredRoute = ModalRoute.of(context)?.secondaryAnimation;
-    _coveredRoute?.addStatusListener(_routeStatus);
-  }
-
-  void _routeStatus(AnimationStatus status) {
-    if (status == AnimationStatus.forward) {
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+    if (_routeCurrent && !isCurrent) {
       unawaited(_stopPreview().catchError((Object _) {}));
     }
+    _routeCurrent = isCurrent;
   }
 
   @override
@@ -380,7 +376,6 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
     _disposed = true;
     ++_previewRequest;
     WidgetsBinding.instance.removeObserver(this);
-    _coveredRoute?.removeStatusListener(_routeStatus);
     unawaited(_previewState?.cancel().catchError((Object _) {}));
     // Attempt both operations independently so a rejected or delayed stop does
     // not prevent disposal. Neither operation can stop a newer focus owner.
