@@ -86,7 +86,7 @@ void main() {
       expect(shareText.contains('سورة الإخلاص'), isTrue);
       expect(shareText.contains('نص المصدر (لباب النقول، السيوطي)'), isTrue);
       expect(shareText, contains('لم يُثبت ربط هذا الموضع'));
-      expect(shareText, contains('لم يُربط مصدر الإعراب بعد.'));
+      expect(shareText, contains('الجدول في إعراب القرآن الكريم، محمود صافي'));
       expect(shareText.contains('الإعراب والدلالة النحوية'), isTrue);
       expect(shareText.contains('تطبيق صديق المؤمن'), isTrue);
     });
@@ -156,8 +156,8 @@ void main() {
       await tester.tap(find.text('إعراب الآية'));
       await tester.pumpAndSettle();
 
-      expect(find.text('الإعراب الإجمالي للآية:'), findsOneWidget);
-      expect(find.text('لم يُربط مصدر الإعراب بعد.'), findsOneWidget);
+      expect(find.text('فتح إعراب الآية'), findsOneWidget);
+      expect(find.textContaining('محمود صافي'), findsOneWidget);
     });
 
     testWidgets('AyahActionSheet includes dedicated buttons for Meanings, Asbab, and Irab', (tester) async {
