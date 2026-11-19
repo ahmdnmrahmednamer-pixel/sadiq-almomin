@@ -7,13 +7,12 @@ import '../../core/ui/portal_category_card.dart';
 import 'shamela_library_screen.dart';
 
 /// بوابة «المكتبة الإسلامية ورياض العلم» (IslamicLibraryScreen)
-/// مقسمة إلى ٦ محاور علمية رئيسية واضحة ومستقلة:
-/// 1. رياض الصالحين والحديث النبوي
-/// 2. قصص الأنبياء المسموعة والمقروءة
-/// 3. المتون العلمية وأحكام التجويد
-/// 4. حاسبة المواريث والتركات الشرعية
-/// 5. دليل الحج والعمرة التفاعلي
-/// 6. إذاعة القرآن والتراث الإسلامي
+/// المكتبة الشاملة وأدوات مستقلة: القصص والمواريث والحج والإذاعة.
+/// - المكتبة الشاملة (مستقلة)
+/// 1. قصص الأنبياء
+/// 2. حاسبة المواريث والتركات الشرعية
+/// 3. الحج والعمرة
+/// 4. الإذاعة والتراث
 class IslamicLibraryScreen extends StatelessWidget {
   final int initialTabIndex;
 
@@ -29,7 +28,7 @@ class IslamicLibraryScreen extends StatelessWidget {
       child: Scaffold(
         drawer: const AppNavigationDrawer(),
         appBar: AppBar(
-          title: const Text('المكتبة الإسلامية ورياض العلم'),
+          title: const Text('رياض العلم'),
           leading: Builder(
             builder: (ctx) => Semantics(
               label: 'open navigation menu',
@@ -96,7 +95,7 @@ class IslamicLibraryScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'السنة النبوية، قصص الأنبياء، المتون، والفقه',
+                          'كتب شرعية وأدوات عملية',
                           style: TextStyle(
                             color: Color(0xFFFFEFA6),
                             fontSize: 12,
@@ -110,13 +109,13 @@ class IslamicLibraryScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
 
-            // المكتبة الشاملة الشرعية
+            // المكتبة الشاملة
             PortalCategoryCard(
               numberText: 'ش',
-              title: 'المكتبة الشاملة الشرعية',
-              subtitle: 'بحث في الأقسام الشرعية وقراءة أونلاين وحفظ الكتب داخل التطبيق للقراءة دون اتصال',
+              title: 'المكتبة الشاملة',
+              subtitle: '',
               icon: Icons.menu_book_rounded,
               color: AppColors.primaryGreen,
               onTap: () => Navigator.of(context).push(
@@ -126,66 +125,43 @@ class IslamicLibraryScreen extends StatelessWidget {
               ),
             ),
 
-            // 1. رياض الصالحين وصحيح الحديث
+            // 1. قصص الأنبياء
             PortalCategoryCard(
               numberText: '١',
-              title: 'رياض الصالحين وصحيح الحديث',
-              subtitle: 'أبواب وكتب رياض الصالحين للإمام النووي مع شروح الأحاديث والفوائد التربوية والإيمانية',
-              icon: Icons.collections_bookmark_rounded,
-              color: AppColors.primaryGreen,
-              badgeText: 'رياض الصالحين',
-              onTap: () => context.push('/riyad-alsalihin'),
-            ),
-
-            // 2. قصص الأنبياء المسموعة والمقروءة
-            PortalCategoryCard(
-              numberText: '٢',
-              title: 'قصص الأنبياء المسموعة والمقروءة',
-              subtitle: 'سلسلة قصص الأنبياء من آدم عليه السلام حتى خاتم المرسلين ﷺ بصوت نبيل العوضي وقراءة تفصيلية',
+              title: 'قصص الأنبياء',
+              subtitle: '',
               icon: Icons.menu_book_rounded,
               color: const Color(0xFF1E8260),
-              badgeText: '١٢ قصة صوتية',
               onTap: () => context.push('/stories'),
             ),
 
-            // 3. المتون العلمية وأحكام التجويد
+            // 2. حاسبة المواريث والتركات الشرعية
             PortalCategoryCard(
-              numberText: '٣',
-              title: 'المتون العلمية وأحكام التجويد',
-              subtitle: 'تحفة الأطفال، الجزرية، القواعد الفقهية، العقيدة الطحاوية، وموسوعة أحكام التجويد',
-              icon: Icons.school_rounded,
-              color: const Color(0xFFB8893A),
-              onTap: () => context.push('/islamic-mutoon'),
-            ),
-
-            // 4. حاسبة المواريث والتركات الشرعية
-            PortalCategoryCard(
-              numberText: '٤',
-              title: 'حاسبة المواريث الشرعية',
-              subtitle: 'حساب وقسمة الأنصبة الشرعية والتركات ومقادير الفروض والعصبات بالأدلة الفقهية',
+              numberText: '٢',
+              title: 'المواريث',
+              subtitle: '',
               icon: Icons.balance_rounded,
               color: const Color(0xFF2E7D32),
               onTap: () => context.push('/mawarith-calculator'),
             ),
 
-            // 5. دليل الحج والعمرة التفاعلي
+            // 3. الحج والعمرة
             PortalCategoryCard(
-              numberText: '٥',
-              title: 'دليل الحج والعمرة التفاعلي',
-              subtitle: 'مناسك الحج والعمرة خطوة بخطوة مع عداد أشواط الطواف والسعي التفاعلي والأدعية',
+              numberText: '٣',
+              title: 'الحج والعمرة',
+              subtitle: '',
               icon: Icons.flight_takeoff_rounded,
               color: const Color(0xFF0F5B45),
               onTap: () => context.push('/hajj-umrah'),
             ),
 
-            // 6. إذاعة القرآن والتراث الإسلامي
+            // 4. الإذاعة والتراث
             PortalCategoryCard(
-              numberText: '٦',
-              title: 'إذاعة القرآن والتراث الإسلامي',
-              subtitle: 'بث إذاعة القرآن الكريم من القاهرة، نوادر التلاوات، ابتهالات النقشبندي، ومجالس الشعراوي',
+              numberText: '٤',
+              title: 'الإذاعة والتراث',
+              subtitle: '',
               icon: Icons.radio_rounded,
               color: const Color(0xFF25739B),
-              badgeText: 'راديو مباشر',
               onTap: () => context.push('/egypt-heritage'),
             ),
 
