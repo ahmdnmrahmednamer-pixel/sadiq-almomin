@@ -171,6 +171,40 @@ void main() {
         expect(entry.ayahs, expected.value,
             reason: 'source both ${surah.id} ${expected.key}');
       }
+      const reviewedListAyahs = <int, Map<String, List<int>>>{
+        2: {
+          "\" اليسر والعسر \" قرأ أبو جعفر بضم السين فيهما، والباقون بالإسكان.":
+              [185],
+          "\" فيغفر ويعذب \" قرأ الشامي وعاصم وأبو جعفر ويعقوب برفع الراء والباء من الفعلين والباقون بجزمهما.":
+              [284],
+        },
+        4: {
+          "\" نوله ونصله \" قرأ قالون ويعقوب وهشام بخلف عنه بكسر الهاء من غير صلة، وقرأ البصري وشعبة وحمزة وأبو جعفر بإسكانها، والباقون بكسرها مع الصلة، وهو الوجه الثاني لهشام.":
+              [115],
+        },
+        10: {
+          "\" ولا أصغر ولا أكبر \" قرأ يعقوب وخلف وحمزة برفع الراء فيهما، والباقون بنصبها فيهما.":
+              [61],
+        },
+        36: {
+          "\" سدا، معا \" فتح السين فيهما حفص والأخوان وخلف، وضمها غيرهم.": [9],
+        },
+      };
+      for (final expected
+          in (reviewedListAyahs[surah.id] ?? const <String, List<int>>{})
+              .entries) {
+        expect(result.singleWhere((p) => p.text == expected.key).ayahs,
+            expected.value);
+      }
+      if (surah.id == 36) {
+        final withoutEvidence = BudurSource.passages(
+            source, surah, ayahs.where((a) => a.ayahNumber != 9).toList());
+        final entry = withoutEvidence
+            .singleWhere((p) => p.text.startsWith('" سدا، معا "'));
+        expect(entry.ayahs, isEmpty,
+            reason:
+                'reviewed list still requires both actual Quran occurrences');
+      }
       passages += result.length;
       assigned += result.where((p) => p.ayahs.isNotEmpty).length;
       for (final p in result) {
