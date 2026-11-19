@@ -65,15 +65,18 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
                         ),
                       ),
                     ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                      label: Text(
-                        isAr ? 'معاينة اللغات' : 'Languages Sheet',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      onPressed: () => showSettingsLanguageModal(context),
-                    ),
                   ],
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: Text(
+                      isAr ? 'معاينة اللغات' : 'Languages Sheet',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    onPressed: () => showSettingsLanguageModal(context),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 AppDropdownField<String>(
