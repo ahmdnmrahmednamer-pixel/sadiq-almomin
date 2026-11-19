@@ -23,6 +23,23 @@ class AdhkarHubScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    const hubTitle = 'أُنس الذاكرين والتسبيح';
+    final titleStyle =
+        theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge!;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final titlePainter = TextPainter(
+      text: TextSpan(text: hubTitle, style: titleStyle),
+      textDirection: SettingsService.instance.textDirection,
+      textScaler: textScaler,
+    )..layout();
+    // The toolbar reserves 56px for the menu, 96px for two actions and
+    // 32px for title spacing. Use a full-width row when the title cannot fit.
+    final needsTitleRow = titlePainter.width > screenWidth - 184;
+    titlePainter.layout(maxWidth: (screenWidth - 32).clamp(1.0, double.infinity));
+    final titleRowHeight = titlePainter.height + 24;
+    final titleLines = titlePainter.computeLineMetrics().length;
+    titlePainter.dispose();
     // Level-7 normalized verification
     assert(ArabicNormalizer.normalize('أُنس الذاكرين').isNotEmpty);
 
@@ -31,7 +48,26 @@ class AdhkarHubScreen extends StatelessWidget {
       child: Scaffold(
         drawer: const AppNavigationDrawer(),
         appBar: AppBar(
-          title: const Text('أُنس الذاكرين والتسبيح'),
+          title: needsTitleRow
+              ? null
+              : Text(hubTitle, style: titleStyle, textScaler: textScaler),
+          bottom: needsTitleRow
+              ? PreferredSize(
+                  preferredSize: Size.fromHeight(titleRowHeight),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Semantics(
+                      header: true,
+                      namesRoute: true,
+                      child: Text(hubTitle,
+                          style: titleStyle,
+                          textAlign: TextAlign.center,
+                          textScaler: textScaler,
+                          maxLines: titleLines),
+                    ),
+                  ),
+                )
+              : null,
           leading: Builder(
             builder: (ctx) => Semantics(
               label: 'open navigation menu',

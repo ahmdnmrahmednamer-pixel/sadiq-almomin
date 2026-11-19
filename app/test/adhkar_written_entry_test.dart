@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:almomin/features/settings/settings_screen.dart';
+import 'package:almomin/features/adhkar/tasbih_screen.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -157,4 +159,59 @@ void main() {
       }
     }
   });
+  testWidgets('hub title wraps without truncation at narrow and enlarged text',
+      (tester) async {
+    final semantics = tester.ensureSemantics();
+    for (final width in [320.0, 360.0, 412.0]) {
+      for (final scale in [1.0, 2.0, 3.0]) {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        await mount(tester, width: width, scale: scale);
+        final title = find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('أُنس الذاكرين والتسبيح'),
+        );
+        expect(title, findsOneWidget);
+        final paragraph = tester.renderObject<RenderParagraph>(title);
+        expect(paragraph.didExceedMaxLines, isFalse);
+        final titleRect = tester.getRect(title);
+        final appBarRect = tester.getRect(find.byType(AppBar));
+        expect(titleRect.left, greaterThanOrEqualTo(appBarRect.left));
+        expect(titleRect.right, lessThanOrEqualTo(appBarRect.right));
+        expect(titleRect.top, greaterThanOrEqualTo(appBarRect.top));
+        expect(titleRect.bottom, lessThanOrEqualTo(appBarRect.bottom));
+        expect(paragraph.textScaler.scale(1), scale);
+        expect(find.bySemanticsLabel('أُنس الذاكرين والتسبيح'), findsOneWidget);
+        for (final tooltip in ['open navigation menu', 'مواقيت تنبيهات الأذكار', 'السبحة الإلكترونية']) {
+          final button = find.byTooltip(tooltip);
+          expect(button.hitTestable(), findsOneWidget);
+          final bounds = tester.getRect(button);
+          expect(bounds.top, greaterThanOrEqualTo(appBarRect.top));
+          expect(bounds.bottom, lessThanOrEqualTo(appBarRect.bottom));
+          expect(bounds.overlaps(titleRect), isFalse);
+        }
+        await capture(tester, 'title-${width.toInt()}-${scale.toInt()}');
+        expect(tester.takeException(), isNull);
+      }
+    }
+    await mount(tester, width: 320, scale: 1);
+    await tester.tap(find.byTooltip('open navigation menu'));
+    await tester.pumpAndSettle();
+    expect(find.byType(Drawer), findsOneWidget);
+    Navigator.of(tester.element(find.byType(Drawer))).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('مواقيت تنبيهات الأذكار'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(GoRouterState.of(tester.element(find.byType(SettingsScreen))).uri.path, '/settings');
+    appRouter.pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('السبحة الإلكترونية'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TasbihScreen), findsOneWidget);
+    expect(GoRouterState.of(tester.element(find.byType(TasbihScreen))).uri.path, '/tasbih');
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
 }
