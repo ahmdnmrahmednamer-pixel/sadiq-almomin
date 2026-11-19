@@ -130,6 +130,15 @@ class AdhkarHubScreen extends StatelessWidget {
               onTap: () => context.push('/adhkar?index=0'),
             ),
 
+            PortalCategoryCard(
+              numberText: 'صوت',
+              title: 'الأذكار المسموعة',
+              subtitle: 'تسجيلات الأذكار والأدعية وحالة مراجعة مصادرها',
+              icon: Icons.headphones_rounded,
+              color: AppColors.primaryGreen,
+              onTap: () => context.push('/adhkar-audio'),
+            ),
+
             // 2. المسبحة الإلكترونية الذكية
             PortalCategoryCard(
               numberText: '٢',
