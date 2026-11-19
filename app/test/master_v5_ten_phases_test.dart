@@ -82,7 +82,7 @@ void main() {
       expect(opt.label, 'التفسير الميسر');
     });
 
-    test('Phase 5: Selected tafsir source identity is preserved and unlinked grammar stays unavailable', () async {
+    test('Phase 5: Selected tafsir identity and grammar attribution preserve source boundaries', () async {
       expect(TafsirService.availableEditions.length >= 9, isTrue);
 
       final source = FixtureTafsir();
@@ -113,7 +113,11 @@ void main() {
       expect(linguistics.asbabNuzul.title, isNotEmpty);
       expect(linguistics.grammar.summary, isNotEmpty);
       expect(linguistics.grammar.words, isEmpty);
-      expect(linguistics.grammar.summary, 'لم يُربط مصدر الإعراب بعد.');
+      expect(linguistics.grammar.surahId, 2);
+      expect(linguistics.grammar.ayahNumber, 255);
+      expect(linguistics.grammar.summary,
+          'الجدول في إعراب القرآن الكريم، محمود صافي. افتح صفحات المصدر لقراءة الإعراب في سياقه.');
+      // Attribution is not fetched verse text or generated word-level grammar.
       expect(linguistics.asbabNuzul.hasSourceText, isFalse);
       expect(linguistics.asbabNuzul.hasSpecificIncident, isFalse);
       expect(linguistics.grammar.rhetoricSummary, isEmpty);
