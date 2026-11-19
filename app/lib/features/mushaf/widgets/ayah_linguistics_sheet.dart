@@ -8,6 +8,7 @@ import '../../../core/models/ayah.dart';
 import '../../../core/services/quran_linguistics_service.dart';
 import 'ayah_card_share_sheet.dart';
 import 'tafsir_viewer_sheet.dart';
+import '../screens/quran_irab_screen.dart';
 
 class AyahLinguisticsSheet extends StatefulWidget {
   final Surah surah;
@@ -445,63 +446,11 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
   }
 
   Widget _buildGrammarTab(QuranLinguisticsResult data) {
-    final grammar = data.grammar;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Semantics(
-            container: true,
-            label: 'الإعراب الإجمالي للآية: ${grammar.summary}',
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.spellcheck_rounded, color: AppColors.primaryGreen, size: 20),
-                      SizedBox(width: 8),
-                      Text('الإعراب الإجمالي للآية:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryGreen)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    grammar.summary,
-                    style: const TextStyle(fontSize: 14.5, height: 1.8, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Text('التحليل النحوي والصرفي لمفردات الآية:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          const SizedBox(height: 8),
-          ...grammar.words.map((w) {
-            return Semantics(
-              container: true,
-              label: 'إعراب كلمة ${w.word}: ${w.role}، ${w.caseEnding}',
-              child: Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  dense: true,
-                  title: Text('﴿${w.word}﴾', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
-                  subtitle: Text('${w.role} — ${w.caseEnding}', style: const TextStyle(fontSize: 12.5, height: 1.4)),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
+    return Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      const Text('الجدول في إعراب القرآن الكريم، محمود صافي. تُعرض صفحات الكتاب مع سياقها وهوامشها.'),
+      const SizedBox(height:12),
+      FilledButton(onPressed:()=>Navigator.of(context).push(MaterialPageRoute(builder:(_)=>QuranIrabScreen(initialSurahId:widget.surah.id,initialAyah:widget.ayah.ayahNumber))),child:const Text('فتح إعراب الآية')),
+    ]));
   }
 
   Widget _buildRhetoricTab(QuranLinguisticsResult data) {
