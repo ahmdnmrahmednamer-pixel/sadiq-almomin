@@ -27,7 +27,6 @@ import 'package:almomin/features/prayer/hijri_calendar_screen.dart';
 import 'package:almomin/features/prayer/prayer_times_detail_screen.dart';
 import 'package:almomin/features/prayer/prayer_tracker_screen.dart';
 import 'package:almomin/features/prayer/sunan_rawatib_screen.dart';
-import 'package:almomin/features/audio/scholars_audio_library_screen.dart';
 import 'package:almomin/features/search/quran_search_screen.dart';
 import 'package:almomin/features/settings/settings_screen.dart';
 import 'package:almomin/features/wird/daily_wird_screen.dart';
@@ -451,10 +450,7 @@ void main() {
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
 
-      await _performSemanticTapByLabel(tester, 'كبار العلماء، دروس ومحاضرات صوتية');
-      expect(find.byType(ScholarsAudioLibraryScreen), findsOneWidget);
-      await tester.tap(find.byType(BackButton).first);
-      await tester.pumpAndSettle();
+      expect(find.text('كبار العلماء'), findsNothing);
 
       await _performSemanticTapByLabel(tester, 'ختمة القرآن، خطة الختمة والمتابعة');
       expect(find.byType(KhatmaScreen), findsOneWidget);
@@ -512,7 +508,6 @@ void main() {
               '/mushaf-reader',
               '/adhkar',
               '/tasbih',
-              '/scholars-audio',
               '/khatma',
               '/mushaf',
               '/prayer',
@@ -595,7 +590,7 @@ void main() {
         await verifyRouteTap('الصلاة والقبلة، المواقيت والأذان والقبلة', '/prayer', isPush: false);
         await verifyRouteTap('الأذكار والسبحة، حصن المسلم والأوراد اليومية', '/adhkar-hub', isPush: false);
         await verifyRouteTap('المكتبة والحديث، رياض الصالحين والقصص والفقه', '/library', isPush: false);
-        await verifyRouteTap('كبار العلماء، دروس ومحاضرات صوتية', '/scholars-audio');
+        expect(find.text('كبار العلماء'), findsNothing);
         await verifyRouteTap('ختمة القرآن، خطة الختمة والمتابعة', '/khatma');
         await verifyRouteTap('الإعدادات', '/settings');
 

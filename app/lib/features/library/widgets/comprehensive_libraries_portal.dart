@@ -5,7 +5,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/adaptive_screen_layouts.dart';
 import '../../../core/ui/app_dropdown_field.dart';
 import '../../adhkar/spiritual_mood_remedy_screen.dart';
-import '../../audio/scholars_audio_library_screen.dart';
 import '../../egypt/egyptian_heritage_screen.dart';
 import '../../hadith/hadith_library_screen.dart';
 import '../../mushaf/comparative_tafsir_screen.dart';
@@ -66,16 +65,6 @@ class _ComprehensiveLibrariesPortalState
 
     return [
       // ================= الروضة ١: مجالس العلماء والتراث الصوتي =================
-      StructuredScreenItem(
-        id: 'lib_scholars_audio_v8',
-        title: context.tr('scholars_gatherings'),
-        subtitle: context.tr('scholars_gatherings_sub'),
-        badgeText: '١١٥ عالماً',
-        category: gScholars,
-        icon: Icons.mic_external_on_rounded,
-        accentColor: const Color(0xFF0F5B45),
-        onTap: () => push(const ScholarsAudioLibraryScreen(), '/scholars-audio'),
-      ),
       StructuredScreenItem(
         id: 'lib_egypt_heritage',
         title: context.tr('egypt_heritage'),

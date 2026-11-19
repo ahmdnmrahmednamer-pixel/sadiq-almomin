@@ -54,13 +54,6 @@ class HomeQuickSectionsGrid extends StatelessWidget {
       route: '/library',
     ),
     _QuickSectionItem(
-      title: 'كبار العلماء',
-      subtitle: 'دروس ومحاضرات صوتية',
-      icon: Icons.mic_external_on_rounded,
-      color: Color(0xFF7C3AED),
-      route: '/scholars-audio',
-    ),
-    _QuickSectionItem(
       title: 'ختمة القرآن',
       subtitle: 'خطة الختمة والمتابعة',
       icon: Icons.bookmark_added_rounded,

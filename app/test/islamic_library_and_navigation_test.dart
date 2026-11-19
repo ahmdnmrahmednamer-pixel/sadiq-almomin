@@ -32,7 +32,7 @@ void main() {
       expect(find.text('المتون العلمية وأحكام التجويد'), findsOneWidget);
     });
 
-    testWidgets('Renders HomeShortcutsList clean categorized grid with 9 spiritual doors', (tester) async {
+    testWidgets('Renders HomeShortcutsList clean categorized grid with 8 retained spiritual doors', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -52,7 +52,7 @@ void main() {
       expect(find.textContaining('نسائم القاهرة'), findsOneWidget);
 
       // Check key spiritual door tiles
-      expect(find.textContaining('مجالس العلماء'), findsOneWidget);
+      expect(find.textContaining('مجالس العلماء'), findsNothing);
       expect(find.textContaining('طِبّ القلوب'), findsOneWidget);
       expect(find.textContaining('رواتب الجنة'), findsOneWidget);
       expect(find.textContaining('بصائر المفسرين'), findsOneWidget);

@@ -1,7 +1,6 @@
 import '../../core/audio/ayah_audio_player.dart';
 import 'widgets/recitation_reciter_selector.dart';
 import '../../core/text/arabic_normalizer.dart';
-import 'scholars_audio_library_screen.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -516,16 +515,6 @@ class _AudioScreenState extends State<AudioScreen> {
             icon: const Icon(Icons.person_search),
             tooltip: 'تغيير القارئ',
             onPressed: _showReciterPicker,
-          ),
-          IconButton(
-            icon: const Icon(Icons.mic_external_on_rounded),
-            tooltip: 'موسوعة دروس ومحاضرات الشيوخ والعلماء (١١٥ شيخاً)',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (_) => const ScholarsAudioLibraryScreen()),
-              );
-            },
           ),
           IconButton(
             icon: const Icon(Icons.menu_book_rounded),
