@@ -29,8 +29,8 @@ class PrayerAudioQuickCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
@@ -38,37 +38,36 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       padding: const EdgeInsets.all(9),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.primaryGreen, AppColors.secondaryGreen],
+                          colors: [
+                            AppColors.primaryGreen,
+                            AppColors.secondaryGreen
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryGreen.withValues(alpha: 0.3),
+                            color:
+                                AppColors.primaryGreen.withValues(alpha: 0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.headphones_rounded, color: Colors.white, size: 20),
+                      child: const Icon(Icons.headphones_rounded,
+                          color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 10),
-                    Column(
+                    Expanded(
+                        child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'سماع الأذان والإقامة 🎧',
-                          style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w900),
-                        ),
-                        Text(
-                          'أصوات الحرمين ومصر والقدس والإقامة المدمجة',
                           style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white60 : AppColors.mutedText,
-                          ),
+                              fontSize: 14.5, fontWeight: FontWeight.w900),
                         ),
                       ],
-                    ),
+                    )),
                   ],
                 ),
                 Wrap(
@@ -80,21 +79,26 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const AdhanControlScreen(prayerName: 'الظهر', autoPlay: false),
+                            builder: (_) => const AdhanControlScreen(
+                                prayerName: 'الظهر', autoPlay: false),
                           ),
                         );
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppColors.accentGold.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color:
+                                  AppColors.accentGold.withValues(alpha: 0.3)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.touch_app_rounded, size: 12, color: AppColors.accentGold),
+                            Icon(Icons.touch_app_rounded,
+                                size: 12, color: AppColors.accentGold),
                             SizedBox(width: 4),
                             Text(
                               'شاشة التحكم 🎛️',
@@ -112,11 +116,14 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       onTap: () => showSettingsAdhanVoiceModal(context),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppColors.primaryGreen.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color: AppColors.primaryGreen
+                                  .withValues(alpha: 0.2)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -130,7 +137,8 @@ class PrayerAudioQuickCard extends StatelessWidget {
                               ),
                             ),
                             SizedBox(width: 4),
-                            Icon(Icons.arrow_forward_ios_rounded, size: 9, color: AppColors.primaryGreen),
+                            Icon(Icons.arrow_forward_ios_rounded,
+                                size: 9, color: AppColors.primaryGreen),
                           ],
                         ),
                       ),
@@ -144,11 +152,15 @@ class PrayerAudioQuickCard extends StatelessWidget {
             if (currentTrack != null) ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1B3D2F) : const Color(0xFFE8F5E9),
+                  color: isDark
+                      ? const Color(0xFF1B3D2F)
+                      : const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
+                  border: Border.all(
+                      color: AppColors.accentGold.withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
@@ -158,7 +170,9 @@ class PrayerAudioQuickCard extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       icon: Icon(
-                        isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                        isPlaying
+                            ? Icons.pause_circle_filled_rounded
+                            : Icons.play_circle_fill_rounded,
                         color: AppColors.accentGold,
                       ),
                       onPressed: () {
@@ -176,7 +190,8 @@ class PrayerAudioQuickCard extends StatelessWidget {
                         children: [
                           Text(
                             currentTrack.title,
-                            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
+                            style: const TextStyle(
+                                fontSize: 12.5, fontWeight: FontWeight.w900),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -184,7 +199,8 @@ class PrayerAudioQuickCard extends StatelessWidget {
                             currentTrack.subtitle,
                             style: TextStyle(
                               fontSize: 10.5,
-                              color: isDark ? Colors.white60 : AppColors.mutedText,
+                              color:
+                                  isDark ? Colors.white60 : AppColors.mutedText,
                               fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
@@ -271,7 +287,9 @@ class PrayerAudioQuickCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          final track = IslamicAudioService.allTracks.firstWhere((t) => t.id == trackId, orElse: () => IslamicAudioService.allTracks.first);
+          final track = IslamicAudioService.allTracks.firstWhere(
+              (t) => t.id == trackId,
+              orElse: () => IslamicAudioService.allTracks.first);
           audioService.playTrack(track);
         },
         child: Container(
@@ -302,7 +320,9 @@ class PrayerAudioQuickCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
-                  color: isPlaying ? Colors.white : (isDark ? Colors.white : AppColors.lightText),
+                  color: isPlaying
+                      ? Colors.white
+                      : (isDark ? Colors.white : AppColors.lightText),
                 ),
               ),
             ],
