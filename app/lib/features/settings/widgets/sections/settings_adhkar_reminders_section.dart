@@ -415,12 +415,17 @@ class _ShortReminderPreview extends StatefulWidget {
 }
 
 class _ShortReminderPreviewState extends State<_ShortReminderPreview> with WidgetsBindingObserver {
-  Animation<double>? _routeAnimation;
-  void _routeStatus(AnimationStatus status) { if(status == AnimationStatus.forward) unawaited(_stop()); }
+  bool _routeCurrent = true;
+  bool _disposed = false;
   @override
   void initState() { super.initState(); WidgetsBinding.instance.addObserver(this); }
   @override
-  void didChangeDependencies() { super.didChangeDependencies(); _routeAnimation?.removeStatusListener(_routeStatus); _routeAnimation = ModalRoute.of(context)?.secondaryAnimation; _routeAnimation?.addStatusListener(_routeStatus); }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+    if (_routeCurrent && !isCurrent) unawaited(_stop());
+    _routeCurrent = isCurrent;
+  }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) { if(state != AppLifecycleState.resumed) unawaited(_stop()); }
   late final AudioPlayer _player = widget.player ?? AudioPlayer();
@@ -430,6 +435,7 @@ class _ShortReminderPreviewState extends State<_ShortReminderPreview> with Widge
   String? _error;
   Future<void>? _pendingStop;
   Future<void> _stop() {
+    if (_disposed) return Future<void>.value();
     final pending = _pendingStop;
     if (pending != null) return pending;
     final generation = ++_generation;
@@ -502,10 +508,11 @@ class _ShortReminderPreviewState extends State<_ShortReminderPreview> with Widge
 
   @override
   void dispose() {
+    _disposed = true;
     ++_generation;
     WidgetsBinding.instance.removeObserver(this);
-    _routeAnimation?.removeStatusListener(_routeStatus);
-    unawaited(_player.dispose());
+    unawaited(_player.stop().catchError((Object _) {}));
+    unawaited(_player.dispose().catchError((Object _) {}));
     super.dispose();
   }
 
