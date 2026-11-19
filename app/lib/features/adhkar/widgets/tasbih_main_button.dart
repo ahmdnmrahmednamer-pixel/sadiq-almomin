@@ -28,6 +28,10 @@ class TasbihMainButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final flexibleContent = MediaQuery.textScalerOf(context).scale(16) > 20 || buttonSize < 180;
+    final cycleLabel = target > 0
+        ? 'الدورة: ${currentInCycle == 0 && count > 0 ? target : currentInCycle} / $target'
+        : 'تسبيح مفتوح';
     return GestureDetector(
       key: const Key('tasbih_main_button'),
       onTap: onTap,
@@ -35,9 +39,12 @@ class TasbihMainButton extends StatelessWidget {
         scale: scaleAnimation,
         child: Container(
           width: buttonSize,
-          height: buttonSize,
+          height: flexibleContent ? null : buttonSize,
+          constraints: BoxConstraints(minHeight: buttonSize),
+          padding: flexibleContent ? const EdgeInsets.all(16) : EdgeInsets.zero,
           decoration: BoxDecoration(
-            shape: BoxShape.circle,
+            shape: flexibleContent ? BoxShape.rectangle : BoxShape.circle,
+            borderRadius: flexibleContent ? BorderRadius.circular(32) : null,
             gradient: RadialGradient(
               colors: isDark
                   ? [const Color(0xFF233D2D), AppColors.darkSurface]
@@ -61,7 +68,35 @@ class TasbihMainButton extends StatelessWidget {
               width: 3.5,
             ),
           ),
-          child: Stack(
+          child: flexibleContent
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('$count',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 56,
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 4),
+                    Text(cycleLabel,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.softGold,
+                            fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 8),
+                    const Text('المس للتسبيح',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    if (target > 0) ...[
+                      const SizedBox(height: 12),
+                      LinearProgressIndicator(
+                        value: (progress == 0.0 && count > 0 ? 1.0 : progress)
+                            .clamp(0.0, 1.0),
+                        color: AppColors.accentGold,
+                        backgroundColor: Colors.white12,
+                      ),
+                    ],
+                  ],
+                )
+              : Stack(
             alignment: Alignment.center,
             children: [
               // Circular Progress Indicator around the button

@@ -216,9 +216,24 @@ class _TasbihScreenState extends State<TasbihScreen>
                 target > 0 ? (currentInCycle / target) : 0.0;
             final cyclesCompleted = target > 0 ? (count ~/ target) : 0;
 
+            final title = context.tr('electronic_tasbih');
+            final titleStyle = Theme.of(context).appBarTheme.titleTextStyle ??
+                Theme.of(context).textTheme.titleLarge!;
+            final textScaler = MediaQuery.textScalerOf(context);
+            final width = MediaQuery.sizeOf(context).width;
+            final titlePainter = TextPainter(
+              text: TextSpan(text: title, style: titleStyle),
+              textDirection: SettingsService.instance.textDirection,
+              textScaler: textScaler,
+            )..layout();
+            final separateTitle = titlePainter.width > width - 280;
+            titlePainter.layout(maxWidth: (width - 32).clamp(1.0, double.infinity));
+            final titleLines = titlePainter.computeLineMetrics().length;
+            titlePainter.dispose();
             return Scaffold(
               appBar: AppBar(
-                title: Text(context.tr('electronic_tasbih')),
+                title: separateTitle ? null : Text(title,
+                    style: titleStyle, textScaler: textScaler),
                 actions: [
                   IconButton(
                     icon: Icon(
@@ -300,14 +315,28 @@ class _TasbihScreenState extends State<TasbihScreen>
                   builder: (context, constraints) {
                     final isVeryCompact = constraints.maxHeight < 600;
                     final isCompact = constraints.maxHeight < 680;
-                    final buttonSize = isVeryCompact
+                    final enlargedText = MediaQuery.textScalerOf(context).scale(16) > 20;
+                    final buttonSize = enlargedText
+                        ? (constraints.maxWidth - 32).clamp(130.0, 480.0)
+                        : isVeryCompact
                         ? 130.0
                         : (isCompact ? 165.0 : 220.0);
                     final ringSize =
                         buttonSize - (isVeryCompact ? 16.0 : 22.0);
 
-                    return Column(
+                    final needsScroll = isCompact ||
+                        MediaQuery.textScalerOf(context).scale(16) > 20;
+                    final content = Column(
+                      mainAxisSize: needsScroll ? MainAxisSize.min : MainAxisSize.max,
                       children: [
+                        if (separateTitle)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: Semantics(header: true, namesRoute: true,
+                              child: Text(title, style: titleStyle,
+                                textScaler: textScaler, textAlign: TextAlign.center,
+                                maxLines: titleLines)),
+                          ),
                         // 1. Famous Dhikr Dropdown Selector
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -568,7 +597,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                             ),
                           ),
 
-                        if (!isCompact)
+                        if (!needsScroll)
                           const Spacer()
                         else
                           const SizedBox(height: 6),
@@ -586,7 +615,7 @@ class _TasbihScreenState extends State<TasbihScreen>
                           ringSize: ringSize,
                         ),
 
-                        if (!isCompact)
+                        if (!needsScroll)
                           const Spacer()
                         else
                           const SizedBox(height: 6),
@@ -600,6 +629,13 @@ class _TasbihScreenState extends State<TasbihScreen>
                         ),
                       ],
                     );
+                    return needsScroll
+                        ? SingleChildScrollView(
+                            key: const ValueKey('tasbih_accessible_scroll'),
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: content,
+                          )
+                        : content;
                   },
                 ),
               ),

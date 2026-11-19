@@ -35,7 +35,21 @@ class TasbihStatsBar extends StatelessWidget {
           color: isDark ? Colors.white10 : Colors.black12,
         ),
       ),
-      child: Row(
+      child: MediaQuery.textScalerOf(context).scale(16) > 20
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildStatColumn(title: 'الدورات المكتملة',
+                    value: '$cyclesCompleted', icon: Icons.done_all, isDark: isDark),
+                const Divider(),
+                _buildStatColumn(title: 'مجموع اليوم',
+                    value: '$totalToday', icon: Icons.calendar_today, isDark: isDark),
+                IconButton(
+                  icon: const Icon(Icons.restart_alt, color: Colors.orange),
+                  tooltip: 'تصفير العداد', onPressed: onReset),
+              ],
+            )
+          : Row(
         children: [
           Expanded(
             child: _buildStatColumn(
@@ -83,8 +97,7 @@ class TasbihStatsBar extends StatelessWidget {
             Flexible(
               child: Text(
                 title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,
                   color: isDark ? Colors.white60 : AppColors.mutedText,
