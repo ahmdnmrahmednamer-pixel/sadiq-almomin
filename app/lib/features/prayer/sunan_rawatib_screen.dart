@@ -35,9 +35,11 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
           animation: SunanRawatibService.instance,
           builder: (context, _) {
             final s = SunanRawatibService.instance;
-            final rawatibRakahs = s.getCompletedRawatibRakahs(date: _selectedDate);
+            final rawatibRakahs =
+                s.getCompletedRawatibRakahs(date: _selectedDate);
             final totalRakahs = s.getTotalCompletedRakahs(date: _selectedDate);
-            final houseBuilt = s.isHouseInParadiseCompleted(date: _selectedDate);
+            final houseBuilt =
+                s.isHouseInParadiseCompleted(date: _selectedDate);
             final weeklyHouses = s.getWeeklyParadiseHousesCount();
 
             final filteredItems = SunanRawatibService.allSunan.where((item) {
@@ -52,20 +54,30 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                 // 1. Hero Card: House in Paradise Progress (12 Rak'ahs)
                 Semantics(
                   container: true,
-                  label: 'تقدم السنن الرواتب لليوم: $rawatibRakahs من 12 ركعة، إجمالي النوافل $totalRakahs ركعة',
+                  label:
+                      'تقدم السنن الرواتب لليوم: $rawatibRakahs من 12 ركعة، إجمالي النوافل $totalRakahs ركعة',
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: houseBuilt
-                            ? [const Color(0xFF0F5B45), const Color(0xFF1B4332), const Color(0xFFB88917)]
-                            : [const Color(0xFF0F2E22), const Color(0xFF1B4332)],
+                            ? [
+                                const Color(0xFF0F5B45),
+                                const Color(0xFF1B4332),
+                                const Color(0xFFB88917)
+                              ]
+                            : [
+                                const Color(0xFF0F2E22),
+                                const Color(0xFF1B4332)
+                              ],
                         begin: Alignment.topRight,
                         end: Alignment.bottomLeft,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: houseBuilt ? AppColors.accentGold : AppColors.accentGold.withValues(alpha: 0.4),
+                        color: houseBuilt
+                            ? AppColors.accentGold
+                            : AppColors.accentGold.withValues(alpha: 0.4),
                         width: houseBuilt ? 2.0 : 1.0,
                       ),
                     ),
@@ -76,11 +88,14 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppColors.accentGold.withValues(alpha: 0.22),
+                                color: AppColors.accentGold
+                                    .withValues(alpha: 0.22),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                houseBuilt ? Icons.verified_rounded : Icons.mosque_rounded,
+                                houseBuilt
+                                    ? Icons.verified_rounded
+                                    : Icons.mosque_rounded,
                                 color: AppColors.accentGold,
                                 size: 30,
                               ),
@@ -103,7 +118,10 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                                   const SizedBox(height: 4),
                                   const Text(
                                     'قال ﷺ: «ما من عبد مسلم يصلي لله كل يوم ثنتي عشرة ركعة تطوعاً غير الفريضة إلا بنى الله له بيتاً في الجنة» [رواه مسلم]',
-                                    style: TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.4),
+                                    style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11.5,
+                                        height: 1.4),
                                   ),
                                 ],
                               ),
@@ -117,20 +135,26 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                             value: (rawatibRakahs / 12.0).clamp(0.0, 1.0),
                             minHeight: 10,
                             backgroundColor: Colors.white24,
-                            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.accentGold),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.accentGold),
                           ),
                         ),
                         const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 6,
                           children: [
                             Text(
                               'الرواتب المؤكدة: $rawatibRakahs / ١٢ ركعة',
-                              style: const TextStyle(color: AppColors.softGold, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(
+                                  color: AppColors.softGold,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
                             ),
                             Text(
                               'إجمالي ركعات اليوم: $totalRakahs ركعة · أسبوعك: $weeklyHouses/٧ أيام',
-                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 12),
                             ),
                           ],
                         ),
@@ -154,7 +178,8 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                     ),
                     AppDropdownOption(
                       value: 'rawatib',
-                      label: 'السنن الرواتب المؤكدة فقط (١٢ ركعة — بيت في الجنة)',
+                      label:
+                          'السنن الرواتب المؤكدة فقط (١٢ ركعة — بيت في الجنة)',
                       icon: Icons.stars_rounded,
                     ),
                     AppDropdownOption(
@@ -172,38 +197,49 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                   final done = s.isCompleted(item.id, date: _selectedDate);
                   return Semantics(
                     container: true,
-                    label: '${item.titleAr}، عدد الركعات ${item.rakahs}، الحالة: ${done ? "تمت صلاتها" : "لم تسجل بعد"}',
+                    label:
+                        '${item.titleAr}، عدد الركعات ${item.rakahs}، الحالة: ${done ? "تمت صلاتها" : "لم تسجل بعد"}',
                     child: Card(
                       margin: const EdgeInsets.only(bottom: 10),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                          color: done ? AppColors.accentGold : Colors.grey.withValues(alpha: 0.2),
+                          color: done
+                              ? AppColors.accentGold
+                              : Colors.grey.withValues(alpha: 0.2),
                           width: done ? 1.6 : 1.0,
                         ),
                       ),
                       color: done
-                          ? (isDark ? const Color(0xFF172A21) : const Color(0xFFF2F9F5))
+                          ? (isDark
+                              ? const Color(0xFF172A21)
+                              : const Color(0xFFF2F9F5))
                           : null,
                       child: CheckboxListTile(
                         value: done,
                         activeColor: AppColors.primaryGreen,
                         checkColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 6),
                         title: Row(
                           children: [
                             Expanded(
                               child: Text(
                                 item.titleAr,
-                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14.5),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: item.isRawatib12
-                                    ? AppColors.accentGold.withValues(alpha: 0.22)
-                                    : AppColors.primaryGreen.withValues(alpha: 0.12),
+                                    ? AppColors.accentGold
+                                        .withValues(alpha: 0.22)
+                                    : AppColors.primaryGreen
+                                        .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -223,25 +259,31 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '⏰ الوقت: ${item.timingAr}',
-                              style: const TextStyle(fontSize: 12, color: AppColors.secondaryGreen, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.secondaryGreen,
+                                  fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               item.hadithVirtue,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isDark ? Colors.white70 : AppColors.mutedText,
+                                color: isDark
+                                    ? Colors.white70
+                                    : AppColors.mutedText,
                                 height: 1.45,
                               ),
                             ),
                           ],
                         ),
                         onChanged: (_) async {
-                          final result =
-                              await s.toggleSunnah(item.id, date: _selectedDate);
+                          final result = await s.toggleSunnah(item.id,
+                              date: _selectedDate);
                           if (!mounted) return;
                           if (result.status ==
-                              SunanRawatibOperationStatus.writeRefusedUnreadable) {
+                              SunanRawatibOperationStatus
+                                  .writeRefusedUnreadable) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
