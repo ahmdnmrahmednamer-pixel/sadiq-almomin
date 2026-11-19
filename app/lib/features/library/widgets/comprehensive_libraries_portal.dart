@@ -6,7 +6,6 @@ import '../../../core/ui/adaptive_screen_layouts.dart';
 import '../../../core/ui/app_dropdown_field.dart';
 import '../../adhkar/spiritual_mood_remedy_screen.dart';
 import '../../egypt/egyptian_heritage_screen.dart';
-import '../../hadith/hadith_library_screen.dart';
 import '../../mushaf/comparative_tafsir_screen.dart';
 import '../../mushaf/gharib_quran_screen.dart';
 import '../../mushaf/tadabbur_journal_screen.dart';
@@ -23,9 +22,7 @@ import '../screens/asma_allah_shamail_screen.dart';
 import '../screens/fiqh_library_screen.dart';
 import '../screens/hajj_umrah_companion_screen.dart';
 import '../screens/islamic_history_screen.dart';
-import '../screens/islamic_mutoon_screen.dart';
 import '../screens/quran_sciences_screen.dart';
-import '../screens/riyad_alsalihin_screen.dart';
 import '../screens/unified_library_search_screen.dart';
 
 /// بوابة «رياض العلم والهدي النبوي» — مقسمة بتناغم إلى ٥ رياض علمية وروحانية بجميع اللغات الـ ٦
@@ -89,28 +86,6 @@ class _ComprehensiveLibrariesPortalState
       ),
 
       // ================= الروضة ٢: مشكاة النبوة والسيرة والقصص =================
-      StructuredScreenItem(
-        id: 'lib_riyad_salihin',
-        title: context.tr('riyad_salihin'),
-        subtitle:
-            'جميع كتب وأبواب رياض الصالحين مع الشرح والفوائد والأدب المفرد',
-        badgeText: '١٩ كتاباً',
-        category: gProphethood,
-        icon: Icons.collections_bookmark_rounded,
-        accentColor: const Color(0xFF0F5B45),
-        onTap: () => push(const RiyadAlSalihinScreen(), '/riyad-alsalihin'),
-      ),
-      StructuredScreenItem(
-        id: 'lib_hadith',
-        title: context.tr('hadith_library'),
-        subtitle:
-            'صحيح البخاري، صحيح مسلم، رياض الصالحين، والأربعون النووية',
-        badgeText: 'كتب السنة',
-        category: gProphethood,
-        icon: Icons.auto_stories_rounded,
-        accentColor: AppColors.primaryGreen,
-        onTap: () => push(const HadithLibraryScreen(), '/hadith'),
-      ),
       StructuredScreenItem(
         id: 'lib_asma_shamail',
         title: 'أسماء الله الحسنى والشمائل المحمدية',
@@ -176,17 +151,6 @@ class _ComprehensiveLibrariesPortalState
         icon: Icons.menu_book_rounded,
         accentColor: const Color(0xFF1F6E58),
         onTap: () => push(const QuranSciencesScreen(), '/quran-sciences'),
-      ),
-      StructuredScreenItem(
-        id: 'lib_islamic_mutoon',
-        title: context.tr('islamic_mutoon'),
-        subtitle:
-            'تحفة الأطفال، المقدمة الجزرية، القواعد الفقهية الكبرى، والعقيدة الطحاوية',
-        badgeText: 'متون الحفظ',
-        category: gQuran,
-        icon: Icons.school_rounded,
-        accentColor: const Color(0xFF8E6C18),
-        onTap: () => push(const IslamicMutoonScreen(), '/islamic-mutoon'),
       ),
       StructuredScreenItem(
         id: 'lib_tajweed_topics',
