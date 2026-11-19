@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/islamic_libraries_models.dart';
 import '../text/arabic_normalizer.dart';
-import '../theme/app_theme.dart';
-import 'hadith_service.dart';
 import 'stories_service.dart';
 import 'tajweed_service.dart';
 import 'quran_topic_service.dart';
@@ -11,9 +9,7 @@ import 'quran_sciences_service.dart';
 import 'asma_allah_shamail_service.dart';
 import 'islamic_history_service.dart';
 import 'egyptian_heritage_service.dart';
-import 'riyad_alsalihin_service.dart';
 import 'gharib_quran_service.dart';
-import 'islamic_mutoon_service.dart';
 import 'spiritual_mood_remedy_service.dart';
 
 /// محرك البحث الموسوعي الموحد عبر جميع المكتبات الإسلامية والعلمية والصوتية في التطبيق (١٢ موسوعة)
@@ -39,24 +35,6 @@ class UnifiedLibrarySearchService {
     final normQ = ArabicNormalizer.normalize(q, loose: true);
 
     final List<UnifiedLibrarySearchResult> results = [];
-
-    // 1. موسوعة الحديث النبوي
-    if (selectedLibrary == 'الكل' || selectedLibrary == 'الحديث النبوي') {
-      for (final h in HadithService.instance.searchHadiths(q)) {
-        results.add(
-          UnifiedLibrarySearchResult(
-            id: 'hadith_${h.id}',
-            libraryName: 'الحديث النبوي',
-            category: h.narrator,
-            title: h.title,
-            snippet: h.matn,
-            sourceReference: h.grade,
-            icon: Icons.auto_stories_rounded,
-            accentColor: AppColors.primaryGreen,
-          ),
-        );
-      }
-    }
 
     // 2. موسوعة الفقه الميسر
     if (selectedLibrary == 'الكل' || selectedLibrary == 'الفقه الميسر') {
@@ -227,29 +205,6 @@ class UnifiedLibrarySearchService {
       }
     }
 
-    // 10. رياض الصالحين والأدب المفرد
-    if (selectedLibrary == 'الكل' || selectedLibrary == 'رياض الصالحين') {
-      for (final entry in RiyadAlSalihinService.allEntries) {
-        if (_matchesNormalized(entry.chapterTitle, q, normQ) ||
-            _matchesNormalized(entry.arabicMatn, q, normQ) ||
-            _matchesNormalized(entry.sharhAndBenefits, q, normQ) ||
-            _matchesNormalized(entry.bookTitle, q, normQ)) {
-          results.add(
-            UnifiedLibrarySearchResult(
-              id: 'riyad_${entry.id}',
-              libraryName: 'رياض الصالحين',
-              category: entry.bookTitle,
-              title: entry.chapterTitle,
-              snippet: '${entry.arabicMatn}\n\nالفوائد: ${entry.sharhAndBenefits}',
-              sourceReference: '${entry.narrator} — ${entry.sourceAndGrade}',
-              icon: Icons.collections_bookmark_rounded,
-              accentColor: const Color(0xFF1B5E20),
-            ),
-          );
-        }
-      }
-    }
-
     // 11. غريب القرآن ومفرداته
     if (selectedLibrary == 'الكل' || selectedLibrary == 'غريب القرآن') {
       for (final w in GharibQuranService.instance.searchWords(q)) {
@@ -265,29 +220,6 @@ class UnifiedLibrarySearchService {
             accentColor: const Color(0xFF5D4037),
           ),
         );
-      }
-    }
-
-    // 12. المتون العلمية الجامعة
-    if (selectedLibrary == 'الكل' || selectedLibrary == 'المتون العلمية') {
-      for (final m in IslamicMutoonService.allSections) {
-        if (_matchesNormalized(m.chapterTitle, q, normQ) ||
-            _matchesNormalized(m.vocalizedText, q, normQ) ||
-            _matchesNormalized(m.sharhAndExplanation, q, normQ) ||
-            _matchesNormalized(m.matnBookTitle, q, normQ)) {
-          results.add(
-            UnifiedLibrarySearchResult(
-              id: 'matn_${m.id}',
-              libraryName: 'المتون العلمية',
-              category: m.matnBookTitle,
-              title: m.chapterTitle,
-              snippet: '${m.vocalizedText}\n\nالشرح: ${m.sharhAndExplanation}',
-              sourceReference: m.keyTakeaway,
-              icon: Icons.school_rounded,
-              accentColor: const Color(0xFF4A148C),
-            ),
-          );
-        }
       }
     }
 
@@ -322,12 +254,9 @@ class UnifiedLibrarySearchService {
 
   static const List<String> libraryFilters = [
     'الكل',
-    'الحديث النبوي',
-    'رياض الصالحين',
     'الفقه الميسر',
     'علوم القرآن',
     'غريب القرآن',
-    'المتون العلمية',
     'أسماء الله والشمائل',
     'التاريخ والسيرة',
     'التراث المصري',
