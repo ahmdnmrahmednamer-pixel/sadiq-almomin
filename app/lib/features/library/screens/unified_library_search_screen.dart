@@ -177,7 +177,7 @@ class _UnifiedLibrarySearchScreenState extends State<UnifiedLibrarySearchScreen>
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
                 hintText:
-                    'ابحث في مجالس العلماء، رياض الصالحين، الفقه، غريب القرآن، المتون، صيدلية القلوب...',
+                    'بحث في المحتوى المحلي',
                 prefixIcon: const Icon(Icons.manage_search_rounded),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
