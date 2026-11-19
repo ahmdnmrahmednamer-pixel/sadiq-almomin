@@ -83,9 +83,16 @@ class BudurVerseLinker {
     final all = quoted
         .map((qs) => qs.map((q) => occurrences(q, ayahs)).toList())
         .toList();
+    final authorBoth = texts
+        .map(
+            (text) => RegExp(r'^\s*"[^"\n]+"\s*معا(?:[.،\s]|$)').hasMatch(text))
+        .toList();
     final anchor = List<BudurOccurrence?>.filled(texts.length, null);
     for (var i = 0; i < texts.length; i++) {
-      if (!blocks[i] && all[i].length == 1 && all[i].single.length == 1) {
+      if (!blocks[i] &&
+          !authorBoth[i] &&
+          all[i].length == 1 &&
+          all[i].single.length == 1) {
         anchor[i] = all[i].single.single;
       }
     }
@@ -95,6 +102,17 @@ class BudurVerseLinker {
       final resolved = <int>{};
       var complete = true;
       for (final candidates in all[i]) {
+        // The author's immediate "both" label must agree with exactly two
+        // complete occurrences. A single normalized match is not enough and
+        // must not become an independent anchor for another passage.
+        if (authorBoth[i]) {
+          if (all[i].length != 1 || candidates.length != 2) {
+            complete = false;
+            break;
+          }
+          resolved.addAll(candidates.map((c) => c.ayah));
+          continue;
+        }
         if (candidates.length == 1) {
           resolved.add(candidates.single.ayah);
           continue;
