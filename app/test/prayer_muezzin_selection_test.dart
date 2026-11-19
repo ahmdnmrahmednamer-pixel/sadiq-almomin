@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
-import 'package:almomin/core/ui/app_dropdown_field.dart';
 import 'package:almomin/features/settings/widgets/settings_adhan_voice_modal.dart';
 import 'package:almomin/features/prayer/widgets/prayer_muezzin_selector_card.dart';
 
@@ -35,7 +34,8 @@ void main() {
       expect(notif.getPrayerVoice('العشاء'), equals('adhan_aqsa'));
     });
 
-    test('setPrayerVoice updates and persists voice for specific prayer', () async {
+    test('setPrayerVoice updates and persists voice for specific prayer',
+        () async {
       final notif = PrayerNotificationService.instance;
 
       // Assign Sheikh Hussary for Asr
@@ -43,13 +43,15 @@ void main() {
       expect(notif.getPrayerVoice('العصر'), equals('adhan_hussary'));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('notif_prayer_voice_العصر'), equals('adhan_hussary'));
+      expect(
+          prefs.getString('notif_prayer_voice_العصر'), equals('adhan_hussary'));
 
       // Dhuhr remains untouched
       expect(notif.getPrayerVoice('الظهر'), equals('adhan_makkah'));
     });
 
-    test('setAllPrayersVoice updates all 5 prayers to chosen Muezzin', () async {
+    test('setAllPrayersVoice updates all 5 prayers to chosen Muezzin',
+        () async {
       final notif = PrayerNotificationService.instance;
 
       await notif.setAllPrayersVoice('adhan_afasy');
@@ -61,7 +63,9 @@ void main() {
       expect(notif.getPrayerVoice('العشاء'), equals('adhan_afasy'));
     });
 
-    testWidgets('Renders Per-Prayer Muezzin Manager Sheet with 5 prayers and preview buttons', (tester) async {
+    testWidgets(
+        'Renders Per-Prayer Muezzin Manager Sheet with 5 prayers and preview buttons',
+        (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -94,12 +98,16 @@ void main() {
       expect(find.text('صلاة المغرب'), findsOneWidget);
       expect(find.text('صلاة العشاء'), findsOneWidget);
 
-      // Verify Preview (استماع للمؤذن) and Dropdown buttons exist
-      expect(find.text('استماع للمؤذن 🎧'), findsWidgets);
-      expect(find.text('تغيير المؤذن ▾'), findsWidgets);
+      await tester.tap(find.text('صلاة الفجر'));
+      await tester.pumpAndSettle();
+      expect(find.text('مؤذن الفجر'), findsOneWidget);
+      expect(find.text('استماع'), findsWidgets);
+      expect(find.text('تعيين'), findsWidgets);
     });
 
-    testWidgets('PrayerMuezzinSelectorCard renders 5 prayers with dropdown buttons and preview on screen', (tester) async {
+    testWidgets(
+        'PrayerMuezzinSelectorCard renders 5 prayers with dropdown buttons and preview on screen',
+        (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -127,9 +135,11 @@ void main() {
       expect(find.text('صلاة المغرب'), findsOneWidget);
       expect(find.text('صلاة العشاء'), findsOneWidget);
 
-      // Verify preview and dropdown fields
-      expect(find.text('استماع'), findsNWidgets(5));
-      expect(find.byType(AppAudioDropdownField<String>), findsNWidgets(5));
+      await tester.tap(find.text('صلاة العصر'));
+      await tester.pumpAndSettle();
+      expect(find.text('مؤذن العصر'), findsOneWidget);
+      expect(find.text('استماع'), findsWidgets);
+      expect(find.text('تعيين'), findsWidgets);
     });
   });
 }
