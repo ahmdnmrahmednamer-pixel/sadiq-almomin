@@ -107,8 +107,8 @@ void main() {
         find.byWidgetPredicate((widget) =>
             widget is Semantics &&
             widget.properties.label == 'استمع إلى أذكار المساء'),
-        findsOneWidget);
-    expect(find.byTooltip('المكتبة الصوتية للأذكار والأذان'), findsOneWidget);
+        findsNothing);
+    expect(find.byTooltip('المكتبة الصوتية للأذكار والأذان'), findsNothing);
     expect(find.byTooltip('السبحة الإلكترونية'), findsOneWidget);
     await capture(tester, 'evening-320-2');
     expect(tester.takeException(), isNull);
@@ -184,30 +184,16 @@ void main() {
     expect(item.text, original);
     expect(tester.takeException(), isNull);
   });
-  testWidgets(
-      'audio semantic activation preserves playback and category reset remains available',
+  testWidgets('written reader has no audio player or mixed sheet entry',
       (tester) async {
-    final semantics = tester.ensureSemantics();
     await mount(tester, width: 320, scale: 2);
-    await tester.ensureVisible(find.byWidgetPredicate((widget) =>
-        widget is Semantics &&
-        widget.properties.label == 'استمع إلى أذكار الصباح'));
-    await tester.pumpAndSettle();
-    final node = tester.getSemantics(find.byWidgetPredicate((widget) =>
-        widget is Semantics &&
-        widget.properties.label == 'استمع إلى أذكار الصباح'));
-    tester.binding.pipelineOwner.semanticsOwner!
-        .performAction(node.id, ui.SemanticsAction.tap);
-    await tester.pumpAndSettle();
-    expect(IslamicAudioService.instance.currentTrack?.id, 'adhkar_morning');
-    expect(IslamicAudioService.instance.isPlaying, isTrue);
-    await IslamicAudioService.instance.stop();
-    final list = Scrollable.of(tester.element(find.byWidgetPredicate((widget) =>
-        widget is Semantics &&
-        widget.properties.label == 'إيقاف مؤقت: أذكار الصباح')));
-    list.position.jumpTo(0);
-    await tester.pumpAndSettle();
+    expect(find.byTooltip('المكتبة الصوتية للأذكار والأذان'), findsNothing);
+    expect(
+        find.byWidgetPredicate((widget) =>
+            widget is Semantics &&
+            (widget.properties.label?.startsWith('استمع إلى') ?? false)),
+        findsNothing);
     expect(find.byTooltip('إعادة ضبط كل أذكار هذه القائمة'), findsWidgets);
-    semantics.dispose();
+    expect(AdhkarService.instance.categories.length, 10);
   });
 }
