@@ -80,6 +80,21 @@ void main() {
         for (final ref in BudurReferenceResolver.references(n, p.text)) {
           final target = BudurReferenceResolver.resolve(source, ref,
               surahs.singleWhere((s) => s.id == ref.surah), ayahs(ref.surah));
+          expect(p.ayahs, isNotEmpty,
+              reason: 'reviewed reference must appear under its own verse');
+          if (n == 3) {
+            expect(p.ayahs, [49]);
+            final changed =
+                source.replaceFirst(p.text, '${p.text} EXTRA_UNREVIEWED');
+            final changedPassage = BudurSource.passages(
+                    changed, surahs.singleWhere((s) => s.id == 3), ayahs(3))
+                .singleWhere(
+                    (candidate) => candidate.text.contains('EXTRA_UNREVIEWED'));
+            expect(changedPassage.ayahs, isEmpty,
+                reason:
+                    'reviewed override must require original paragraph identity');
+          }
+          if (n == 5) expect(p.ayahs, ref.quote == 'فمن اضطر' ? [3] : [110]);
           expect(target, isNotNull, reason: '$n ${ref.quote}');
           expect(target!.text, isNotEmpty);
           expect(target.firstPage, greaterThan(0));
