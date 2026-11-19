@@ -194,6 +194,8 @@ class IslamicAudioService extends ChangeNotifier {
   Duration _bufferedPosition = Duration.zero;
   double _playbackSpeed = 1.0;
   bool _isInitialized = false;
+  bool _isOnlinePreview = false;
+  int _onlinePreviewSession = 0;
 
   // Queue & Playlist Management
   List<IslamicAudioTrack> _queue = [];
@@ -1528,6 +1530,13 @@ class IslamicAudioService extends ChangeNotifier {
         return;
       }
       if (state.processingState == ProcessingState.completed) {
+        if (_isOnlinePreview) {
+          _isOnlinePreview = false;
+          _position = Duration.zero;
+          _isPlaying = false;
+          notifyListeners();
+          return;
+        }
         if (_stopAtTrackEnd) {
           cancelSleepTimer();
           stop();
@@ -1845,7 +1854,51 @@ class IslamicAudioService extends ChangeNotifier {
     await playTrack(track);
   }
 
+  /// Preview must stream, even when a bundled or downloaded copy exists.
+  /// This never falls back to a local file or silently downloads a preview.
+  Future<bool> playOnlinePreview(IslamicAudioTrack track) async {
+    if (track.type != IslamicAudioType.adhan && track.type != IslamicAudioType.iqamah) return false;
+    if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+    if (_legacyStopFailed) return false;
+    final url = track.remoteUrl;
+    if (url == null || url.isEmpty) return false;
+    final session = ++_onlinePreviewSession;
+    _isOnlinePreview = true;
+    _currentTrack = track;
+    _isBuffering = true;
+    _isPlaying = false;
+    notifyListeners();
+    try {
+      await init();
+      final ok = await FastAudioService.instance.playResilient(
+        url,
+        player: _player,
+        primaryUrl: url,
+        fallbackUrls: track.fallbackUrls,
+        isLiveStream: true, // bypass both disk cache and background prefetch
+        onStopCallback: stop,
+      );
+      if (session != _onlinePreviewSession) return false;
+      _isBuffering = false;
+      _isPlaying = ok;
+      if (!ok) { _currentTrack = null; _isOnlinePreview = false; }
+      notifyListeners();
+      return ok;
+    } catch (_) {
+      if (session == _onlinePreviewSession) {
+        _isBuffering = false;
+        _isPlaying = false;
+        _currentTrack = null;
+        _isOnlinePreview = false;
+        notifyListeners();
+      }
+      return false;
+    }
+  }
+
   Future<void> playTrack(IslamicAudioTrack track) async {
+    _isOnlinePreview = false;
+    _onlinePreviewSession++;
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (_legacyStopFailed) return;
     if (isHeldLegacyAdhkar(track)) {
@@ -1969,6 +2022,8 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> stop() async {
+    _onlinePreviewSession++;
+    _isOnlinePreview = false;
     if (disableNativePlayerForTesting) {
       _isPlaying = false;
       _currentTrack = null;
