@@ -54,19 +54,32 @@ class MemorizationPlaybackBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Status and Reciter Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Status and Reciter Header (responsive wrap, full text, no ellipsis/clamp/shrink)
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              runAlignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.record_voice_over, size: 14, color: AppColors.mutedText),
-                    const SizedBox(width: 4),
-                    Text(
-                      'القارئ: ${reciter.nameAr}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
-                    ),
-                  ],
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      const WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: ExcludeSemantics(
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 4.0),
+                            child: Icon(Icons.record_voice_over, size: 14, color: AppColors.mutedText),
+                          ),
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'القارئ: ${reciter.nameAr}',
+                        style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
+                      ),
+                    ],
+                  ),
                 ),
                 Text(
                   isPlaying
@@ -78,25 +91,28 @@ class MemorizationPlaybackBar extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            // Playback Buttons Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            // Playback Buttons Row (wrapped controls when needed, every target >= 48px, no FittedBox)
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 // Stop Button
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: const Icon(Icons.stop_circle_outlined, size: 28),
                   tooltip: 'إيقاف كامل',
                   onPressed: onStop,
                 ),
-                const SizedBox(width: 12),
 
                 // Previous Ayah
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: const Icon(Icons.skip_previous_rounded, size: 30),
                   tooltip: 'الآية السابقة',
                   onPressed: onPrev,
                 ),
-                const SizedBox(width: 12),
 
                 // Main Play / Pause Button
                 Container(
@@ -105,6 +121,7 @@ class MemorizationPlaybackBar extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
+                    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                     iconSize: 34,
                     icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
                     color: Colors.white,
@@ -112,18 +129,18 @@ class MemorizationPlaybackBar extends StatelessWidget {
                     onPressed: onPlayPause,
                   ),
                 ),
-                const SizedBox(width: 12),
 
                 // Next Ayah
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: const Icon(Icons.skip_next_rounded, size: 30),
                   tooltip: 'الآية التالية',
                   onPressed: onNext,
                 ),
-                const SizedBox(width: 12),
 
                 // Quick Reciter change
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                   icon: const Icon(Icons.tune, size: 24),
                   tooltip: 'اختيار قارئ آخر',
                   onPressed: onSelectReciter,

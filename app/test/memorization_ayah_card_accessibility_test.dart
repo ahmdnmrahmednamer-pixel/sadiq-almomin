@@ -86,17 +86,6 @@ SemanticsNode _findTappableNode(WidgetTester tester, String labelSubstring) {
   return found!;
 }
 
-bool _isVerifiedPlaybackBarOverflow(FlutterErrorDetails details) {
-  final diag = details.toDiagnosticsNode().toStringDeep();
-  final stackStr = details.stack?.toString() ?? '';
-  final full = '${details.exceptionAsString()}\n$diag\n$stackStr';
-
-  final isRenderFlexOverflow = full.contains('A RenderFlex overflowed');
-  final isPlaybackBarSource = full.contains('memorization_playback_bar.dart') ||
-                              full.contains('MemorizationPlaybackBar');
-  return isRenderFlexOverflow && isPlaybackBarSource;
-}
-
 Widget _buildCardHost({
   required Ayah ayah,
   required MemorizationHideMode hideMode,
@@ -520,17 +509,12 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('8. Real Screen Verse Flow & Recording of Separate PlaybackBar Overflow', (tester) async {
-      final List<FlutterErrorDetails> playbackBarOverflows = [];
-      final List<FlutterErrorDetails> unexpectedErrors = [];
+    testWidgets('8. Real Screen Verse Flow & Zero RenderFlex Overflows Across Entire Screen', (tester) async {
+      final List<FlutterErrorDetails> capturedErrors = [];
       final oldHandler = FlutterError.onError;
       FlutterError.onError = (details) {
-        if (_isVerifiedPlaybackBarOverflow(details)) {
-          playbackBarOverflows.add(details);
-        } else {
-          unexpectedErrors.add(details);
-          oldHandler?.call(details);
-        }
+        capturedErrors.add(details);
+        oldHandler?.call(details);
       };
 
       try {
@@ -548,14 +532,8 @@ void main() {
 
         expect(find.text('••••••'), findsWidgets);
 
-        // Verification:
-        // 1. PlaybackBar overflow is verified from source (count > 0), explicitly recorded
-        expect(playbackBarOverflows, isNotEmpty, reason: 'Playback bar overflow must be captured from verified source');
-        // ignore: avoid_print
-        print('EXPLICIT RECORD: MemorizationPlaybackBar verified baseline overflow count: ${playbackBarOverflows.length}');
-
-        // 2. All other errors (including any RenderFlex in MemorizationAyahCard) MUST BE ZERO
-        expect(unexpectedErrors, isEmpty, reason: 'Zero non-playback-bar errors or card overflows allowed');
+        // Verification: Zero errors allowed across entire screen (including responsive playback bar and cards)
+        expect(capturedErrors, isEmpty, reason: 'Zero RenderFlex errors or card/playback-bar overflows allowed');
       } finally {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
@@ -567,12 +545,8 @@ void main() {
       final List<FlutterErrorDetails> unexpectedErrors = [];
       final oldHandler = FlutterError.onError;
       FlutterError.onError = (details) {
-        if (_isVerifiedPlaybackBarOverflow(details)) {
-          // Allow ONLY verified playback source overflow
-        } else {
-          unexpectedErrors.add(details);
-          oldHandler?.call(details);
-        }
+        unexpectedErrors.add(details);
+        oldHandler?.call(details);
       };
 
       final scenarios = [
