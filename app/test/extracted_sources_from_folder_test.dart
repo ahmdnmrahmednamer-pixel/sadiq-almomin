@@ -73,7 +73,7 @@ void main() {
       expect(audio.nameAr, contains('المختصر الصوتي'));
     });
 
-    testWidgets('Sources screen separates connected sources from unlinked grammar', (tester) async {
+    testWidgets('Sources screen attributes connected grammar and keeps source limitations', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -84,8 +84,11 @@ void main() {
       expect(find.text('البدور الزاهرة، عبد الفتاح القاضي'), findsOneWidget);
       expect(find.text('الميسر، الجلالين، القرطبي، البغوي'), findsOneWidget);
       expect(find.text('لباب النقول، جلال الدين السيوطي'), findsOneWidget);
-      expect(find.text('المصدر لم يُعتمد بعد'), findsOneWidget);
-      expect(find.textContaining('ولم تُربط بالآيات بعد'), findsOneWidget);
+      expect(find.text('الجدول في إعراب القرآن الكريم، محمود صافي'), findsOneWidget);
+      expect(find.text('https://api.quranpedia.net/v1/book/1772'), findsOneWidget);
+      expect(find.textContaining('نقص فاطر واختلاف تفريغ غافر'), findsOneWidget);
+      expect(find.textContaining('بقية الاختيارات لم تُربط بعد'), findsOneWidget);
+      expect(find.textContaining('المواضع غير المحسومة لا تُنسب تلقائيًا'), findsOneWidget);
       expect(find.text('المختصر في تفسير القرآن الكريم'), findsOneWidget);
       expect(find.text('فتح القراءات'), findsOneWidget);
       expect(find.text('فتح الإعراب'), findsOneWidget);
