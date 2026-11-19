@@ -1,4 +1,6 @@
 import 'quran_repository.dart';
+import 'lubab_source.dart';
+import 'package:flutter/foundation.dart';
 
 class WordMeaning {
   final String word;
@@ -21,6 +23,7 @@ class AsbabNuzul {
   final String narration;
   final String source;
   final bool hasSpecificIncident;
+  final bool hasSourceText;
 
   const AsbabNuzul({
     required this.surahId,
@@ -29,6 +32,7 @@ class AsbabNuzul {
     required this.narration,
     required this.source,
     this.hasSpecificIncident = true,
+    this.hasSourceText = false,
   });
 }
 
@@ -90,7 +94,7 @@ class QuranLinguisticsResult {
       buffer.writeln();
     }
 
-    buffer.writeln('📜 سبب النزول (${asbabNuzul.source}):');
+    buffer.writeln('نص المصدر (${asbabNuzul.source}):');
     buffer.writeln(asbabNuzul.narration);
     buffer.writeln();
 
@@ -100,7 +104,7 @@ class QuranLinguisticsResult {
       buffer.writeln('\n✨ البلاغة والبيان القرآني:');
       buffer.writeln(grammar.rhetoricSummary);
     }
-    buffer.writeln('\n— تطبيق صديق المؤمن (بدون إنترنت وبدون إعلانات)');
+    buffer.writeln('\nتطبيق صديق المؤمن');
 
     return buffer.toString();
   }
@@ -108,6 +112,27 @@ class QuranLinguisticsResult {
 
 /// No generated religious explanations. Sources are connected only after review.
 class QuranLinguisticsService {
+  static LubabSource _source=LubabSource();
+  @visibleForTesting static void setSourceForTesting(LubabSource? source){_source=source??LubabSource();}
+  static Future<AsbabNuzul> _asbab(int surah,int ayah)async{
+    try{
+      final entries=await _source.fetch(surah,ayah);
+      if(entries.isNotEmpty){
+        final pages=entries.expand((e)=>e.pages).toSet().toList();
+        return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'نص لباب النقول',
+          narration:entries.map((e)=>e.text).join('\n\n'),
+          source:'لباب النقول، السيوطي. ص ${pages.join("، ")}. الموسوعة القرآنية\n${LubabSource.sourceUrl}\nمقطع يبدأ بلفظ الآية وقد يشمل سياق ما بعدها. ليس حكمًا على صحة الرواية أو إثباتًا لسبب خاص.',
+          hasSpecificIncident:false,hasSourceText:true);
+      }
+      return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'لباب النقول',
+        narration:'لم يُثبت ربط هذا الموضع في الفهرس بعد. هذا لا يعني عدم وجود سبب نزول لهذه الآية.',
+        source:'لباب النقول، السيوطي',hasSpecificIncident:false);
+    }catch(_){
+      return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'لباب النقول',
+        narration:'تعذر تحميل نص المصدر أو تغيّرت نسخته. هذا لا يعني عدم وجود سبب نزول لهذه الآية.',
+        source:'لباب النقول، السيوطي',hasSpecificIncident:false);
+    }
+  }
   static final Map<String, String> _ghareebDictionary = {
     'الصمد': 'السيد الذي يُصمد إليه في الحوائج، الكامل في سؤدده الذي تصمد إليه الخلائق في حوائجها، الغني عن كل أحد.',
     'أحد': 'المتفرد بالوحدانية في ذاته وأسمائه وصفاته، لا شبيه له ولا نظير.',
@@ -166,9 +191,7 @@ class QuranLinguisticsService {
     return QuranLinguisticsResult(
       surahId: surahId, ayahNumber: ayahNumber,
       ayahText: ayah?.cleanTextUthmani ?? '', wordMeanings: _extractWordMeanings(ayah?.cleanTextUthmani ?? ''),
-      asbabNuzul: AsbabNuzul(surahId:surahId, ayahNumber:ayahNumber,
-        title:'أسباب النزول', narration:'لم يُربط مصدر أسباب النزول بعد. هذا لا يعني عدم وجود سبب نزول لهذه الآية.',
-        source:'لم يُحدد المصدر بعد', hasSpecificIncident:false),
+      asbabNuzul: await _asbab(surahId,ayahNumber),
       grammar: AyahGrammar(surahId:surahId, ayahNumber:ayahNumber,
         summary:'لم يُربط مصدر الإعراب بعد.'),
     );
