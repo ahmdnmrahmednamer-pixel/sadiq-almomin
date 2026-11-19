@@ -164,7 +164,6 @@ class HomeShortcutsList extends StatelessWidget {
       key: const Key('home_islamic_radio_banner_semantics'),
       button: true,
       label: 'إذاعات القرآن الكريم، بث مباشر وتلاوات كبار القراء',
-      hint: 'الانتقال إلى إذاعات وتلاوات القرآن الكريم',
       child: InkWell(
         onTap: () => context.push('/islamic-radio'),
         borderRadius: BorderRadius.circular(18),
@@ -226,7 +225,8 @@ class HomeShortcutsList extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
@@ -273,8 +273,8 @@ class HomeShortcutsList extends StatelessWidget {
   Widget _buildEgyptianHeritageBanner(BuildContext context, bool isDark) {
     return Semantics(
       button: true,
-      label: '${context.tr('egypt_heritage')}، إذاعة القرآن الكريم، ابتهالات النقشبندي وطوبار، خواطر الشعراوي',
-      hint: 'الانتقال إلى واحة التراث المصري',
+      label:
+          '${context.tr('egypt_heritage')}، إذاعة القرآن الكريم، ابتهالات النقشبندي وطوبار، خواطر الشعراوي',
       child: InkWell(
         onTap: () => context.push('/egypt-heritage'),
         borderRadius: BorderRadius.circular(18),
