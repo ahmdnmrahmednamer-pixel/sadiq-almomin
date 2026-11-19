@@ -6,6 +6,8 @@ import '../../core/services/settings_service.dart';
 import '../../core/services/shamela_epub_service.dart';
 import '../../core/theme/app_theme.dart';
 
+import 'widgets/reader_bookmarks_sheet.dart';
+
 class ShamelaOfflineReaderScreen extends StatefulWidget {
   final OfflineShamelaBook book;
   final int? initialIndex;
@@ -247,6 +249,27 @@ class _ShamelaOfflineReaderScreenState
     );
   }
 
+  Future<void> _showBookmarks() async {
+    final mark = await showReaderBookmarks(context,
+      documentId: 'shamela:${widget.book.id}', locationKind: 'epub-spine',
+      page: _currentIndex,
+      scrollOffset: _scrollController.hasClients ? _scrollController.offset : 0,
+      pageLabel: 'الصفحة ${_currentIndex + 1}',
+    );
+    if (mark == null || !mounted) return;
+    if (mark.page >= widget.book.pageCount) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('موضع العلامة غير متاح في هذه النسخة من الكتاب')));
+      return;
+    }
+    _scrollOffsets[mark.page] = mark.scrollOffset;
+    _goToIndex(mark.page);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scrollController.hasClients) {
+        _scrollController.jumpTo(mark.scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -282,6 +305,11 @@ class _ShamelaOfflineReaderScreenState
             ],
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.bookmarks_outlined),
+              tooltip: 'العلامات المرجعية',
+              onPressed: _showBookmarks,
+            ),
             Semantics(
               button: true,
               enabled: true,
