@@ -16,6 +16,8 @@ class BudurReferenceResolver {
   static const _qasasFirst = "\" أئمة \" تقدم نظيره في سورة الأنبياء.";
   static const _qasasLater = "\" أئمة \" تقدم أول السورة.";
   static const _sajda = "\" أئمة \" سبق حكمها قريبا في القصص.";
+  static const _yunusDetailed =
+      "\" أرأيتم \" قرأ أبو جعفر ونافع بتسهيل الهمزة الثانية بين بين، ولورش إبدالها ألفا مع إشباع المد للساكنين. وقرأ الكسائي بحذفها: والباقون باثباتها محققة. وإذا وقف حمزة فليس له إلا تسهيلها.";
   static List<BudurReference> references(int surah, String text) {
     if (surah == 28 && text == _qasasFirst)
       return const [BudurReference(21, 'أئمة')];
@@ -23,6 +25,16 @@ class BudurReferenceResolver {
       return const [BudurReference(28, 'أئمة', exactText: _qasasFirst)];
     if (surah == 32 && text == _sajda)
       return const [BudurReference(28, 'أئمة', exactText: _qasasFirst)];
+    if (surah == 11 && text == "\" أرأيتم \" سبق في يونس.")
+      return const [BudurReference(10, 'أرأيتم', exactText: _yunusDetailed)];
+    if (surah == 10 && text == "\" أرأيتم \" سبق قريبا.")
+      return const [BudurReference(10, 'أرأيتم', exactText: _yunusDetailed)];
+    if (surah == 30 &&
+        text ==
+            "\" يبدؤا \" فيه لحمزة وهشام وقفا خمسة أوجه تقدمت في تفتؤا بيوسف.")
+      return const [BudurReference(12, 'تفتؤا')];
+    if (surah == 18 && text == "\" للملائكة اسجدوا \" سبق في الإسراء مثله.")
+      return const [BudurReference(17, 'للملائكة اسجدوا')];
     final quotes = BudurVerseLinker.quotes(text);
     if (quotes.length != 1) return const [];
     final q = quotes.single;
