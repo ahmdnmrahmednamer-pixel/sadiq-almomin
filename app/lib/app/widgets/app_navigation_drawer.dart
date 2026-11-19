@@ -201,19 +201,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 3. قسم مكتبة العلماء والدروس =================
       _DrawerItemData(
-        title: 'مكتبة كبار العلماء والدروس الإسلامية 🎙️',
-        subtitle: 'دروس ومقاطع الشيخ الشعراوي، ابن عثيمين، كشك، حسان، ومصطفى محمود',
-        semanticLabel: 'مكتبة كبار العلماء والدروس الإسلامية',
-        icon: Icons.mic_external_on_rounded,
-        color: const Color(0xFF7C3AED),
-        categoryKey: 'scholars',
-        keywords: ['علماء', 'دروس', 'شعراوي', 'كشك', 'عثيمين', 'محاضرات'],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/scholars-audio');
-        },
-      ),
-      _DrawerItemData(
         title: 'إذاعات القرآن الكريم (MP3Quran) 📻',
         subtitle: 'بث إذاعي متواصل لكبار القراء، التفسير، الفتاوى، والأذكار والرقية',
         semanticLabel: 'إذاعات القرآن الكريم',
