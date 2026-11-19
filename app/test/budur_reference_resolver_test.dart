@@ -112,7 +112,7 @@ void main() {
             .map((r) => Ayah.fromRow(Map<String, dynamic>.from(r)))
             .toList();
     var count = 0;
-    for (final n in [3, 5, 6, 10, 11, 13, 18, 21, 23, 28, 30, 32, 34, 53, 56]) {
+    for (final n in [3, 5, 6, 10, 11, 13, 16, 18, 21, 23, 24, 28, 30, 32, 34, 53, 56]) {
       final passages = BudurSource.passages(
           source, surahs.singleWhere((s) => s.id == n), ayahs(n));
       for (final p in passages) {
@@ -149,6 +149,8 @@ void main() {
                 isEmpty);
           }
           if (n == 11) expect(p.ayahs, [28]);
+          if (n == 16) expect(p.ayahs, [48]);
+          if (n == 24) expect(p.ayahs, [8]);
           if (n == 18) expect(p.ayahs, [50]);
           if (n == 30) expect(p.ayahs, [11]);
           if (n == 32) expect(p.ayahs, [24]);
@@ -168,6 +170,6 @@ void main() {
         }
       }
     }
-    expect(count, 18);
+    expect(count, 20);
   });
 }
