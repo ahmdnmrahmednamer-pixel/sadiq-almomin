@@ -96,7 +96,7 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
     final tasbihCard = Semantics(
       button: true,
       excludeSemantics: true,
-      label: 'السبحة الذكية، عداد الورد والتسبيح',
+      label: 'السبحة، عداد الورد والتسبيح',
       onTap: handleTasbihTap,
       child: Card(
         elevation: 2,
@@ -129,7 +129,7 @@ class HomeAdhkarTasbihRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'السبحة الذكية',
+                  'السبحة',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
                 ),
