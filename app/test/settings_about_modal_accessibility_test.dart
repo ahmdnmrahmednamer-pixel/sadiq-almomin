@@ -23,7 +23,7 @@ const List<String> _expectedAllAboutStrings = [
   'مواقيت الصلاة والأذان والإقامة',
   'المكتبة الصوتية وديوان كبار القراء',
   'تلاوات القرآن الكريم',
-  'حصن المسلم والسنة النبوية والسبحة الذكية',
+  'حصن المسلم والسنة النبوية والسبحة',
   'أذكار اليوم والسبحة',
   'محاريب العبادات والقبلة والزكاة والأنبياء',
   'القبلة والزكاة وقصص الأنبياء',
@@ -350,7 +350,7 @@ void main() {
     );
 
     testWidgets(
-      'Actual appRouter /settings preserves v7.0 entry and opens About modal cleanly at 360x800 1.0x and 2.0x',
+      'Actual appRouter /settings tools category opens About cleanly at 360x800 1.0x and 2.0x',
       (tester) async {
         final semantics = tester.ensureSemantics();
         tester.view.devicePixelRatio = 1.0;
@@ -363,7 +363,12 @@ void main() {
           await tester.pumpWidget(_buildRouterApp(textScale: scale));
           await tester.pumpAndSettle();
 
-          final aboutTileText = find.text('رسالة التطبيق (الإصدار السابع v7.0)');
+          final tools = find.byKey(const ValueKey('settings_category_5'));
+          if (tools.evaluate().isNotEmpty) {
+            await tester.tap(tools);
+            await tester.pumpAndSettle();
+          }
+          final aboutTileText = find.text('رسالة التطبيق');
           final settingsScrollable = find.byType(Scrollable).first;
           await tester.scrollUntilVisible(
             aboutTileText,
