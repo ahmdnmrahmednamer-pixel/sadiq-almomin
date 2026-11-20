@@ -39,6 +39,8 @@ class MemorizationService extends ChangeNotifier {
             _items[memItem.id] = memItem;
           }
         }
+      } else {
+        _items.clear();
       }
       _isInitialized = true;
       notifyListeners();
