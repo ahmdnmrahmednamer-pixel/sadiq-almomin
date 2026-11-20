@@ -71,7 +71,14 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
     );
 
     if (confirm == true) {
-      await AyahNotesService.instance.deleteNote(note.surahId, note.ayahNumber);
+      final deleted = await AyahNotesService.instance.deleteNote(note.surahId, note.ayahNumber);
+      if (!mounted) return;
+      if (!deleted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر حذف الخاطرة. لم تُحذف، حاول مرة أخرى.'),
+        ));
+        return;
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
