@@ -52,7 +52,6 @@ import '../features/mushaf/mushaf_screen.dart';
 import '../features/mushaf/page_mode_mushaf_screen.dart';
 import '../features/mushaf/quran_hub_screen.dart';
 import '../features/mushaf/quran_notes_screen.dart';
-import '../features/onboarding/onboarding_screen.dart';
 import '../features/prayer/adhan_control_screen.dart';
 import '../features/prayer/battery_reliability_screen.dart';
 import '../features/prayer/fajr_qiyam_alarm_screen.dart';
@@ -469,7 +468,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
+      redirect: (context, state) => '/home',
     ),
     GoRoute(
       path: '/adhan-control',
