@@ -41,6 +41,8 @@ class ZakatService extends ChangeNotifier {
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final Map<String, dynamic> data = json.decode(jsonStr);
         _calculation = ZakatCalculation.fromJson(data);
+      } else {
+        _calculation = const ZakatCalculation();
       }
       _isInitialized = true;
       notifyListeners();
