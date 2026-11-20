@@ -425,20 +425,18 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Scroll down to the gesture section
-      final gestureTitle = find.text('إيماءات التحكم بالأذان ومستشعرات الحركة');
-      await tester.scrollUntilVisible(
-        gestureTitle,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('settings_category_4')));
+      await tester.pumpAndSettle();
+      final overlay = find.text('الظهور فوق التطبيقات');
+      await tester.scrollUntilVisible(overlay, 300,
+        scrollable: find.byType(Scrollable).first);
+      expect(overlay, findsOneWidget);
+      expect(find.text('الهز للإيقاف'), findsOneWidget);
+      expect(find.text('القلب للكتم'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('تجربة شاشة الأذان'), 200,
+        scrollable: find.byType(Scrollable).first);
+      expect(find.text('تجربة شاشة الأذان'), findsOneWidget);
 
-      expect(gestureTitle, findsOneWidget);
-      expect(find.text('الظهور فوق التطبيقات وشاشة القفل'), findsOneWidget);
-      expect(find.text('إيقاف الأذان عند هز الهاتف 📳'), findsOneWidget);
-      expect(find.text('كتم الأذان عند قلب الهاتف على وجهه 📱'), findsOneWidget);
-      expect(find.text('تجربة الشاشة'), findsOneWidget);
     });
   });
 
