@@ -25,12 +25,26 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
   late final SettingsSession session = SettingsSession();
   int? category;
   String? status;
   bool closing = false;
   String? ownedReciterPreview;
+  bool reciterPreviewPending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      unawaited(stopReciterPreview());
+    }
+  }
   bool get ar => SettingsService.instance.isArabic;
   String tr(String arabic, String english) {
     if (ar) return arabic;
@@ -96,6 +110,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(stopReciterPreview());
     session.draft.dispose();
     super.dispose();
@@ -105,19 +120,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final id = ownedReciterPreview;
     if (id == null) return;
     ownedReciterPreview = null;
-    if (AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_$id') {
+    if (reciterPreviewPending ||
+        AyahAudioPlayer.instance.currentPlayingKey.value == 'preview_$id') {
       await AyahAudioPlayer.instance.stop();
     }
   }
 
   Future<void> previewReciter() async {
+    if (reciterPreviewPending) {
+      await stopReciterPreview();
+      return;
+    }
     final player = AyahAudioPlayer.instance;
     final reciter = SettingsService.availableReciters.firstWhere(
         (r) => r.id == session.reciter.value,
         orElse: () => SettingsService.availableReciters.first);
     ownedReciterPreview = reciter.id;
+    reciterPreviewPending = true;
     final ok = await player.playReciterPreview(reciter);
-    if (!mounted) return;
+    reciterPreviewPending = false;
+    if (!mounted || ownedReciterPreview != reciter.id) return;
     if (!ok && player.currentPlayingKey.value != 'preview_${reciter.id}') {
       setState(() => status = tr(
           'توقفت المعاينة أو تعذر تشغيلها', 'Preview stopped or unavailable'));
@@ -408,9 +430,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     orElse: () => SettingsService.availableReciters.first)
                 .nameAr),
             trailing: const Icon(Icons.expand_more),
-            onTap: () => showSettingsReciterModal(context,
-                selectedReciter: session.reciter.value,
-                onStage: session.reciter.stage)),
+            onTap: () async {
+              await stopReciterPreview();
+              if (!mounted) return;
+              showSettingsReciterModal(context,
+                  selectedReciter: session.reciter.value,
+                  onStage: session.reciter.stage);
+            }),
         TextButton.icon(
             onPressed: previewReciter,
             icon: const Icon(Icons.headphones),
