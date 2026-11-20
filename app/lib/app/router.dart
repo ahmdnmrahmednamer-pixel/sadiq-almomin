@@ -90,7 +90,8 @@ const Set<String> kHubShellRoutePaths = {
 /// Reusable AppBar leading back button for isolated full-page feature screens.
 /// Pops the current route when possible, or falls back to `/home` on direct deep links.
 class IsolatedBackButton extends StatelessWidget {
-  const IsolatedBackButton({super.key});
+  const IsolatedBackButton({super.key, this.onPressed});
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +99,7 @@ class IsolatedBackButton extends StatelessWidget {
     return IconButton(
       icon: const Icon(Icons.arrow_back_rounded),
       tooltip: isArabic ? 'رجوع' : 'Back',
-      onPressed: () {
+      onPressed: onPressed ?? () {
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
         } else {
