@@ -139,7 +139,7 @@ class AdhkarHubScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 3),
                         Text(
-                          'حصن المسلم، التسبيح الذكي، وأوراد السكينة',
+                          'حصن المسلم، التسبيح، والأوراد',
                           style: TextStyle(
                             color: Color(0xFFFFEFA6),
                             fontSize: 12,
@@ -178,7 +178,7 @@ class AdhkarHubScreen extends StatelessWidget {
             // 2. المسبحة الإلكترونية الذكية
             PortalCategoryCard(
               numberText: '٢',
-              title: 'المسبحة الإلكترونية الذكية',
+              title: 'المسبحة الإلكترونية',
               subtitle: 'سبحة لمسية رقمية بالأهتزاز والصوت مع أوراد الاستغفار والحوقلة وحفظ الإحصائيات',
               icon: Icons.fingerprint_rounded,
               color: const Color(0xFFB8893A),
