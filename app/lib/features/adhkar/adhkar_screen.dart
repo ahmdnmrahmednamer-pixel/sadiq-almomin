@@ -157,7 +157,7 @@ class _AdhkarScreenState extends State<AdhkarScreen>
           backgroundColor: AppColors.primaryGreen,
           foregroundColor: AppColors.softGold,
           icon: const Icon(Icons.fingerprint),
-          label: const Text('السبحة الذكية'),
+          label: const Text('السبحة'),
           onPressed: () {
             Navigator.push(
               context,
