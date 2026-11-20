@@ -186,6 +186,7 @@ class KhatmaService extends ChangeNotifier {
     await _initNotifications();
 
     final jsonStr = _prefs?.getString('active_khatma_plan');
+    _activePlan = null;
     if (jsonStr != null && jsonStr.isNotEmpty) {
       try {
         final Map<String, dynamic> data = json.decode(jsonStr);
