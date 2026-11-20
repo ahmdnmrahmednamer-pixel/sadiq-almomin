@@ -229,7 +229,7 @@ class PrayerZakatOverviewCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text('حاسبة الزكاة الشرعية الذكية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5)),
+                        const Text('حاسبة الزكاة', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15.5)),
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
