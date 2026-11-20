@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/services/settings_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../adhkar/widgets/sharawi_post_prayer_card.dart';
 import '../../../audio/widgets/islamic_audio_player_sheet.dart';
 import '../../../backup/backup_restore_screen.dart';
 import '../../../home/screens/app_screen_directory_screen.dart';
 import '../../../khatma/khatma_screen.dart';
-import '../../../onboarding/onboarding_screen.dart';
 import '../../../prayer/battery_reliability_screen.dart';
 import '../../about_developer_screen.dart';
 import '../../contact_support_screen.dart';
@@ -78,24 +76,6 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const BackupRestoreScreen())),
-        ),
-        SwitchListTile(
-          secondary:
-              const Icon(Icons.school_rounded, color: AppColors.primaryGreen),
-          title: const Text('إظهار شاشات شرح البرنامج عند الفتح',
-              style: TextStyle(fontWeight: FontWeight.w800)),
-          value: SettingsService.instance.showTutorialScreens,
-          onChanged: (val) =>
-              SettingsService.instance.setShowTutorialScreens(val),
-        ),
-        ListTile(
-          leading:
-              const Icon(Icons.help_rounded, color: AppColors.primaryGreen),
-          title: const Text('عرض شاشات شرح استخدام البرنامج',
-              style: TextStyle(fontWeight: FontWeight.w800)),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const OnboardingScreen())),
         ),
         ListTile(
           leading: const Icon(Icons.support_agent_rounded,

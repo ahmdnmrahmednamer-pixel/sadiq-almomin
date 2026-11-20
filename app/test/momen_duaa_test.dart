@@ -474,7 +474,7 @@ void main() {
       }
     });
 
-    testWidgets('SettingsScreen displays Duaa tile and Tutorial switch controls', (WidgetTester tester) async {
+    testWidgets('SettingsScreen has no retired tour controls and preserves its saved preference', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(1080, 8000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -494,17 +494,10 @@ void main() {
 
       // Verify internal cleanliness per user spec
       expect(find.textContaining('دعاء لمؤمن إبراهيم رحمهُ الله'), findsNothing);
-      expect(find.text('إظهار شاشات شرح البرنامج عند الفتح'), findsOneWidget);
-      expect(find.text('عرض شاشات شرح استخدام البرنامج'), findsOneWidget);
+      expect(find.text('إظهار شاشات شرح البرنامج عند الفتح'), findsNothing);
+      expect(find.text('عرض شاشات شرح استخدام البرنامج'), findsNothing);
+      expect(SettingsService.instance.showTutorialScreens, isTrue);
 
-      // Toggle tutorial switch
-      final switchFinder = find.widgetWithText(SwitchListTile, 'إظهار شاشات شرح البرنامج عند الفتح');
-      expect(switchFinder, findsOneWidget);
-
-      await tester.tap(switchFinder);
-      await tester.pumpAndSettle();
-
-      expect(SettingsService.instance.showTutorialScreens, isFalse);
     });
   });
 }
