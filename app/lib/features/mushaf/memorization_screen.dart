@@ -609,7 +609,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
         theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold) ??
         const TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
 
-    const titleText = 'المحفظ القرآني والتكرار الذكي';
+    const titleText = 'المحفظ القرآني والتكرار';
     final textPainter = TextPainter(
       text: TextSpan(text: titleText, style: titleStyle),
       textDirection: SettingsService.instance.textDirection,
