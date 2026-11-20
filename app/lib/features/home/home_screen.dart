@@ -8,7 +8,6 @@ import '../../core/services/prayer_service.dart';
 import '../../core/services/prayer_tracker_service.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/services/sunan_rawatib_service.dart';
-import '../onboarding/onboarding_screen.dart';
 import '../settings/settings_screen.dart';
 import '../settings/widgets/settings_about_modal.dart';
 import 'widgets/home_adhkar_tasbih_row.dart';
@@ -43,21 +42,6 @@ class _HomeScreenState extends State<HomeScreen> {
     PrayerTrackerService.instance.init();
     SunanRawatibService.instance.init();
     DailyWirdService.instance.init();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!SettingsService.instance.hasCompletedOnboarding &&
-          SettingsService.instance.showTutorialScreens &&
-          mounted) {
-        final router = GoRouter.maybeOf(context);
-        if (router != null) {
-          router.push('/onboarding');
-        } else {
-          Navigator.of(context, rootNavigator: true).push(
-            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-          );
-        }
-      }
-    });
   }
 
   void _openSettings(BuildContext context) {
