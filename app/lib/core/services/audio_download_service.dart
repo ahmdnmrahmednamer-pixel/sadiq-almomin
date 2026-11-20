@@ -163,12 +163,14 @@ class AudioDownloadService extends ChangeNotifier {
     }
   }
 
+  static const _minimumAudioBytes = 1000;
+
   bool isDownloaded(String reciterId, int surahId) {
     final key = _key(reciterId, surahId);
     final info = _downloadedSurahs[key];
     if (info == null) return false;
     final f = File(info.localPath);
-    return f.existsSync() && f.lengthSync() > 1000;
+    return f.existsSync() && f.lengthSync() > _minimumAudioBytes;
   }
 
   String? getLocalAudioPath(String reciterId, int surahId) {
@@ -245,6 +247,11 @@ class AudioDownloadService extends ChangeNotifier {
         if (tempFile.existsSync()) {
           try {
             final length = tempFile.lengthSync();
+            // Reject incomplete responses before touching a previous download.
+            // This is the existing offline-size threshold, not audio decoding.
+            if (length <= _minimumAudioBytes) {
+              throw const FormatException('Downloaded audio is empty or too short');
+            }
             tempFile.renameSync(filePath);
 
             const reciters = SettingsService.availableReciters;
