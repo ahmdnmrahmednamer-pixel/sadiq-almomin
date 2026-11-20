@@ -139,9 +139,9 @@ class VoluntaryFastingService extends ChangeNotifier {
     final dateStr =
         '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     final entry = '$dateStr|$fastId';
-    if (!_fastedDateLogs.contains(entry)) {
-      _fastedDateLogs.insert(0, entry);
-    }
+    // Repeated confirmation of the same dated fast must not inflate its count.
+    if (_fastedDateLogs.contains(entry)) return;
+    _fastedDateLogs.insert(0, entry);
     _completedCounts[fastId] = (_completedCounts[fastId] ?? 0) + 1;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('vfast_count_$fastId', _completedCounts[fastId]!);
