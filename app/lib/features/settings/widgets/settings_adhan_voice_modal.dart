@@ -71,8 +71,9 @@ class _PrayerMuezzinManagerSheetState
     super.initState();
     if (widget.initialPrayer != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted)
+        if (mounted) {
           showPrayerMuezzinDropdownPicker(context, widget.initialPrayer!);
+        }
       });
     }
   }
@@ -138,7 +139,8 @@ class PrayerVoiceList extends StatelessWidget {
 /// Interactive Dropdown/Picker Sheet for choosing a Sheikh for a specific prayer
 /// Allows listening to any Sheikh's voice before selecting him
 void showPrayerMuezzinDropdownPicker(BuildContext context, String prayerName,
-    {bool isIqamah = false, AudioPlayer Function()? previewPlayerFactory}) {
+    {bool isIqamah = false, AudioPlayer Function()? previewPlayerFactory,
+    String? selectedVoice, ValueChanged<String>? onStage}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -147,18 +149,22 @@ void showPrayerMuezzinDropdownPicker(BuildContext context, String prayerName,
       prayerName: prayerName,
       isIqamah: isIqamah,
       previewPlayerFactory: previewPlayerFactory,
+      selectedVoice: selectedVoice, onStage: onStage,
     ),
   );
 }
 
 class _PrayerMuezzinPickerSheet extends StatefulWidget {
   final String prayerName;
+  final String? selectedVoice;
+  final ValueChanged<String>? onStage;
   final bool isIqamah;
   final AudioPlayer Function()? previewPlayerFactory;
 
   const _PrayerMuezzinPickerSheet({
     required this.prayerName,
     this.isIqamah = false,
+    this.selectedVoice, this.onStage,
     this.previewPlayerFactory,
   });
 
@@ -344,7 +350,9 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
       await _stopPreview();
       if (!mounted) return;
       final notifications = PrayerNotificationService.instance;
-      if (widget.isIqamah) {
+      if (widget.onStage != null) {
+        widget.onStage!(track.id);
+      } else if (widget.isIqamah) {
         await notifications.setSelectedIqamahVoice(track.id);
       } else if (widget.prayerName == 'الكل') {
         await notifications.setAllPrayersVoice(track.id);
@@ -356,7 +364,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'تم تعيين ${adhanVoiceLabel(track)}: ${widget.prayerName}',
+            widget.onStage != null ? 'تم اختيار الصوت. اضغط تطبيق لحفظه.' : 'تم تعيين ${adhanVoiceLabel(track)}: ${widget.prayerName}',
           ),
         ),
       );
@@ -471,13 +479,14 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
               animation: Listenable.merge([audio, notifications]),
               builder: (context, _) {
                 final tracks = _getFilteredTracks();
-                final selected = widget.isIqamah
+                final selected = widget.selectedVoice ?? (widget.isIqamah
                     ? notifications.selectedIqamahVoice
                     : widget.prayerName == 'الكل'
                         ? notifications.selectedAdhanVoice
-                        : notifications.getPrayerVoice(widget.prayerName);
-                if (tracks.isEmpty)
+                        : notifications.getPrayerVoice(widget.prayerName));
+                if (tracks.isEmpty) {
                   return const Center(child: Text('لا توجد أصوات مطابقة'));
+                }
                 return ListView.builder(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
