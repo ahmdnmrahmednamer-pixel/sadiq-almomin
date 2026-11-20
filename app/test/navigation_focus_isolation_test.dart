@@ -20,6 +20,8 @@ import 'package:almomin/features/home/widgets/home_next_prayer_card.dart';
 import 'package:almomin/features/home/widgets/home_quran_continue_card.dart';
 import 'package:almomin/features/mushaf/mushaf_screen.dart';
 import 'package:almomin/features/onboarding/onboarding_screen.dart';
+import 'package:almomin/features/home/momen_duaa_screen.dart';
+import 'package:almomin/features/home/home_screen.dart';
 import 'package:almomin/features/prayer/hijri_calendar_screen.dart';
 import 'package:almomin/features/prayer/prayer_times_detail_screen.dart';
 import 'package:almomin/features/settings/settings_screen.dart';
@@ -558,29 +560,58 @@ void main() {
       semantics.dispose();
     });
 
-    testWidgets('Onboarding push from HomeScreen isolates on root navigator without bottom NavigationBar', (tester) async {
-      final semantics = tester.ensureSemantics();
+    for (final completed in [false, true]) {
+      testWidgets('Amen opens Home without a tour for completed=$completed and preserves saved data', (tester) async {
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        SharedPreferences.setMockInitialValues({
+          'has_completed_onboarding': completed,
+          'show_tutorial_screens': true,
+          'bookmarks': <String>['2:255'],
+          'mushaf_font_size': 30.0,
+          'theme_mode': 'dark',
+        });
+        await SettingsService.instance.init();
+        appRouter.go('/momen-duaa');
+        await tester.pumpWidget(_buildRouterApp());
+        await tester.pumpAndSettle();
+        expect(find.byType(MomenDuaaScreen), findsOneWidget);
+        expect(find.text('آمين'), findsOneWidget);
+        expect(find.byType(HomeScreen), findsNothing);
+        await tester.tap(find.text('آمين'));
+        await tester.pumpAndSettle();
+        expect(find.byType(MomenDuaaScreen), findsNothing);
+        expect(find.byType(OnboardingScreen), findsNothing);
+        expect(find.byType(HomeScreen), findsOneWidget);
+        expect(find.byType(NavigationBar), findsOneWidget);
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool('has_completed_onboarding'), completed);
+        expect(prefs.getBool('show_tutorial_screens'), isTrue);
+        expect(prefs.getStringList('bookmarks'), ['2:255']);
+        expect(prefs.getDouble('mushaf_font_size'), 30.0);
+        expect(prefs.getString('theme_mode'), 'dark');
+        expect(tester.takeException(), isNull);
+        PrayerService.instance.stopLiveTicker();
+      });
+    }
+
+    testWidgets('Retired tour deep link redirects to Home even with first-use defaults', (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-
-      SharedPreferences.setMockInitialValues({
-        'has_completed_onboarding': false,
-        'show_tutorial_screens': true,
-      });
+      SharedPreferences.setMockInitialValues({});
       await SettingsService.instance.init();
-
-      appRouter.go('/home');
+      appRouter.go('/onboarding');
       await tester.pumpWidget(_buildRouterApp());
       await tester.pumpAndSettle();
-
-      expect(find.byType(OnboardingScreen), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
-      _assertActiveSemanticsIsolated(tester, 'OnboardingScreen root push');
-
+      expect(find.byType(OnboardingScreen), findsNothing);
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(NavigationBar), findsOneWidget);
+      expect(tester.takeException(), isNull);
       PrayerService.instance.stopLiveTicker();
-      semantics.dispose();
     });
   });
 }
