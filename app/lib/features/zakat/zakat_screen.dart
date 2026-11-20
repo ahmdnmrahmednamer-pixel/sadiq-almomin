@@ -190,7 +190,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('حاسبة الزكاة الشرعية الذكية'),
+          title: const Text('حاسبة الزكاة'),
           actions: [
             IconButton(
               icon: const Icon(Icons.share_outlined),
