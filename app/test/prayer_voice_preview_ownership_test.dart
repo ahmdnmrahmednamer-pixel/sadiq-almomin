@@ -119,7 +119,7 @@ void main() {
       double scale = 1,
       bool dark = false,
       String prayer = 'الفجر',
-      bool iqamah = false}) async {
+      bool iqamah = false, ValueChanged<String>? onStage}) async {
     t.view.physicalSize = Size(width, height);
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.resetPhysicalSize);
@@ -139,7 +139,7 @@ void main() {
                     builder: (c) => TextButton(
                         onPressed: () => showPrayerMuezzinDropdownPicker(
                             c, prayer,
-                            isIqamah: iqamah,
+                            isIqamah: iqamah, onStage: onStage,
                             previewPlayerFactory: () => player),
                         child: const Text('فتح')))))));
     await t.tap(find.text('فتح'));
@@ -191,6 +191,21 @@ void main() {
     expect(audio.isPlaying, isTrue);
     expect(notifications.getPrayerVoice('الفجر'), saved);
   });
+  testWidgets('staged assignment returns selection without changing saved voices', (t) async {
+    final before = notifications.getPrayerVoice('الفجر');
+    String? staged;
+    await mount(t, onStage: (value) => staged = value);
+    final selected = (card(t, 0).key! as ValueKey).value.toString().substring('voice_'.length);
+    card(t, 0).onAssign();
+    await t.pumpAndSettle();
+    expect(staged, selected);
+    expect(notifications.getPrayerVoice('الفجر'), before);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('notif_prayer_voice_الفجر'), isNull);
+    expect(player.urls, isEmpty);
+    expect(player.disposed, isTrue);
+  });
+
   testWidgets('Listen streams selected catalog URL only and does not assign',
       (t) async {
     await mount(t);
