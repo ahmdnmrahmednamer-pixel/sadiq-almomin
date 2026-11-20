@@ -116,17 +116,6 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
           'مؤمن إبراهيم'
         ],
       ),
-      const AppDirectoryItem(
-        id: 'onboarding',
-        title: 'دليل البداية والتعريف بالمعالم',
-        subtitle: 'جولة استكشافية لمعالم وخصائص تطبيق صديق المؤمن',
-        category: 'إشراقة اليوم',
-        categoryKey: 'home',
-        route: '/onboarding',
-        icon: Icons.explore_rounded,
-        color: Color(0xFF25739B),
-        keywords: ['ترحيب', 'بداية', 'شرح', 'تعليم', 'جولة'],
-      ),
 
       // ================= المقام الثاني: رحاب القرآن الكريم وعلومه (٢٠ باباً) =================
       AppDirectoryItem(
