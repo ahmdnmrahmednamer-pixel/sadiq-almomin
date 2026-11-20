@@ -43,6 +43,8 @@ class ReaderBookmarkService {
 
   Future<List<ReaderBookmark>> list(String documentId, String locationKind) async {
     final prefs = await SharedPreferences.getInstance();
+    // Read only confirmed storage, never another pending write's cache value.
+    await prefs.reload();
     final all = _decode(prefs.getString(_key));
     return all.where((b) => b.documentId == documentId && b.locationKind == locationKind).toList()
       ..sort((a,b) => a.createdAt.compareTo(b.createdAt));
@@ -60,10 +62,20 @@ class ReaderBookmarkService {
   Future<void> _mutate(void Function(List<ReaderBookmark>) change) {
     final next = (_tail ?? Future<void>.value()).then((_) async {
       final prefs = await SharedPreferences.getInstance();
+      // A rejected SharedPreferences write still updates its local cache.
+      // Reload before deriving the next mutation, including after reload failure.
+      await prefs.reload();
       final all = _decode(prefs.getString(_key));
       change(all);
-      final saved = await prefs.setString(_key,jsonEncode(all.map((b)=>b.toJson()).toList()));
-      if (!saved) throw StateError('Unable to save reader bookmarks');
+      try {
+        final saved = await prefs.setString(_key,jsonEncode(all.map((b)=>b.toJson()).toList()));
+        if (!saved) throw StateError('Unable to save reader bookmarks');
+      } catch (_) {
+        // Best effort cache repair; keep the original write error for callers.
+        // Every subsequent list/mutation retries reload before using the cache.
+        try { await prefs.reload(); } catch (_) {}
+        rethrow;
+      }
     });
     late final Future<void> settled;
     void clearTail() { if (identical(_tail, settled)) _tail = null; }
