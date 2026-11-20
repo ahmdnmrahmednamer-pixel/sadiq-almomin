@@ -207,7 +207,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen title
-      expect(find.text('حاسبة الزكاة الشرعية الذكية'), findsOneWidget);
+      expect(find.text('حاسبة الزكاة'), findsOneWidget);
 
       // Verify Noble Dedication Banner for Momin Ibrahim
       expect(find.text('حاسبة الزكاة الشرعية — نماء وطهارة للمال'), findsOneWidget);
