@@ -69,9 +69,8 @@ class QuranAccessibilityService {
     return '$cleanPronunciation $ayahNumber';
   }
 
-  /// Semantic interaction hint for an Ayah
-  static String get ayahSemanticHint =>
-      'انقر للاستماع إلى تلاوة الآية، أو انقر مطولاً لعرض الإعراب وأسباب النزول والتفسير.';
+  /// Verses are spoken as text and number only, without repeated instructions.
+  static String get ayahSemanticHint => '';
 
   /// Builds a semantic label for a Surah Header
   static String buildSurahHeaderSemanticLabel({
