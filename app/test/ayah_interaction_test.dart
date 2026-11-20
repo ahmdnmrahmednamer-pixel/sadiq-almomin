@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../lib/features/mushaf/widgets/ayah_interaction.dart';
+import 'package:almomin/features/mushaf/widgets/ayah_interaction.dart';
+import 'package:almomin/core/services/quran_accessibility_service.dart';
 
 void main() {
+  test('verse speech contains only normalized text and number', () {
+    expect(QuranAccessibilityService.buildAyahSemanticLabel(
+      surahName: 'الإخلاص', ayahNumber: 1, uthmaniText: 'قُلْ هُوَ اللَّهُ أَحَدٌ',
+    ), 'قُلْ هُوَ اللَّهُ أَحَدٌ 1');
+    expect(QuranAccessibilityService.ayahSemanticHint, isEmpty);
+  });
+
   Widget host(Widget child, {double scale = 1}) => MaterialApp(
     home: MediaQuery(
       data: MediaQueryData(textScaler: TextScaler.linear(scale)),
@@ -34,6 +42,7 @@ void main() {
     for (var n = 1; n <= 3; n++) {
       final node = tester.getSemantics(find.byKey(ValueKey('verse-$n')));
       expect(node.label, 'نص الآية $n');
+      expect(node.getSemanticsData().hint, isEmpty);
       expect(node.hasFlag(SemanticsFlag.isButton), isTrue);
       expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
       expect(node.getSemanticsData().hasAction(SemanticsAction.longPress), isTrue);
@@ -74,6 +83,7 @@ void main() {
     )));
     final node = tester.getSemantics(find.byType(AyahInteraction));
     expect(node.hasFlag(SemanticsFlag.isSelected), isTrue);
+    expect(node.getSemanticsData().hint, isEmpty);
     tester.binding.pipelineOwner.semanticsOwner!.performAction(node.id, SemanticsAction.tap);
     tester.binding.pipelineOwner.semanticsOwner!.performAction(node.id, SemanticsAction.longPress);
     expect(taps, 1);

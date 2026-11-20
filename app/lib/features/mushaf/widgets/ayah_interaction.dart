@@ -29,9 +29,6 @@ class AyahInteraction extends StatelessWidget {
       selected: isPlaying,
       sortKey: order == null ? null : OrdinalSortKey(order!),
       label: label,
-      hint: isPlaying
-          ? 'اضغط مرتين لإيقاف التلاوة، واضغط مطولاً لخيارات الآية'
-          : 'اضغط مرتين للاستماع بصوت القارئ المختار، واضغط مطولاً لخيارات الآية',
       onTap: onTap,
       onLongPress: onLongPress,
       child: ExcludeSemantics(
