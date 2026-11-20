@@ -546,3 +546,7 @@ class _ShortReminderPreviewState extends State<_ShortReminderPreview> with Widge
         ],
       ));
 }
+
+void showShortReminderPreview(BuildContext context, String key) {
+  showDialog<void>(context: context, builder: (_) => _ShortReminderPreview(reminderKey: key));
+}

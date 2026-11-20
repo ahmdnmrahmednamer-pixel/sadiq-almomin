@@ -4,17 +4,19 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/audio/ayah_audio_player.dart';
 
-void showSettingsReciterModal(BuildContext context) {
+void showSettingsReciterModal(BuildContext context, {String? selectedReciter, ValueChanged<String>? onStage}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (ctx) => const _ReciterSelectionSheet(),
+    builder: (ctx) => _ReciterSelectionSheet(selectedReciter: selectedReciter, onStage: onStage),
   );
 }
 
 class _ReciterSelectionSheet extends StatefulWidget {
-  const _ReciterSelectionSheet();
+  const _ReciterSelectionSheet({this.selectedReciter, this.onStage});
+  final String? selectedReciter;
+  final ValueChanged<String>? onStage;
 
   @override
   State<_ReciterSelectionSheet> createState() => _ReciterSelectionSheetState();
@@ -44,7 +46,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final currentReciterId = SettingsService.instance.selectedReciterId;
+    final currentReciterId = widget.selectedReciter ?? SettingsService.instance.selectedReciterId;
 
     const allReciters = SettingsService.availableReciters;
     final normRecQ = ArabicNormalizer.normalize(_searchQuery, loose: true);
@@ -120,7 +122,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      'القارئ الحالي: ${SettingsService.instance.currentReciter.nameAr}',
+                      'القارئ الحالي: ${SettingsService.availableReciters.firstWhere((r) => r.id == currentReciterId, orElse: () => SettingsService.availableReciters.first).nameAr}',
                       softWrap: true,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -150,7 +152,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                         ),
                       ),
                       Text(
-                        'القارئ الحالي: ${SettingsService.instance.currentReciter.nameAr}',
+                        'القارئ الحالي: ${SettingsService.availableReciters.firstWhere((r) => r.id == currentReciterId, orElse: () => SettingsService.availableReciters.first).nameAr}',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: isDark ? Colors.white70 : AppColors.mutedText,
@@ -302,6 +304,11 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () async {
+                if (widget.onStage != null) {
+                  widget.onStage!(r.id);
+                  Navigator.pop(context);
+                  return;
+                }
                 await SettingsService.instance.setSelectedReciter(r.id);
                 await AyahAudioPlayer.instance.playReciterPreview(r);
                 if (context.mounted) {

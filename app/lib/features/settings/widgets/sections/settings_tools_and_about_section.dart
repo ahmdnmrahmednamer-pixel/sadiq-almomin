@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/settings_service.dart';
 import '../../../adhkar/widgets/sharawi_post_prayer_card.dart';
 import '../../../audio/widgets/islamic_audio_player_sheet.dart';
 import '../../../backup/backup_restore_screen.dart';
@@ -14,21 +15,22 @@ import 'settings_section_header.dart';
 
 /// Refactored Section 5: Tools, Backup & Application Information
 class SettingsToolsAndAboutSection extends StatelessWidget {
-  const SettingsToolsAndAboutSection({super.key});
+  const SettingsToolsAndAboutSection({super.key, this.showHeader = true});
+  final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SettingsSectionHeader(
+        if (showHeader) SettingsSectionHeader(
           title: context.tr('section_tools_about'),
           icon: Icons.build_circle_rounded,
         ),
         ListTile(
           leading: const Icon(Icons.dashboard_customize_rounded,
               color: AppColors.accentGold),
-          title: const Text('دليل وفهرس الشاشات الشامل',
+          title: const Text('دليل الشاشات',
               style: TextStyle(fontWeight: FontWeight.w900)),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(
@@ -39,7 +41,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.auto_stories_rounded,
               color: AppColors.accentGold),
-          title: const Text('مخطط الختمات والورد القرآني',
+          title: const Text('الختمة والورد',
               style: TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => Navigator.push(
               context, MaterialPageRoute(builder: (_) => const KhatmaScreen())),
@@ -48,21 +50,21 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
           leading: const Icon(Icons.library_music_rounded,
               color: AppColors.primaryGreen),
           title: const Text(
-              'المكتبة الصوتية الفائقة (الأذان والأدعية والابتهالات HD)',
+              'المكتبة الصوتية',
               style: TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => IslamicAudioPlayerSheet.show(context),
         ),
         ListTile(
           leading: const Icon(Icons.record_voice_over_rounded,
               color: AppColors.accentGold),
-          title: const Text('دعاء الشيخ الشعراوي بعد الأذان والصلاة',
+          title: const Text('دعاء الشعراوي',
               style: TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => showSharawiPostPrayerModal(context),
         ),
         ListTile(
           leading:
               const Icon(Icons.bolt_rounded, color: AppColors.primaryGreen),
-          title: const Text('دليل تثبيت الأذان وإعدادات البطارية',
+          title: const Text('البطارية والأذان',
               style: TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => Navigator.push(
               context,
@@ -72,7 +74,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
         ListTile(
           leading:
               const Icon(Icons.backup_rounded, color: AppColors.primaryGreen),
-          title: Text(context.tr('backup_restore'),
+          title: Text(SettingsService.instance.isArabic ? 'النسخ الاحتياطي' : context.tr('backup_restore'),
               style: const TextStyle(fontWeight: FontWeight.w800)),
           onTap: () => Navigator.push(context,
               MaterialPageRoute(builder: (_) => const BackupRestoreScreen())),
@@ -80,7 +82,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
         ListTile(
           leading: const Icon(Icons.support_agent_rounded,
               color: AppColors.primaryGreen),
-          title: const Text('الدعم والتواصل مع المطور',
+          title: const Text('الدعم',
               style: TextStyle(fontWeight: FontWeight.w800)),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(context,
@@ -89,7 +91,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
         ListTile(
           leading:
               const Icon(Icons.code_rounded, color: AppColors.primaryGreen),
-          title: const Text('عن المطور ومشروع التطبيق مفتوح المصدر',
+          title: const Text('عن المطور',
               style: TextStyle(fontWeight: FontWeight.w800)),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => Navigator.push(context,
@@ -97,7 +99,7 @@ class SettingsToolsAndAboutSection extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.info_rounded, color: AppColors.accentGold),
-          title: Text('${context.tr('about_app')} (الإصدار السابع v7.0)',
+          title: Text(context.tr('about_app'),
               style: const TextStyle(fontWeight: FontWeight.w800)),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
           onTap: () => showSettingsAboutModal(context),

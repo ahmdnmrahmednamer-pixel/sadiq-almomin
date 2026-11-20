@@ -123,7 +123,7 @@ void main() {
       expect(service.morningAdhkarMinute, 0);
     });
 
-    testWidgets('SettingsScreen contains SettingsAdhkarRemindersSection', (tester) async {
+    testWidgets('SettingsScreen opens a separate Adhkar category with time controls', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -139,16 +139,14 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      final adhkarTitle = find.text('مواقيت وتنبيهات أذكار المسلم');
-      await tester.scrollUntilVisible(
-        adhkarTitle,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('settings_category_3')));
+      await tester.pumpAndSettle();
+      expect(find.text('أذكار الصباح'), findsOneWidget);
+      expect(find.text('موعد الصباح'), findsOneWidget);
+      expect(find.text('أذكار المساء'), findsOneWidget);
+      expect(find.text('موعد النوم'), findsOneWidget);
+      expect(find.byKey(const ValueKey('settings_apply')), findsOneWidget);
 
-      expect(adhkarTitle, findsOneWidget);
-      expect(find.byType(SettingsAdhkarRemindersSection), findsOneWidget);
     });
   });
 }
