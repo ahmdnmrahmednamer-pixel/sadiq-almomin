@@ -13,6 +13,7 @@ class AyahNotesService extends ChangeNotifier {
 
   final Map<String, AyahNote> _notes = {};
   bool _isInitialized = false;
+  Future<void>? _writeTail;
 
   bool get isInitialized => _isInitialized;
   int get notesCount => _notes.length;
@@ -67,38 +68,33 @@ class AyahNotesService extends ChangeNotifier {
     }
 
     final id = AyahNote.generateId(surahId, ayahNumber);
-    final existing = _notes[id];
-    final now = DateTime.now();
+    return _mutate((notes) {
+      final existing = notes[id];
+      final now = DateTime.now();
 
-    final note = AyahNote(
-      id: id,
-      surahId: surahId,
-      surahName: surahName,
-      ayahNumber: ayahNumber,
-      ayahText: ayahText,
-      noteText: cleanNote,
-      createdAt: existing?.createdAt ?? now,
-      updatedAt: now,
-      pageNumber: pageNumber > 0 ? pageNumber : (existing?.pageNumber ?? 1),
-    );
+      final note = AyahNote(
+        id: id,
+        surahId: surahId,
+        surahName: surahName,
+        ayahNumber: ayahNumber,
+        ayahText: ayahText,
+        noteText: cleanNote,
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+        pageNumber: pageNumber > 0 ? pageNumber : (existing?.pageNumber ?? 1),
+      );
 
-    _notes[id] = note;
-    await _persist();
-    notifyListeners();
-    return true;
+      notes[id] = note;
+    });
   }
 
   /// Deletes a reflection
   Future<bool> deleteNote(int surahId, int ayahNumber) async {
     await init();
     final id = AyahNote.generateId(surahId, ayahNumber);
-    if (_notes.containsKey(id)) {
-      _notes.remove(id);
-      await _persist();
-      notifyListeners();
-      return true;
-    }
-    return false;
+    return _mutate((notes) {
+      notes.remove(id);
+    }, shouldWrite: (notes) => notes.containsKey(id));
   }
 
   /// Returns all reflections, optionally filtered by query or surah
@@ -114,11 +110,14 @@ class AyahNotesService extends ChangeNotifier {
       final normQ = ArabicNormalizer.normalize(searchQuery, loose: true);
       list = list.where((n) {
         return n.noteText.toLowerCase().contains(q) ||
-            ArabicNormalizer.normalize(n.noteText, loose: true).contains(normQ) ||
+            ArabicNormalizer.normalize(n.noteText, loose: true)
+                .contains(normQ) ||
             n.surahName.contains(q) ||
-            ArabicNormalizer.normalize(n.surahName, loose: true).contains(normQ) ||
+            ArabicNormalizer.normalize(n.surahName, loose: true)
+                .contains(normQ) ||
             n.ayahText.contains(q) ||
-            ArabicNormalizer.normalize(n.ayahText, loose: true).contains(normQ) ||
+            ArabicNormalizer.normalize(n.ayahText, loose: true)
+                .contains(normQ) ||
             n.ayahNumber.toString() == normQ;
       }).toList();
     }
@@ -130,9 +129,10 @@ class AyahNotesService extends ChangeNotifier {
 
   /// Clears all notes
   Future<void> clearAllNotes() async {
-    _notes.clear();
-    await _persist();
-    notifyListeners();
+    await init();
+    if (!await _mutate((notes) => notes.clear())) {
+      throw StateError('Unable to clear Quran notes');
+    }
   }
 
   /// Exports notes list for backup integration (FR-BKM-003)
@@ -141,38 +141,72 @@ class AyahNotesService extends ChangeNotifier {
   }
 
   /// Restores notes from backup data
-  Future<void> restoreNotesList(List<dynamic> list, {bool replace = false}) async {
+  Future<void> restoreNotesList(List<dynamic> list,
+      {bool replace = false}) async {
     await init();
-    if (replace) {
-      _notes.clear();
-    }
+    final saved = await _mutate((notes) {
+      if (replace) {
+        notes.clear();
+      }
 
-    for (final item in list) {
-      if (item is Map<String, dynamic>) {
-        final note = AyahNote.fromJson(item);
-        if (replace || !_notes.containsKey(note.id)) {
-          _notes[note.id] = note;
-        } else {
-          // Merge: keep the newer note
-          final existing = _notes[note.id]!;
-          if (note.updatedAt.isAfter(existing.updatedAt)) {
-            _notes[note.id] = note;
+      for (final item in list) {
+        if (item is Map<String, dynamic>) {
+          final note = AyahNote.fromJson(item);
+          if (replace || !notes.containsKey(note.id)) {
+            notes[note.id] = note;
+          } else {
+            // Merge: keep the newer note
+            final existing = notes[note.id]!;
+            if (note.updatedAt.isAfter(existing.updatedAt)) {
+              notes[note.id] = note;
+            }
           }
         }
       }
-    }
-
-    await _persist();
-    notifyListeners();
+    });
+    if (!saved) throw StateError('Unable to restore Quran notes');
   }
 
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = _notes.values.map((n) => n.toJson()).toList();
-      await prefs.setString(_storageKey, json.encode(list));
-    } catch (e) {
-      debugPrint('AyahNotesService persist error: $e');
+  /// Serialize read-modify-write operations. Publish only after storage accepts
+  /// the candidate, so a failed write cannot replace the last saved reflections.
+  Future<bool> _mutate(void Function(Map<String, AyahNote>) change,
+      {bool Function(Map<String, AyahNote>)? shouldWrite}) {
+    final result = (_writeTail ?? Future<void>.value()).then((_) async {
+      final candidate = Map<String, AyahNote>.of(_notes);
+      if (shouldWrite != null && !shouldWrite(candidate)) return false;
+      change(candidate);
+      SharedPreferences? prefs;
+      try {
+        prefs = await SharedPreferences.getInstance();
+        final saved = await prefs.setString(_storageKey,
+            json.encode(candidate.values.map((n) => n.toJson()).toList()));
+        if (!saved) {
+          await prefs.reload();
+          return false;
+        }
+      } catch (e) {
+        // The preferences plugin updates its cache before the platform write.
+        // Discard that speculative cache after a rejected or thrown write.
+        try {
+          await prefs?.reload();
+        } catch (_) {}
+        debugPrint('AyahNotesService persist error: $e');
+        return false;
+      }
+      _notes
+        ..clear()
+        ..addAll(candidate);
+      notifyListeners();
+      return true;
+    });
+    late final Future<void> settled;
+    void clearTail() {
+      if (identical(_writeTail, settled)) _writeTail = null;
     }
+
+    settled = result.then<void>((_) => clearTail(),
+        onError: (Object _, StackTrace __) => clearTail());
+    _writeTail = settled;
+    return result;
   }
 }

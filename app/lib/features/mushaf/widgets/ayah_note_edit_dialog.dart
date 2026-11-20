@@ -37,6 +37,7 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
   late final TextEditingController _controller;
   bool _isSaving = false;
   bool _hasExistingNote = false;
+  String? _saveError;
 
   @override
   void initState() {
@@ -64,8 +65,8 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
       return;
     }
 
-    setState(() => _isSaving = true);
-    await AyahNotesService.instance.saveNote(
+    setState(() { _isSaving = true; _saveError = null; });
+    final saved = await AyahNotesService.instance.saveNote(
       surahId: widget.surah.id,
       surahName: widget.surah.nameAr,
       ayahNumber: widget.ayah.ayahNumber,
@@ -73,7 +74,12 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
       noteText: text,
       pageNumber: widget.ayah.page,
     );
+    if (!mounted) return;
     setState(() => _isSaving = false);
+    if (!saved) {
+      setState(() => _saveError = 'تعذر حفظ الخاطرة. النص ما زال هنا، حاول مرة أخرى.');
+      return;
+    }
 
     if (mounted) {
       Navigator.pop(context, true);
@@ -116,7 +122,12 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
     );
 
     if (confirm == true) {
-      await AyahNotesService.instance.deleteNote(widget.surah.id, widget.ayah.ayahNumber);
+      final deleted = await AyahNotesService.instance.deleteNote(widget.surah.id, widget.ayah.ayahNumber);
+      if (!mounted) return;
+      if (!deleted) {
+        setState(() => _saveError = 'تعذر حذف الخاطرة. لم تُحذف، حاول مرة أخرى.');
+        return;
+      }
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,6 +240,11 @@ class _AyahNoteEditDialogState extends State<AyahNoteEditDialog> {
                   contentPadding: const EdgeInsets.all(14),
                 ),
               ),
+              if (_saveError != null)
+                Padding(padding: const EdgeInsets.only(top: 8), child: Semantics(
+                  liveRegion: true,
+                  child: Text(_saveError!, style: TextStyle(color: theme.colorScheme.error, height: 1.6)),
+                )),
               const SizedBox(height: 12),
 
               // Action Buttons
