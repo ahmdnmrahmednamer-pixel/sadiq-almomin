@@ -346,7 +346,7 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
 
       // 4. HomeAdhkarTasbihRow Tasbih card -> TasbihScreen
-      final tasbihCard = find.text('السبحة الذكية');
+      final tasbihCard = find.text('السبحة');
       await tester.ensureVisible(tasbihCard);
       await tester.pumpAndSettle();
       await tester.tap(tasbihCard);
