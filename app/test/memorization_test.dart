@@ -317,7 +317,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Screen title
-      expect(find.text('المحفظ القرآني والتكرار الذكي'), findsOneWidget);
+      expect(find.text('المحفظ القرآني والتكرار'), findsOneWidget);
 
       // Verify Memorization Banner
       expect(find.text('محراب التحفيظ والتثبيت القرآني'), findsOneWidget);

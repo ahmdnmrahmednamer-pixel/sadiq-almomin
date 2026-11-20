@@ -316,7 +316,7 @@ void main() {
                 reason: 'Zero errors allowed on ${vp.size.width.toInt()}x${vp.size.height.toInt()} @ ${vp.scale}x (push: $withPush)');
 
             // Verify AppBar Title containment and absence of RenderParagraph truncation
-            final titleFinder = find.text('المحفظ القرآني والتكرار الذكي');
+            final titleFinder = find.text('المحفظ القرآني والتكرار');
             expect(titleFinder, findsOneWidget);
             _assertRenderParagraphNotTruncated(tester, titleFinder);
 

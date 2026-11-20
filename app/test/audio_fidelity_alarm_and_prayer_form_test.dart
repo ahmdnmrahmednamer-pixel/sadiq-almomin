@@ -127,7 +127,7 @@ void main() {
 
       expect(find.text('منبّه الاستعداد للفجر وقيام الليل'), findsOneWidget);
       expect(find.textContaining('منبّه الاستيقاظ والاستعداد قبل صلاة الفجر'), findsOneWidget);
-      expect(find.textContaining('منبّه قيام الليل والتهجد الذكي'), findsOneWidget);
+      expect(find.textContaining('منبّه قيام الليل والتهجد'), findsOneWidget);
     });
   });
 

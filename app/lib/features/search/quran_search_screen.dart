@@ -539,7 +539,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 children: [
                   Icon(Icons.lightbulb_outline, color: AppColors.accentGold, size: 20),
                   SizedBox(width: 8),
-                  Text('إرشادات البحث الذكي:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  Text('إرشادات البحث:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ],
               ),
               SizedBox(height: 6),

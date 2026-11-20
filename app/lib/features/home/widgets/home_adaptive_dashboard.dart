@@ -31,7 +31,7 @@ class HomeAdaptiveDashboardBanner extends StatelessWidget {
     final hubItems = [
       StructuredScreenItem(
         id: 'home_wird',
-        title: 'الورد اليومي الذكي',
+        title: 'الورد اليومي',
         subtitle: 'خطة الطاعات اليومية والسنن الرواتب والأذكار',
         badgeText:
             '${(DailyWirdService.instance.getTodayCompletionRatio() * 100).round()}%',
@@ -114,7 +114,7 @@ class HomeAdaptiveDashboardBanner extends StatelessWidget {
             const SizedBox(width: 8),
             const Expanded(
               child: Text(
-                'الموسوعات العلمية والورد اليومي الذكي',
+                'الموسوعات العلمية والورد اليومي',
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14.5),
               ),
             ),

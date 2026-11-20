@@ -68,11 +68,11 @@ void main() {
       expect(find.text('أذكار المسلم وحصن المسلم 🤲'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('السبحة الإلكترونية الذكية 📿'),
+        find.text('السبحة الإلكترونية 📿'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('السبحة الإلكترونية الذكية 📿'), findsOneWidget);
+      expect(find.text('السبحة الإلكترونية 📿'), findsOneWidget);
 
       // Verify Settings, About, Developer, & Support
       await tester.scrollUntilVisible(

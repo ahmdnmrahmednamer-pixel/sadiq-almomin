@@ -184,7 +184,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'منبه الفجر وقيام الليل الذكي ⏰',
+        title: 'منبه الفجر وقيام الليل ⏰',
         subtitle: 'إيقاظ دقيق قبل الفجر بنغمات قرآنية وأذكار الاستيقاظ',
         semanticLabel: 'منبه الفجر وقيام الليل',
         icon: Icons.alarm_rounded,
@@ -263,9 +263,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'السبحة الإلكترونية الذكية 📿',
-        subtitle: 'عداد التسبيح الذكي مع الاهتزاز وحفظ الأوراد',
-        semanticLabel: 'السبحة الإلكترونية الذكية',
+        title: 'السبحة الإلكترونية 📿',
+        subtitle: 'عداد التسبيح مع الاهتزاز وحفظ الأوراد',
+        semanticLabel: 'السبحة الإلكترونية',
         icon: Icons.fingerprint_rounded,
         color: const Color(0xFF0D9488),
         categoryKey: 'adhkar',

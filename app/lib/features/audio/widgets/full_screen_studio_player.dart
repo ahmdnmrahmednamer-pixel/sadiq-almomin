@@ -219,7 +219,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                   Icon(Icons.bedtime_rounded, color: AppColors.accentGold, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    'مؤقت النوم الذكي (إيقاف تلقائي)',
+                    'مؤقت النوم (إيقاف تلقائي)',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),

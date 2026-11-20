@@ -32,7 +32,7 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('الورد اليومي الذكي وخطة الطاعات'),
+          title: const Text('الورد اليومي وخطة الطاعات'),
           actions: [
             ScreenLayoutPopupButton(
               currentMode: _layoutMode,

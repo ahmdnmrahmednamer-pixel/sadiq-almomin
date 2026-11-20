@@ -139,7 +139,7 @@ void main() {
 
       await tester.pumpWidget(const MaterialApp(home: DailyWirdScreen()));
       await tester.pumpAndSettle();
-      expect(find.text('الورد اليومي الذكي وخطة الطاعات'), findsOneWidget);
+      expect(find.text('الورد اليومي وخطة الطاعات'), findsOneWidget);
 
       await tester.pumpWidget(const MaterialApp(home: DaawahCardStudioScreen()));
       await tester.pumpAndSettle();

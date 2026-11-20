@@ -154,7 +154,7 @@ void showSettingsAboutModal(BuildContext context) {
                       isLargeText: isLargeText,
                       icon: Icons.fingerprint_rounded,
                       iconColor: const Color(0xFF7C3AED),
-                      title: 'حصن المسلم والسنة النبوية والسبحة الذكية',
+                      title: 'حصن المسلم والسنة النبوية والسبحة',
                       description: 'أذكار اليوم والسبحة',
                     ),
 

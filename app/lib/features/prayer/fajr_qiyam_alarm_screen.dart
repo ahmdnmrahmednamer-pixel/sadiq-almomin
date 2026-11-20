@@ -442,7 +442,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        '٢. منبّه قيام الليل والتهجد الذكي (الثلث الأخير)',
+                        '٢. منبّه قيام الليل والتهجد (الثلث الأخير)',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w900,

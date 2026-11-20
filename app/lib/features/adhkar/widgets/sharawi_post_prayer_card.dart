@@ -455,7 +455,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                     Icon(Icons.auto_awesome_rounded, size: 12, color: AppColors.accentGold),
                     SizedBox(width: 4),
                     Text(
-                      'أدعية خاشعة ومأثورة',
+                      'أدعية مأثورة',
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
