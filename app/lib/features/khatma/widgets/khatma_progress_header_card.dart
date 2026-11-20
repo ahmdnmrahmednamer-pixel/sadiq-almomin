@@ -178,7 +178,7 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'الجدولة التعويضية الذكية',
+                        'الجدولة التعويضية',
                         style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.bold, fontSize: 15),
                       ),
                     ),
