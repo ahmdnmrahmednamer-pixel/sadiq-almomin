@@ -90,7 +90,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       AppDirectoryItem(
         id: 'daawah_studio',
         title: context.tr('daawah_studio'),
-        subtitle: 'تصميم بطاقات الآيات والأحاديث النبوية بخطوط وزخارف فاخرة',
+        subtitle: 'تصميم بطاقات الآيات والأحاديث النبوية بخطوط وزخارف',
         category: 'إشراقة اليوم',
         categoryKey: 'home',
         route: '/daawah-studio',
@@ -277,7 +277,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       AppDirectoryItem(
         id: 'memorization',
         title: context.tr('memorization'),
-        subtitle: 'المساعد الذكي للتحفيظ مع تكرار الآيات وتحديد المقاطع',
+        subtitle: 'مساعد التحفيظ مع تكرار الآيات وتحديد المقاطع',
         category: 'رحاب القرآن',
         categoryKey: 'quran',
         route: '/memorization',
@@ -522,7 +522,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         id: 'tasbih',
         title: context.tr('electronic_tasbih'),
         subtitle:
-            'المسبحة الإلكترونية الذكية مع ميزة الاهتزاز وحفظ العداد التلقائي',
+            'المسبحة الإلكترونية مع ميزة الاهتزاز وحفظ العداد التلقائي',
         category: 'أُنس الذاكرين',
         categoryKey: 'adhkar',
         route: '/tasbih',
@@ -623,7 +623,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
       AppDirectoryItem(
         id: 'zakat',
         title: context.tr('zakat_faraid'),
-        subtitle: 'حاسبة الزكاة الذكية: زكاة المال، الذهب والفضة، عروض التجارة',
+        subtitle: 'حاسبة الزكاة: زكاة المال، الذهب والفضة، عروض التجارة',
         category: 'رياض العلم',
         categoryKey: 'library',
         route: '/zakat',
