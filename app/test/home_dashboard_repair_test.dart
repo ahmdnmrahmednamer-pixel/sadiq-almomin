@@ -445,7 +445,7 @@ void main() {
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
 
-      await _performSemanticTapByLabel(tester, 'السبحة الذكية، عداد الورد والتسبيح');
+      await _performSemanticTapByLabel(tester, 'السبحة، عداد الورد والتسبيح');
       expect(find.byType(TasbihScreen), findsOneWidget);
       await tester.tap(find.byType(BackButton).first);
       await tester.pumpAndSettle();
@@ -585,7 +585,7 @@ void main() {
         await verifyRouteTap('متابعة قراءة القرآن الكريم', '/mushaf-pages');
         await verifyRouteTap('فهرس المصحف والأجزاء', '/mushaf-reader');
         await verifyRouteTap('حصن المسلم، الأذكار والأدعية', '/adhkar?index=0');
-        await verifyRouteTap('السبحة الذكية، عداد الورد والتسبيح', '/tasbih');
+        await verifyRouteTap('السبحة، عداد الورد والتسبيح', '/tasbih');
         await verifyRouteTap('المصحف الشريف', '/mushaf', isPush: false);
         await verifyRouteTap('الصلاة والقبلة', '/prayer', isPush: false);
         await verifyRouteTap('الأذكار والسبحة', '/adhkar-hub', isPush: false);
