@@ -392,7 +392,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                 ),
                 icon: const Icon(Icons.notifications_active_rounded),
                 label: const Text(
-                  'تجربة رنين منبّه الاستعداد للفجر الآن 🔔',
+                  'تجربة رنين منبّه الاستعداد للفجر الآن',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () =>
@@ -481,7 +481,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
               options: const [
                 AppDropdownOption(
                   value: 'last_third',
-                  label: 'بداية الثلث الأخير من الليل تلقائياً 🌙',
+                  label: 'بداية الثلث الأخير من الليل تلقائياً',
                 ),
                 AppDropdownOption(
                   value: 'before_fajr',
@@ -534,7 +534,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                 ),
                 icon: const Icon(Icons.nights_stay_rounded),
                 label: const Text(
-                  'تجربة رنين منبّه قيام الليل الآن 🌙',
+                  'تجربة رنين منبّه قيام الليل الآن',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () =>
