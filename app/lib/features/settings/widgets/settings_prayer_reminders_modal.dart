@@ -1,3 +1,4 @@
+import '../../../core/ui/notification_preference_error.dart';
 import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
@@ -901,7 +902,9 @@ void showSettingsSoundModeModal(BuildContext context) {
 
       return Directionality(
         textDirection: SettingsService.instance.textDirection,
-        child: Padding(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: NotificationPreferenceError()),
+          Flexible(child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -956,8 +959,8 @@ void showSettingsSoundModeModal(BuildContext context) {
                         style: const TextStyle(fontSize: 11.5),
                       ),
                       onTap: () async {
-                        await PrayerNotificationService.instance.setSoundMode(item['mode'] as AdhanSoundMode);
-                        if (ctx.mounted) Navigator.pop(ctx);
+                        final saved = await PrayerNotificationService.instance.setSoundMode(item['mode'] as AdhanSoundMode);
+                        if (saved && ctx.mounted) Navigator.pop(ctx);
                       },
                     ),
                   ),
@@ -966,7 +969,8 @@ void showSettingsSoundModeModal(BuildContext context) {
               const SizedBox(height: 12),
             ],
           ),
-        ),
+        )),
+        ]),
       );
     },
   );

@@ -1,3 +1,4 @@
+import '../../../core/ui/notification_preference_error.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/prayer_service.dart';
 import '../../../core/notifications/prayer_notification_service.dart';
@@ -85,7 +86,7 @@ class PrayerTimesCard extends StatelessWidget {
     }
 
     return Column(
-      children: data!.prayers.map((p) {
+      children: [const NotificationPreferenceError(), ...data!.prayers.map((p) {
         final isNotifOn = PrayerNotificationService.instance.isPrayerEnabled(p.name);
         final prayerIcon = getPrayerIcon(p.name);
 
@@ -207,7 +208,7 @@ class PrayerTimesCard extends StatelessWidget {
             ),
           ),
         );
-      }).toList(),
+      })],
     );
   }
 }

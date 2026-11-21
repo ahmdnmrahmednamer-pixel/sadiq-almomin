@@ -416,6 +416,8 @@ class PrayerNotificationService extends ChangeNotifier {
     _sleepAdhkarMinute = prefs.getInt('notif_sleep_adhkar_minute') ?? 30;
 
     _vibrateOnStop = prefs.getBool('notif_vibrate_on_stop') ?? true;
+    _preferenceError = null;
+    _muteUntil = null;
     final muteStr = prefs.getString('notif_mute_until');
     if (muteStr != null) {
       final parsed = DateTime.tryParse(muteStr);
@@ -813,21 +815,59 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
-  Future<void> togglePrayer(String prayerName, bool enabled) async {
-    _prayerToggles[prayerName] = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notif_prayer_$prayerName', enabled);
-    rescheduleCurrentPrayers();
-    notifyListeners();
+  String? _preferenceError;
+  String? get preferenceError => _preferenceError;
+  int _preferenceRevision = 0;
+  int get preferenceRevision => _preferenceRevision;
+  final List<Future<void> Function()> _preferenceQueue = [];
+  bool _preferenceBusy = false;
+
+  Future<bool> _saveNotificationPreference(
+    Future<bool> Function(SharedPreferences) write,
+    void Function() publish,
+  ) {
+    final result = Completer<bool>();
+    _preferenceQueue.add(() async {
+      var saved = false;
+      SharedPreferences? prefs;
+      try {
+        prefs = await SharedPreferences.getInstance();
+        if (!await write(prefs)) throw StateError('Preference write rejected');
+        publish();
+        _preferenceError = null;
+        saved = true;
+        rescheduleCurrentPrayers();
+      } catch (_) {
+        try { await prefs?.reload(); } catch (_) {}
+        _preferenceError = 'لم يُحفظ تعديل التنبيه. بقي الإعداد السابق كما كان. حاول مرة أخرى.';
+      }
+      _preferenceRevision++;
+      notifyListeners();
+      _preferenceBusy = false;
+      _runNextPreference();
+      result.complete(saved);
+    });
+    _runNextPreference();
+    return result.future;
   }
 
-  Future<void> setSoundMode(AdhanSoundMode mode) async {
-    _soundMode = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notif_sound_mode', mode.name);
-    rescheduleCurrentPrayers();
-    notifyListeners();
+  void _runNextPreference() {
+    if (_preferenceBusy || _preferenceQueue.isEmpty) return;
+    _preferenceBusy = true;
+    unawaited(_preferenceQueue.removeAt(0)());
   }
+
+  Future<bool> togglePrayer(String prayerName, bool enabled) =>
+      _saveNotificationPreference(
+        (prefs) => prefs.setBool('notif_prayer_$prayerName', enabled),
+        () => _prayerToggles[prayerName] = enabled,
+      );
+
+  Future<bool> setSoundMode(AdhanSoundMode mode) =>
+      _saveNotificationPreference(
+        (prefs) => prefs.setString('notif_sound_mode', mode.name),
+        () => _soundMode = mode,
+      );
 
   Future<void> toggleVibrateOnStop(bool enabled) async {
     _vibrateOnStop = enabled;
@@ -836,21 +876,18 @@ class PrayerNotificationService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> muteForDuration(Duration duration) async {
-    _muteUntil = DateTime.now().add(duration);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notif_mute_until', _muteUntil!.toIso8601String());
-    rescheduleCurrentPrayers();
-    notifyListeners();
+  Future<bool> muteForDuration(Duration duration) {
+    final until = DateTime.now().add(duration);
+    return _saveNotificationPreference(
+      (prefs) => prefs.setString('notif_mute_until', until.toIso8601String()),
+      () => _muteUntil = until,
+    );
   }
 
-  Future<void> cancelTemporaryMute() async {
-    _muteUntil = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('notif_mute_until');
-    rescheduleCurrentPrayers();
-    notifyListeners();
-  }
+  Future<bool> cancelTemporaryMute() => _saveNotificationPreference(
+    (prefs) => prefs.remove('notif_mute_until'),
+    () => _muteUntil = null,
+  );
 
   /// Only keys with an explicit Android sound mapping can be newly assigned.
   /// Loading old preferences does not call this guard or change stored choices.

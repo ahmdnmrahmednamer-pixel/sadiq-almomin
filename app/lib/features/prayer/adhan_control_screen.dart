@@ -1,3 +1,4 @@
+import '../../core/ui/notification_preference_error.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/notifications/active_prayer_alert.dart';
 import 'dart:async';
@@ -627,6 +628,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   ),
                   const SizedBox(height: 10),
 
+                  const NotificationPreferenceError(),
                   Expanded(
                     child: ListView(
                       physics: const BouncingScrollPhysics(),
@@ -673,7 +675,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     activeTrackColor: AppColors.primaryGreen,
                                     onChanged: (val) async {
                                       await notifService.toggleMaster(val);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                       setModalState(() {});
                                       setState(() {});
                                     },
@@ -697,7 +699,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     selected: isMuted,
                                     onSelected: (_) async {
                                       await notifService.muteForDuration(const Duration(hours: 2));
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                       setModalState(() {});
                                       setState(() {});
                                     },
@@ -707,7 +709,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     selected: false,
                                     onSelected: (_) async {
                                       await notifService.muteForDuration(const Duration(hours: 4));
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                       setModalState(() {});
                                       setState(() {});
                                     },
@@ -717,7 +719,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     selected: false,
                                     onSelected: (_) async {
                                       await notifService.muteForDuration(const Duration(hours: 12));
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                       setModalState(() {});
                                       setState(() {});
                                     },
@@ -728,7 +730,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                       label: const Text('إلغاء الكتم'),
                                       onPressed: () async {
                                         await notifService.cancelTemporaryMute();
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                         setModalState(() {});
                                         setState(() {});
                                       },
@@ -798,7 +800,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 return InkWell(
                                   onTap: () async {
                                     await notifService.setSoundMode(item['mode'] as AdhanSoundMode);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                     setModalState(() {});
                                     setState(() {});
                                   },
@@ -936,7 +938,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   value: vibrateOnStop,
                                   onChanged: (val) async {
                                     await notifService.toggleVibrateOnStop(val);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                     setModalState(() {});
                                     setState(() {});
                                   },
@@ -959,7 +961,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   value: shakeEnabled,
                                   onChanged: (val) async {
                                     await sensorService.toggleShakeToStop(val);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                     setModalState(() {});
                                     setState(() {});
                                   },
@@ -982,7 +984,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   value: flipEnabled,
                                   onChanged: (val) async {
                                     await sensorService.toggleFlipToMute(val);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                     setModalState(() {});
                                     setState(() {});
                                   },
@@ -1029,7 +1031,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                     value: isEnabled,
                                     onChanged: (val) async {
                                       await notifService.togglePrayer(prayer, val);
-                    if (!mounted) return;
+                    if (!mounted || !modalContext.mounted) return;
                                       setModalState(() {});
                                       setState(() {});
                                     },
