@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:almomin/core/services/settings_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +16,25 @@ import 'package:almomin/features/settings/widgets/settings_adhan_voice_modal.dar
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  final calls = <MethodCall>[];
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  const notifications =
+      MethodChannel('dexterous.com/flutter/local_notifications');
+  const timezone = MethodChannel('flutter_timezone');
   setUp(() async {
+    calls.clear();
+    messenger.setMockMethodCallHandler(notifications, (call) async {
+      calls.add(call);
+      if (call.method == 'getNotificationAppLaunchDetails')
+        return {'notificationLaunchedApp': false};
+      return true;
+    });
+    messenger.setMockMethodCallHandler(timezone, (_) async => 'Africa/Cairo');
+    IslamicAudioService.instance.disableNativePlayerForTesting = true;
+    await IslamicAudioService.instance.stop();
     SharedPreferences.setMockInitialValues({
+      'app_language': 'ar',
       'notif_shake_to_stop': true,
       'notif_flip_to_mute': true,
       'notif_overlay_window': true,
@@ -24,14 +43,23 @@ void main() {
       'notif_vibrate_on_stop': true,
     });
     // Use an empty stream override in unit tests to avoid missing native hardware channels
-    AdhanSensorGestureService.instance.accelerometerStreamOverride = const Stream<AccelerometerEvent>.empty();
-    await AdhanSensorGestureService.instance.init();
+    AdhanSensorGestureService.instance.accelerometerStreamOverride =
+        const Stream<AccelerometerEvent>.empty();
+    await SettingsService.instance.init(forceReload: true);
+    await AdhanSensorGestureService.instance.init(forceReload: true);
     await PrayerNotificationService.instance.init(forceReload: true);
-    await PrayerTrackerService.instance.init();
+    await PrayerTrackerService.instance.init(forceReload: true);
+    await Future<void>.delayed(Duration.zero);
+    calls.clear();
   });
 
-  tearDown(() {
+  tearDown(() async {
     AdhanSensorGestureService.instance.stopListening();
+    AdhanSensorGestureService.instance.accelerometerStreamOverride = null;
+    await IslamicAudioService.instance.stop();
+    IslamicAudioService.instance.disableNativePlayerForTesting = false;
+    messenger.setMockMethodCallHandler(notifications, null);
+    messenger.setMockMethodCallHandler(timezone, null);
   });
 
   group('AdhanSensorGestureService Unit & Persistence Tests', () {
@@ -114,7 +142,8 @@ void main() {
       expect(IslamicAudioService.instance.isPlaying, isFalse);
     });
 
-    test('isBatteryOptimizationIgnored returns a boolean status safely', () async {
+    test('isBatteryOptimizationIgnored returns a boolean status safely',
+        () async {
       final service = PrayerNotificationService.instance;
       final ignored = await service.isBatteryOptimizationIgnored();
       expect(ignored, isA<bool>());
@@ -123,7 +152,9 @@ void main() {
     test('snoozeAdhan schedules without throwing exceptions', () async {
       final service = PrayerNotificationService.instance;
       await service.snoozeAdhan(5, 'الفجر');
-      expect(true, isTrue);
+      final call = calls.singleWhere((c) => c.method == 'zonedSchedule');
+      expect(call.arguments['id'], 995);
+      expect(call.arguments['payload'], 'type=adhan&prayer=الفجر');
     });
 
     test('Toggling vibrateOnStop persists correctly in preferences', () async {
@@ -158,7 +189,8 @@ void main() {
   });
 
   group('AdhanControlScreen Widget Rendering & Action Tests', () {
-    testWidgets('Renders AdhanControlScreen with dedication, prayer title, and controls',
+    testWidgets(
+        'Renders AdhanControlScreen with dedication, prayer title, and controls',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -183,7 +215,8 @@ void main() {
       expect(find.text('نداء الأذان المبارك — حيّ على الصلاة'), findsOneWidget);
 
       // Check prayer headline
-      expect(find.text('الله أكبر.. حان الآن أذان العصر'), findsOneWidget);
+      expect(find.text('معاينة أذان العصر'), findsOneWidget);
+      expect(find.text('الله أكبر.. حان الآن أذان العصر'), findsNothing);
 
       // Check stop button
       expect(find.text('إيقاف الأذان فوراً'), findsOneWidget);
@@ -193,20 +226,22 @@ void main() {
       expect(find.textContaining('اقلب الهاتف للكتم'), findsOneWidget);
 
       // Check secondary actions
-      expect(find.text('استئناف'), findsOneWidget);
+      expect(find.text('تشغيل الأذان الآن'), findsOneWidget);
       expect(find.text('غفوة ٥ دقائق'), findsOneWidget);
       expect(find.text('بدء عداد الإقامة'), findsOneWidget);
       expect(find.text('دعاء الأذان'), findsOneWidget);
       expect(find.text('خيارات الأذان'), findsOneWidget);
 
       // Check Qibla card & Prayer Logger
-      expect(find.textContaining('اتجاه القبلة نحو الكعبة المشرفة'), findsOneWidget);
+      expect(find.textContaining('اتجاه القبلة نحو الكعبة المشرفة'),
+          findsOneWidget);
       expect(find.textContaining('هل صليت العصر؟'), findsOneWidget);
       expect(find.text('جماعة بالمسجد'), findsOneWidget);
       expect(find.text('صليت حاضراً'), findsOneWidget);
     });
 
-    testWidgets('Tapping manual stop button activates dedicated stop & serenity screen',
+    testWidgets(
+        'Tapping manual stop button activates dedicated stop & serenity screen',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -235,8 +270,12 @@ void main() {
 
       // Verify Dedicated Stop View is displayed
       expect(find.text('تم إيقاف الأذان بنجاح ⏹️'), findsOneWidget);
-      expect(find.textContaining('نسأل الله العظيم أن يتقبل صلاتكم وطاعتكم'), findsOneWidget);
-      expect(find.textContaining('اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ'), findsOneWidget);
+      expect(find.textContaining('نسأل الله العظيم أن يتقبل صلاتكم وطاعتكم'),
+          findsOneWidget);
+      expect(
+          find.textContaining(
+              'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ'),
+          findsOneWidget);
       expect(find.text('استئناف الأذان'), findsOneWidget);
       expect(find.text('العودة للتطبيق'), findsOneWidget);
 
@@ -248,7 +287,8 @@ void main() {
       expect(find.text('إيقاف الأذان فوراً'), findsOneWidget);
     });
 
-    testWidgets('Tapping adhan options button opens multiple activation & dismissal modal',
+    testWidgets(
+        'Tapping adhan options button opens multiple activation & dismissal modal',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -276,14 +316,16 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       // Verify modal content
-      expect(find.text('خيارات تفعيل وإيقاف الأذان والتنبيهات'), findsOneWidget);
+      expect(
+          find.text('خيارات تفعيل وإيقاف الأذان والتنبيهات'), findsOneWidget);
       expect(find.text('تنبيه الأذان العام مفعّل'), findsOneWidget);
       expect(find.textContaining('كتم مؤقت'), findsOneWidget);
       expect(find.text('اهتزاز قوي فقط (بدون رنين)'), findsOneWidget);
       expect(find.text('الاهتزاز اللمسي عند الإيقاف'), findsOneWidget);
     });
 
-    testWidgets('Tapping prayer logger updates tracker and displays confirmation banner',
+    testWidgets(
+        'Tapping prayer logger updates tracker and displays confirmation banner',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -311,8 +353,16 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Verify success feedback
-      expect(find.textContaining('تقبل الله صلاتكم في جماعة'), findsWidgets);
-      expect(find.textContaining('تم تسجيل أداء صلاة الظهر بنجاح'), findsOneWidget);
+      expect(
+          find.textContaining(
+              'تم تسجيل أداء صلاة الظهر في جماعة. تقبل الله صلاتكم.'),
+          findsOneWidget);
+      expect(PrayerTrackerService.instance.todayRecord.dhuhr, isTrue);
+      await tester.runAsync(
+          () => PrayerTrackerService.instance.init(forceReload: true));
+      expect(PrayerTrackerService.instance.todayRecord.dhuhr, isTrue);
+      expect(find.textContaining('تم تسجيل أداء صلاة الظهر بنجاح'),
+          findsOneWidget);
     });
 
     testWidgets('Tapping simulated shake stops adhan and shows feedback banner',
@@ -342,7 +392,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.textContaining('تم إيقاف الأذان بنجاح عبر هز الهاتف'), findsWidgets);
+      expect(find.text('تم إيقاف الأذان بنجاح ⏹️'), findsOneWidget);
+      expect(IslamicAudioService.instance.isPlaying, isFalse);
+      expect(
+          calls.where((c) => c.method == 'cancel' || c.method == 'cancelAll'),
+          isEmpty);
     });
 
     testWidgets('Tapping simulated flip mutes adhan and shows feedback banner',
@@ -372,10 +426,15 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.textContaining('تم كتم الأذان بنجاح عند قلب الهاتف على وجهه'), findsWidgets);
+      expect(find.text('تم إيقاف الأذان بنجاح ⏹️'), findsOneWidget);
+      expect(IslamicAudioService.instance.isPlaying, isFalse);
+      expect(
+          calls.where((c) => c.method == 'cancel' || c.method == 'cancelAll'),
+          isEmpty);
     });
 
-    testWidgets('Tapping Duaa button opens bottom sheet with authentic text and copy button',
+    testWidgets(
+        'Tapping Duaa button opens bottom sheet with authentic text and copy button',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -402,13 +461,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       expect(find.text('دعاء ما بعد الأذان (الوسيلة)'), findsOneWidget);
-      expect(find.textContaining('اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ'), findsOneWidget);
+      expect(
+          find.textContaining(
+              'اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ'),
+          findsOneWidget);
       expect(find.text('نسخ الدعاء المبارك'), findsOneWidget);
     });
   });
 
   group('SettingsScreen Gesture & Overlay Controls UI Tests', () {
-    testWidgets('SettingsScreen displays new motion gestures and overlay switches',
+    testWidgets(
+        'SettingsScreen displays new motion gestures and overlay switches',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -429,19 +492,22 @@ void main() {
       await tester.pumpAndSettle();
       final overlay = find.text('الظهور فوق التطبيقات');
       await tester.scrollUntilVisible(overlay, 300,
-        scrollable: find.byType(Scrollable).first);
+          scrollable: find.byType(Scrollable).first);
       expect(overlay, findsOneWidget);
       expect(find.text('الهز للإيقاف'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('القلب للكتم'), 150,
+          scrollable: find.byType(Scrollable).first);
       expect(find.text('القلب للكتم'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('تجربة شاشة الأذان'), 200,
-        scrollable: find.byType(Scrollable).first);
+          scrollable: find.byType(Scrollable).first);
       expect(find.text('تجربة شاشة الأذان'), findsOneWidget);
-
     });
   });
 
   group('Expanded High-Definition Adhan Audio Library Tests', () {
-    test('All expanded Adhan tracks exist in IslamicAudioService with unique IDs and valid metadata', () {
+    test(
+        'All expanded Adhan tracks exist in IslamicAudioService with unique IDs and valid metadata',
+        () {
       final adhanTracks = IslamicAudioService.allTracks
           .where((t) => t.type == IslamicAudioType.adhan)
           .toList();
@@ -449,7 +515,8 @@ void main() {
       expect(adhanTracks.length, greaterThanOrEqualTo(30));
 
       final ids = adhanTracks.map((t) => t.id).toSet();
-      expect(ids.length, equals(adhanTracks.length), reason: 'All track IDs must be unique');
+      expect(ids.length, equals(adhanTracks.length),
+          reason: 'All track IDs must be unique');
 
       for (final track in adhanTracks) {
         expect(track.title.isNotEmpty, isTrue);
@@ -479,21 +546,28 @@ void main() {
     test('getAdhanVoiceName resolves new muezzin keys properly', () {
       expect(getAdhanVoiceName('adhan_alqatami'), contains('ناصر القطامي'));
       expect(getAdhanVoiceName('adhan_alzamil'), contains('ماجد الزامل'));
-      expect(getAdhanVoiceName('adhan_mansoor_alsalimi'), contains('منصور السالمي'));
+      expect(getAdhanVoiceName('adhan_mansoor_alsalimi'),
+          contains('منصور السالمي'));
       expect(getAdhanVoiceName('adhan_essam_bukhari'), contains('عصام بخاري'));
-      expect(getAdhanVoiceName('adhan_farooq_hadrawi'), contains('فاروق حضراوي'));
-      expect(getAdhanVoiceName('adhan_mustafa_ismail'), contains('مصطفى إسماعيل'));
+      expect(
+          getAdhanVoiceName('adhan_farooq_hadrawi'), contains('فاروق حضراوي'));
+      expect(
+          getAdhanVoiceName('adhan_mustafa_ismail'), contains('مصطفى إسماعيل'));
       expect(getAdhanVoiceName('adhan_omran'), contains('محمد عمران'));
       expect(getAdhanVoiceName('adhan_islam_sobhi'), contains('إسلام صبحي'));
-      expect(getAdhanVoiceName('adhan_wadih_alyamani'), contains('وديع اليمني'));
+      expect(
+          getAdhanVoiceName('adhan_wadih_alyamani'), contains('وديع اليمني'));
       expect(getAdhanVoiceName('adhan_idrees_abkar'), contains('إدريس أبكر'));
       expect(getAdhanVoiceName('adhan_tunisia'), contains('جامع الزيتونة'));
       expect(getAdhanVoiceName('adhan_bosnia'), contains('سراييفو'));
       expect(getAdhanVoiceName('adhan_fajr_alqatami'), contains('الفجر'));
-      expect(getAdhanVoiceName('adhan_haza_albalushi'), contains('هزاع البلوشي'));
+      expect(
+          getAdhanVoiceName('adhan_haza_albalushi'), contains('هزاع البلوشي'));
     });
 
-    test('supported general and Fajr voices persist while unsupported voices cannot overwrite them', () async {
+    test(
+        'supported general and Fajr voices persist while unsupported voices cannot overwrite them',
+        () async {
       final notifications = PrayerNotificationService.instance;
       final prefs = await SharedPreferences.getInstance();
       await notifications.setSelectedAdhanVoice('adhan_hussary');
@@ -502,15 +576,19 @@ void main() {
       expect(notifications.selectedFajrVoice, 'adhan_fajr');
       expect(prefs.getString('notif_selected_adhan'), 'adhan_hussary');
       expect(prefs.getString('notif_selected_fajr_adhan'), 'adhan_fajr');
-      await expectLater(notifications.setSelectedAdhanVoice('adhan_alqatami'), throwsStateError);
-      await expectLater(notifications.setSelectedFajrVoice('adhan_fajr_alqatami'), throwsStateError);
+      await expectLater(notifications.setSelectedAdhanVoice('adhan_alqatami'),
+          throwsStateError);
+      await expectLater(
+          notifications.setSelectedFajrVoice('adhan_fajr_alqatami'),
+          throwsStateError);
       expect(notifications.selectedAdhanVoice, 'adhan_hussary');
       expect(notifications.selectedFajrVoice, 'adhan_fajr');
       expect(prefs.getString('notif_selected_adhan'), 'adhan_hussary');
       expect(prefs.getString('notif_selected_fajr_adhan'), 'adhan_fajr');
     });
 
-    testWidgets('Tapping adhan options modal contains direct navigation to Adhan Audio Studio',
+    testWidgets(
+        'Tapping adhan options modal contains direct navigation to Adhan Audio Studio',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -536,7 +614,8 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(find.textContaining('المكتبة الصوتية للأذان والمؤذنين'), findsOneWidget);
+      expect(find.textContaining('المكتبة الصوتية للأذان والمؤذنين'),
+          findsOneWidget);
     });
   });
 }
