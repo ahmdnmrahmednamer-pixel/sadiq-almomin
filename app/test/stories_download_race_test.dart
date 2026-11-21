@@ -200,7 +200,7 @@ void main() {
 
   tearDown(() async {
     DynamicHttpOverrides.activeHandler = null;
-    for (final sid in ['adam', 'nuh', 'hud_salih', 'ibrahim', 'lut_shuaib', 'yusuf', 'musa']) {
+    for (final sid in ['adam', 'nuh', 'hud_salih', 'ibrahim', 'lut_shuaib', 'yusuf', 'musa_pharaoh']) {
       if (service.isDownloading(sid)) {
         service.cancelDownload(sid);
       }
@@ -223,6 +223,46 @@ void main() {
   });
 
   group('StoriesService Baseline Controls', () {
+    test('unknown story ID cannot download another story or publish a file', () async {
+      var requests = 0;
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        requests++;
+        return TestHttpClientResponse(Stream.value(Uint8List(2048)), contentLength: 2048);
+      };
+      const id = 'nonexistent_story';
+      try {
+        expect(await service.downloadStory(id), isFalse);
+        expect(requests, 0);
+        expect(File('${storiesDir.path}/$id.mp3').existsSync(), isFalse);
+        expect(service.isDownloading(id), isFalse);
+      } finally {
+        await service.deleteDownloadedStory(id);
+      }
+    });
+
+    for (final size in [0, 1000]) {
+      test('rejects $size byte story download without replacing a good copy', () async {
+        const id = 'adam';
+        final good = Uint8List.fromList(List<int>.generate(2048, (i) => i % 251));
+        var response = good;
+        DynamicHttpOverrides.activeHandler = (method, url, req) async =>
+            TestHttpClientResponse(Stream.value(response), contentLength: response.length);
+        try {
+          expect(await service.downloadStory(id), isTrue);
+          final path = service.getLocalAudioPath(id)!;
+          response = Uint8List(size);
+          expect(await service.downloadStory(id), isFalse);
+          expect(File(path).readAsBytesSync(), good);
+          expect(service.isDownloaded(id), isTrue);
+          expect(service.totalDownloadedStoriesBytes, good.length);
+          expect(service.isDownloading(id), isFalse);
+          expect(getLingeringTempFiles(storiesDir, id), isEmpty);
+        } finally {
+          await service.deleteDownloadedStory(id);
+        }
+      });
+    }
+
     test('Control 1: Single successful download completes and marks story downloaded', () async {
       const storyId = 'adam';
       final fakeData = Uint8List(2048);
@@ -654,7 +694,7 @@ void main() {
     });
 
     test('Race 2: Re-download after cancel must complete successfully without being deleted by old request catch block', () async {
-      const storyId = 'musa';
+      const storyId = 'musa_pharaoh';
 
       final req1Started = Completer<void>();
       final req1StreamController = createTestStreamController();
