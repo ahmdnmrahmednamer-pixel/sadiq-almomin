@@ -31,6 +31,8 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
   }
 }
 
+enum PrayerScheduleOutcome { applied, skipped, superseded, failed }
+
 enum ShortReminderFrequency { off, halfHourly, hourly, twoHourly, daily }
 
 enum AdhanSoundMode {
@@ -1230,15 +1232,17 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
-  Future<void> _cancelLocationDerivedRange(int generation) async {
+  Future<bool> _cancelLocationDerivedRange(int generation) async {
+    var applied = true;
     for (int id = prayerDerivedNotificationIdStart;
         id <= prayerDerivedNotificationIdEnd;
         id++) {
-      if (generation != _derivedScheduleGeneration) return;
+      if (generation != _derivedScheduleGeneration) return false;
       try {
         await _localNotifications.cancel(id);
-      } catch (_) {}
+      } catch (_) { applied = false; }
     }
+    return applied;
   }
 
   /// Cancels ONLY location-derived prayer notifications (100..399, plus legacy
@@ -1267,13 +1271,13 @@ class PrayerNotificationService extends ChangeNotifier {
 
   /// Schedules or cancels the fixed-clock Friday Sunnahs & Al-Kahf reminder on
   /// its dedicated ID (804), independent of GPS location availability.
-  Future<void> scheduleFridayReminder() async {
-    if (!_isInitialized) return;
+  Future<bool> scheduleFridayReminder() async {
+    if (!_isInitialized) return false;
     if (!_masterEnabled || !_fridayReminderEnabled) {
       try {
         await _localNotifications.cancel(fridayReminderNotificationId);
-      } catch (_) {}
-      return;
+        return true;
+      } catch (_) { return false; }
     }
     _ensureTimeZonesInitialized();
     try {
@@ -1315,8 +1319,10 @@ class PrayerNotificationService extends ChangeNotifier {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
+      return true;
     } catch (e) {
       debugPrint('Error scheduling Friday reminder: $e');
+      return false;
     }
   }
 
@@ -1559,47 +1565,47 @@ class PrayerNotificationService extends ChangeNotifier {
     );
   }
 
-  Future<void> schedulePrayerNotifications(PrayerData data) async {
+  Future<PrayerScheduleOutcome> schedulePrayerNotifications(PrayerData data) async {
     final int generation = ++_derivedScheduleGeneration;
-    if (!_masterEnabled || !_isInitialized) return;
+    if (!_masterEnabled || !_isInitialized) return PrayerScheduleOutcome.skipped;
 
-    await _serializeDerivedOp<void>(() async {
+    return _serializeDerivedOp<PrayerScheduleOutcome>(() async {
       bool isStale() =>
           generation != _derivedScheduleGeneration ||
           !_masterEnabled ||
           !_isInitialized;
 
-      if (isStale()) return;
+      if (isStale()) return PrayerScheduleOutcome.superseded;
 
       try {
         final android = _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
         if (android != null) {
           final notificationsAllowed = await android.areNotificationsEnabled();
-          if (isStale()) return;
+          if (isStale()) return PrayerScheduleOutcome.superseded;
           final exactAllowed = await android.canScheduleExactNotifications();
-          if (isStale()) return;
+          if (isStale()) return PrayerScheduleOutcome.superseded;
           if (notificationsAllowed == false || exactAllowed == false) {
             _prayerSchedulingError = notificationsAllowed == false
                 ? 'لم تُجدول تنبيهات الصلاة: إشعارات التطبيق غير مسموحة. اسمح بها من إعدادات الجهاز ثم أعد المحاولة. لم نحذف الجدولة السابقة، لكن لا نعتمد عليها مع الإذن المغلق.'
                 : 'لم تُجدول تنبيهات الصلاة: إذن المنبهات الدقيقة غير مسموح. اسمح به من إعدادات الجهاز ثم أعد المحاولة. لم نحذف الجدولة السابقة، لكن النظام قد يكون ألغاها عند سحب الإذن.';
             notifyListeners();
-            return;
+            return PrayerScheduleOutcome.failed;
           }
         }
-        await _cancelLocationDerivedRange(generation);
-        if (isStale()) return;
+        final cleared = await _cancelLocationDerivedRange(generation);
+        if (isStale()) return PrayerScheduleOutcome.superseded;
         final now = DateTime.now();
 
         final prayers = data.notificationPrayers ?? data.prayers;
         int notificationId = prayerDerivedNotificationIdStart;
         for (final prayer in prayers) {
-          if (isStale()) return;
+          if (isStale()) return PrayerScheduleOutcome.superseded;
           if (!isPrayerEnabled(prayer.name)) continue;
           if (isTemporarilyMuted && prayer.time.isBefore(_muteUntil!)) continue;
 
           if (prayer.name.contains('الشروق')) {
             if (prayer.time.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
               final sunriseDetails = AndroidNotificationDetails(
                 _quietModeChannel('prayer_sunrise_channel'),
@@ -1621,14 +1627,14 @@ class PrayerNotificationService extends ChangeNotifier {
                 uiLocalNotificationDateInterpretation:
                     UILocalNotificationDateInterpretation.absoluteTime,
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
             continue;
           }
 
           // Schedule Main Adhan / Prayer Time Notification only if prayer time is in the future
           if (prayer.time.isAfter(now)) {
-            if (isStale()) return;
+            if (isStale()) return PrayerScheduleOutcome.superseded;
             final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
             final isFajr = prayer.name.contains('الفجر');
             final prayerVoice = getPrayerVoice(prayer.name);
@@ -1678,14 +1684,14 @@ class PrayerNotificationService extends ChangeNotifier {
                   UILocalNotificationDateInterpretation.absoluteTime,
               payload: 'type=adhan&prayer=${prayer.name}',
             );
-            if (isStale()) return;
+            if (isStale()) return PrayerScheduleOutcome.superseded;
           }
 
           // Schedule Pre-reminder if enabled
           if (_preReminderEnabled && _preReminderMinutes > 0 && isPreReminderPrayerEnabled(prayer.name) && prayer.name != 'الشروق') {
             final preTime = prayer.time.subtract(Duration(minutes: _preReminderMinutes));
             if (preTime.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final preTz = tz.TZDateTime.from(preTime, tz.local);
               final approChannelId = _resolveApproachingChannelId(prayer.name);
               final approSound = _resolveApproachingSound(prayer.name);
@@ -1713,7 +1719,7 @@ class PrayerNotificationService extends ChangeNotifier {
                     UILocalNotificationDateInterpretation.absoluteTime,
                 payload: 'type=prereminder&prayer=${prayer.name}',
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
           }
 
@@ -1721,7 +1727,7 @@ class PrayerNotificationService extends ChangeNotifier {
           if (_iqamahReminderEnabled && prayer.name != 'الشروق') {
             final iqamahTime = prayer.time.add(Duration(minutes: _iqamahOffsetMinutes));
             if (iqamahTime.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final iqamahTz = tz.TZDateTime.from(iqamahTime, tz.local);
               final iqamahRawSound = IslamicAudioService.allTracks
                       .where((t) => t.id == _selectedIqamahVoice)
@@ -1765,7 +1771,7 @@ class PrayerNotificationService extends ChangeNotifier {
                     UILocalNotificationDateInterpretation.absoluteTime,
                 payload: 'type=iqamah&prayer=${prayer.name}',
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
           }
 
@@ -1773,7 +1779,7 @@ class PrayerNotificationService extends ChangeNotifier {
           if (_postPrayerAdhkarReminderEnabled && prayer.name != 'الشروق') {
             final adhkarTime = prayer.time.add(Duration(minutes: _iqamahOffsetMinutes + _postPrayerAdhkarMinutes));
             if (adhkarTime.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final adhkarTz = tz.TZDateTime.from(adhkarTime, tz.local);
               final adhkarDetails = AndroidNotificationDetails(
                 _quietModeChannel('prayer_post_adhkar_channel'),
@@ -1796,7 +1802,7 @@ class PrayerNotificationService extends ChangeNotifier {
                 uiLocalNotificationDateInterpretation:
                     UILocalNotificationDateInterpretation.absoluteTime,
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
           }
         }
@@ -1806,7 +1812,7 @@ class PrayerNotificationService extends ChangeNotifier {
           for (final shurouqPrayer in prayers.where((p) => p.name.contains('الشروق'))) {
             final duhaTime = shurouqPrayer.time.add(Duration(minutes: _duhaReminderMinutesAfterSunrise));
             if (duhaTime.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final duhaTz = tz.TZDateTime.from(duhaTime, tz.local);
               final duhaDetails = AndroidNotificationDetails(
                 _quietModeChannel('prayer_duha_channel'),
@@ -1829,7 +1835,7 @@ class PrayerNotificationService extends ChangeNotifier {
                 uiLocalNotificationDateInterpretation:
                     UILocalNotificationDateInterpretation.absoluteTime,
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
           }
 
@@ -1839,7 +1845,7 @@ class PrayerNotificationService extends ChangeNotifier {
           for (final fajrPrayer in prayers.where((p) => p.name.contains('الفجر'))) {
             final qiyamTime = fajrPrayer.time.subtract(Duration(minutes: _qiyamOffsetMinutes));
             if (qiyamTime.isAfter(now)) {
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
               final qiyamTz = tz.TZDateTime.from(qiyamTime, tz.local);
               final qiyamDetails = AndroidNotificationDetails(
                 _quietModeChannel('prayer_qiyam_channel'),
@@ -1862,35 +1868,39 @@ class PrayerNotificationService extends ChangeNotifier {
                 uiLocalNotificationDateInterpretation:
                     UILocalNotificationDateInterpretation.absoluteTime,
               );
-              if (isStale()) return;
+              if (isStale()) return PrayerScheduleOutcome.superseded;
             }
           }
 
         }
-        if (isStale()) return;
+        if (isStale()) return PrayerScheduleOutcome.superseded;
         // Schedule fixed-clock Friday Sunnahs & Kahf Reminder on dedicated ID (804)
-        await scheduleFridayReminder();
+        final fridayApplied = await scheduleFridayReminder();
 
-        if (isStale()) return;
+        if (isStale()) return PrayerScheduleOutcome.superseded;
         // Schedule Morning, Evening, and Sleep Adhkar Reminders on dedicated IDs (801..803)
-        await scheduleAdhkarReminders();
+        final adhkarApplied = await scheduleAdhkarReminders();
+        if (!cleared || !fridayApplied || !adhkarApplied) throw StateError('Fixed reminder schedule failed');
         if (!isStale()) {
           _prayerSchedulingError = null;
           notifyListeners();
         }
+        return isStale() ? PrayerScheduleOutcome.superseded : PrayerScheduleOutcome.applied;
       } catch (e) {
         if (!isStale()) {
           _prayerSchedulingError = 'تعذر إكمال جدولة تنبيهات الصلاة. بعض التنبيهات قد لا تعمل. راجع إذن الإشعارات والمنبهات الدقيقة ثم أعد المحاولة. نجاح فتح شاشة الأذان لا يثبت عمل التنبيه.';
           notifyListeners();
         }
         debugPrint('Error scheduling prayer notifications: $e');
+        return isStale() ? PrayerScheduleOutcome.superseded : PrayerScheduleOutcome.failed;
       }
     });
   }
 
   /// Schedules recurring daily notifications for Morning, Evening, and Sleep Adhkar
-  Future<void> scheduleAdhkarReminders() async {
-    if (!_masterEnabled || !_isInitialized) return;
+  Future<bool> scheduleAdhkarReminders() async {
+    if (!_masterEnabled || !_isInitialized) return false;
+    var applied = true;
     _ensureTimeZonesInitialized();
     final now = DateTime.now();
 
@@ -1928,6 +1938,7 @@ class PrayerNotificationService extends ChangeNotifier {
         await _localNotifications.cancel(morningAdhkarNotificationId);
       }
     } catch (e) {
+      applied = false;
       debugPrint('Error scheduling morning adhkar: $e');
     }
 
@@ -1965,6 +1976,7 @@ class PrayerNotificationService extends ChangeNotifier {
         await _localNotifications.cancel(eveningAdhkarNotificationId);
       }
     } catch (e) {
+      applied = false;
       debugPrint('Error scheduling evening adhkar: $e');
     }
 
@@ -2002,8 +2014,10 @@ class PrayerNotificationService extends ChangeNotifier {
         await _localNotifications.cancel(sleepAdhkarNotificationId);
       }
     } catch (e) {
+      applied = false;
       debugPrint('Error scheduling sleep adhkar: $e');
     }
+    return applied;
   }
 
   Future<void> cancelAll() async {
