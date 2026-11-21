@@ -120,13 +120,15 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                         value: 'الكل',
                         label: 'جميع أيام الصيام التطوعي (٧ سنن نبوية)'),
                     AppDropdownOption(
-                        value: 'أسبوعي', label: 'الصيام الأسبوعي (الإثنين والخميس)'),
+                        value: 'أسبوعي',
+                        label: 'الصيام الأسبوعي (الإثنين والخميس)'),
                     AppDropdownOption(
                         value: 'شهري',
                         label: 'الصيام الشهري (الأيام البيض ١٣ و١٤ و١٥)'),
                     AppDropdownOption(
                         value: 'موسمي',
-                        label: 'الصيام الموسمي (الست من شوال • عرفة • عاشوراء)'),
+                        label:
+                            'الصيام الموسمي (الست من شوال • عرفة • عاشوراء)'),
                   ],
                   onChanged: (val) => setState(() => _selectedCategory = val),
                 ),
@@ -136,14 +138,22 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                   secondary: const Icon(Icons.alarm_rounded,
                       color: AppColors.primaryGreen),
                   title: const Text('تذكير السحور وعقد نية صيام النافلة',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 14)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                   subtitle: const Text(VoluntaryFastingService.intentionNote,
                       style: TextStyle(fontSize: 11.5)),
                   activeThumbColor: AppColors.accentGold,
                   activeTrackColor: AppColors.primaryGreen,
                   value: service.suhoorReminderEnabled,
-                  onChanged: (val) => service.toggleSuhoorReminder(val),
+                  onChanged: (val) async {
+                    final saved = await service.toggleSuhoorReminder(val);
+                    if (!saved && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text(
+                            'تعذر تأكيد حفظ اختيار تذكير السحور. يرجى المحاولة مرة أخرى.'),
+                      ));
+                    }
+                  },
                 ),
                 const Divider(),
 
@@ -178,8 +188,8 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color:
-                                      AppColors.accentGold.withValues(alpha: 0.15),
+                                  color: AppColors.accentGold
+                                      .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -203,7 +213,8 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withValues(alpha: 0.06),
+                              color: AppColors.primaryGreen
+                                  .withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
