@@ -132,9 +132,13 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       return;
     }
     final player = AyahAudioPlayer.instance;
-    final reciter = SettingsService.availableReciters.firstWhere(
-        (r) => r.id == session.reciter.value,
-        orElse: () => SettingsService.availableReciters.first);
+    final reciter = SettingsService.resolveReciter(session.reciter.value);
+    if (reciter.serverUrl.isEmpty) {
+      setState(() => status = tr(
+          'القارئ المحفوظ غير متاح. اختر قارئاً آخر بنفسك؛ لم يتغير اختيارك المحفوظ.',
+          'The saved reciter is unavailable. Choose another reciter yourself; your saved choice was not changed.'));
+      return;
+    }
     ownedReciterPreview = reciter.id;
     reciterPreviewPending = true;
     final ok = await player.playReciterPreview(reciter);
@@ -425,10 +429,7 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   List<Widget> quranPage() => [
         ListTile(
             title: Text(tr('القارئ', 'Reciter')),
-            subtitle: Text(SettingsService.availableReciters
-                .firstWhere((r) => r.id == session.reciter.value,
-                    orElse: () => SettingsService.availableReciters.first)
-                .nameAr),
+            subtitle: Text(SettingsService.resolveReciter(session.reciter.value).nameAr),
             trailing: const Icon(Icons.expand_more),
             onTap: () async {
               await stopReciterPreview();
