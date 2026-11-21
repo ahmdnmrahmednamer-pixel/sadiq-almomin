@@ -22,12 +22,68 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
   late int _currentId;
   double _fontSize = 20.0;
   final bool _showExplanation = true;
+  final Set<int> _savingFavorites = {};
+  int? _failedFavorite;
+
+  Future<void> _toggleFavorite(int id) async {
+    if (_savingFavorites.contains(id)) return;
+    setState(() {
+      _savingFavorites.add(id);
+      if (_failedFavorite == id) _failedFavorite = null;
+    });
+    final saved = await HadithService.instance.toggleFavorite(id);
+    if (!mounted) return;
+    setState(() {
+      _savingFavorites.remove(id);
+      if (!saved) _failedFavorite = id;
+    });
+    if (saved) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(HadithService.instance.isFavorite(id)
+            ? 'تمت إضافة الحديث إلى المفضلة' : 'تمت إزالة الحديث من المفضلة'),
+        duration: const Duration(milliseconds: 1500),
+      ));
+    }
+  }
+
+  Widget _favoriteFailure() => Semantics(
+    liveRegion: true,
+    child: Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('لم يتم حفظ تغيير المفضلة: ${HadithService.instance.getHadithById(_failedFavorite!)?.title ?? _failedFavorite.toString()}. لم تتغير المفضلة المحفوظة.'),
+            TextButton(
+              onPressed: () => _toggleFavorite(_failedFavorite!),
+              child: const Text('إعادة محاولة الحفظ'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
 
   @override
   void initState() {
     super.initState();
     _currentId = widget.hadithId;
-    HadithService.instance.setLastRead(_currentId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) HadithService.instance.setLastRead(_currentId);
+    });
+    HadithService.instance.addListener(_refreshFavorites);
+  }
+
+  void _refreshFavorites() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    HadithService.instance.removeListener(_refreshFavorites);
+    super.dispose();
   }
 
   Color _getGradingColor(String grading) {
@@ -94,19 +150,8 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
               isFav ? Icons.star : Icons.star_border,
               color: isFav ? AppColors.accentGold : null,
             ),
-            tooltip: isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
-            onPressed: () {
-              HadithService.instance.toggleFavorite(hadith.id);
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isFav ? 'تمت إزالة الحديث من المفضلة' : 'تمت إضافة الحديث إلى المفضلة ⭐',
-                  ),
-                  duration: const Duration(milliseconds: 1500),
-                ),
-              );
-            },
+            tooltip: _savingFavorites.contains(hadith.id) ? 'جارٍ حفظ المفضلة' : isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
+            onPressed: _savingFavorites.contains(hadith.id) ? null : () => _toggleFavorite(hadith.id),
           ),
           IconButton(
             icon: const Icon(Icons.copy),
@@ -136,6 +181,7 @@ class _HadithDetailScreenState extends State<HadithDetailScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+            if (_failedFavorite != null) _favoriteFailure(),
             // Chapter and Number Badge
             Row(
               children: [
