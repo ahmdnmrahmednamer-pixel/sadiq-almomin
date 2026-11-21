@@ -196,14 +196,14 @@ void main() {
       expect(find.text('استئناف'), findsOneWidget);
       expect(find.text('غفوة ٥ دقائق'), findsOneWidget);
       expect(find.text('بدء عداد الإقامة'), findsOneWidget);
-      expect(find.text('دعاء الأذان 🤲'), findsOneWidget);
+      expect(find.text('دعاء الأذان'), findsOneWidget);
       expect(find.text('خيارات الأذان'), findsOneWidget);
 
       // Check Qibla card & Prayer Logger
       expect(find.textContaining('اتجاه القبلة نحو الكعبة المشرفة'), findsOneWidget);
       expect(find.textContaining('هل صليت العصر؟'), findsOneWidget);
-      expect(find.text('جماعة بالمسجد 🕌'), findsOneWidget);
-      expect(find.text('صليت حاضراً 🤲'), findsOneWidget);
+      expect(find.text('جماعة بالمسجد'), findsOneWidget);
+      expect(find.text('صليت حاضراً'), findsOneWidget);
     });
 
     testWidgets('Tapping manual stop button activates dedicated stop & serenity screen',
@@ -279,8 +279,8 @@ void main() {
       expect(find.text('خيارات تفعيل وإيقاف الأذان والتنبيهات'), findsOneWidget);
       expect(find.text('تنبيه الأذان العام مفعّل'), findsOneWidget);
       expect(find.textContaining('كتم مؤقت'), findsOneWidget);
-      expect(find.text('اهتزاز قوي فقط 📳 (بدون رنين)'), findsOneWidget);
-      expect(find.text('الاهتزاز اللمسي عند الإيقاف 📳'), findsOneWidget);
+      expect(find.text('اهتزاز قوي فقط (بدون رنين)'), findsOneWidget);
+      expect(find.text('الاهتزاز اللمسي عند الإيقاف'), findsOneWidget);
     });
 
     testWidgets('Tapping prayer logger updates tracker and displays confirmation banner',
@@ -304,7 +304,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Tap congregation prayer
-      final masjidBtn = find.text('جماعة بالمسجد 🕌');
+      final masjidBtn = find.text('جماعة بالمسجد');
       expect(masjidBtn, findsOneWidget);
       await tester.tap(masjidBtn);
       await tester.pump();
@@ -395,7 +395,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      final duaaButton = find.text('دعاء الأذان 🤲');
+      final duaaButton = find.text('دعاء الأذان');
       expect(duaaButton, findsOneWidget);
       await tester.tap(duaaButton);
       await tester.pump();
