@@ -151,63 +151,99 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
   }
 
   Future<void> _markReinforcement() async {
-    await MemorizationService.instance.recordReview(
-      surahId: widget.surah.id,
-      ayahNumber: widget.ayah.ayahNumber,
-      surahName: widget.surah.nameAr,
-      rating: MemorizationRating.hard,
-    );
-    if (!mounted) return;
-    setState(() {});
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.timelapse, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'تم تحديد الآية: تحتاج تثبيت ومراجعة',
-                style: TextStyle(fontSize: 13),
+    try {
+      await MemorizationService.instance.recordReview(
+        surahId: widget.surah.id,
+        ayahNumber: widget.ayah.ayahNumber,
+        surahName: widget.surah.nameAr,
+        rating: MemorizationRating.hard,
+      );
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.timelapse, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'تم تحديد الآية: تحتاج تثبيت ومراجعة',
+                  style: TextStyle(fontSize: 13),
+                ),
               ),
-            ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF1B4332),
+        ),
+      );
+    } on MemorizationStorageException catch (error) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          scrollable: true,
+          title: const Text('لم يُحفظ التعديل'),
+          content: Text(error.message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('حسنًا'),
+            )
           ],
         ),
-        duration: Duration(seconds: 2),
-        backgroundColor: Color(0xFF1B4332),
-      ),
-    );
+      );
+    }
   }
 
   Future<void> _markForgotten() async {
-    await MemorizationService.instance.recordReview(
-      surahId: widget.surah.id,
-      ayahNumber: widget.ayah.ayahNumber,
-      surahName: widget.surah.nameAr,
-      rating: MemorizationRating.forgot,
-    );
-    if (!mounted) return;
-    setState(() {});
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.replay_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'تم تحديد الآية: نسيتها وتحتاج إعادة حفظ',
-                style: TextStyle(fontSize: 13),
+    try {
+      await MemorizationService.instance.recordReview(
+        surahId: widget.surah.id,
+        ayahNumber: widget.ayah.ayahNumber,
+        surahName: widget.surah.nameAr,
+        rating: MemorizationRating.forgot,
+      );
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.replay_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'تم تحديد الآية: نسيتها وتحتاج إعادة حفظ',
+                  style: TextStyle(fontSize: 13),
+                ),
               ),
-            ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF8B2500),
+        ),
+      );
+    } on MemorizationStorageException catch (error) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          scrollable: true,
+          title: const Text('لم يُحفظ التعديل'),
+          content: Text(error.message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('حسنًا'),
+            )
           ],
         ),
-        duration: Duration(seconds: 2),
-        backgroundColor: Color(0xFF8B2500),
-      ),
-    );
+      );
+    }
   }
 
   void _showTadabburNote() {
