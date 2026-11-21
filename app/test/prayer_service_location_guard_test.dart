@@ -453,6 +453,42 @@ void main() {
   });
 
   group('GPS-Only Core: Legacy Migration, Provenance, Freshness & Etiquette', () {
+    testWidgets('countdown boundary keeps due OS alarm while moving next prayer; midnight still rebuilds', (tester) async {
+      var clock = DateTime(2026, 11, 21, 9);
+      PrayerService.instance.setClockForTesting(() => clock);
+      mockPrefs.reset({
+        PrayerService.locationSourceKey: PrayerService.locationSourceGps,
+        PrayerService.locationUpdatedAtMsKey: clock.toUtc().millisecondsSinceEpoch,
+        'last_latitude': 30.0, 'last_longitude': 31.0, 'last_city': 'موقع محفوظ',
+      });
+      fakeProvider
+        ..serviceEnabled = true
+        ..checkPermissionResult = LocationPermission.denied;
+      await PrayerService.instance.init(forceReload: true);
+      await tester.pump(const Duration(milliseconds: 100));
+      await waitForAllNotifOps();
+      await tester.pump(const Duration(milliseconds: 100));
+      await waitForAllNotifOps();
+      final before = PrayerService.instance.currentData!;
+      final next = before.nextPrayer!;
+      expect(next.time.day, before.lastUpdated.day);
+      final scheduledBefore = Map<int, Map<String, dynamic>>.from(activeOsNotifications);
+      notifCalls.clear();
+      clock = next.time.add(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+      await waitForAllNotifOps();
+      expect(PrayerService.instance.currentData!.nextPrayer!.time.isAfter(clock), isTrue);
+      expect(notifCalls.where((c) => c.method == 'cancel' || c.method == 'zonedSchedule'), isEmpty,
+        reason: 'countdown must not cancel the due alarm at delivery time');
+      expect(activeOsNotifications, scheduledBefore);
+      clock = DateTime(clock.year, clock.month, clock.day + 1, 0, 0, 1);
+      await tester.pump(const Duration(seconds: 1));
+      await waitForAllNotifOps();
+      expect(PrayerService.instance.currentData!.lastUpdated.day, clock.day);
+      expect(notifCalls.any((c) => c.method == 'zonedSchedule'), isTrue);
+      PrayerService.instance.stopLiveTicker();
+    });
+
     test('Fresh install starts UNKNOWN (no Cairo fallback) and never auto-prompts permission', () async {
       fakeProvider
         ..serviceEnabled = true
