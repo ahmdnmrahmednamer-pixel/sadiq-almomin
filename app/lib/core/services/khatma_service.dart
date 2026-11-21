@@ -53,7 +53,7 @@ class KhatmaPlan {
   }
 
   /// Standard pages per day (ceil(totalPlannedPages / days) or custom pace)
-  int get pagesPerDay => customDailyPace ?? (totalPlannedPages / targetDays.clamp(1, 365)).ceil();
+  int get pagesPerDay => customDailyPace ?? (totalPlannedPages / targetDays.clamp(1, 730)).ceil();
 
   /// Standard pages per prayer if split across 5 daily prayers
   int get pagesPerPrayer => (pagesPerDay / 5).ceil();
@@ -150,7 +150,7 @@ class KhatmaPlan {
     return KhatmaPlan(
       id: json['id'] as String? ?? 'khatma_default',
       title: json['title'] as String? ?? 'ختمة القرآن الكريم',
-      targetDays: ((json['targetDays'] as num?)?.toInt() ?? 30).clamp(1, 365),
+      targetDays: ((json['targetDays'] as num?)?.toInt() ?? 30).clamp(1, 730),
       startDate: DateTime.tryParse(json['startDate'] as String? ?? '') ?? DateTime.now(),
       startingPage: parsedStarting,
       currentPage: parsedCurrent,
