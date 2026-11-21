@@ -55,7 +55,7 @@ void main() {
         notificationsAllowed = denied != 'notifications';
         exactAllowed = denied != 'exact';
         await PrayerNotificationService.instance.schedulePrayerNotifications(futureData());
-        expect(calls.where((c) => c.method == 'cancelAll' || ((c.method == 'cancel' || c.method == 'zonedSchedule') && (c.arguments as Map)['id'] >= 100 && (c.arguments as Map)['id'] <= 139)), isEmpty);
+        expect(calls.where((c) => c.method == 'cancelAll' || ((c.method == 'cancel' || c.method == 'zonedSchedule') && (c.arguments as Map)['id'] >= PrayerNotificationService.prayerDerivedNotificationIdStart && (c.arguments as Map)['id'] <= PrayerNotificationService.prayerDerivedNotificationIdEnd)), isEmpty);
         expect(PrayerNotificationService.instance.prayerSchedulingError, contains(denied == 'exact' ? 'المنبهات الدقيقة' : 'إشعارات التطبيق'));
         final prefs = await SharedPreferences.getInstance();
         expect(prefs.getBool('notif_master_enabled'), isTrue);
@@ -704,6 +704,10 @@ void main() {
       expect(warning, findsOneWidget);
       expect(tester.getSemantics(warning).label, contains('إشعارات التطبيق'));
       expect(find.text('إعادة محاولة جدولة الصلاة'), findsOneWidget);
+      await tester.ensureVisible(find.text('إعادة محاولة جدولة الصلاة'));
+      await tester.pumpAndSettle();
+      expect(tester.getRect(find.text('إعادة محاولة جدولة الصلاة')).bottom, lessThan(760));
+      expect(find.textContaining('لليوم وستة أيام تالية'), findsOneWidget);
       expect(tester.takeException(), isNull);
       const capture = String.fromEnvironment('PRAYER_PERMISSION_PIXELS');
       if (capture.isNotEmpty) {
