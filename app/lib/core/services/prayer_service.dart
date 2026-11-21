@@ -599,7 +599,7 @@ class PrayerService extends ChangeNotifier {
 
   void _tickContinuousCountdown() {
     if (_currentData == null) return;
-    final now = DateTime.now();
+    final now = _nowProvider();
 
     // If date rolled over past midnight, recalculate entire day
     if (now.day != _currentData!.lastUpdated.day) {
@@ -613,7 +613,9 @@ class PrayerService extends ChangeNotifier {
 
       // When the countdown reaches zero or prayer time arrives, recalculate immediately to shift to next prayer
       if (diff.isNegative || diff.inSeconds <= 0) {
-        _calculatePrayers(_currentData!.latitude, _currentData!.longitude, _currentData!.locationName);
+        // This is a display-only countdown transition. Rebuilding the alarm
+        // range here can cancel the due native alarm before Android delivers it.
+        _calculatePrayers(_currentData!.latitude, _currentData!.longitude, _currentData!.locationName, updateSchedules: false);
         return;
       }
 
@@ -1013,8 +1015,8 @@ class PrayerService extends ChangeNotifier {
     return result;
   }
 
-  void _calculatePrayers(double lat, double lng, String locName) {
-    final now = DateTime.now();
+  void _calculatePrayers(double lat, double lng, String locName, {bool updateSchedules = true}) {
+    final now = _nowProvider();
     final coords = Coordinates(lat, lng);
     final params = _getParams();
     final pt = PrayerTimes(
@@ -1098,12 +1100,14 @@ class PrayerService extends ChangeNotifier {
       lastUpdated: now,
     );
     countdownNotifier.value = minDiff;
-    try {
-      PrayerNotificationService.instance.schedulePrayerNotifications(_currentData!);
-    } catch (_) {}
-    try {
-      FajrQiyamAlarmService.instance.syncWithLocationAvailability(_currentData!);
-    } catch (_) {}
+    if (updateSchedules) {
+      try {
+        PrayerNotificationService.instance.schedulePrayerNotifications(_currentData!);
+      } catch (_) {}
+      try {
+        FajrQiyamAlarmService.instance.syncWithLocationAvailability(_currentData!);
+      } catch (_) {}
+    }
     notifyListeners();
   }
 
