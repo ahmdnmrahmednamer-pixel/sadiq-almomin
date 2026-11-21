@@ -858,7 +858,32 @@ class PrayerNotificationService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Only keys with an explicit Android sound mapping can be newly assigned.
+  /// Loading old preferences does not call this guard or change stored choices.
+  static String? adhanAssignmentUnavailableReason(String voiceKey) {
+    final unavailable = IslamicAudioService.unavailableRecordingReason(voiceKey);
+    if (unavailable != null) return unavailable;
+    const supported = {
+      'adhan_makkah', 'adhan_madinah', 'adhan_fajr_madinah',
+      'adhan_cairo', 'adhan_cairo_refaat', 'adhan_aqsa',
+      'adhan_fajr_aqsa', 'adhan_hussary', 'adhan_fajr', 'takbeerat',
+    };
+    return supported.contains(voiceKey) ? null :
+        'متاح للاستماع والتحميل فقط حاليا. تعيين هذا الصوت لأذان التنبيه غير مدعوم بعد. مواعيدك واختياراتك المحفوظة لم تتغير.';
+  }
+
+  void _requireAssignableAdhanRecording(String voiceKey) {
+    final reason = adhanAssignmentUnavailableReason(voiceKey);
+    if (reason != null) throw StateError(reason);
+  }
+
+  void _requireAvailableRecording(String voiceKey) {
+    final reason = IslamicAudioService.unavailableRecordingReason(voiceKey);
+    if (reason != null) throw StateError(reason);
+  }
+
   Future<void> setSelectedAdhanVoice(String voiceKey) async {
+    _requireAssignableAdhanRecording(voiceKey);
     _selectedAdhanVoice = voiceKey;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notif_selected_adhan', voiceKey);
@@ -867,6 +892,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> setPrayerVoice(String prayerName, String voiceKey) async {
+    _requireAssignableAdhanRecording(voiceKey);
     _prayerAdhanVoices[prayerName] = voiceKey;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notif_prayer_voice_$prayerName', voiceKey);
@@ -882,6 +908,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> setAllPrayersVoice(String voiceKey) async {
+    _requireAssignableAdhanRecording(voiceKey);
     final prefs = await SharedPreferences.getInstance();
     for (final p in _prayerAdhanVoices.keys) {
       _prayerAdhanVoices[p] = voiceKey;
@@ -894,6 +921,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> setSelectedFajrVoice(String voiceKey) async {
+    _requireAssignableAdhanRecording(voiceKey);
     _selectedFajrVoice = voiceKey;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notif_selected_fajr_adhan', voiceKey);
@@ -902,6 +930,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> setSelectedIqamahVoice(String voiceKey) async {
+    _requireAvailableRecording(voiceKey);
     _selectedIqamahVoice = voiceKey;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('notif_selected_iqamah', voiceKey);
