@@ -524,31 +524,41 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   }
 
   void _rateAyah(Ayah ayah, MemorizationRating rating) async {
-    final item = await MemorizationService.instance.recordReview(
-      surahId: _selectedSurahId,
-      ayahNumber: ayah.ayahNumber,
-      surahName: _currentSurah?.nameAr ?? '',
-      rating: rating,
-    );
-
-    if (mounted) {
-      final ratingText = rating == MemorizationRating.easy
-          ? 'متقن (الصندوق ${item.leitnerBox} - مراجعة بعد ${MemorizationItem.getIntervalForBox(item.leitnerBox).inDays} أيام)'
-          : rating == MemorizationRating.hard
-              ? 'يحتاج تثبيت (مراجعة بعد ${MemorizationItem.getIntervalForBox(item.leitnerBox).inDays} أيام)'
-              : 'نسيت (تمت إعادتها للصندوق الأول للمراجعة غداً)';
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('تم تقييم آية ${ayah.ayahNumber}: $ratingText'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: rating == MemorizationRating.easy
-              ? AppColors.primaryGreen
-              : rating == MemorizationRating.hard
-                  ? Colors.amber.shade800
-                  : Colors.red.shade700,
-        ),
+    try {
+      final item = await MemorizationService.instance.recordReview(
+        surahId: _selectedSurahId,
+        ayahNumber: ayah.ayahNumber,
+        surahName: _currentSurah?.nameAr ?? '',
+        rating: rating,
       );
+
+      if (mounted) {
+        final ratingText = rating == MemorizationRating.easy
+            ? 'متقن (الصندوق ${item.leitnerBox} - مراجعة بعد ${MemorizationItem.getIntervalForBox(item.leitnerBox).inDays} أيام)'
+            : rating == MemorizationRating.hard
+                ? 'يحتاج تثبيت (مراجعة بعد ${MemorizationItem.getIntervalForBox(item.leitnerBox).inDays} أيام)'
+                : 'نسيت (تمت إعادتها للصندوق الأول للمراجعة غداً)';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تم تقييم آية ${ayah.ayahNumber}: $ratingText'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: rating == MemorizationRating.easy
+                ? AppColors.primaryGreen
+                : rating == MemorizationRating.hard
+                    ? Colors.amber.shade800
+                    : Colors.red.shade700,
+          ),
+        );
+      }
+    } on MemorizationStorageException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error.message),
+        backgroundColor: Colors.red.shade700,
+        duration: const Duration(seconds: 8),
+      ));
     }
   }
 
@@ -581,7 +591,10 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
                 ),
                 const Text(
                   'اختر القارئ المفضل للتحفيظ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryGreen),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
@@ -590,21 +603,33 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
                     itemCount: SettingsService.availableReciters.length,
                     itemBuilder: (ctx, index) {
                       final r = SettingsService.availableReciters[index];
-                      final isSelected = SettingsService.instance.selectedReciterId == r.id;
+                      final isSelected =
+                          SettingsService.instance.selectedReciterId == r.id;
                       return ListTile(
                         leading: Icon(
-                          isSelected ? Icons.check_circle : Icons.person_outline,
-                          color: isSelected ? AppColors.accentGold : AppColors.primaryGreen,
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.person_outline,
+                          color: isSelected
+                              ? AppColors.accentGold
+                              : AppColors.primaryGreen,
                         ),
                         title: Text(
                           r.nameAr,
-                          style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                          style: TextStyle(
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal),
                         ),
                         trailing: isSelected
-                            ? const Text('محدد', style: TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold))
+                            ? const Text('محدد',
+                                style: TextStyle(
+                                    color: AppColors.accentGold,
+                                    fontWeight: FontWeight.bold))
                             : null,
                         onTap: () async {
-                          await SettingsService.instance.setSelectedReciter(r.id);
+                          await SettingsService.instance
+                              .setSelectedReciter(r.id);
                           if (ctx.mounted) Navigator.pop(ctx);
                           if (mounted) setState(() {});
                         },
