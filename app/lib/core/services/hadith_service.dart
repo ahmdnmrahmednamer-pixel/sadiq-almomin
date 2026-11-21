@@ -17,25 +17,41 @@ class HadithService extends ChangeNotifier {
   Set<int> _favoriteIds = {};
   int? _lastReadHadithId;
   bool _initialized = false;
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations = result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
 
   bool get isInitialized => _initialized;
   List<HadithBook> get books => _books;
   List<HadithItem> get allHadiths => _hadiths;
-  Set<int> get favoriteIds => _favoriteIds;
+  Set<int> get favoriteIds => Set.unmodifiable(_favoriteIds);
   int? get lastReadHadithId => _lastReadHadithId;
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_initialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) {
+    if (_initialized && !forceReload) return Future<void>.value();
+    return _serialize(() async { await _load(forceReload: forceReload); });
+  }
+
+  Future<bool> _load({bool forceReload = false}) async {
+    if (_initialized && !forceReload) return true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final favList = prefs.getStringList(_favoritesKey) ?? [];
-      _favoriteIds = favList.map((e) => int.tryParse(e)).whereType<int>().toSet();
-      _lastReadHadithId = prefs.getInt(_lastReadIdKey);
+      if (forceReload) await prefs.reload();
+      final favList = prefs.getStringList(_favoritesKey) ?? <String>[];
+      final favorites = favList.map((e) => int.tryParse(e)).whereType<int>().toSet();
+      final lastRead = prefs.getInt(_lastReadIdKey);
+      _favoriteIds = favorites;
+      _lastReadHadithId = lastRead;
       _initialized = true;
       notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('Error initializing HadithService: $e');
-      _initialized = true;
+      return false;
     }
   }
 
@@ -63,22 +79,31 @@ class HadithService extends ChangeNotifier {
 
   bool isFavorite(int id) => _favoriteIds.contains(id);
 
-  Future<void> toggleFavorite(int hadithId) async {
-    if (_favoriteIds.contains(hadithId)) {
-      _favoriteIds.remove(hadithId);
-    } else {
-      _favoriteIds.add(hadithId);
-    }
-    notifyListeners();
+  Future<bool> toggleFavorite(int hadithId) => _serialize(() async {
+    if (!await _load()) return false;
+    final next = Set<int>.of(_favoriteIds);
+    if (!next.add(hadithId)) next.remove(hadithId);
+    return _persistFavorites(next);
+  });
 
+  Future<bool> _persistFavorites(Set<int> next) async {
+    SharedPreferences? prefs;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        _favoritesKey,
-        _favoriteIds.map((e) => e.toString()).toList(),
-      );
+      prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setStringList(_favoritesKey, next.map((id) => id.toString()).toList())) {
+        throw StateError('Hadith favorites write rejected');
+      }
+      _favoriteIds = next;
+      notifyListeners();
+      return true;
     } catch (e) {
+      try {
+        await prefs?.reload();
+      } catch (reloadError) {
+        debugPrint('Hadith favorites cache reload error: $reloadError');
+      }
       debugPrint('Error saving hadith favorites: $e');
+      return false;
     }
   }
 
@@ -154,16 +179,13 @@ ${hadith.matn}
   // Backup & Restore Support
   List<int> exportFavorites() => _favoriteIds.toList();
 
-  Future<void> importFavorites(List<int> ids, {bool replace = false}) async {
-    if (replace) {
-      _favoriteIds.clear();
-    }
-    _favoriteIds.addAll(ids);
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _favoritesKey,
-      _favoriteIds.map((e) => e.toString()).toList(),
-    );
+  Future<void> importFavorites(List<int> ids, {bool replace = false}) {
+    final incoming = List<int>.of(ids);
+    return _serialize(() async {
+      if (!await _load()) throw StateError('Hadith favorites could not be loaded');
+      final next = replace ? <int>{} : Set<int>.of(_favoriteIds);
+      next.addAll(incoming);
+      if (!await _persistFavorites(next)) throw StateError('Hadith favorites could not be saved');
+    });
   }
 }
