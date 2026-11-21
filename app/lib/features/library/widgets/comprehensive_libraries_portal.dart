@@ -297,27 +297,27 @@ class _ComprehensiveLibrariesPortalState
                   AppDropdownOption(
                     value: 'garden_all',
                     label:
-                        '🌿 ${context.tr('garden_all')} (${allItems.length})',
+                        '${context.tr('garden_all')} (${allItems.length})',
                   ),
                   AppDropdownOption(
                     value: 'garden_scholars',
-                    label: '🎙️ ${context.tr('garden_scholars')}',
+                    label: context.tr('garden_scholars'),
                   ),
                   AppDropdownOption(
                     value: 'garden_prophethood',
-                    label: '🕌 ${context.tr('garden_prophethood')}',
+                    label: context.tr('garden_prophethood'),
                   ),
                   AppDropdownOption(
                     value: 'garden_quran_sciences',
-                    label: '📖 ${context.tr('garden_quran_sciences')}',
+                    label: context.tr('garden_quran_sciences'),
                   ),
                   AppDropdownOption(
                     value: 'garden_fiqh_wealth',
-                    label: '⚖️ ${context.tr('garden_fiqh_wealth')}',
+                    label: context.tr('garden_fiqh_wealth'),
                   ),
                   AppDropdownOption(
                     value: 'garden_heart_seasons',
-                    label: '🤍 ${context.tr('garden_heart_seasons')}',
+                    label: context.tr('garden_heart_seasons'),
                   ),
                 ],
                 onChanged: (val) => setState(() => _selectedGarden = val),
