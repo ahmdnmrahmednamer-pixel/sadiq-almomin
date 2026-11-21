@@ -185,7 +185,7 @@ void main() {
       scaffoldState.openDrawer();
       await tester.pumpAndSettle();
 
-      final drawerItemFinder = find.text('إذاعات القرآن الكريم (MP3Quran) 📻');
+      final drawerItemFinder = find.text('إذاعات القرآن الكريم (MP3Quran)');
       await tester.scrollUntilVisible(
         drawerItemFinder,
         200,
