@@ -47,7 +47,8 @@ Future<void> notificationTapBackground(NotificationResponse notificationResponse
 
 enum PrayerScheduleOutcome { applied, skipped, superseded, failed }
 
-enum ShortReminderFrequency { off, halfHourly, hourly, twoHourly, daily }
+enum ShortReminderFrequency { off, halfHourly, hourly, twoHourly, daily, custom }
+typedef ShortReminderInterval = ({bool enabled, int minutes});
 
 enum AdhanSoundMode {
   fullAdhan,
@@ -92,6 +93,39 @@ class PrayerNotificationService extends ChangeNotifier {
     'salawat': ShortReminderFrequency.off,
     'istighfar': ShortReminderFrequency.off,
   };
+  final Map<String, ShortReminderInterval> _shortIntervals = {};
+  ShortReminderInterval shortInterval(String key) =>
+      _shortIntervals[key] ?? (enabled: false, minutes: 30);
+
+  static ShortReminderInterval decodeShortReminderInterval(String? stored) {
+    const presets = {'halfHourly': 30, 'hourly': 60, 'twoHourly': 120, 'daily': 1440};
+    if (presets.containsKey(stored)) return (enabled: true, minutes: presets[stored]!);
+    final match = RegExp(r'^(minutes|off):([0-9]+)$').firstMatch(stored ?? '');
+    final minutes = match == null ? null : int.tryParse(match[2]!);
+    if (minutes != null && minutes >= 1 && minutes <= 1440) {
+      return (enabled: match![1] == 'minutes', minutes: minutes);
+    }
+    return (enabled: false, minutes: 30);
+  }
+
+  static String encodeShortReminderInterval(ShortReminderInterval value) {
+    if (value.minutes < 1 || value.minutes > 1440) {
+      throw RangeError.range(value.minutes, 1, 1440, 'minutes');
+    }
+    if (!value.enabled) return value.minutes == 30 ? 'off' : 'off:${value.minutes}';
+    return switch (value.minutes) {
+      30 => 'halfHourly', 60 => 'hourly', 120 => 'twoHourly', 1440 => 'daily',
+      _ => 'minutes:${value.minutes}',
+    };
+  }
+
+  static ShortReminderFrequency _shortFrequencyFor(ShortReminderInterval value) =>
+      !value.enabled ? ShortReminderFrequency.off : switch (value.minutes) {
+        30 => ShortReminderFrequency.halfHourly, 60 => ShortReminderFrequency.hourly,
+        120 => ShortReminderFrequency.twoHourly, 1440 => ShortReminderFrequency.daily,
+        _ => ShortReminderFrequency.custom,
+      };
+
   final Map<String, String?> _shortErrors = {};
   bool _shortBusy = false;
   Future<void>? _shortOperation;
@@ -103,7 +137,18 @@ class PrayerNotificationService extends ChangeNotifier {
   static const shortReminderIds = {'salawat': 805, 'istighfar': 806};
 
   Future<void>? _shortPreferenceOperation;
-  Future<void> setShortReminderFrequency(String key, ShortReminderFrequency value) async {
+  Future<void> setShortReminderFrequency(String key, ShortReminderFrequency value) =>
+      setShortReminderInterval(key, switch (value) {
+        ShortReminderFrequency.off => (enabled: false, minutes: 30),
+        ShortReminderFrequency.halfHourly => (enabled: true, minutes: 30),
+        ShortReminderFrequency.hourly => (enabled: true, minutes: 60),
+        ShortReminderFrequency.twoHourly => (enabled: true, minutes: 120),
+        ShortReminderFrequency.daily => (enabled: true, minutes: 1440),
+        ShortReminderFrequency.custom => (enabled: true, minutes: shortInterval(key).minutes),
+      });
+
+  Future<void> setShortReminderInterval(String key, ShortReminderInterval value) async {
+    final stored = encodeShortReminderInterval(value);
     if (!shortReminderIds.containsKey(key)) throw ArgumentError.value(key);
     final prior = _shortPreferenceOperation;
     final gate = Completer<void>();
@@ -112,13 +157,14 @@ class PrayerNotificationService extends ChangeNotifier {
       if (prior != null) await prior;
       final prefs = await SharedPreferences.getInstance();
       try {
-        final saved = await prefs.setString('notif_short_${key}_frequency', value.name);
+        final saved = await prefs.setString('notif_short_${key}_frequency', stored);
         if (!saved) throw StateError('Reminder preference was not saved');
       } catch (_) {
         await prefs.reload();
         rethrow;
       }
-      _shortFrequencies[key] = value;
+      _shortIntervals[key] = value;
+      _shortFrequencies[key] = _shortFrequencyFor(value);
       await scheduleShortReminders();
     } finally {
       if (!gate.isCompleted) gate.complete();
@@ -139,13 +185,15 @@ class PrayerNotificationService extends ChangeNotifier {
       for (final entry in shortReminderIds.entries) {
         final key = entry.key;
         try {
-          await _localNotifications.cancel(entry.value);
-          if (generation != _shortGeneration) return;
           _shortErrors[key] = null;
           final frequency = shortFrequency(key);
           if (!_masterEnabled ||
               !_isInitialized ||
-              frequency == ShortReminderFrequency.off) { continue; }
+              frequency == ShortReminderFrequency.off) {
+            await _localNotifications.cancel(entry.value);
+            if (generation != _shortGeneration) return;
+            continue;
+          }
           final android =
               _localNotifications.resolvePlatformSpecificImplementation<
                   AndroidFlutterLocalNotificationsPlugin>();
@@ -162,13 +210,7 @@ class PrayerNotificationService extends ChangeNotifier {
             key == 'salawat'
                 ? 'اللهم صل وسلم على نبينا محمد'
                 : 'أستغفر الله وأتوب إليه. لا حول ولا قوة إلا بالله',
-            switch (frequency) {
-              ShortReminderFrequency.halfHourly => const Duration(minutes: 30),
-              ShortReminderFrequency.hourly => const Duration(hours: 1),
-              ShortReminderFrequency.twoHourly => const Duration(hours: 2),
-              ShortReminderFrequency.daily => const Duration(days: 1),
-              ShortReminderFrequency.off => throw StateError('disabled'),
-            },
+            Duration(minutes: shortInterval(key).minutes),
             NotificationDetails(
                 android: AndroidNotificationDetails(
               'short_${key}_reminder_v1',
@@ -440,9 +482,9 @@ class PrayerNotificationService extends ChangeNotifier {
     if (reload) await prefs.reload();
     for (final key in shortReminderIds.keys) {
       final stored = prefs.getString('notif_short_${key}_frequency');
-      _shortFrequencies[key] = ShortReminderFrequency.values.firstWhere(
-          (value) => value.name == stored,
-          orElse: () => ShortReminderFrequency.off);
+      final interval = decodeShortReminderInterval(stored);
+      _shortIntervals[key] = interval;
+      _shortFrequencies[key] = _shortFrequencyFor(interval);
     }
     _masterEnabled = prefs.getBool('notif_master_enabled') ?? true;
     _preReminderEnabled = prefs.getBool('notif_pre_reminder_enabled') ?? true;
