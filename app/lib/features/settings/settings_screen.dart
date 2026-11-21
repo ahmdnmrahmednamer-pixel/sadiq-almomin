@@ -1,3 +1,4 @@
+import 'widgets/short_reminder_interval_control.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -502,20 +503,15 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             child: Text(
                 tr('التنبيهات العامة مغلقة', 'Master notifications are off'))),
       for (final key in ['salawat', 'istighfar']) ...[
-        choice(
-            key == 'salawat'
+        ShortReminderIntervalControl(
+            reminderKey: key,
+            label: key == 'salawat'
                 ? tr('الصلاة على النبي', 'Salawat')
                 : tr('الاستغفار والحوقلة', 'Istighfar and hawqala'),
-            session.shortFrequencies[key]!,
-            {
-              ShortReminderFrequency.off: tr('إيقاف', 'Off'),
-              ShortReminderFrequency.halfHourly:
-                  tr('كل ٣٠ دقيقة', 'Every 30 minutes'),
-              ShortReminderFrequency.hourly: tr('كل ساعة', 'Hourly'),
-              ShortReminderFrequency.twoHourly:
-                  tr('كل ساعتين', 'Every two hours'),
-              ShortReminderFrequency.daily: tr('كل ٢٤ ساعة', 'Daily')
-            }),
+            value: session.shortIntervals[key]!.value,
+            busy: session.draft.applying,
+            onChanged: session.shortIntervals[key]!.stage,
+            translate: tr),
         if (n.shortReminderError(key) != null) ...[
           Semantics(
               liveRegion: true,
@@ -534,8 +530,8 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
       Padding(
           padding: const EdgeInsets.all(16),
           child: Text(tr(
-              'قد تتأخر الإشعارات أو تصمت حسب أذونات الجهاز والصامت وعدم الإزعاج.',
-              'Notifications may be delayed or silent depending on device permissions and sound settings.'))),
+              'الفاصل المختار طلب للجدولة وليس ضماناً للتشغيل كل دقيقة. قد يؤجل أندرويد التنبيهات أثناء السكون، وقد تصمت حسب الأذونات والصامت وعدم الإزعاج. التكرار الأقصر قد يستهلك بطارية أكثر.',
+              'The selected interval is a scheduling request, not a guarantee of playback every minute. Android may defer reminders while idle, or silence them through permissions and sound settings. Shorter intervals can use more battery.'))),
     ];
   }
 
