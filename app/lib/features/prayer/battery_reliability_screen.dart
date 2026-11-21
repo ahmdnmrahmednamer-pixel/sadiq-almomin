@@ -1,4 +1,5 @@
 import '../../core/services/settings_service.dart';
+import 'widgets/adhan_full_screen_access_card.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -374,7 +375,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                         ),
                         SizedBox(height: 6),
                         Text(
-                          'تقوم أنظمة أندرويد الحديثة وخاصة (شاومي، سامسونج، هواوي، وأوبو) بإيقاف التطبيقات في الخلفية لتوفير البطارية، مما قد يمنع انطلاق الأذان في وقته. اتبع الخطوات أدناه لضمان صدح الأذان بدقة ١٠٠٪ دون تأخير.',
+                          'قد تؤثر قيود الهاتف والأذونات والصامت في التنبيهات. هذه خطوات فحص وليست ضماناً لوصول الأذان. لا يحتاج كل هاتف إلى استثناء البطارية أو الظهور فوق التطبيقات. اختبر تنبيهاً مجدولاً والشاشة مقفلة بعد أي تغيير.',
                           style: TextStyle(color: AppColors.softGold, fontSize: 12.5, height: 1.5),
                         ),
                       ],
@@ -390,11 +391,10 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
               children: [
                 const Icon(Icons.verified_user_outlined, color: AppColors.primaryGreen, size: 22),
                 const SizedBox(width: 8),
-                const Text(
+                const Expanded(child: Text(
                   'فحص الأذونات الحيوية لنظام الهاتف',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                ),
-                const Spacer(),
+                )),
                 if (_isLoadingChecks)
                   const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
               ],
@@ -414,7 +414,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
             // Card 2: Battery Optimization
             _buildCheckCard(
               title: 'استثناء من توفير البطارية (Battery Optimization)',
-              subtitle: 'يمنع نظام أندرويد من قتل خدمة الأذان أثناء قفل الشاشة',
+              subtitle: 'خيار إضافي لبعض الأجهزة عند تأثر التنبيهات بقيود الطاقة؛ ليس شرطاً عاماً ولا ضماناً للتشغيل.',
               isGranted: _isBatteryOptimizationIgnored,
               onFix: _requestBatteryOptimization,
               icon: Icons.battery_charging_full_outlined,
@@ -424,11 +424,14 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
             // Card 3: Exact Alarm Permission
             _buildCheckCard(
               title: 'إذن المنبه الدقيق بالثانية (Exact Alarms)',
-              subtitle: 'يضمن إطلاق الأذان بالدقيقة والثانية دون أي تأخير',
+              subtitle: 'يسمح بجدولة التنبيهات الدقيقة حسب سياسة النظام؛ لا يضمن الصوت أو وصول التنبيه وحده.',
               isGranted: _isExactAlarmGranted,
               onFix: _requestExactAlarm,
               icon: Icons.alarm_on_outlined,
             ),
+            const SizedBox(height: 12),
+
+            const AdhanFullScreenAccessCard(),
             const SizedBox(height: 12),
 
             // Direct button to open App System Settings
@@ -452,10 +455,10 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
               children: [
                 Icon(Icons.phone_android, color: AppColors.primaryGreen, size: 22),
                 SizedBox(width: 8),
-                Text(
+                Expanded(child:Text(
                   'دليل ضبط الهاتف حسب الشركة المصنعة',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                ),
+                )),
               ],
             ),
             const SizedBox(height: 6),
@@ -542,7 +545,7 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                             ],
                           ),
                         ),
-                        Container(
+                        Flexible(child:Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.accentGold.withValues(alpha: 0.2),
@@ -552,13 +555,13 @@ class _BatteryReliabilityScreenState extends State<BatteryReliabilityScreen> {
                             currentGuide.badge,
                             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                           ),
-                        ),
+                        )),
                       ],
                     ),
                     const SizedBox(height: 12),
 
                     // Progress Indicator
-                    Row(
+                    Wrap(
                       children: [
                         Text(
                           'إنجاز خطوات ${currentGuide.name}: ',
