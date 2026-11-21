@@ -7,6 +7,7 @@ Enforces structural integrity constants (114 Surahs, 6236 Ayahs, 604 Pages, 30 J
 import os
 import sys
 import sqlite3
+import tempfile
 import xml.etree.ElementTree as ET
 from normalizer import normalize_arabic
 
@@ -109,10 +110,24 @@ from reciters_catalog import RECITERS_35
 
 
 def init_database(db_path: str = DB_PATH):
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    if os.path.exists(db_path):
-        os.remove(db_path)
+    """Replace the output only after a complete, successful build."""
+    db_path = os.path.abspath(os.fspath(db_path))
+    parent = os.path.dirname(db_path)
+    os.makedirs(parent, exist_ok=True)
+    fd, staged = tempfile.mkstemp(prefix=".quran-build-", suffix=".db", dir=parent)
+    os.close(fd)
+    try:
+        count = _populate_database(staged)
+        # Same-directory staging keeps replacement on the same filesystem.
+        # A failed build or replacement leaves the previous output untouched.
+        os.replace(staged, db_path)
+    finally:
+        if os.path.exists(staged):
+            os.remove(staged)
+    print(f"Built Quran database ({count} ayahs): {db_path}")
 
+
+def _populate_database(db_path):
     conn = sqlite3.connect(db_path)
     try:
         cur = conn.cursor()
@@ -241,7 +256,8 @@ def init_database(db_path: str = DB_PATH):
         conn.commit()
     finally:
         conn.close()
-    print(f"✅ تم بناء قاعدة بيانات المصحف الشريف الكاملة ({current_global_idx} آية) بنجاح في: {db_path}")
+    return current_global_idx
+
 
 
 if __name__ == "__main__":
