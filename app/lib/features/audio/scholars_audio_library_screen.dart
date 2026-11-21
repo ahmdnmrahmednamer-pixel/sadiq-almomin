@@ -188,7 +188,7 @@ class _ScholarsAudioLibraryScreenState extends State<ScholarsAudioLibraryScreen>
                                 AppDropdownOption(
                                   value: 'arab_world',
                                   label:
-                                      'علماء العالم الإسلامي 🌍 (${service.arabWorldScholarsCount})',
+                                      'علماء العالم الإسلامي (${service.arabWorldScholarsCount})',
                                 ),
                                 const AppDropdownOption(
                                   value: 'favorites',
