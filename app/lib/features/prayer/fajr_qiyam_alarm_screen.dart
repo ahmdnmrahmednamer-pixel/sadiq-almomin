@@ -49,8 +49,10 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
         await _alarmService.setPreFajrTone(chosen);
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('تم حفظ نغمة المنبّه'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_alarmService.schedulingError == null
+            ? 'تم حفظ نغمة المنبّه'
+            : 'حُدث اختيار النغمة، لكن تعذر تحديث التنبيه. راجع التحذير وأعد المحاولة.'),
       ));
     } catch (_) {
       if (!mounted) return;
@@ -132,6 +134,32 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (_alarmService.schedulingError != null) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: Card(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(_alarmService.schedulingError!,
+                              style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
+                            const SizedBox(height: 8),
+                            FilledButton.icon(
+                              key: const ValueKey('retry-wakeup-scheduling'),
+                              onPressed: () async { await _alarmService.retryScheduling(); },
+                              icon: const ExcludeSemantics(child: Icon(Icons.refresh)),
+                              label: const Text('إعادة محاولة تحديث المنبّهات'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 // Top Live Astronomical Times Summary Banner
                 Container(
                   padding: const EdgeInsets.all(18),

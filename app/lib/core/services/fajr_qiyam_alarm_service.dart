@@ -43,6 +43,27 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   bool _initialized = false;
   int _alarmScheduleGeneration = 0;
   Future<void>? _activeAlarmOp;
+  String? _schedulingError;
+  String? get schedulingError => _schedulingError;
+
+  Future<AlarmScheduleOutcome> retryScheduling() => scheduleAlarms();
+
+  Future<AlarmScheduleOutcome> _publishScheduleResult(
+    int generation, Future<AlarmScheduleOutcome> operation,
+  ) async {
+    final outcome = await operation;
+    if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
+    if (outcome != AlarmScheduleOutcome.superseded) {
+      final error = outcome == AlarmScheduleOutcome.failed
+          ? 'تعذر تحديث منبّه الفجر أو قيام الليل. قد تكون بعض التنبيهات أُلغيت أو لم تُجدول. راجع سماح المنبّهات والإشعارات في إعدادات الجهاز ثم أعد المحاولة.'
+          : null;
+      if (_schedulingError != error) {
+        _schedulingError = error;
+        notifyListeners();
+      }
+    }
+    return outcome;
+  }
 
   // 1. Pre-Fajr Wake-Up Alarm Settings
   bool _preFajrEnabled = true;
@@ -421,7 +442,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   /// - When verified GPS exists: schedules enabled alarms.
   Future<AlarmScheduleOutcome> syncWithLocationAvailability([PrayerData? data]) async {
     final int generation = ++_alarmScheduleGeneration;
-    return _serializeAlarmOp<AlarmScheduleOutcome>(() async {
+    return _publishScheduleResult(generation, _serializeAlarmOp<AlarmScheduleOutcome>(() async {
       if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
       try {
         if (!_initialized) {
@@ -462,15 +483,15 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         debugPrint('FajrQiyamAlarmService sync error: $e');
         return AlarmScheduleOutcome.failed;
       }
-    });
+    }));
   }
 
   /// Schedules the actual OS alarm notifications for Pre-Fajr (880) and Qiyam (881)
   Future<AlarmScheduleOutcome> scheduleAlarms([PrayerData? data]) async {
     final int generation = ++_alarmScheduleGeneration;
-    return _serializeAlarmOp<AlarmScheduleOutcome>(() async {
+    return _publishScheduleResult(generation, _serializeAlarmOp<AlarmScheduleOutcome>(() async {
       return _scheduleAlarmsLocked(generation, data);
-    });
+    }));
   }
 
   Future<AlarmScheduleOutcome> _scheduleQiyamAlarmLocked(
