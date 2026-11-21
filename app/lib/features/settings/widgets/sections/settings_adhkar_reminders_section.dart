@@ -16,7 +16,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: pn.morningAdhkarTime,
-      helpText: 'اختر موعد إشعار أذكار الصباح ☀️',
+      helpText: 'اختر موعد إشعار أذكار الصباح',
       cancelText: 'إلغاء',
       confirmText: 'حفظ الموعد',
     );
@@ -30,7 +30,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: pn.eveningAdhkarTime,
-      helpText: 'اختر موعد إشعار أذكار المساء 🌙',
+      helpText: 'اختر موعد إشعار أذكار المساء',
       cancelText: 'إلغاء',
       confirmText: 'حفظ الموعد',
     );
@@ -44,7 +44,7 @@ class SettingsAdhkarRemindersSection extends StatelessWidget {
     final picked = await showTimePicker(
       context: context,
       initialTime: pn.sleepAdhkarTime,
-      helpText: 'اختر موعد إشعار أذكار النوم 🛏️',
+      helpText: 'اختر موعد إشعار أذكار النوم',
       cancelText: 'إلغاء',
       confirmText: 'حفظ الموعد',
     );
