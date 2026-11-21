@@ -235,8 +235,12 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                             backgroundColor: Colors.grey.withValues(alpha: 0.2),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Wrap(
+                            key: ValueKey('fast_actions_${fast.id}'),
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
                             children: [
                               Text(
                                 'الأيام المسجلة: $count / هدف الفترة: ${fast.targetDaysPerPeriod}',
@@ -245,7 +249,10 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                   fontSize: 12.5,
                                 ),
                               ),
-                              Row(
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 4,
+                                runSpacing: 4,
                                 children: [
                                   IconButton(
                                     tooltip: 'إنقاص',
@@ -260,6 +267,13 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primaryGreen,
                                       foregroundColor: Colors.white,
+                                      minimumSize: Size(
+                                          0,
+                                          48 *
+                                              MediaQuery.textScalerOf(context)
+                                                  .scale(1)),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
                                     ),
                                     icon: const Icon(Icons.check_circle_rounded,
                                         size: 16),
