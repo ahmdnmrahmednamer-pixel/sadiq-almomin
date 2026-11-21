@@ -629,37 +629,44 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Find widgets
-      expect(find.text('التنبيه المسبق قبل الأذان'), findsOneWidget);
-      expect(find.text('تنبيه قيام الليل والتهجد 🌙'), findsOneWidget);
-      expect(find.text('تذكير سنن يوم الجمعة المباركة 🕌'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('settings_category_4')));
+      await tester.pumpAndSettle();
+      final beforePre = PrayerNotificationService.instance.preReminderMinutes;
+      final beforeQiyam = PrayerNotificationService.instance.qiyamOffsetMinutes;
+      expect(find.text('التنبيه المسبق'), findsOneWidget);
+      expect(find.text('قيام الليل'), findsOneWidget);
+      expect(find.text('تذكير الجمعة'), findsOneWidget);
 
       // Verify Pre-reminder picker opens and changes value
-      final prePickerTile = find.text('تعديل دقائق التنبيه المسبق');
+      final prePickerTile = find.text('دقائق قبل الأذان');
       expect(prePickerTile, findsOneWidget);
       await tester.tap(prePickerTile);
       await tester.pumpAndSettle();
 
       // Tap on 15 minutes
-      final option15 = find.text('15 دقائق قبل الأذان');
+      final option15 = find.text('15').last;
       expect(option15, findsOneWidget);
       await tester.tap(option15);
       await tester.pumpAndSettle();
 
-      expect(PrayerNotificationService.instance.preReminderMinutes, 15);
+      expect(PrayerNotificationService.instance.preReminderMinutes, beforePre);
 
       // Verify Qiyam offset picker opens and changes value
-      final qiyamPickerTile = find.text('تعديل توقيت تنبيه قيام الليل');
+      final qiyamPickerTile = find.text('دقائق قبل الفجر');
       expect(qiyamPickerTile, findsOneWidget);
       await tester.tap(qiyamPickerTile);
       await tester.pumpAndSettle();
 
       // Tap on 90 minutes
-      final option90 = find.text('قبل أذان الفجر بساعة ونصف (٩٠ دقيقة)');
+      final option90 = find.text('90').last;
       expect(option90, findsOneWidget);
       await tester.tap(option90);
       await tester.pumpAndSettle();
 
+      expect(PrayerNotificationService.instance.qiyamOffsetMinutes, beforeQiyam);
+      await tester.tap(find.byKey(const ValueKey('settings_apply')));
+      await tester.pumpAndSettle();
+      expect(PrayerNotificationService.instance.preReminderMinutes, 15);
       expect(PrayerNotificationService.instance.qiyamOffsetMinutes, 90);
     });
   });

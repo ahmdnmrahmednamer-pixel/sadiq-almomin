@@ -548,7 +548,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                     const SizedBox(height: 16),
 
                     // Section 1: 📖 التفاسير وعلوم القرآن
-                    _buildSectionHeader('📖 التفاسير وعلوم القرآن الكريم',
+                    _buildSectionHeader('التفاسير وعلوم القرآن الكريم',
                         AppColors.primaryGreen),
                     const SizedBox(height: 8),
                     Wrap(
@@ -612,7 +612,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
 
                     // Section 2: ✍️ الحفظ والتدبر والملاحظات
                     _buildSectionHeader(
-                        '✍️ الحفظ والتدبر والخواطر', AppColors.secondaryGreen),
+                        'الحفظ والتدبر والخواطر', AppColors.secondaryGreen),
                     const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.spaceAround,
@@ -701,7 +701,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
 
                     // Section 3: 🎨 المشاركة والتصميم الدعوي
                     _buildSectionHeader(
-                        '🎨 النشر والتصميم الدعوي', AppColors.accentGold),
+                        'النشر والتصميم الدعوي', AppColors.accentGold),
                     const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.spaceAround,

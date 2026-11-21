@@ -249,10 +249,10 @@ void main() {
     tester.state<ScaffoldState>(find.byType(Scaffold)).openDrawer();
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-        find.text('إذاعات القرآن الكريم (MP3Quran) 📻'), 240,
+        find.text('إذاعات القرآن الكريم (MP3Quran)'), 240,
         scrollable: find.byType(Scrollable).last);
     absentScholars(tester);
-    expect(find.text('إذاعات القرآن الكريم (MP3Quran) 📻'), findsOneWidget);
+    expect(find.text('إذاعات القرآن الكريم (MP3Quran)'), findsOneWidget);
     await capture(tester, key, 'drawer_800_1x');
     await tester.pumpWidget(const SizedBox());
     final directory = GlobalKey();

@@ -136,7 +136,7 @@ class _AudioTafsirScreenState extends State<AudioTafsirScreen> {
 
             // 2. Scholar Selector Tabs
             const Text(
-              'اختر الشيخ المفسر 🎙️',
+              'اختر الشيخ المفسر',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -265,7 +265,7 @@ class _AudioTafsirScreenState extends State<AudioTafsirScreen> {
 
             // 4. Platform Listening Links (Extracted from PDF)
             const Text(
-              'روابط الاستماع والتحميل المعتمدة (٥ منصات) 🎧',
+              'روابط الاستماع والتحميل المعتمدة (٥ منصات)',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),

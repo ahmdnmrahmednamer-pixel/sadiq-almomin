@@ -738,13 +738,13 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 },
                                 {
                                   'mode': AdhanSoundMode.vibrateOnly,
-                                  'title': 'اهتزاز قوي فقط 📳 (بدون رنين)',
+                                  'title': 'اهتزاز قوي فقط (بدون رنين)',
                                   'desc': 'اهتزاز متكرر عند دخول الوقت دون تشغيل مكبر الصوت',
                                   'icon': Icons.vibration_rounded,
                                 },
                                 {
                                   'mode': AdhanSoundMode.silent,
-                                  'title': 'تنبيه صامت 🔕 (بدون صوت ولا اهتزاز)',
+                                  'title': 'تنبيه صامت (بدون صوت ولا اهتزاز)',
                                   'desc': 'إشعار بصري فقط على شاشة القفل دون أي إزعاج',
                                   'icon': Icons.notifications_off_outlined,
                                 },
@@ -828,7 +828,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             const Text(
-                                              'تصفح المكتبة الصوتية للأذان والمؤذنين 🎵',
+                                              'تصفح المكتبة الصوتية للأذان والمؤذنين',
                                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.white),
                                             ),
                                             Text(
@@ -881,7 +881,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.vibration_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
-                                    'الاهتزاز اللمسي عند الإيقاف 📳',
+                                    'الاهتزاز اللمسي عند الإيقاف',
                                     style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
                                   ),
                                   subtitle: Text(
@@ -904,7 +904,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.screen_lock_rotation_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
-                                    'إيقاف الأذان عند هز الهاتف 📳',
+                                    'إيقاف الأذان عند هز الهاتف',
                                     style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
                                   ),
                                   subtitle: Text(
@@ -927,7 +927,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   activeTrackColor: AppColors.primaryGreen,
                                   secondary: const Icon(Icons.phone_android_rounded, color: Colors.white70, size: 18),
                                   title: const Text(
-                                    'كتم الأذان عند قلب الهاتف 📱',
+                                    'كتم الأذان عند قلب الهاتف',
                                     style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w600),
                                   ),
                                   subtitle: Text(
@@ -1091,7 +1091,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                           ),
                           IconButton(
                             icon: Icon(Icons.volume_up_rounded, color: themeData.secondaryAccent),
-                            tooltip: 'استوديو الأصوات والمؤذنين',
+                            tooltip: 'مُشغِّل الأصوات والمؤذنين',
                             onPressed: () => showSettingsAdhanVoiceModal(context),
                           ),
                         ],
@@ -1393,7 +1393,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                 ),
                 onPressed: _showDuaaModal,
                 icon: const Icon(Icons.auto_awesome_rounded, size: 18),
-                label: const Text('دعاء الأذان 🤲'),
+                label: const Text('دعاء الأذان'),
               ),
 
               // Adhan Options Modal
@@ -1464,7 +1464,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'دعاء ما بعد الأذان — الشيخ الشعراوي 🎧',
+                      'دعاء ما بعد الأذان — الشيخ الشعراوي',
                       style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w900,
@@ -1954,7 +1954,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                       const SizedBox(width: 5),
                       Text(
                         sensorService.shakeToStopEnabled
-                            ? 'هز الهاتف للإيقاف 📳 (تجربة)'
+                            ? 'هز الهاتف للإيقاف (تجربة)'
                             : 'الهز معطل',
                         style: const TextStyle(
                           color: Colors.white,
@@ -1993,7 +1993,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                       const SizedBox(width: 5),
                       Text(
                         sensorService.flipToMuteEnabled
-                            ? 'اقلب الهاتف للكتم 📱 (تجربة)'
+                            ? 'اقلب الهاتف للكتم (تجربة)'
                             : 'القلب معطل',
                         style: const TextStyle(
                           color: Colors.white,
@@ -2063,7 +2063,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Text(
-                    'مكتوبة 🤲',
+                    'مكتوبة',
                     style: TextStyle(
                       color: Colors.greenAccent,
                       fontSize: 11,
@@ -2089,7 +2089,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     onPressed: () => _logPrayerPerformance(true),
                     icon: const Icon(Icons.groups_rounded, size: 16),
                     label: const Text(
-                      'جماعة بالمسجد 🕌',
+                      'جماعة بالمسجد',
                       style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -2106,7 +2106,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     onPressed: () => _logPrayerPerformance(false),
                     icon: const Icon(Icons.person_rounded, size: 16),
                     label: const Text(
-                      'صليت حاضراً 🤲',
+                      'صليت حاضراً',
                       style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
                   ),

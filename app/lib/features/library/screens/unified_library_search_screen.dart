@@ -126,7 +126,7 @@ class _UnifiedLibrarySearchScreenState extends State<UnifiedLibrarySearchScreen>
                             Icons.play_circle_fill_rounded,
                             size: 18,
                           ),
-                          label: const Text('استماع للدرس الصوتي الآن 🎙️'),
+                          label: const Text('استماع للدرس الصوتي الآن'),
                           onPressed: () {
                             Navigator.pop(ctx);
                             ScholarsLecturesService.instance.playLecture(

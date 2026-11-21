@@ -115,8 +115,8 @@ void main() {
       scaffoldState.openDrawer();
       await tester.pumpAndSettle();
 
-      // Find '📖 القرآن' choice chip which is adjacent to 'الكل'
-      final quranChip = find.widgetWithText(ChoiceChip, '📖 القرآن');
+      // Find 'القرآن' choice chip which is adjacent to 'الكل'
+      final quranChip = find.widgetWithText(ChoiceChip, 'القرآن');
       expect(quranChip, findsOneWidget);
 
       await tester.tap(quranChip);
@@ -126,7 +126,7 @@ void main() {
       expect(find.text('المصحف الشريف وتلاوة الآيات'), findsOneWidget);
 
       // Verify Prayer tile is filtered out
-      expect(find.text('أصوات الأذان والمؤذنون الـ 7 🕌'), findsNothing);
+      expect(find.text('أصوات الأذان والمؤذنون الـ 7'), findsNothing);
     });
   });
 }

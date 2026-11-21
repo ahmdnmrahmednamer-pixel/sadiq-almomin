@@ -475,7 +475,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.download_done_rounded),
                         label: Text(
-                          _replaceMode ? 'استبدال واستعادة البيانات 📥' : 'دمج واستعادة البيانات 📥',
+                          _replaceMode ? 'استبدال واستعادة البيانات' : 'دمج واستعادة البيانات',
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                         style: ElevatedButton.styleFrom(

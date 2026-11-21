@@ -57,12 +57,12 @@ class PrayerAudioQuickCard extends StatelessWidget {
                           color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 10),
-                    Expanded(
+                    const Expanded(
                         child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'سماع الأذان والإقامة 🎧',
+                        Text(
+                          'سماع الأذان والإقامة',
                           style: TextStyle(
                               fontSize: 14.5, fontWeight: FontWeight.w900),
                         ),
@@ -101,7 +101,7 @@ class PrayerAudioQuickCard extends StatelessWidget {
                                 size: 12, color: AppColors.accentGold),
                             SizedBox(width: 4),
                             Text(
-                              'شاشة التحكم 🎛️',
+                              'شاشة التحكم',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -129,7 +129,7 @@ class PrayerAudioQuickCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'اختيار الشيوخ 🕌',
+                              'اختيار الشيوخ',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
@@ -230,25 +230,25 @@ class PrayerAudioQuickCard extends StatelessWidget {
               child: Row(
                 children: [
                   _buildQuickAudioPill(
-                    label: 'أذان مكة 🕋',
+                    label: 'أذان مكة',
                     trackId: 'adhan_makkah',
                     isDark: isDark,
                   ),
                   const SizedBox(width: 8),
                   _buildQuickAudioPill(
-                    label: 'أذان المدينة 🕌',
+                    label: 'أذان المدينة',
                     trackId: 'adhan_madinah',
                     isDark: isDark,
                   ),
                   const SizedBox(width: 8),
                   _buildQuickAudioPill(
-                    label: 'أذان القاهرة 📻',
+                    label: 'أذان القاهرة',
                     trackId: 'adhan_cairo_refaat',
                     isDark: isDark,
                   ),
                   const SizedBox(width: 8),
                   _buildQuickAudioPill(
-                    label: 'دعاء الشعراوي 🤲',
+                    label: 'دعاء الشعراوي',
                     trackId: 'duaa_sharawi_post_prayer',
                     isDark: isDark,
                   ),
@@ -260,7 +260,7 @@ class PrayerAudioQuickCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   _buildQuickAudioPill(
-                    label: 'صوت الإقامة 🔊',
+                    label: 'صوت الإقامة',
                     trackId: 'iqamah_full',
                     isDark: isDark,
                   ),
