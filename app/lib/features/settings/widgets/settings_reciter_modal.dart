@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../../core/text/arabic_normalizer.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
@@ -26,9 +27,22 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
   String _searchQuery = '';
   String _selectedCategory = 'الكل';
   final TextEditingController _searchController = TextEditingController();
+  bool _selectionPending = false;
+  bool _dismissed = false;
+  int? _previewRequestId;
+
+  void _cancelOwnedPreview() {
+    _dismissed = true;
+    final requestId = _previewRequestId;
+    _previewRequestId = null;
+    if (requestId != null) {
+      unawaited(AyahAudioPlayer.instance.stopRequestIfCurrent(requestId));
+    }
+  }
 
   @override
   void dispose() {
+    _cancelOwnedPreview();
     _searchController.dispose();
     super.dispose();
   }
@@ -300,17 +314,30 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
           borderRadius: BorderRadius.circular(16),
           child: Semantics(
             button: true,
+            enabled: !_selectionPending,
             selected: isSelected,
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () async {
+              onTap: _selectionPending ? null : () async {
                 if (widget.onStage != null) {
                   widget.onStage!(r.id);
                   Navigator.pop(context);
                   return;
                 }
+                setState(() => _selectionPending = true);
                 await SettingsService.instance.setSelectedReciter(r.id);
-                final playing = await AyahAudioPlayer.instance.playReciterPreview(r);
+                if (!mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
+                final audio = AyahAudioPlayer.instance;
+                final pending = audio.playReciterPreview(r);
+                final requestId = audio.activeRequestId;
+                _previewRequestId = requestId;
+                final playing = await pending;
+                if (!mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
+                _previewRequestId = null;
+                if (audio.activeRequestId != requestId) {
+                  setState(() => _selectionPending = false);
+                  return;
+                }
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -386,11 +413,6 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                                   style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
                                 ),
                               ),
-                              const Text(
-                                'رواية حفص عن عاصم',
-                                softWrap: true,
-                                style: TextStyle(fontSize: 11, color: AppColors.mutedText),
-                              ),
                               if (isMinshawi)
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -435,7 +457,11 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
 
     final useUnifiedScroll = isLargeText || bottomInset > 0;
 
-    return Directionality(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) _cancelOwnedPreview();
+      },
+      child: Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Padding(
         padding: EdgeInsets.only(bottom: bottomInset),
@@ -509,6 +535,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
           ),
         ),
       ),
+    ),
     );
   }
 }
