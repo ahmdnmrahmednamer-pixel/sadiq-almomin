@@ -28,6 +28,42 @@ class MainActivity: FlutterActivity() {
                     else -> result.notImplemented()
                 }
             }
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "almomin/active_prayer_alert")
+            .setMethodCallHandler { call, result ->
+                val manager = getSystemService(NotificationManager::class.java)
+                val id = call.argument<Number>("id")?.toInt()
+                if (id == null || !(id in 100..399 || id in listOf(995, 998, 999))) {
+                    result.error("invalid_identity", "Notification ID required", null)
+                    return@setMethodCallHandler
+                }
+                try {
+                    // These app notifications have no tag. Never touch an alarm
+                    // PendingIntent or the notification plugin's future cache.
+                    val active = manager.activeNotifications.firstOrNull { it.id == id && it.tag == null }
+                    when (call.method) {
+                        "capture" -> result.success(active?.let {
+                            mapOf("id" to it.id, "key" to it.key, "postTime" to it.postTime)
+                        })
+                        "stopCaptured" -> {
+                            val key = call.argument<String>("key")
+                            val postTime = call.argument<Number>("postTime")?.toLong()
+                            if (key == null || postTime == null) {
+                                result.error("invalid_identity", "Captured instance required", null)
+                            } else if (active == null) {
+                                result.success("gone")
+                            } else if (active.key != key || active.postTime != postTime) {
+                                result.success("replaced")
+                            } else {
+                                manager.cancel(active.tag, active.id)
+                                result.success("stopped")
+                            }
+                        }
+                        else -> result.notImplemented()
+                    }
+                } catch (error: Exception) {
+                    result.error("active_alert_unavailable", "Could not access active notification", null)
+                }
+            }
         volumeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         volumeChannel?.setMethodCallHandler { call, result ->
             when (call.method) {

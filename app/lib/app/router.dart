@@ -481,6 +481,8 @@ final GoRouter appRouter = GoRouter(
           prayerName: prayer,
           isIqamah: isIqamah,
           autoPlay: autoPlay,
+          nativeNotificationId: int.tryParse(state.uri.queryParameters['notificationId'] ?? ''),
+          notificationKind: state.uri.queryParameters['notificationKind'],
         );
       },
     ),
