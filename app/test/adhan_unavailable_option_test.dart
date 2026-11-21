@@ -1,3 +1,7 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:almomin/core/services/settings_service.dart';
+import 'package:almomin/features/settings/widgets/settings_adhan_voice_modal.dart';
+import 'prayer_voice_preview_ownership_test.dart' show VoicePreviewPlayer;
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -175,4 +179,79 @@ void main() {
     expect(assigned, 1);
   });
 
+  group('Saved legacy adhan fallback disclosure', () {
+
+  setUpAll(() async {
+    await (FontLoader('Cairo')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Cairo-Regular.ttf').readAsBytesSync())))).load();
+    const icons = String.fromEnvironment('MATERIAL_ICONS_FONT');
+    if (icons.isNotEmpty) await (FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(File(icons).readAsBytesSync())))).load();
+  });
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({
+      'notif_master_enabled': false,
+      'notif_selected_adhan': 'adhan_haza_albalushi',
+      'notif_prayer_voice_الظهر': 'adhan_haza_albalushi',
+    });
+    await SettingsService.instance.init(forceReload: true);
+    await PrayerNotificationService.instance.init(forceReload: true);
+  });
+
+  test('supported label unchanged and old unknown is not mislabeled Makkah', () {
+    expect(savedAdhanFallbackNotice('adhan_makkah'), isNull);
+    expect(getAdhanVoiceName('adhan_makkah'), isNot(contains('مؤقتًا')));
+    expect(getAdhanVoiceName('old_unknown_voice'), startsWith('اختيار صوت قديم غير معروف'));
+    for (final key in ['adhan_haza_albalushi', 'adhan_sudais', 'adhan_amr_sobhi', 'old_unknown_voice']) {
+      expect(savedAdhanFallbackNotice(key), contains('وضع الصامت والاهتزاز'));
+      expect(getAdhanVoiceName(key), contains('صوت مكة مؤقتًا'));
+    }
+  });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('saved unavailable picker discloses fallback and preserves preferences at $scale', (tester) async {
+      tester.view.physicalSize = const Size(360, 840);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final prefs = await SharedPreferences.getInstance();
+      final before = {for (final key in prefs.getKeys()) key: prefs.get(key)};
+      final boundary = GlobalKey();
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(RepaintBoundary(key: boundary, child: MaterialApp(
+        theme: ThemeData(fontFamily: 'Cairo'),
+        builder: (c, child) => MediaQuery(data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
+        home: Scaffold(body: Builder(builder: (context) => TextButton(
+          onPressed: () => showPrayerMuezzinDropdownPicker(context, 'الظهر', previewPlayerFactory: () => VoicePreviewPlayer()),
+          child: const Text('فتح'),
+        ))),
+      )));
+      await tester.tap(find.text('فتح'));
+      await tester.pumpAndSettle();
+      final notice = find.byKey(const ValueKey('saved_adhan_fallback_notice'));
+      expect(notice, findsOneWidget);
+      expect(tester.getSemantics(notice).label, contains('وليس التسجيل المحفوظ'));
+      expect(tester.takeException(), isNull);
+      const capture = String.fromEnvironment('ADHAN_PIXELS_DIR');
+      if (capture.isNotEmpty) {
+        final render = tester.renderObject<RenderRepaintBoundary>(find.byKey(boundary));
+        await tester.runAsync(() async {
+          final image = await render.toImage();
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          Directory(capture).createSync(recursive: true);
+          File('$capture/saved-fallback-${scale}x.png').writeAsBytesSync(data!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
+      await tester.enterText(find.byType(TextField), 'لايوجدصوتبهذاالاسم');
+      await tester.pumpAndSettle();
+      expect(notice, findsOneWidget);
+      await tester.tap(find.byTooltip('إغلاق'));
+      await tester.pumpAndSettle();
+      expect({for (final key in prefs.getKeys()) key: prefs.get(key)}, before);
+      expect(PrayerNotificationService.instance.getPrayerVoice('الظهر'), 'adhan_haza_albalushi');
+      expect(PrayerNotificationService.instance.masterEnabled, isFalse);
+      semantics.dispose();
+    });
+  }
+
+  });
 }
