@@ -215,7 +215,7 @@ void main() {
       'adhan_madinah',
       'adhan_essam_bukhari',
       'adhan_naif_feeda',
-      'adhan_cairo',
+      'adhan_cairo_refaat',
       'adhan_aqsa',
       'adhan_farooq_hadrawi'
     ]) {
@@ -243,6 +243,44 @@ void main() {
   });
 
   group('IslamicAudioService downloadTrack Controls', () {
+    test('unknown ID cannot download another recording or publish a file', () async {
+      var requests = 0;
+      DynamicHttpOverrides.activeHandler = (method, url, req) async {
+        requests++;
+        return TestHttpClientResponse(Stream.value(Uint8List(2048)), contentLength: 2048);
+      };
+      const id = 'not_a_catalog_recording';
+      expect(await service.downloadTrack(id), isFalse);
+      expect(requests, 0);
+      expect(File('${audioDir.path}/$id.mp3').existsSync(), isFalse);
+      expect(service.isDownloading(id), isFalse);
+      expect(service.isDownloaded(id), isFalse);
+    });
+
+    for (final size in [0, 1000]) {
+      test('rejects $size byte download without replacing a good copy', () async {
+        const id = 'adhan_essam_bukhari';
+        DynamicHttpOverrides.activeHandler = (method, url, req) async {
+          return TestHttpClientResponse(Stream.value(Uint8List(2048)..fillRange(0, 2048, 37)), contentLength: 2048);
+        };
+        expect(await service.downloadTrack(id), isTrue);
+        final file = File(service.getLocalAudioPath(id)!);
+        final oldBytes = file.readAsBytesSync();
+        DynamicHttpOverrides.activeHandler = (method, url, req) async {
+          return TestHttpClientResponse(Stream.value(Uint8List(size)), contentLength: size);
+        };
+        try {
+          expect(await service.downloadTrack(id), isFalse);
+          expect(file.readAsBytesSync(), oldBytes);
+          expect(service.isDownloaded(id), isTrue);
+          expect(service.isDownloading(id), isFalse);
+          expect(getLingeringTempFiles(audioDir, id), isEmpty);
+        } finally {
+          await service.deleteDownloadedTrack(id);
+        }
+      });
+    }
+
     test('Control 1: Single successful download completes and marks track downloaded', () async {
       final fakeData = Uint8List(2048);
       DynamicHttpOverrides.activeHandler = (method, url, req) async {
@@ -486,7 +524,7 @@ void main() {
         }
       };
 
-      const trackId = 'adhan_cairo';
+      const trackId = 'adhan_cairo_refaat';
 
       // 1. Start Request 1
       final req1Future = service.downloadTrack(trackId);
