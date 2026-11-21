@@ -14,7 +14,7 @@ import '../services/prayer_service.dart';
 import '../services/adhan_sensor_gesture_service.dart';
 
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse notificationResponse) {
+Future<void> notificationTapBackground(NotificationResponse notificationResponse) async {
   if (notificationResponse.actionId == 'stop_adhan') {
     PrayerNotificationService.instance.stopAdhanAudio();
   } else if (notificationResponse.actionId == 'snooze_5') {
@@ -27,7 +27,21 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
         prayer = uri.queryParameters['prayer'] ?? 'الصلاة';
       } catch (_) {}
     }
-    PrayerNotificationService.instance.snoozeAdhan(5, prayer);
+    try {
+      // The action callback runs in its own engine. Never use its default
+      // fullAdhan field in place of the user's durable quiet-mode choice.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      final saved = prefs.getString('notif_sound_mode') ?? 'fullAdhan';
+      final mode = AdhanSoundMode.values.firstWhere((m) => m.name == saved,
+          orElse: () => AdhanSoundMode.fullAdhan);
+      PrayerNotificationService._ensureTimeZonesInitialized();
+      final name = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(name));
+      await PrayerNotificationService.instance._snoozeAdhan(5, prayer, mode);
+    } catch (e) {
+      debugPrint('Background snooze could not be prepared: $e');
+    }
   }
 }
 
@@ -498,6 +512,10 @@ class PrayerNotificationService extends ChangeNotifier {
 
   /// Snoozes Adhan alert for specified minutes and schedules follow-up reminder
   Future<void> snoozeAdhan(int minutes, [String? prayerName]) async {
+    await _snoozeAdhan(minutes, prayerName, _soundMode);
+  }
+
+  Future<void> _snoozeAdhan(int minutes, String? prayerName, AdhanSoundMode mode) async {
     _ensureTimeZonesInitialized();
     stopAdhanAudio();
     final now = DateTime.now();
@@ -506,13 +524,17 @@ class PrayerNotificationService extends ChangeNotifier {
     final prayer = prayerName ?? 'الصلاة';
 
     final androidDetails = AndroidNotificationDetails(
-      _quietModeChannel('prayer_reminder_channel'),
+      switch (mode) {
+        AdhanSoundMode.silent => 'prayer_silent_channel',
+        AdhanSoundMode.vibrateOnly => 'prayer_vibrate_channel',
+        _ => 'prayer_reminder_channel',
+      },
       'تذكير ما بعد الغفوة',
       channelDescription: 'تنبيه الأذان بعد انتهاء فترة الغفوة',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-      enableVibration: _soundMode != AdhanSoundMode.silent,
+      playSound: mode != AdhanSoundMode.silent && mode != AdhanSoundMode.vibrateOnly,
+      enableVibration: mode != AdhanSoundMode.silent,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       actions: [
