@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import '../notifications/prayer_notification_service.dart';
+import '../services/adhan_sensor_gesture_service.dart';
 
 class NotificationPreferenceError extends StatelessWidget {
   const NotificationPreferenceError({super.key});
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-        animation: PrayerNotificationService.instance,
+        animation: Listenable.merge([
+          PrayerNotificationService.instance,
+          AdhanSensorGestureService.instance
+        ]),
         builder: (context, _) {
-          final error = PrayerNotificationService.instance.preferenceError;
+          final errors = [
+            PrayerNotificationService.instance.preferenceError,
+            AdhanSensorGestureService.instance.preferenceError
+          ].whereType<String>();
+          final error = errors.isEmpty ? null : errors.join('\n');
           if (error == null) return const SizedBox.shrink();
           final colors = Theme.of(context).colorScheme;
           return Semantics(

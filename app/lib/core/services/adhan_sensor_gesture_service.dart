@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../utils/serial_task_queue.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// specifically for Adhan & Iqamah control (Shake-to-Stop & Flip-to-Mute),
 /// as well as Android System Alert Window (Display over other apps) permissions.
 class AdhanSensorGestureService extends ChangeNotifier {
-  static final AdhanSensorGestureService instance = AdhanSensorGestureService._internal();
+  static final AdhanSensorGestureService instance =
+      AdhanSensorGestureService._internal();
   AdhanSensorGestureService._internal();
 
   bool _isInitialized = false;
@@ -36,48 +38,68 @@ class AdhanSensorGestureService extends ChangeNotifier {
   bool get overlayWindowEnabled => _overlayWindowEnabled;
   bool get isListening => _isListening;
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) =>
+      _preferenceQueue.run(() async {
+        if (_isInitialized && !forceReload) return;
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      _shakeToStopEnabled = prefs.getBool('notif_shake_to_stop') ?? true;
-      _flipToMuteEnabled = prefs.getBool('notif_flip_to_mute') ?? true;
-      _overlayWindowEnabled = prefs.getBool('notif_overlay_window') ?? true;
-    } catch (e) {
-      debugPrint('AdhanSensorGestureService init prefs error: $e');
-    }
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (forceReload) await prefs.reload();
+          final shake = prefs.getBool('notif_shake_to_stop') ?? true;
+          final flip = prefs.getBool('notif_flip_to_mute') ?? true;
+          final overlay = prefs.getBool('notif_overlay_window') ?? true;
+          _shakeToStopEnabled = shake;
+          _flipToMuteEnabled = flip;
+          _overlayWindowEnabled = overlay;
+        } catch (e) {
+          debugPrint('AdhanSensorGestureService init prefs error: $e');
+          _preferenceError =
+              'تعذر قراءة إعداد التحكم بالأذان. احتُفظ بالاختيارات الحالية.';
+          notifyListeners();
+          return;
+        }
 
-    _isInitialized = true;
-    notifyListeners();
-  }
+        _isInitialized = true;
+        _preferenceError = null;
+        notifyListeners();
+      });
 
-  Future<void> toggleShakeToStop(bool enabled) async {
-    _shakeToStopEnabled = enabled;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('notif_shake_to_stop', enabled);
-    } catch (_) {}
-    notifyListeners();
-  }
+  final SerialTaskQueue _preferenceQueue = SerialTaskQueue();
+  String? _preferenceError;
+  String? get preferenceError => _preferenceError;
 
-  Future<void> toggleFlipToMute(bool enabled) async {
-    _flipToMuteEnabled = enabled;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('notif_flip_to_mute', enabled);
-    } catch (_) {}
-    notifyListeners();
-  }
+  Future<bool> _saveChoice(String key, bool enabled, VoidCallback publish) =>
+      _preferenceQueue.run(() async {
+        SharedPreferences? prefs;
+        try {
+          prefs = await SharedPreferences.getInstance();
+          if (!await prefs.setBool(key, enabled)) {
+            throw StateError('Sensor choice was not saved');
+          }
+        } catch (_) {
+          // A rejected write may still update the plugin's optimistic cache.
+          try {
+            await prefs?.reload();
+          } catch (_) {}
+          _preferenceError =
+              'تعذر حفظ إعداد التحكم بالأذان. لم يُطبّق الاختيار الجديد. أعد الاختيار للمحاولة مرة أخرى.';
+          notifyListeners();
+          return false;
+        }
+        publish();
+        _preferenceError = null;
+        notifyListeners();
+        return true;
+      });
 
-  Future<void> toggleOverlayWindow(bool enabled) async {
-    _overlayWindowEnabled = enabled;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('notif_overlay_window', enabled);
-    } catch (_) {}
-    notifyListeners();
-  }
+  Future<bool> toggleShakeToStop(bool enabled) => _saveChoice(
+      'notif_shake_to_stop', enabled, () => _shakeToStopEnabled = enabled);
+
+  Future<bool> toggleFlipToMute(bool enabled) => _saveChoice(
+      'notif_flip_to_mute', enabled, () => _flipToMuteEnabled = enabled);
+
+  Future<bool> toggleOverlayWindow(bool enabled) => _saveChoice(
+      'notif_overlay_window', enabled, () => _overlayWindowEnabled = enabled);
 
   /// Checks the current system alert window permission status
   Future<bool> checkOverlayPermission() async {
