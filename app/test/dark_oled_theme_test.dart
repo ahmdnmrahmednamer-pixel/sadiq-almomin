@@ -11,7 +11,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    await SettingsService.instance.init();
+    await SettingsService.instance.init(forceReload: true);
   });
 
   group('Dark & OLED Theme Tokens Tests (FR-THM-001)', () {
@@ -65,38 +65,39 @@ void main() {
       expect(materialApp.darkTheme?.scaffoldBackgroundColor, const Color(0xFF000000));
     });
 
-    testWidgets('SettingsScreen displays Theme ListTile and opens modal to select OLED mode', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
+    testWidgets('SettingsScreen stages OLED in appearance category and persists only after Apply', (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: SettingsScreen(),
-        ),
-      );
+      final settings = SettingsService.instance;
+      final prefs = await SharedPreferences.getInstance();
+      final beforeMode = settings.themeMode;
+      final beforeStored = prefs.getString('theme_mode');
+      await tester.pumpWidget(const MaterialApp(home: SettingsScreen()));
       await tester.pumpAndSettle();
-
-      // Find theme tile
-      final themeTile = find.text('مظهر التطبيق والوضع الليلي (Dark & OLED)');
-      expect(themeTile, findsOneWidget);
-
-      // Tap on theme tile
+      await tester.tap(find.byKey(const ValueKey('settings_category_0')));
+      await tester.pumpAndSettle();
+      final themeTile = find.byKey(const ValueKey('setting_المظهر'));
+      await tester.ensureVisible(themeTile);
       await tester.tap(themeTile);
       await tester.pumpAndSettle();
-
-      // Modal options should be visible
-      expect(find.text('الوضع الليلي الفاخر (OLED أسود نقي)'), findsOneWidget);
-      expect(find.text('الوضع الداكن الهادئ'), findsOneWidget);
-      expect(find.text('الوضع الفاتح (النهاري)'), findsOneWidget);
-
-      // Select OLED mode
-      await tester.tap(find.text('الوضع الليلي الفاخر (OLED أسود نقي)'));
+      expect(find.descendant(of: find.byType(BottomSheet), matching: find.text('النظام')), findsOneWidget);
+      expect(find.text('داكن'), findsOneWidget);
+      expect(find.text('فاتح'), findsOneWidget);
+      await tester.tap(find.text('OLED'));
       await tester.pumpAndSettle();
-
-      expect(SettingsService.instance.themeMode, 'oled');
-      expect(find.text('تم تفعيل: الوضع الليلي الفاخر (OLED أسود نقي)'), findsOneWidget);
+      expect(settings.themeMode, beforeMode);
+      expect(prefs.getString('theme_mode'), beforeStored);
+      expect(find.text('OLED'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('settings_apply')));
+      await tester.pumpAndSettle();
+      expect(settings.themeMode, 'oled');
+      expect(prefs.getString('theme_mode'), 'oled');
+      expect(find.text('تم حفظ التغييرات'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await settings.init(forceReload: true);
+      expect(settings.themeMode, 'oled');
     });
   });
 }
