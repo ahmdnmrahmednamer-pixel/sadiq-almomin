@@ -8,12 +8,21 @@ import 'package:flutter/material.dart';
 import '../../../core/notifications/prayer_notification_service.dart';
 import '../../../core/services/islamic_audio_service.dart';
 
+/// Old saved choices are retained, but must not imply their recording is used.
+String? savedAdhanFallbackNotice(String key) {
+  if (PrayerNotificationService.adhanAssignmentUnavailableReason(key) == null) {
+    return null;
+  }
+  return 'التسجيل المحفوظ غير مدعوم لأذان التنبيه. في وضع الأذان يُستخدم صوت مكة الموجود مؤقتًا، وليس التسجيل المحفوظ. مواعيد التذكير واختيارك المحفوظ لم يتغيرا، مع احترام وضع الصامت والاهتزاز وباقي أوضاع التنبيه. اختر صوتًا مدعومًا من القائمة لتغييره.';
+}
+
 String getAdhanVoiceName(String key) {
-  final track = IslamicAudioService.allTracks.firstWhere(
+  final tracks = IslamicAudioService.allTracks.where(
     (t) => t.id == key || t.rawNotificationSound == key,
-    orElse: () => IslamicAudioService.allTracks.first,
   );
-  return adhanVoiceLabel(track);
+  final name = tracks.isEmpty ? 'اختيار صوت قديم غير معروف' : adhanVoiceLabel(tracks.first);
+  if (savedAdhanFallbackNotice(key) == null) return name;
+  return '$name. غير مدعوم للتنبيه؛ البديل في وضع الأذان: صوت مكة مؤقتًا. مواعيد التذكير وأوضاع التنبيه لم تتغير. اضغط لاختيار صوت مدعوم.';
 }
 
 String adhanVoiceLabel(IslamicAudioTrack track) {
@@ -485,15 +494,26 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
                     : widget.prayerName == 'الكل'
                         ? notifications.selectedAdhanVoice
                         : notifications.getPrayerVoice(widget.prayerName));
-                if (tracks.isEmpty) {
+                final fallbackNotice = widget.isIqamah ? null : savedAdhanFallbackNotice(selected);
+                if (tracks.isEmpty && fallbackNotice == null) {
                   return const Center(child: Text('لا توجد أصوات مطابقة'));
                 }
+                final noticeCount = fallbackNotice == null ? 0 : 1;
                 return ListView.builder(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  itemCount: tracks.length,
+                  itemCount: tracks.length + noticeCount,
                   itemBuilder: (context, index) {
-                    final track = tracks[index];
+                    if (noticeCount == 1 && index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(fallbackNotice!, key: const ValueKey('saved_adhan_fallback_notice')),
+                        ),
+                      );
+                    }
+                    final track = tracks[index - noticeCount];
                     return AdhanVoiceOption(
                       key: ValueKey('voice_${track.id}'),
                       name: adhanVoiceLabel(track),
