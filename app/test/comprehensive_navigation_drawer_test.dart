@@ -38,41 +38,41 @@ void main() {
 
       // Verify Quran & Reciters
       expect(find.text('المصحف الشريف وتلاوة الآيات'), findsOneWidget);
-      expect(find.text('قراء القرآن الكريم والاستماع (61 قارئاً) 🎧'), findsOneWidget);
+      expect(find.text('قراء القرآن الكريم والاستماع (61 قارئاً)'), findsOneWidget);
 
       // Verify Adhan & 7 Muezzins & Sha'rawi Duaa
       await tester.scrollUntilVisible(
-        find.text('أصوات الأذان والمؤذنون الـ 7 🕌'),
+        find.text('أصوات الأذان والمؤذنون الـ 7'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('أصوات الأذان والمؤذنون الـ 7 🕌'), findsOneWidget);
-      expect(find.text('دعاء الشيخ الشعراوي بعد الأذان 🎧'), findsOneWidget);
+      expect(find.text('أصوات الأذان والمؤذنون الـ 7'), findsOneWidget);
+      expect(find.text('دعاء الشيخ الشعراوي بعد الأذان'), findsOneWidget);
 
       // Retired scholars library must not be advertised; radio stays.
       expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsNothing);
 
       await tester.scrollUntilVisible(
-        find.text('إذاعات القرآن الكريم (MP3Quran) 📻'),
+        find.text('إذاعات القرآن الكريم (MP3Quran)'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('إذاعات القرآن الكريم (MP3Quran) 📻'), findsOneWidget);
+      expect(find.text('إذاعات القرآن الكريم (MP3Quran)'), findsOneWidget);
 
       // Verify Adhkar & Tasbih
       await tester.scrollUntilVisible(
-        find.text('أذكار المسلم وحصن المسلم 🤲'),
+        find.text('أذكار المسلم وحصن المسلم'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('أذكار المسلم وحصن المسلم 🤲'), findsOneWidget);
+      expect(find.text('أذكار المسلم وحصن المسلم'), findsOneWidget);
 
       await tester.scrollUntilVisible(
-        find.text('السبحة الإلكترونية 📿'),
+        find.text('السبحة الإلكترونية'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('السبحة الإلكترونية 📿'), findsOneWidget);
+      expect(find.text('السبحة الإلكترونية'), findsOneWidget);
 
       // Verify Settings, About, Developer, & Support
       await tester.scrollUntilVisible(
