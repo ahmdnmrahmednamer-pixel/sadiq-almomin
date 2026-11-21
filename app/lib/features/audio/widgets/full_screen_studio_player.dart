@@ -504,7 +504,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                               Expanded(child: Column(
                                 children: [
                                   const Text(
-                                    'المشغل الصوتي الاستوديو',
+                                    'المُشغِّل',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 14,
