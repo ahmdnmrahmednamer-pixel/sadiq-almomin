@@ -18,9 +18,15 @@ Linux references:
 
 | File | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `linux/part_a_compact.png` | 129835 | `feab21a0af319c28a058ca23eb399368a33475ab85cb673f22c2921f0f17d9b3` |
-| `linux/part_b_compact.png` | 115979 | `514cf1f43e018f805ecdc92fc3d95cb2ef8127668db996c07f8abcc2d4b4b380` |
+| `linux/part_a_compact.png` | 129797 | `1ff24e37b8febf486703f1d842cd1caf1459b3ec9166a83d89e23db941d4f8a4` |
+| `linux/part_b_compact.png` | 115938 | `29f5796343d76b6083cbd43d65390cabfb81a64a5c2076367b829c0b973b6e74` |
 
 The existing fixtures load Cairo and Amiri, with Cairo also loaded under the Roboto name. They do not load MaterialIcons. Both original and Linux references therefore contain missing-icon boxes. These fixtures check the save-failure layout and text, not production icon fidelity or native accessibility. No production icon change is implied or approved by these references.
 
 The widget test's existing behavioral assertions remain in force: unreadable data refuses saving, failed persistence keeps the sheet open and typed input intact, each exact Arabic error is inside the sheet, and confirmed persistence closes the sheet. Native screen-reader announcements and physical-device interaction remain separate checks.
+
+## November 21, 2026: approved decorative leaf removal
+
+PR62 removed the decorative leaf from the add-sheet title. Only30pixels per Linux image changed: the old fixture rendered that leaf as a missing-glyph mark. Both complete images were inspected, with input, full error text, layout and Save unchanged. The two Linux references above now match the approved title. No production code, test assertion, pixel tolerance or host selector changed.
+
+Causal controls: restoring the leaf against the old references passed; restoring it against these updated references failed the strict comparison at exactly30pixels in each state. Returning to the approved leaf-free title passed all4journal tests. Windows originals remain byte-identical and were not re-rendered for this title change. The historical Windows pass above does not establish a current-revision Windows pass; that host still needs its own reviewed reference alignment.
