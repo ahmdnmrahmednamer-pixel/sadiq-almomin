@@ -181,9 +181,8 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
     }
 
     final ayah = _rangeAyahs[_currentAyahIndex];
-    final url = SettingsService.instance.getAyahAudioUrl(_selectedSurahId, ayah.ayahNumber);
-
     try {
+      final url = SettingsService.instance.getAyahAudioUrl(_selectedSurahId, ayah.ayahNumber);
       _scrollToAyah(_currentAyahIndex);
       final reciterId = SettingsService.instance.selectedReciterId;
       final cacheKey = 'ayah_${reciterId}_${_selectedSurahId}_${ayah.ayahNumber}';
@@ -201,8 +200,8 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
       debugPrint('Memorization audio play error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تعذر تشغيل التلاوة. يرجى التحقق من الاتصال بالإنترنت.'),
+          SnackBar(
+            content: Text(e is VerseRecordingUnavailable ? e.message : 'تعذر تشغيل التلاوة. يرجى التحقق من الاتصال بالإنترنت.'),
             backgroundColor: Colors.redAccent,
           ),
         );
