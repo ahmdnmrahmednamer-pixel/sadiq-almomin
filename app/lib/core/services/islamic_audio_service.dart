@@ -150,6 +150,9 @@ class IslamicAudioService extends ChangeNotifier {
   bool _isInitialized = false;
   bool _isOnlinePreview = false;
   int _onlinePreviewSession = 0;
+  Future<void>? _pendingNativeStop;
+  bool _stopFailed = false;
+  bool get stopFailed => _stopFailed;
 
   // Queue & Playlist Management
   List<IslamicAudioTrack> _queue = [];
@@ -614,6 +617,8 @@ class IslamicAudioService extends ChangeNotifier {
     notifyListeners();
     try {
       await init();
+      await _pendingNativeStop;
+      if (session != _onlinePreviewSession) return false;
       final ok = await FastAudioService.instance.playResilient(
         url,
         player: _player,
@@ -641,9 +646,14 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playTrack(IslamicAudioTrack track) async {
+    final priorTrack = _currentTrack;
     _isOnlinePreview = false;
     final session = ++_onlinePreviewSession;
-    bool isCurrent() => session == _onlinePreviewSession;
+    final focus = FastAudioService.instance;
+    int? focusToken;
+    bool isCurrent() =>
+        session == _onlinePreviewSession &&
+        (focusToken == null || focusToken == focus.activePlaybackToken);
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (!isCurrent() || _legacyStopFailed) return;
     if (isHeldRecording(track)) {
@@ -677,12 +687,12 @@ class IslamicAudioService extends ChangeNotifier {
     try {
       await init();
       if (!isCurrent()) return;
-      try {
-        await _player.stop();
-      } catch (_) {}
+      await _pendingNativeStop;
       if (!isCurrent()) return;
-      await FastAudioService.instance.claimAudioFocus(player: _player, onStopOther: stop);
+      focusToken =
+          await focus.claimAudioFocus(player: _player, onStopOther: stop);
       if (!isCurrent()) return;
+      _stopFailed = false;
       await _player.setVolume(1.0);
       if (!isCurrent()) return;
       // 1. Check if user explicitly downloaded the HD file (offline HD playback)
@@ -698,7 +708,7 @@ class IslamicAudioService extends ChangeNotifier {
       //    and fall back to the remastered 44.1kHz Stereo bundled asset if offline!
       else if (track.remoteUrl != null) {
         final cacheKey = 'audio_hd_${track.id}';
-        final success = await FastAudioService.instance.playResilient(
+        final playback = focus.playResilient(
           track.remoteUrl!,
           player: _player,
           onStopCallback: stop,
@@ -706,12 +716,19 @@ class IslamicAudioService extends ChangeNotifier {
           fallbackUrls: track.fallbackUrls,
           cacheKey: cacheKey,
         );
+        // playResilient claims synchronously before its first await.
+        focusToken = focus.activePlaybackToken;
+        final success = await playback;
         if (!isCurrent()) return;
         if (success) {
           await _player.setSpeed(_playbackSpeed);
           if (!isCurrent()) return;
         } else if (track.assetPath != null) {
-          // Seamless offline fallback to remastered 44.1kHz Stereo bundled asset
+          // A false result may mean a failed physical stop, not a network
+          // error. Reconfirm silence before any bundled fallback.
+          focusToken =
+              await focus.claimAudioFocus(player: _player, onStopOther: stop);
+          if (!isCurrent()) return;
           if (!kIsWeb && File(track.assetPath!).existsSync()) {
             await _player.setFilePath(track.assetPath!);
           } else {
@@ -740,12 +757,19 @@ class IslamicAudioService extends ChangeNotifier {
         throw Exception('No playable audio source found for ${track.id}');
       }
     } catch (e) {
-      if (!isCurrent()) return;
+      if (session != _onlinePreviewSession) return;
       debugPrint('Error playing ${track.id}: $e');
       _isBuffering = false;
-      _isPlaying = false;
-      _currentTrack = null;
+      _isPlaying = _player.playing;
+      _currentTrack = _isPlaying ? priorTrack : null;
       notifyListeners();
+    } finally {
+      if (session == _onlinePreviewSession && !isCurrent()) {
+        _isBuffering = false;
+        _isPlaying = _player.playing;
+        if (!_isPlaying) _currentTrack = null;
+        notifyListeners();
+      }
     }
   }
 
@@ -770,12 +794,20 @@ class IslamicAudioService extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    if (_currentTrack != null) {
-      try {
-        await _player.play();
-      } catch (e) {
-        debugPrint('Audio resume error: $e');
-      }
+    final session = _onlinePreviewSession;
+    final track = _currentTrack;
+    try {
+      await _pendingNativeStop;
+      if (session != _onlinePreviewSession || track != _currentTrack) return;
+      final focus = FastAudioService.instance;
+      final token =
+          await focus.claimAudioFocus(player: _player, onStopOther: stop);
+      if (session != _onlinePreviewSession ||
+          track != _currentTrack ||
+          token != focus.activePlaybackToken) return;
+      unawaited(_player.play());
+    } catch (error) {
+      debugPrint('Audio resume error: $error');
     }
   }
 
@@ -784,6 +816,7 @@ class IslamicAudioService extends ChangeNotifier {
     FastAudioService.instance.releaseAudioFocusFor(_player);
     _isOnlinePreview = false;
     _isBuffering = false;
+    _stopFailed = false;
     if (disableNativePlayerForTesting) {
       _isPlaying = false;
       _currentTrack = null;
@@ -791,14 +824,27 @@ class IslamicAudioService extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    try {
+    final priorStop = _pendingNativeStop;
+    final stopping = () async {
+      await priorStop;
       await _player.stop();
+      if (_player.playing) throw StateError('Audio stop was not confirmed');
+    }();
+    // New starts wait for this native stop, including a stop which ultimately
+    // fails. Focus admission then checks the physical owner again.
+    _pendingNativeStop = stopping.catchError((Object _) {});
+    try {
+      await stopping;
+    } catch (error) {
       if (session != _onlinePreviewSession) return;
-      _isPlaying = false;
-    } catch (e) {
-      debugPrint('Audio stop error: $e');
+      _stopFailed = true;
+      _isPlaying = _player.playing;
+      notifyListeners();
+      debugPrint('Audio stop error: $error');
+      return;
     }
     if (session != _onlinePreviewSession) return;
+    _isPlaying = false;
     _currentTrack = null;
     _position = Duration.zero;
     notifyListeners();
