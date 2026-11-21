@@ -938,7 +938,7 @@ void main() {
         expect(find.byType(BottomSheet), findsNothing);
         expect(
           find.text(
-            'تم اعتماد القارئ: محمد صديق المنشاوي (مجود) — جاري سماع صوته الآن 🎧',
+            'تم اعتماد القارئ: محمد صديق المنشاوي (مجود)، تم تشغيل عينته.',
           ),
           findsOneWidget,
         );

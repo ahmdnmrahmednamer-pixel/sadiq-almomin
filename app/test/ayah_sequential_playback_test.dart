@@ -12,7 +12,9 @@ void main() {
   });
 
   group('Ayah Sequential Audio Playback & URL Integrity Tests', () {
-    test('SettingsService generates distinct, properly padded URLs for sequential ayahs', () {
+    test(
+        'SettingsService generates distinct, properly padded URLs for sequential ayahs',
+        () {
       final s = SettingsService.instance;
 
       // Surah 1: Ayah 1 vs Ayah 2
@@ -31,7 +33,9 @@ void main() {
       expect(urlKursi, endsWith('/002255.mp3'));
     });
 
-    test('Reciters without separate verse audio route to high-fidelity canonical verse stream', () async {
+    test(
+        'Reciters without separate verse audio remain unavailable without substitution',
+        () async {
       final s = SettingsService.instance;
 
       // Select Raad Al-Kurdi (whole-surah reciter on MP3Quran)
@@ -39,43 +43,51 @@ void main() {
       expect(s.currentReciter.id, equals('kurdi'));
       expect(s.currentReciter.hasVerseAudio, isFalse);
 
-      // Ayah URL routes to canonical verse audio (never 404s on EveryAyah)
-      final ayah1 = s.getAyahAudioUrl(1, 1);
-      final ayah2 = s.getAyahAudioUrl(1, 2);
-      expect(ayah1, contains('Minshawy_Murattal_128kbps/001001.mp3'));
-      expect(ayah2, contains('Minshawy_Murattal_128kbps/001002.mp3'));
-      expect(ayah1, isNot(equals(ayah2)));
+      expect(() => s.getAyahAudioUrl(1, 1),
+          throwsA(isA<VerseRecordingUnavailable>()));
+      expect(() => s.getAyahAudioUrl(1, 2),
+          throwsA(isA<VerseRecordingUnavailable>()));
+      expect(s.selectedReciterId, 'kurdi');
 
       // While whole-surah URL still routes to Raad Al-Kurdi MP3Quran CDN
       final surah1 = s.getSurahAudioUrl(1);
       expect(surah1, contains('server6.mp3quran.net/kurdi/001.mp3'));
     });
 
-    test('Verified EveryAyah reciters route to their exact subfolders', () async {
+    test('Verified EveryAyah reciters route to their exact subfolders',
+        () async {
       final s = SettingsService.instance;
 
       // Mahmoud Ali Al-Banna
       await s.setSelectedReciter('banna');
       expect(s.currentReciter.subfolder, equals('mahmoud_ali_al_banna_32kbps'));
-      expect(s.getAyahAudioUrl(1, 2), contains('mahmoud_ali_al_banna_32kbps/001002.mp3'));
+      expect(s.getAyahAudioUrl(1, 2),
+          contains('mahmoud_ali_al_banna_32kbps/001002.mp3'));
 
       // Fares Abbad
       await s.setSelectedReciter('fares_abbad');
       expect(s.currentReciter.subfolder, equals('Fares_Abbad_64kbps'));
-      expect(s.getAyahAudioUrl(1, 2), contains('Fares_Abbad_64kbps/001002.mp3'));
+      expect(
+          s.getAyahAudioUrl(1, 2), contains('Fares_Abbad_64kbps/001002.mp3'));
 
       // Abdullah Al-Juhany
       await s.setSelectedReciter('juhany');
-      expect(s.currentReciter.subfolder, equals('Abdullaah_3awwaad_Al-Juhaynee_128kbps'));
-      expect(s.getAyahAudioUrl(1, 2), contains('Abdullaah_3awwaad_Al-Juhaynee_128kbps/001002.mp3'));
+      expect(s.currentReciter.subfolder,
+          equals('Abdullaah_3awwaad_Al-Juhaynee_128kbps'));
+      expect(s.getAyahAudioUrl(1, 2),
+          contains('Abdullaah_3awwaad_Al-Juhaynee_128kbps/001002.mp3'));
 
       // Salah Bukhatir
       await s.setSelectedReciter('bukhatir');
-      expect(s.currentReciter.subfolder, equals('Salaah_AbdulRahman_Bukhatir_128kbps'));
-      expect(s.getAyahAudioUrl(1, 2), contains('Salaah_AbdulRahman_Bukhatir_128kbps/001002.mp3'));
+      expect(s.currentReciter.subfolder,
+          equals('Salaah_AbdulRahman_Bukhatir_128kbps'));
+      expect(s.getAyahAudioUrl(1, 2),
+          contains('Salaah_AbdulRahman_Bukhatir_128kbps/001002.mp3'));
     });
 
-    test('AyahAudioPlayer state updates cleanly across ayahs without retaining old key', () async {
+    test(
+        'AyahAudioPlayer state updates cleanly across ayahs without retaining old key',
+        () async {
       final player = AyahAudioPlayer.instance;
       expect(player.currentPlayingKey.value, isNull);
 

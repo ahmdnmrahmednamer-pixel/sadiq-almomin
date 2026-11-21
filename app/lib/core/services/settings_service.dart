@@ -22,6 +22,14 @@ class ReciterInfo {
   });
 }
 
+/// No alternate reciter may be substituted for a saved recording choice.
+class VerseRecordingUnavailable implements Exception {
+  final String reciterId;
+  const VerseRecordingUnavailable(this.reciterId);
+  String get message =>
+      'تسجيل الآيات المنفصلة للقارئ المختار غير متاح هنا. اختر قارئاً آخر بنفسك من إعدادات القارئ؛ لم يتغير اختيارك المحفوظ.';
+}
+
 class SettingsService extends ChangeNotifier {
   static final SettingsService instance = SettingsService._internal();
   SettingsService._internal();
@@ -882,11 +890,11 @@ class SettingsService extends ChangeNotifier {
   /// Builds the EveryAyah URL for an ayah given the current reciter
   String getAyahAudioUrl(int surahId, int ayahNumber, [String? reciterId]) {
     final rid = reciterId ?? _selectedReciterId;
-    final reciter = availableReciters.firstWhere(
-      (r) => r.id == rid,
-      orElse: () => availableReciters.first,
-    );
-    final sub = reciter.hasVerseAudio ? reciter.subfolder : 'Minshawy_Murattal_128kbps';
+    final reciter = availableReciters.where((r) => r.id == rid).firstOrNull;
+    if (reciter == null || !reciter.hasVerseAudio) {
+      throw VerseRecordingUnavailable(rid);
+    }
+    final sub = reciter.subfolder;
     final sStr = surahId.toString().padLeft(3, '0');
     final aStr = ayahNumber.toString().padLeft(3, '0');
     return 'https://everyayah.com/data/$sub/$sStr$aStr.mp3';

@@ -45,7 +45,8 @@ class AyahAudioPlayer {
 
   Stream<PlayerState>? _playerStateStreamOverride;
   @visibleForTesting
-  Stream<PlayerState>? get playerStateStreamOverride => _playerStateStreamOverride;
+  Stream<PlayerState>? get playerStateStreamOverride =>
+      _playerStateStreamOverride;
   @visibleForTesting
   set playerStateStreamOverride(Stream<PlayerState>? stream) {
     _playerStateStreamOverride = stream;
@@ -104,7 +105,8 @@ class AyahAudioPlayer {
   String? _lastSurahName;
   String? _playingReciterId;
 
-  Future<void> _advanceToNextAyahIfPossible(String finishedKey, int sessionId) async {
+  Future<void> _advanceToNextAyahIfPossible(
+      String finishedKey, int sessionId) async {
     int currentSessionToken = sessionId;
     try {
       if (currentSessionToken != _activePlaySessionId) return;
@@ -120,15 +122,10 @@ class AyahAudioPlayer {
       final surah = surahs.where((s) => s.id == surahId).firstOrNull;
       if (surah != null && ayahNumber < surah.ayahCount) {
         final nextAyah = ayahNumber + 1;
+        final selectedId = SettingsService.instance.selectedReciterId;
         final reciter = SettingsService.instance.currentReciter;
-        final primaryUrl = SettingsService.instance.getAyahAudioUrl(surahId, nextAyah);
-        final sStr = surahId.toString().padLeft(3, '0');
-        final aStr = nextAyah.toString().padLeft(3, '0');
-        final fallbackAyahUrls = [
-          'https://everyayah.com/data/Minshawy_Murattal_128kbps/$sStr$aStr.mp3',
-          'https://everyayah.com/data/Husary_128kbps/$sStr$aStr.mp3',
-          'https://everyayah.com/data/Alafasy_128kbps/$sStr$aStr.mp3',
-        ].where((u) => u != primaryUrl).toList();
+        final primaryUrl = SettingsService.instance
+            .getAyahAudioUrl(surahId, nextAyah, selectedId);
 
         currentSessionToken = ++_activePlaySessionId;
         currentPlayingKey.value = '$surahId:$nextAyah';
@@ -136,11 +133,12 @@ class AyahAudioPlayer {
         isPlaying.value = true;
 
         final cacheKey = 'ayah_${reciter.id}_${surahId}_$nextAyah';
-        final ok = await (playResilientRunner ?? FastAudioService.instance.playResilient)(
+        final ok = await (playResilientRunner ??
+            FastAudioService.instance.playResilient)(
           primaryUrl,
           player: _player,
           primaryUrl: primaryUrl,
-          fallbackUrls: fallbackAyahUrls,
+          fallbackUrls: const [],
           cacheKey: cacheKey,
           onStopCallback: stop,
         );
@@ -154,12 +152,14 @@ class AyahAudioPlayer {
         }
 
         if (nextAyah < surah.ayahCount) {
-          final prefetchUrl = SettingsService.instance.getAyahAudioUrl(surahId, nextAyah + 1);
+          final prefetchUrl = SettingsService.instance
+              .getAyahAudioUrl(surahId, nextAyah + 1, selectedId);
           final prefetchKey = 'ayah_${reciter.id}_${surahId}_${nextAyah + 1}';
           if (prefetchAudioRunner != null) {
             prefetchAudioRunner!(prefetchUrl, prefetchKey);
           } else {
-            unawaited(FastAudioService.instance.prefetchAudio(prefetchUrl, prefetchKey));
+            unawaited(FastAudioService.instance
+                .prefetchAudio(prefetchUrl, prefetchKey));
           }
         }
       }
@@ -171,8 +171,10 @@ class AyahAudioPlayer {
     }
   }
 
-  Future<void> playAyah(BuildContext context, int surahId, int ayahNumber, {String? surahName}) async {
+  Future<void> playAyah(BuildContext context, int surahId, int ayahNumber,
+      {String? surahName}) async {
     final key = '$surahId:$ayahNumber';
+    final selectedId = SettingsService.instance.selectedReciterId;
     final reciter = SettingsService.instance.currentReciter;
     if (surahName != null) _lastSurahName = surahName;
 
@@ -195,15 +197,8 @@ class AyahAudioPlayer {
       await _stopPlayer();
       if (sessionId != _activePlaySessionId) return;
 
-      final primaryUrl = SettingsService.instance.getAyahAudioUrl(surahId, ayahNumber);
-      final sStr = surahId.toString().padLeft(3, '0');
-      final aStr = ayahNumber.toString().padLeft(3, '0');
-      // Authentic verse-by-verse fallbacks for the EXACT requested ayah (never whole surah!)
-      final fallbackAyahUrls = [
-        'https://everyayah.com/data/Minshawy_Murattal_128kbps/$sStr$aStr.mp3',
-        'https://everyayah.com/data/Husary_128kbps/$sStr$aStr.mp3',
-        'https://everyayah.com/data/Alafasy_128kbps/$sStr$aStr.mp3',
-      ].where((u) => u != primaryUrl).toList();
+      final primaryUrl = SettingsService.instance
+          .getAyahAudioUrl(surahId, ayahNumber, selectedId);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -229,11 +224,12 @@ class AyahAudioPlayer {
       }
 
       final cacheKey = 'ayah_${reciter.id}_${surahId}_$ayahNumber';
-      final ok = await (playResilientRunner ?? FastAudioService.instance.playResilient)(
+      final ok = await (playResilientRunner ??
+          FastAudioService.instance.playResilient)(
         primaryUrl,
         player: _player,
         primaryUrl: primaryUrl,
-        fallbackUrls: fallbackAyahUrls,
+        fallbackUrls: const [],
         cacheKey: cacheKey,
         onStopCallback: stop,
       );
@@ -247,12 +243,14 @@ class AyahAudioPlayer {
       final surahs = await (loadSurahsRunner ?? QuranRepository.loadSurahs)();
       final surah = surahs.where((s) => s.id == surahId).firstOrNull;
       if (surah == null || ayahNumber < surah.ayahCount) {
-        final nextUrl = SettingsService.instance.getAyahAudioUrl(surahId, ayahNumber + 1);
+        final nextUrl = SettingsService.instance
+            .getAyahAudioUrl(surahId, ayahNumber + 1, selectedId);
         final nextCacheKey = 'ayah_${reciter.id}_${surahId}_${ayahNumber + 1}';
         if (prefetchAudioRunner != null) {
           prefetchAudioRunner!(nextUrl, nextCacheKey);
         } else {
-          unawaited(FastAudioService.instance.prefetchAudio(nextUrl, nextCacheKey));
+          unawaited(
+              FastAudioService.instance.prefetchAudio(nextUrl, nextCacheKey));
         }
       }
     } catch (e) {
@@ -263,7 +261,9 @@ class AyahAudioPlayer {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('تعذر تشغيل صوت القارئ ${reciter.nameAr}. يرجى التحقق من الاتصال بالإنترنت.'),
+              content: Text(e is VerseRecordingUnavailable
+                  ? e.message
+                  : 'تعذر تشغيل صوت القارئ ${reciter.nameAr}. تحقق من الاتصال أو اختر تسجيلاً آخر بنفسك؛ لم يتغير اختيارك المحفوظ.'),
               backgroundColor: Colors.redAccent,
             ),
           );
@@ -295,11 +295,12 @@ class AyahAudioPlayer {
       final ayahUrl =
           'https://everyayah.com/data/${reciter.subfolder}/001002.mp3';
 
-      final ok = await (playResilientRunner ?? FastAudioService.instance.playResilient)(
+      final ok = await (playResilientRunner ??
+          FastAudioService.instance.playResilient)(
         surahUrl,
         player: _player,
         primaryUrl: surahUrl,
-        fallbackUrls: [ayahUrl],
+        fallbackUrls: reciter.hasVerseAudio ? [ayahUrl] : const [],
         cacheKey: 'preview_reciter_${reciter.id}',
         onStopCallback: stop,
       );
@@ -318,6 +319,27 @@ class AyahAudioPlayer {
       }
       return false;
     }
+  }
+
+  /// User-triggered preview feedback, without reporting stale or stopped work
+  /// as a failed current request.
+  Future<void> previewReciterWithFeedback(
+      BuildContext context, ReciterInfo reciter) async {
+    final togglingOff = _playingReciterId == reciter.id &&
+        currentPlayingKey.value == 'preview_${reciter.id}' &&
+        _isPlayerPlaying;
+    final pending = playReciterPreview(reciter);
+    final sessionId = _activePlaySessionId;
+    final ok = await pending;
+    if (ok ||
+        togglingOff ||
+        sessionId != _activePlaySessionId ||
+        !context.mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+          'تعذر تشغيل عينة القارئ ${reciter.nameAr}. تحقق من الاتصال أو اختر قارئاً آخر بنفسك؛ لم يتم تشغيل قارئ بديل.'),
+    ));
   }
 
   Future<void> stop() async {
