@@ -130,6 +130,15 @@ class FastAudioService {
     return token;
   }
 
+  /// Invalidates pending starts only for this player. Never stops another owner.
+  void releaseAudioFocusFor(AudioPlayer player) {
+    if (_activePlayer != player) return;
+    _activePlaybackToken++;
+    _activeCallbackToken = 0;
+    _activeCustomStopCallback = null;
+    _activePlayer = null;
+  }
+
   /// Coordinates audio players across the app so only one audio stream plays at a time.
   /// Synchronously registers focus and returns the assigned token after stopping prior audio.
   Future<int> claimAudioFocus({
