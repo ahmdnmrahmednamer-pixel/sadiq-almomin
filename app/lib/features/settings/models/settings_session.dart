@@ -248,7 +248,7 @@ class SettingsSession {
           key: 'voice_$prayer',
           read: () => n.getPrayerVoice(prayer),
           write: (value) => n.setPrayerVoice(prayer, value),
-          verify: (value) => _saved({'notif_prayer_voice_$prayer': value}));
+          verify: (value) async => await _saved({'notif_prayer_voice_$prayer': value}) && n.prayerVoiceConfirmed(prayer, value));
     }
     for (final key in ['salawat', 'istighfar']) {
       shortIntervals[key] = draft.add<ShortReminderInterval>(

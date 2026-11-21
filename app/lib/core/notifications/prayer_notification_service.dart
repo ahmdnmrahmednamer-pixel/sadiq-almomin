@@ -478,6 +478,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
   Future<void> _loadSavedSchedulingPreferences({bool reload = false}) async {
     _adhkarRegistrations.clear();
+    _confirmedPrayerVoices.clear();
     final prefs = await SharedPreferences.getInstance();
     if (reload) await prefs.reload();
     for (final key in shortReminderIds.keys) {
@@ -493,12 +494,7 @@ class PrayerNotificationService extends ChangeNotifier {
     for (final p in _preReminderPrayerToggles.keys) {
       _preReminderPrayerToggles[p] = prefs.getBool('notif_pre_reminder_prayer_$p') ?? true;
     }
-    _selectedAdhanVoice = prefs.getString('notif_selected_adhan') ?? 'adhan_makkah';
-    _selectedFajrVoice = prefs.getString('notif_selected_fajr_adhan') ?? 'adhan_fajr';
-    for (final p in _prayerAdhanVoices.keys) {
-      final defaultVoice = (p == 'الفجر') ? _selectedFajrVoice : _selectedAdhanVoice;
-      _prayerAdhanVoices[p] = prefs.getString('notif_prayer_voice_$p') ?? defaultVoice;
-    }
+    _readAdhanVoiceChoices(prefs);
     _selectedIqamahVoice = prefs.getString('notif_selected_iqamah') ?? 'iqamah_full';
     _iqamahReminderEnabled = prefs.getBool('notif_iqamah_enabled') ?? true;
     _iqamahOffsetMinutes = prefs.getInt('notif_iqamah_offset') ?? 15;
@@ -1019,51 +1015,110 @@ class PrayerNotificationService extends ChangeNotifier {
     if (reason != null) throw StateError(reason);
   }
 
+  final SerialTaskQueue _adhanVoiceQueue = SerialTaskQueue();
+  final Map<String, String> _confirmedPrayerVoices = {};
+
+  /// A saved choice can be deferred while notifications are off or no location
+  /// is known. With an active plan, require successful native registration too.
+  bool prayerVoiceConfirmed(String prayer, String voice) =>
+      getPrayerVoice(prayer) == voice &&
+      (!_masterEnabled || !isPrayerEnabled(prayer) ||
+       PrayerService.instance.currentData == null ||
+       _confirmedPrayerVoices[prayer] == voice);
+
+  Future<void> _saveAdhanVoiceChoices(
+      Map<String, String> values, void Function() publish) =>
+      _adhanVoiceQueue.run(() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final before = {for (final key in values.keys) key: prefs.getString(key)};
+        final changed = <String>[];
+        try {
+          for (final entry in values.entries) {
+            // Include a possibly failing write in rollback: a provider can
+            // write successfully before throwing or returning false.
+            changed.add(entry.key);
+            if (!await prefs.setString(entry.key, entry.value)) {
+              throw StateError('Adhan voice preference was not saved');
+            }
+          }
+          await prefs.reload();
+          if (values.entries.any((entry) => prefs.getString(entry.key) != entry.value)) {
+            throw StateError('Adhan voice preference readback did not match');
+          }
+        } catch (_) {
+          var restored = true;
+          for (final key in changed.reversed) {
+            try {
+              final old = before[key];
+              final ok = old == null ? await prefs.remove(key) : await prefs.setString(key, old);
+              if (!ok) restored = false;
+            } catch (_) { restored = false; }
+          }
+          await prefs.reload();
+          if (!restored) {
+            // A failed rollback must not leave a fabricated in-memory choice.
+            _readAdhanVoiceChoices(prefs);
+            _confirmedPrayerVoices.clear();
+            notifyListeners();
+          }
+          rethrow;
+        }
+        publish();
+        notifyListeners();
+        final data = PrayerService.instance.currentData;
+        if (_masterEnabled && data != null) {
+          final result = await schedulePrayerNotifications(data);
+          if (result != PrayerScheduleOutcome.applied) {
+            throw StateError('Adhan voice was saved but native scheduling was not confirmed');
+          }
+        }
+      });
+
+  void _readAdhanVoiceChoices(SharedPreferences prefs) {
+    _selectedAdhanVoice = prefs.getString('notif_selected_adhan') ?? 'adhan_makkah';
+    _selectedFajrVoice = prefs.getString('notif_selected_fajr_adhan') ?? 'adhan_fajr';
+    for (final prayer in _prayerAdhanVoices.keys) {
+      _prayerAdhanVoices[prayer] = prefs.getString('notif_prayer_voice_$prayer') ??
+          (prayer == 'الفجر' ? _selectedFajrVoice : _selectedAdhanVoice);
+    }
+  }
+
   Future<void> setSelectedAdhanVoice(String voiceKey) async {
     _requireAssignableAdhanRecording(voiceKey);
-    _selectedAdhanVoice = voiceKey;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notif_selected_adhan', voiceKey);
-    rescheduleCurrentPrayers();
-    notifyListeners();
+    await _saveAdhanVoiceChoices({'notif_selected_adhan': voiceKey},
+        () => _selectedAdhanVoice = voiceKey);
   }
 
   Future<void> setPrayerVoice(String prayerName, String voiceKey) async {
+    if (!_prayerAdhanVoices.containsKey(prayerName)) throw ArgumentError.value(prayerName);
     _requireAssignableAdhanRecording(voiceKey);
-    _prayerAdhanVoices[prayerName] = voiceKey;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notif_prayer_voice_$prayerName', voiceKey);
-    if (prayerName.contains('فجر') || prayerName.contains('الفجر')) {
-      _selectedFajrVoice = voiceKey;
-      await prefs.setString('notif_selected_fajr_adhan', voiceKey);
-    } else {
-      _selectedAdhanVoice = voiceKey;
-      await prefs.setString('notif_selected_adhan', voiceKey);
-    }
-    rescheduleCurrentPrayers();
-    notifyListeners();
+    final isFajr = prayerName == 'الفجر';
+    await _saveAdhanVoiceChoices({
+      'notif_prayer_voice_$prayerName': voiceKey,
+      isFajr ? 'notif_selected_fajr_adhan' : 'notif_selected_adhan': voiceKey,
+    }, () {
+      _prayerAdhanVoices[prayerName] = voiceKey;
+      if (isFajr) { _selectedFajrVoice = voiceKey; }
+      else { _selectedAdhanVoice = voiceKey; }
+    });
   }
 
   Future<void> setAllPrayersVoice(String voiceKey) async {
     _requireAssignableAdhanRecording(voiceKey);
-    final prefs = await SharedPreferences.getInstance();
-    for (final p in _prayerAdhanVoices.keys) {
-      _prayerAdhanVoices[p] = voiceKey;
-      await prefs.setString('notif_prayer_voice_$p', voiceKey);
-    }
-    _selectedAdhanVoice = voiceKey;
-    await prefs.setString('notif_selected_adhan', voiceKey);
-    rescheduleCurrentPrayers();
-    notifyListeners();
+    await _saveAdhanVoiceChoices({
+      for (final prayer in _prayerAdhanVoices.keys) 'notif_prayer_voice_$prayer': voiceKey,
+      'notif_selected_adhan': voiceKey,
+    }, () {
+      for (final prayer in _prayerAdhanVoices.keys) { _prayerAdhanVoices[prayer] = voiceKey; }
+      _selectedAdhanVoice = voiceKey;
+    });
   }
 
   Future<void> setSelectedFajrVoice(String voiceKey) async {
     _requireAssignableAdhanRecording(voiceKey);
-    _selectedFajrVoice = voiceKey;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('notif_selected_fajr_adhan', voiceKey);
-    rescheduleCurrentPrayers();
-    notifyListeners();
+    await _saveAdhanVoiceChoices({'notif_selected_fajr_adhan': voiceKey},
+        () => _selectedFajrVoice = voiceKey);
   }
 
   Future<void> setSelectedIqamahVoice(String voiceKey) async {
@@ -1319,6 +1374,7 @@ class PrayerNotificationService extends ChangeNotifier {
     bool cancelStaleAdhanSnooze = false,
   }) async {
     final int generation = ++_derivedScheduleGeneration;
+    _confirmedPrayerVoices.clear();
     if (!_isInitialized) return;
     await _serializeDerivedOp<void>(() async {
       if (generation != _derivedScheduleGeneration || !_isInitialized) return;
@@ -1632,6 +1688,8 @@ class PrayerNotificationService extends ChangeNotifier {
 
   Future<PrayerScheduleOutcome> schedulePrayerNotifications(PrayerData data) async {
     final int generation = ++_derivedScheduleGeneration;
+    _confirmedPrayerVoices.clear();
+    final voiceSnapshot = Map<String, String>.of(_prayerAdhanVoices);
     if (!_masterEnabled || !_isInitialized) return PrayerScheduleOutcome.skipped;
 
     return _serializeDerivedOp<PrayerScheduleOutcome>(() async {
@@ -1947,6 +2005,7 @@ class PrayerNotificationService extends ChangeNotifier {
         final adhkarApplied = await scheduleAdhkarReminders();
         if (!cleared || !fridayApplied || !adhkarApplied) throw StateError('Fixed reminder schedule failed');
         if (!isStale()) {
+          _confirmedPrayerVoices.addAll(voiceSnapshot);
           _prayerSchedulingError = null;
           notifyListeners();
         }
@@ -2178,6 +2237,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> cancelAll() async {
+    _confirmedPrayerVoices.clear();
     _adhkarRegistrations.clear();
     final adhkarPending = _adhkarOperation;
     if (adhkarPending != null) await adhkarPending;
@@ -2187,6 +2247,7 @@ class PrayerNotificationService extends ChangeNotifier {
     if (shortPending != null) await shortPending;
     final int generation = ++_derivedScheduleGeneration;
     await _serializeDerivedOp<void>(() async {
+      _confirmedPrayerVoices.clear();
       if (generation != _derivedScheduleGeneration) return;
       try {
         await _localNotifications.cancelAll();
