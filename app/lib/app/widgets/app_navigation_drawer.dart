@@ -67,7 +67,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'بوابة القرآن الكريم وعلومه الشاملة 📖',
+        title: 'بوابة القرآن الكريم وعلومه الشاملة',
         subtitle: 'المحاور الـ ٦: التلاوة، التفسير، الإعراب، وأسباب النزول',
         semanticLabel: 'بوابة القرآن الكريم وعلومه الشاملة',
         icon: Icons.dashboard_customize_rounded,
@@ -80,7 +80,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'قراء القرآن الكريم والاستماع (61 قارئاً) 🎧',
+        title: 'قراء القرآن الكريم والاستماع (61 قارئاً)',
         subtitle: 'اختيار القارئ من القائمة المنسدلة والاستماع لعينات التلاوة',
         semanticLabel: 'قراء القرآن الكريم والاستماع',
         icon: Icons.record_voice_over_rounded,
@@ -106,7 +106,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'مصحف الصحابة في القراءات العشر 📜',
+        title: 'مصحف الصحابة في القراءات العشر',
         subtitle: 'القراءات العشر المتواترة من طريق الشاطبية والدرة وتوجيهها',
         semanticLabel: 'مصحف الصحابة في القراءات العشر',
         icon: Icons.auto_stories_rounded,
@@ -119,7 +119,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'المختصر الصوتي في تفسير القرآن 🎧',
+        title: 'المختصر الصوتي في تفسير القرآن',
         subtitle: 'مركز تفسير للدراسات القرآنية (الأسمري، الغامدي، الشايع)',
         semanticLabel: 'المختصر الصوتي في تفسير القرآن',
         icon: Icons.record_voice_over_rounded,
@@ -134,7 +134,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 2. قسم الصلاة والأذان والمؤذنون =================
       _DrawerItemData(
-        title: 'أصوات الأذان والمؤذنون الـ 7 🕌',
+        title: 'أصوات الأذان والمؤذنون الـ 7',
         subtitle:
             'استماع وتخصيص أذان القطامي، المنشاوي، النقشبندي، عبد الباسط، الحصري، عباد، الدوسري',
         semanticLabel: 'أصوات الأذان وتخصيص المؤذنين',
@@ -148,7 +148,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'دعاء الشيخ الشعراوي بعد الأذان 🎧',
+        title: 'دعاء الشيخ الشعراوي بعد الأذان',
         subtitle: 'استماع فوري وتفعيل التشغيل التلقائي عقب كل أذان',
         semanticLabel: 'دعاء الشيخ الشعراوي بعد الأذان',
         icon: Icons.volume_up_rounded,
@@ -161,7 +161,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'مواقيت الصلاة وبوصلة القبلة 🧭',
+        title: 'مواقيت الصلاة وبوصلة القبلة',
         subtitle: 'المواقيت الدقيقة للصلوات الخمس واتجاه الكعبة',
         semanticLabel: 'مواقيت الصلاة وبوصلة القبلة',
         icon: Icons.access_time_filled_rounded,
@@ -184,7 +184,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'منبه الفجر وقيام الليل ⏰',
+        title: 'منبه الفجر وقيام الليل',
         subtitle: 'إيقاظ دقيق قبل الفجر بنغمات قرآنية وأذكار الاستيقاظ',
         semanticLabel: 'منبه الفجر وقيام الليل',
         icon: Icons.alarm_rounded,
@@ -197,7 +197,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'سجل ومتابعة الصلوات والسنن الرواتب 📊',
+        title: 'سجل ومتابعة الصلوات والسنن الرواتب',
         subtitle: 'متابعة أداء الفروض والسنن والتشخيص الإيماني الأسبوعي',
         semanticLabel: 'سجل ومتابعة الصلوات',
         icon: Icons.fact_check_rounded,
@@ -212,7 +212,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 3. قسم مكتبة العلماء والدروس =================
       _DrawerItemData(
-        title: 'إذاعات القرآن الكريم (MP3Quran) 📻',
+        title: 'إذاعات القرآن الكريم (MP3Quran)',
         subtitle: 'بث إذاعات القرآن الكريم وتلاوات كبار القراء',
         semanticLabel: 'إذاعات القرآن الكريم',
         icon: Icons.podcasts_rounded,
@@ -235,7 +235,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'إذاعة وتراث القرآن الكريم بمصر 📻',
+        title: 'إذاعة وتراث القرآن الكريم بمصر',
         subtitle: 'تسجيلات نادرة وعبق التلاوة المصرية الخالدة',
         semanticLabel: 'إذاعة وتراث القرآن الكريم',
         icon: Icons.radio_rounded,
@@ -250,7 +250,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 4. قسم الأذكار وحصن المسلم والسبحة =================
       _DrawerItemData(
-        title: 'أذكار المسلم وحصن المسلم 🤲',
+        title: 'أذكار المسلم وحصن المسلم',
         subtitle: 'أذكار الصباح والمساء والصلوات وحفظ النفس',
         semanticLabel: 'أذكار المسلم وحصن المسلم',
         icon: Icons.volunteer_activism_rounded,
@@ -263,7 +263,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'السبحة الإلكترونية 📿',
+        title: 'السبحة الإلكترونية',
         subtitle: 'عداد التسبيح مع الاهتزاز وحفظ الأوراد',
         semanticLabel: 'السبحة الإلكترونية',
         icon: Icons.fingerprint_rounded,
@@ -276,7 +276,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'صيدلية الروح والرقية الشرعية 🌿',
+        title: 'صيدلية الروح والرقية الشرعية',
         subtitle: 'أدعية الشفاء وسكينة القلب والمأثورات',
         semanticLabel: 'صيدلية الروح والرقية الشرعية',
         icon: Icons.favorite_rounded,
@@ -327,7 +327,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'فقه العبادات والزكاة والمواريث ⚖️',
+        title: 'فقه العبادات والزكاة والمواريث',
         subtitle: 'أحكام الفقه الميسر، حاسبة الزكاة وحساب المواريث',
         semanticLabel: 'فقه العبادات والزكاة والمواريث',
         icon: Icons.balance_rounded,
@@ -340,7 +340,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'المصادر والمراجع القرآنية المعتمدة 📚',
+        title: 'المصادر والمراجع القرآنية المعتمدة',
         subtitle: 'مصحف القراءات، تفسير وإعراب الدرة، والمختصر الصوتي',
         semanticLabel: 'المصادر والمراجع القرآنية المعتمدة',
         icon: Icons.library_books_rounded,
@@ -487,7 +487,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
         },
       ),
       _DrawerItemData(
-        title: 'دليل وفهرس شاشات التطبيق الشامل 📑',
+        title: 'دليل وفهرس شاشات التطبيق الشامل',
         subtitle: 'فهرسة تفصيلية لجميع الـ ٥٨ شاشة وباباً إيمانياً مع البحث',
         semanticLabel: 'دليل وفهرس شاشات التطبيق',
         icon: Icons.grid_view_rounded,
@@ -703,18 +703,18 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                           children: [
                             _buildFilterChip('الكل', 'all'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('📖 القرآن', 'quran'),
+                            _buildFilterChip('القرآن', 'quran'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('🕌 الصلاة', 'prayer'),
+                            _buildFilterChip('الصلاة', 'prayer'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('🎙️ العلماء', 'scholars'),
+                            _buildFilterChip('العلماء', 'scholars'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('🤲 الأذكار', 'adhkar'),
+                            _buildFilterChip('الأذكار', 'adhkar'),
                             const SizedBox(width: 6),
-                            _buildFilterChip('📚 المكتبة', 'library'),
+                            _buildFilterChip('المكتبة', 'library'),
                             const SizedBox(width: 6),
                             _buildFilterChip(
-                                '⚙️ الإعدادات والمطور', 'settings'),
+                                'الإعدادات والمطور', 'settings'),
                           ],
                         ),
                       ),
