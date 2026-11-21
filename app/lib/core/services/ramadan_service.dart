@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import '../models/ramadan_day.dart';
+import '../utils/serial_task_queue.dart';
 import 'prayer_service.dart';
 import 'settings_service.dart';
 
@@ -24,6 +25,8 @@ class RamadanService extends ChangeNotifier {
   RamadanService._internal();
 
   bool _isInitialized = false;
+  bool _reloadRequired = false;
+  final SerialTaskQueue _trackerOperations = SerialTaskQueue();
   final Set<int> _fastedDays = {};
   final Set<int> _taraweehDays = {};
   final Set<int> _quranDays = {};
@@ -35,12 +38,19 @@ class RamadanService extends ChangeNotifier {
   int get totalFastedCount => _fastedDays.length;
   int get totalTaraweehCount => _taraweehDays.length;
   int get totalQuranCount => _quranDays.length;
-  double get fastingProgress => _fastedDays.isEmpty ? 0.0 : _fastedDays.length / 30.0;
+  double get fastingProgress =>
+      _fastedDays.isEmpty ? 0.0 : _fastedDays.length / 30.0;
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) =>
+      _trackerOperations.run(() async {
+        await _initialize(forceReload: forceReload);
+      });
+
+  Future<bool> _initialize({bool forceReload = false}) async {
+    if (_isInitialized && !forceReload) return true;
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (forceReload || _reloadRequired) await prefs.reload();
       final fasted = prefs.getStringList('ramadan_fasted_days') ?? [];
       final taraweeh = prefs.getStringList('ramadan_taraweeh_days') ?? [];
       final quran = prefs.getStringList('ramadan_quran_days') ?? [];
@@ -56,51 +66,60 @@ class RamadanService extends ChangeNotifier {
         ..addAll(quran.map((s) => int.tryParse(s) ?? 0).where((n) => n > 0));
     } catch (e) {
       debugPrint('RamadanService init error: $e');
+      _isInitialized = false;
+      _reloadRequired = true;
+      return false;
     }
+    _reloadRequired = false;
     _isInitialized = true;
     notifyListeners();
+    return true;
   }
 
   bool isDayFasted(int day) => _fastedDays.contains(day);
   bool isTaraweehCompleted(int day) => _taraweehDays.contains(day);
   bool isQuranCompleted(int day) => _quranDays.contains(day);
 
-  Future<void> toggleFasted(int day) async {
-    if (_fastedDays.contains(day)) {
-      _fastedDays.remove(day);
-    } else {
-      _fastedDays.add(day);
-    }
-    notifyListeners();
-    _saveTracker('ramadan_fasted_days', _fastedDays);
+  Future<bool> toggleFasted(int day) =>
+      _toggleTracker('ramadan_fasted_days', _fastedDays, day);
+
+  Future<bool> toggleTaraweeh(int day) =>
+      _toggleTracker('ramadan_taraweeh_days', _taraweehDays, day);
+
+  Future<bool> toggleQuran(int day) =>
+      _toggleTracker('ramadan_quran_days', _quranDays, day);
+
+  Future<bool> _toggleTracker(String key, Set<int> current, int day) {
+    return _trackerOperations.run(() async {
+      if (!await _initialize()) return false;
+      final candidate = Set<int>.from(current);
+      if (!candidate.remove(day)) candidate.add(day);
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        if (!await prefs.setStringList(
+            key, candidate.map((n) => n.toString()).toList())) {
+          await _reloadAfterUnconfirmedWrite();
+          return false;
+        }
+      } catch (_) {
+        await _reloadAfterUnconfirmedWrite();
+        return false;
+      }
+      current
+        ..clear()
+        ..addAll(candidate);
+      notifyListeners();
+      return true;
+    });
   }
 
-  Future<void> toggleTaraweeh(int day) async {
-    if (_taraweehDays.contains(day)) {
-      _taraweehDays.remove(day);
-    } else {
-      _taraweehDays.add(day);
-    }
-    notifyListeners();
-    _saveTracker('ramadan_taraweeh_days', _taraweehDays);
-  }
-
-  Future<void> toggleQuran(int day) async {
-    if (_quranDays.contains(day)) {
-      _quranDays.remove(day);
-    } else {
-      _quranDays.add(day);
-    }
-    notifyListeners();
-    _saveTracker('ramadan_quran_days', _quranDays);
-  }
-
-  Future<void> _saveTracker(String key, Set<int> set) async {
+  Future<void> _reloadAfterUnconfirmedWrite() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(key, set.map((n) => n.toString()).toList());
-    } catch (e) {
-      debugPrint('Error saving ramadan tracker: $e');
+      await prefs.reload();
+    } catch (_) {
+      _isInitialized = false;
+      _reloadRequired = true;
     }
   }
 
