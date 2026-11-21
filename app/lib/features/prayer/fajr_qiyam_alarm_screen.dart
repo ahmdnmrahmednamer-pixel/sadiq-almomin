@@ -44,9 +44,9 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
     if (chosen == null || !mounted) return;
     try {
       if (isQiyam) {
-        await _alarmService.setQiyamTone(chosen);
+        if (!await _alarmService.setQiyamTone(chosen)) return;
       } else {
-        await _alarmService.setPreFajrTone(chosen);
+        if (!await _alarmService.setPreFajrTone(chosen)) return;
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -134,6 +134,20 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (_alarmService.preferenceError != null) ...[
+                  Semantics(
+                    liveRegion: true,
+                    child: Card(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(_alarmService.preferenceError!,
+                          style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (_alarmService.schedulingError != null) ...[
                   Semantics(
                     liveRegion: true,
