@@ -227,6 +227,17 @@ class SettingsSession {
         write: sensors.toggleOverlayWindow,
         verify: (value) => _saved({'notif_overlay_window': value}));
     for (final prayer in prayers) {
+      prayerEnabled[prayer] = draft.add<bool>(
+          key: 'prayer_$prayer',
+          read: () => n.isPrayerEnabled(prayer),
+          write: (value) => n.togglePrayer(prayer, value),
+          verify: (value) => _saved({'notif_prayer_$prayer': value}));
+      prePrayerEnabled[prayer] = draft.add<bool>(
+          key: 'prePrayer_$prayer',
+          read: () => n.isPreReminderPrayerEnabled(prayer),
+          write: (value) => n.togglePreReminderPrayer(prayer, value),
+          verify: (value) =>
+              _saved({'notif_pre_reminder_prayer_$prayer': value}));
       voices[prayer] = draft.add<String>(
           key: 'voice_$prayer',
           read: () => n.getPrayerVoice(prayer),
@@ -252,6 +263,8 @@ class SettingsSession {
   final SettingsDraft draft = SettingsDraft();
   static const prayers = ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
   final voices = <String, DraftSetting<String>>{};
+  final prayerEnabled = <String, DraftSetting<bool>>{};
+  final prePrayerEnabled = <String, DraftSetting<bool>>{};
   final shortFrequencies = <String, DraftSetting<ShortReminderFrequency>>{};
   late final DraftSetting<LanguageChoice> language;
   late final DraftSetting<({bool settings, bool notifications})> master;
