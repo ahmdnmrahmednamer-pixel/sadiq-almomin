@@ -1,3 +1,4 @@
+import '../../../../core/ui/notification_preference_error.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/notifications/prayer_notification_service.dart';
@@ -367,10 +368,12 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
           },
         ),
 
+        const NotificationPreferenceError(),
         // Sound Mode Dropdown
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: AppDropdownField<AdhanSoundMode>(
+          child: AnimatedBuilder(animation: pn, builder: (context, _) => AppDropdownField<AdhanSoundMode>(
+            key: ValueKey((pn.soundMode, pn.preferenceRevision)),
             label: 'نمط صوت تنبيه الأذان',
             value: pn.soundMode,
             prefixIcon: Icons.surround_sound_rounded,
@@ -390,7 +393,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
                   value: AdhanSoundMode.silent, label: 'إشعار صامت'),
             ],
             onChanged: (mode) => pn.setSoundMode(mode),
-          ),
+          )),
         ),
 
         // Per-Prayer Muezzin Dropdowns (5 Prayers)
