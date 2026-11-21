@@ -26,7 +26,8 @@ class WakeUpAlarmTone {
 
 /// خدمة «منبّه الاستعداد لصلاة الفجر ومنبّه قيام الليل الذكي»
 class FajrQiyamAlarmService extends ChangeNotifier {
-  static final FajrQiyamAlarmService instance = FajrQiyamAlarmService._internal();
+  static final FajrQiyamAlarmService instance =
+      FajrQiyamAlarmService._internal();
   FajrQiyamAlarmService._internal();
 
   final FlutterLocalNotificationsPlugin _notifications =
@@ -145,6 +146,25 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   bool get isQiyamFixedClock =>
       _qiyamMode != 'last_third' && _qiyamMode != 'before_fajr';
 
+  /// An explicit multi-day horizon is authoritative. Never fabricate another
+  /// calendar day after it is exhausted, or repeat today's clock time.
+  DateTime? _nextHorizonFajrOffset(
+    PrayerData data,
+    DateTime now,
+    int minutesBefore,
+  ) {
+    DateTime? next;
+    for (final prayer in data.notificationPrayers!) {
+      if (!prayer.name.contains('الفجر')) continue;
+      final candidate = prayer.time.subtract(Duration(minutes: minutesBefore));
+      if (candidate.isAfter(now) &&
+          (next == null || candidate.isBefore(next))) {
+        next = candidate;
+      }
+    }
+    return next;
+  }
+
   /// Calculates the next Fajr DateTime from verified GPS PrayerService data.
   /// Returns null when location is UNKNOWN instead of fabricating 04:45 AM.
   DateTime? getNextFajrTime([PrayerData? data]) {
@@ -152,6 +172,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     final prayerData = data ?? PrayerService.instance.currentData;
     if (prayerData == null || prayerData.prayers.isEmpty) {
       return null;
+    }
+    if (prayerData.notificationPrayers != null) {
+      return _nextHorizonFajrOffset(prayerData, now, 0);
     }
     final fajr = prayerData.prayers.firstWhere(
       (p) => p.name.contains('الفجر'),
@@ -166,6 +189,10 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   /// Calculates the exact Pre-Fajr Wake-Up Alarm DateTime (null if location UNKNOWN)
   DateTime? getNextPreFajrWakeTime([PrayerData? data]) {
     final now = DateTime.now();
+    final prayerData = data ?? PrayerService.instance.currentData;
+    if (prayerData?.notificationPrayers != null) {
+      return _nextHorizonFajrOffset(prayerData!, now, _preFajrMinutesBefore);
+    }
     final fajr = getNextFajrTime(data);
     if (fajr == null) return null;
     final candidate = fajr.subtract(Duration(minutes: _preFajrMinutesBefore));
@@ -213,6 +240,11 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     if (_qiyamMode == 'last_third') {
       return getLastThirdOfNightStart(data);
     } else if (_qiyamMode == 'before_fajr') {
+      final prayerData = data ?? PrayerService.instance.currentData;
+      if (prayerData?.notificationPrayers != null) {
+        return _nextHorizonFajrOffset(
+            prayerData!, now, _qiyamMinutesBeforeFajr);
+      }
       final fajr = getNextFajrTime(data);
       if (fajr == null) return null;
       final candidate =
@@ -358,7 +390,8 @@ class FajrQiyamAlarmService extends ChangeNotifier {
           if (generation != _alarmScheduleGeneration) return;
           _preFajrEnabled = prefs.getBool('wake_pre_fajr_enabled') ?? true;
           _preFajrMinutesBefore = prefs.getInt('wake_pre_fajr_minutes') ?? 25;
-          _preFajrToneId = prefs.getString('wake_pre_fajr_tone') ?? 'adhan_fajr';
+          _preFajrToneId =
+              prefs.getString('wake_pre_fajr_tone') ?? 'adhan_fajr';
           _qiyamEnabled = prefs.getBool('wake_qiyam_enabled') ?? true;
           _qiyamMode = prefs.getString('wake_qiyam_mode') ?? 'last_third';
           _qiyamMinutesBeforeFajr =
@@ -463,7 +496,8 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         final androidDetails = AndroidNotificationDetails(
           'fajr_wakeup_alarm_${tone.rawSoundName}',
           'منبه الاستيقاظ والاستعداد لصلاة الفجر',
-          channelDescription: 'منبه صوتي لإيقاظك قبل أذان الفجر بالوقت والنغمة المحددين',
+          channelDescription:
+              'منبه صوتي لإيقاظك قبل أذان الفجر بالوقت والنغمة المحددين',
           importance: Importance.max,
           priority: Priority.max,
           playSound: true,
