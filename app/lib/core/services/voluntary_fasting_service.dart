@@ -119,18 +119,31 @@ class VoluntaryFastingService extends ChangeNotifier {
   int get totalFastedDays =>
       _completedCounts.values.fold<int>(0, (sum, val) => sum + val);
 
-  Future<void> init({bool forceReload = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    _suhoorReminderEnabled =
-        prefs.getBool('voluntary_fast_suhoor_reminder') ?? true;
-    for (final f in fastTypes) {
-      _completedCounts[f.id] = prefs.getInt('vfast_count_${f.id}') ?? 0;
-    }
-    _fastedDateLogs
-      ..clear()
-      ..addAll(prefs.getStringList('vfast_date_logs') ?? []);
-    notifyListeners();
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations =
+        result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
   }
+
+  Future<void> init({bool forceReload = false}) => _serialize(() async {
+        final prefs = await SharedPreferences.getInstance();
+        // Failed legacy setters can leave the plugin cache ahead of disk.
+        await prefs.reload();
+        _suhoorReminderEnabled =
+            prefs.getBool('voluntary_fast_suhoor_reminder') ?? true;
+        for (final f in fastTypes) {
+          _completedCounts[f.id] = prefs.getInt('vfast_count_${f.id}') ?? 0;
+        }
+        final savedLogs = List<String>.of(
+            prefs.getStringList('vfast_date_logs') ?? const <String>[]);
+        _fastedDateLogs
+          ..clear()
+          ..addAll(savedLogs);
+        notifyListeners();
+      });
 
   int getCountForType(String fastId) => _completedCounts[fastId] ?? 0;
 
@@ -139,37 +152,47 @@ class VoluntaryFastingService extends ChangeNotifier {
     final dateStr =
         '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
     final entry = '$dateStr|$fastId';
-    // Repeated confirmation of the same dated fast must not inflate its count.
-    if (_fastedDateLogs.contains(entry)) return;
-    _fastedDateLogs.insert(0, entry);
-    _completedCounts[fastId] = (_completedCounts[fastId] ?? 0) + 1;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('vfast_count_$fastId', _completedCounts[fastId]!);
-    await prefs.setStringList('vfast_date_logs', _fastedDateLogs);
-    notifyListeners();
-  }
-
-  Future<void> decrementFastCount(String fastId) async {
-    final current = _completedCounts[fastId] ?? 0;
-    if (current > 0) {
-      _completedCounts[fastId] = current - 1;
-      final logIdx = _fastedDateLogs.indexWhere((e) => e.endsWith('|$fastId'));
-      if (logIdx >= 0) {
-        _fastedDateLogs.removeAt(logIdx);
-      }
+    return _serialize(() async {
+      // Repeated confirmation of the same dated fast must not inflate its count.
+      if (_fastedDateLogs.contains(entry)) return;
+      _fastedDateLogs.insert(0, entry);
+      _completedCounts[fastId] = (_completedCounts[fastId] ?? 0) + 1;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('vfast_count_$fastId', _completedCounts[fastId]!);
       await prefs.setStringList('vfast_date_logs', _fastedDateLogs);
       notifyListeners();
-    }
+    });
   }
 
-  Future<void> toggleSuhoorReminder(bool val) async {
-    _suhoorReminderEnabled = val;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('voluntary_fast_suhoor_reminder', val);
-    notifyListeners();
-  }
+  Future<void> decrementFastCount(String fastId) => _serialize(() async {
+        final current = _completedCounts[fastId] ?? 0;
+        if (current > 0) {
+          _completedCounts[fastId] = current - 1;
+          final logIdx =
+              _fastedDateLogs.indexWhere((e) => e.endsWith('|$fastId'));
+          if (logIdx >= 0) {
+            _fastedDateLogs.removeAt(logIdx);
+          }
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('vfast_count_$fastId', _completedCounts[fastId]!);
+          await prefs.setStringList('vfast_date_logs', _fastedDateLogs);
+          notifyListeners();
+        }
+      });
+
+  Future<bool> toggleSuhoorReminder(bool val) => _serialize(() async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (!await prefs.setBool('voluntary_fast_suhoor_reminder', val)) {
+            return false;
+          }
+          _suhoorReminderEnabled = val;
+          notifyListeners();
+          return true;
+        } catch (_) {
+          return false;
+        }
+      });
 
   /// Checks if a given Hijri day (1..30) is one of the 3 White Days (13, 14, 15)
   bool isWhiteDay(int hijriDay) =>
@@ -197,7 +220,8 @@ class VoluntaryFastingService extends ChangeNotifier {
     if (isWhiteDay(hDay)) {
       return 'اليوم من الأيام البيض المباركة ($hDay ${HijriDateHelper.hijriMonths[hMonth - 1]}) — صيامها كصيام الدهر';
     }
-    if (target.weekday == DateTime.monday || target.weekday == DateTime.thursday) {
+    if (target.weekday == DateTime.monday ||
+        target.weekday == DateTime.thursday) {
       final dayAr = target.weekday == DateTime.monday ? 'الإثنين' : 'الخميس';
       return 'اليوم يوم $dayAr — تعرض فيه الأعمال على الله تعالى';
     }
