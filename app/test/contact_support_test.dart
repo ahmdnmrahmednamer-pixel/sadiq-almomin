@@ -1,12 +1,40 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:almomin/core/services/support_service.dart';
 import 'package:almomin/features/settings/contact_support_screen.dart';
 import 'package:almomin/features/settings/settings_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
+  final originalProvider = SupportService.packageInfoProvider;
+  setUp(() {
+    SupportService.packageInfoProvider = () async => PackageInfo(
+      appName: 'test', packageName: 'org.test', version: '9.8.7', buildNumber: '654');
+  });
+  tearDown(() { SupportService.packageInfoProvider = originalProvider; });
   group('SupportService Unit Tests', () {
+    test('runtime version and overridden build are used in outgoing diagnostics', () async {
+      Uri? sent;
+      SupportService.urlLauncher = (uri, {mode = LaunchMode.externalApplication}) async {
+        sent = uri; return true;
+      };
+      expect(await SupportService.loadVersionDiagnostic(), 'v9.8.7 (Build 654)');
+      expect(await SupportService.sendSupportEmail(subject: 'test', content: 'body',
+        category: SupportCategory.inquiry), isTrue);
+      expect(sent!.queryParameters['body'], contains('v9.8.7 (Build 654)'));
+      expect(sent!.queryParameters['body'], isNot(contains('Build 12')));
+    });
+    test('missing or failed runtime metadata never claims a hardcoded build', () async {
+      SupportService.packageInfoProvider = () async => throw StateError('not available');
+      expect(await SupportService.loadVersionDiagnostic(), 'غير متاح');
+      SupportService.packageInfoProvider = () async => PackageInfo(
+        appName: 'test', packageName: 'test', version: '', buildNumber: '');
+      expect(await SupportService.loadVersionDiagnostic(), 'غير متاح');
+    });
+
     test('Developer email is set to ahmdnmrahmednamer@gmail.com', () {
       expect(SupportService.developerEmail, 'ahmdnmrahmednamer@gmail.com');
     });
@@ -32,7 +60,7 @@ void main() {
       expect(body, contains('• التصنيف: استفسار عام أو ملاحظة'));
       expect(body, contains('• اسم الراسل: عبد الرحمن'));
       expect(body, contains('• وسيلة التواصل: abdurrahman@example.com'));
-      expect(body, contains('• إصدار تطبيق صديق المؤمن: v${SupportService.appVersion}'));
+      expect(body, contains('• إصدار تطبيق صديق المؤمن: غير متاح'));
       expect(body, contains('تطبيق «صديق المؤمن»'));
     });
 
@@ -88,6 +116,39 @@ void main() {
   });
 
   group('ContactSupportScreen Widget Tests', () {
+    testWidgets('copy path uses runtime metadata and handles disposal while loading', (tester) async {
+      String? copied;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+          if (call.method == 'Clipboard.setData') copied = (call.arguments as Map)['text'] as String;
+          return null;
+        });
+      addTearDown(() => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null));
+      await tester.pumpWidget(const MaterialApp(home: ContactSupportScreen()));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).at(0), 'test subject');
+      await tester.enterText(find.byType(TextFormField).at(1), 'test body');
+      final copy = find.text('نسخ الرسالة بالكامل للحافظة');
+      await tester.ensureVisible(copy);
+      await tester.tap(copy);
+      await tester.pumpAndSettle();
+      expect(copied, contains('v9.8.7 (Build 654)'));
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      copied = null;
+      final pending = Completer<PackageInfo>();
+      SupportService.packageInfoProvider = () => pending.future;
+      await tester.ensureVisible(copy);
+      await tester.tap(copy);
+      await tester.pump();
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      pending.complete(PackageInfo(appName: 'test', packageName: 'test', version: '1', buildNumber: '2'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(copied, isNull);
+    });
+
     setUp(() {
       SupportService.urlLauncher = (Uri uri, {LaunchMode mode = LaunchMode.externalApplication}) async {
         return true;
