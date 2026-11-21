@@ -715,6 +715,30 @@ class IslamicAudioService extends ChangeNotifier {
       fileSizeBytes: 2800000,
     ),
     IslamicAudioTrack(
+      id: 'adhan_jamal_aljaafari',
+      title: 'أذان الشيخ جمال عبد الحميد الجعفري',
+      subtitle: 'تسجيل أذان منسوب للشيخ في مكتبة إسلام ويب',
+      type: IslamicAudioType.adhan,
+      remoteUrl: 'https://dl2.islamweb.net/Audio3/Adan/416974.mp3',
+      durationFormatted: '02:43',
+      quality: 'MP3 128 كيلوبت/ث، أحادي، 16 كيلوهرتز',
+      categoryAr: 'العالم الإسلامي',
+      muezzinName: 'الشيخ جمال عبد الحميد الجعفري',
+      fileSizeBytes: 2680899,
+    ),
+    IslamicAudioTrack(
+      id: 'adhan_ihsan_aldulaimi',
+      title: 'أذان المؤذن إحسان حميد الدليمي',
+      subtitle: 'تسجيل أذان منسوب للمؤذن في مكتبة إسلام ويب',
+      type: IslamicAudioType.adhan,
+      remoteUrl: 'https://dl2.islamweb.net/Audio3/Adan/421877.mp3',
+      durationFormatted: '03:33',
+      quality: 'MP3 128 كيلوبت/ث، ستيريو',
+      categoryAr: 'العالم الإسلامي',
+      muezzinName: 'المؤذن إحسان حميد الدليمي',
+      fileSizeBytes: 3481306,
+    ),
+    IslamicAudioTrack(
       id: 'adhan_amr_sobhi',
       title: 'أذان الشيخ عمرو صبحي',
       subtitle: 'تسجيل أذان من مكتبة إسلام ويب',
@@ -1729,7 +1753,9 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<bool> downloadTrack(String id) async {
-    final track = allTracks.firstWhere((t) => t.id == id, orElse: () => allTracks.first);
+    final matching = allTracks.where((track) => track.id == id);
+    if (matching.isEmpty) return false;
+    final track = matching.first;
     if (isHeldRecording(track) || track.remoteUrl == null || isDownloading(id)) return false;
 
     await init();
@@ -1778,6 +1804,11 @@ class IslamicAudioService extends ChangeNotifier {
         if (tempFile.existsSync()) {
           try {
             final fileSize = tempFile.lengthSync();
+            // Match isDownloaded/storage-scan eligibility before replacing any
+            // previous copy. A successful HTTP response is not a usable file.
+            if (fileSize <= 1000) {
+              throw const FormatException('Downloaded audio is too small');
+            }
             tempFile.renameSync(filePath);
             _downloadedLocalPaths[id] = filePath;
             _downloadedFileSizes[id] = fileSize;

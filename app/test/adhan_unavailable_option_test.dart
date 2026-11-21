@@ -119,6 +119,49 @@ void main() {
     }
   });
 
+  for (final (id, name) in [
+    ('adhan_jamal_aljaafari', 'الشيخ جمال عبد الحميد الجعفري'),
+    ('adhan_ihsan_aldulaimi', 'المؤذن إحسان حميد الدليمي'),
+  ]) {
+    testWidgets('new preview voice $id stays readable and independently usable at 2x', (tester) async {
+      tester.view.physicalSize = const Size(320, 820);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      var listened = 0;
+      var downloaded = 0;
+      var assigned = 0;
+      final key = ValueKey(id);
+      await tester.pumpWidget(MaterialApp(theme: ThemeData(fontFamily: 'Cairo'), home: Scaffold(body:
+        Directionality(textDirection: TextDirection.rtl, child: MediaQuery(data: const MediaQueryData(textScaler: TextScaler.linear(2)), child:
+        RepaintBoundary(key: key, child: SingleChildScrollView(child: AdhanVoiceOption(
+          name: name, selected: false, playing: false, downloaded: false, downloading: false,
+          assignmentUnavailableReason: PrayerNotificationService.adhanAssignmentUnavailableReason(id),
+          onListen: () => listened++, onAssign: () => assigned++, onDownload: () => downloaded++,
+        ))))))));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text(name), findsOneWidget);
+      expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed, isNull);
+      await tester.tap(find.text('استماع'));
+      await tester.tap(find.text('تحميل'));
+      expect(listened, 1);
+      expect(downloaded, 1);
+      expect(assigned, 0);
+      const capture = String.fromEnvironment('ADHAN_PIXELS_DIR');
+      if (capture.isNotEmpty) {
+        final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+        await tester.runAsync(() async {
+          final image = await boundary.toImage(pixelRatio: 1);
+          final data = await image.toByteData(format: ui.ImageByteFormat.png);
+          Directory(capture).createSync(recursive: true);
+          File('$capture/$id-320-2x.png').writeAsBytesSync(data!.buffer.asUint8List());
+          image.dispose();
+        });
+      }
+    });
+  }
+
   testWidgets('a supported native voice keeps its assignment button usable', (tester) async {
     var assigned = 0;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: AdhanVoiceOption(

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:almomin/core/notifications/prayer_notification_service.dart';
 import 'package:almomin/core/services/islamic_audio_service.dart';
 
 void main() {
@@ -22,6 +23,27 @@ void main() {
       expect(byId(entry.key).fallbackUrls, isEmpty,
           reason: 'Do not substitute another recording under the same selection.');
     }
+  });
+
+  test('new catalog voices have distinct sourced recordings and honest native limits', () {
+    const expected = {
+      'adhan_jamal_aljaafari': ('https://dl2.islamweb.net/Audio3/Adan/416974.mp3', 2680899, '02:43'),
+      'adhan_ihsan_aldulaimi': ('https://dl2.islamweb.net/Audio3/Adan/421877.mp3', 3481306, '03:33'),
+    };
+    for (final entry in expected.entries) {
+      final track = byId(entry.key);
+      expect(track.remoteUrl, entry.value.$1);
+      expect(track.fileSizeBytes, entry.value.$2);
+      expect(track.durationFormatted, entry.value.$3);
+      expect(track.assetPath, isNull);
+      expect(track.rawNotificationSound, isNull);
+      expect(track.fallbackUrls, isEmpty);
+      expect(track.quality, isNot(contains('HD')));
+      expect(IslamicAudioService.unavailableRecordingReason(track.id), isNull);
+      expect(PrayerNotificationService.adhanAssignmentUnavailableReason(track.id), isNotNull);
+      expect(tracks.where((t) => t.remoteUrl == track.remoteUrl), hasLength(1));
+    }
+    expect(tracks.map((t) => t.id).toSet(), hasLength(tracks.length));
   });
 
   test('adhan sources never substitute a Quran surah', () {
