@@ -53,11 +53,11 @@ void main() {
       expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsNothing);
 
       await tester.scrollUntilVisible(
-        find.text('إذاعات القرآن الكريم (MP3Quran)'),
+        find.text('الإذاعة'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('إذاعات القرآن الكريم (MP3Quran)'), findsOneWidget);
+      expect(find.text('الإذاعة'), findsOneWidget);
 
       // Verify Adhkar & Tasbih
       await tester.scrollUntilVisible(
