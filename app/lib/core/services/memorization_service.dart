@@ -1,162 +1,206 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/memorization_item.dart';
 
-/// Service managing Quran Memorization, Leitner spaced-repetition and Ayah mastery (FR-MEM-001..003)
+class MemorizationStorageException implements Exception {
+  final String message;
+  const MemorizationStorageException(this.message);
+  @override
+  String toString() => message;
+}
+
+/// Persistent memorization reviews. Live state is published only after saving.
 class MemorizationService extends ChangeNotifier {
   static final MemorizationService instance = MemorizationService._internal();
   MemorizationService._internal();
-
   static const String _storageKey = 'memorization_items_v1';
-
   final Map<String, MemorizationItem> _items = {};
+  Map<String, Map<String, dynamic>> _rawItems = {};
   bool _isInitialized = false;
+  bool _historyReadable = true;
+  String? _storageError;
+  String? get storageError => _storageError;
+  static const _readError =
+      'تعذرت قراءة سجل الحفظ. لم نغير البيانات المحفوظة. استعد نسخة سليمة أو أعد فتح التطبيق قبل التسجيل.';
+  static const _writeError =
+      'لم يُحفظ تعديل سجل الحفظ. بقي السجل السابق كما كان. حاول مرة أخرى.';
+  final List<Future<void> Function()> _queue = [];
+  bool _busy = false;
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = Completer<T>();
+    _queue.add(() async {
+      try {
+        result.complete(await action());
+      } catch (error, stack) {
+        result.completeError(error, stack);
+      } finally {
+        _busy = false;
+        _runNext();
+      }
+    });
+    _runNext();
+    return result.future;
+  }
+
+  void _runNext() {
+    if (_busy || _queue.isEmpty) return;
+    _busy = true;
+    unawaited(_queue.removeAt(0)());
+  }
 
   bool get isInitialized => _isInitialized;
   int get totalTrackedAyahs => _items.length;
-
-  /// Total count of ayahs considered mastered (Leitner Box >= 3)
   int get totalMasteredCount =>
-      _items.values.where((item) => item.leitnerBox >= 3).length;
+      _items.values.where((i) => i.leitnerBox >= 3).length;
+  int get dueReviewsCount => _items.values.where((i) => i.isDue).length;
 
-  /// Count of ayahs that are currently due for review
-  int get dueReviewsCount =>
-      _items.values.where((item) => item.isDue).length;
+  Future<void> init({bool forceReload = false}) =>
+      _serialize(() => _load(forceReload: forceReload));
 
-  /// Initializes the service from persistent storage
-  Future<void> init({bool forceReload = false}) async {
+  Future<void> _load({bool forceReload = false}) async {
     if (_isInitialized && !forceReload) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final jsonStr = prefs.getString(_storageKey);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final List<dynamic> list = json.decode(jsonStr);
-        _items.clear();
-        for (final item in list) {
-          if (item is Map<String, dynamic>) {
-            final memItem = MemorizationItem.fromJson(item);
-            _items[memItem.id] = memItem;
-          }
-        }
-      } else {
-        _items.clear();
+      if (forceReload) await prefs.reload();
+      final raw = prefs.getString(_storageKey);
+      final decoded =
+          raw == null || raw.isEmpty ? <dynamic>[] : json.decode(raw);
+      if (decoded is! List) throw const FormatException();
+      final parsed = <String, MemorizationItem>{};
+      final rawItems = <String, Map<String, dynamic>>{};
+      for (final row in decoded) {
+        if (row is! Map<String, dynamic>) throw const FormatException();
+        final item = MemorizationItem.fromJson(row);
+        if (parsed.containsKey(item.id)) throw const FormatException();
+        parsed[item.id] = item;
+        rawItems[item.id] = Map<String, dynamic>.from(row);
       }
-      _isInitialized = true;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('MemorizationService init error: $e');
-      _isInitialized = true;
+      _items
+        ..clear()
+        ..addAll(parsed);
+      _rawItems = rawItems;
+      _historyReadable = true;
+      _storageError = null;
+    } catch (_) {
+      _historyReadable = false;
+      _storageError = _readError;
     }
+    _isInitialized = true;
+    notifyListeners();
   }
 
-  /// Checks if an Ayah is being tracked in memorization
-  bool hasItem(int surahId, int ayahNumber) {
-    return _items.containsKey(MemorizationItem.generateId(surahId, ayahNumber));
+  bool hasItem(int surahId, int ayahNumber) =>
+      _items.containsKey(MemorizationItem.generateId(surahId, ayahNumber));
+  MemorizationItem? getItem(int surahId, int ayahNumber) =>
+      _items[MemorizationItem.generateId(surahId, ayahNumber)];
+  List<MemorizationItem> getItemsForSurah(int surahId) =>
+      _items.values.where((i) => i.surahId == surahId).toList();
+  List<MemorizationItem> getDueItems() =>
+      _items.values.where((i) => i.isDue).toList();
+
+  void _requireReadable() {
+    if (!_historyReadable) throw const MemorizationStorageException(_readError);
   }
 
-  /// Gets the memorization item for an Ayah
-  MemorizationItem? getItem(int surahId, int ayahNumber) {
-    return _items[MemorizationItem.generateId(surahId, ayahNumber)];
+  Future<void> _save(
+      Map<String, MemorizationItem> next, Map<String, Map<String, dynamic>> raw,
+      {bool remove = false}) async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      final saved = remove
+          ? await prefs.remove(_storageKey)
+          : await prefs.setString(
+              _storageKey, json.encode(raw.values.toList()));
+      if (!saved) throw StateError('Write rejected');
+    } catch (_) {
+      try {
+        await prefs?.reload();
+      } catch (_) {}
+      _storageError = _writeError;
+      notifyListeners();
+      throw const MemorizationStorageException(_writeError);
+    }
+    _items
+      ..clear()
+      ..addAll(next);
+    _rawItems = raw;
+    _historyReadable = true;
+    _storageError = null;
+    notifyListeners();
   }
 
-  /// Gets all tracked items for a specific surah
-  List<MemorizationItem> getItemsForSurah(int surahId) {
-    return _items.values.where((item) => item.surahId == surahId).toList();
-  }
-
-  /// Gets all items that are currently due for spaced repetition review
-  List<MemorizationItem> getDueItems() {
-    return _items.values.where((item) => item.isDue).toList();
-  }
-
-  /// Records a self-evaluation review (Easy / Hard / Forgot) for an Ayah
   Future<MemorizationItem> recordReview({
     required int surahId,
     required int ayahNumber,
     required String surahName,
     required MemorizationRating rating,
-  }) async {
-    await init();
-    final id = MemorizationItem.generateId(surahId, ayahNumber);
-    final existing = _items[id] ??
-        MemorizationItem.createInitial(
-          surahId: surahId,
-          ayahNumber: ayahNumber,
-          surahName: surahName,
-        );
+  }) =>
+      _serialize(() async {
+        await _load();
+        _requireReadable();
+        final id = MemorizationItem.generateId(surahId, ayahNumber);
+        final existing = _items[id] ??
+            MemorizationItem.createInitial(
+                surahId: surahId, ayahNumber: ayahNumber, surahName: surahName);
+        final updated = existing.recordReview(rating);
+        final next = Map<String, MemorizationItem>.from(_items)..[id] = updated;
+        final raw = Map<String, Map<String, dynamic>>.from(_rawItems)
+          ..[id] = {...?_rawItems[id], ...updated.toJson()};
+        await _save(next, raw);
+        return updated;
+      });
 
-    final updated = existing.recordReview(rating);
-    _items[id] = updated;
+  Future<bool> deleteItem(int surahId, int ayahNumber) => _serialize(() async {
+        await _load();
+        _requireReadable();
+        final id = MemorizationItem.generateId(surahId, ayahNumber);
+        if (!_items.containsKey(id)) return false;
+        final next = Map<String, MemorizationItem>.from(_items)..remove(id);
+        final raw = Map<String, Map<String, dynamic>>.from(_rawItems)
+          ..remove(id);
+        await _save(next, raw);
+        return true;
+      });
 
-    await _persist();
-    notifyListeners();
-    return updated;
-  }
-
-  /// Removes an Ayah from memorization tracking
-  Future<bool> deleteItem(int surahId, int ayahNumber) async {
-    await init();
-    final id = MemorizationItem.generateId(surahId, ayahNumber);
-    if (_items.containsKey(id)) {
-      _items.remove(id);
-      await _persist();
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
-
-  /// Exports all items for backup
   List<Map<String, dynamic>> exportData() {
-    return _items.values.map((e) => e.toJson()).toList();
+    _requireReadable();
+    return _rawItems.values.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  /// Imports items from a backup list
-  Future<int> importData(List<dynamic> list, {bool merge = true}) async {
-    await init();
-    if (!merge) {
-      _items.clear();
-    }
-
-    int count = 0;
-    for (final item in list) {
-      if (item is Map<String, dynamic>) {
-        final parsed = MemorizationItem.fromJson(item);
-        if (merge && _items.containsKey(parsed.id)) {
-          // If merging, preserve the one with higher timesReviewed or later lastReviewedAt
-          final existing = _items[parsed.id]!;
-          if (parsed.lastReviewedAt.isAfter(existing.lastReviewedAt)) {
-            _items[parsed.id] = parsed;
+  Future<int> importData(List<dynamic> list, {bool merge = true}) =>
+      _serialize(() async {
+        await _load();
+        if (merge) _requireReadable();
+        final next = merge
+            ? Map<String, MemorizationItem>.from(_items)
+            : <String, MemorizationItem>{};
+        final raw = merge
+            ? Map<String, Map<String, dynamic>>.from(_rawItems)
+            : <String, Map<String, dynamic>>{};
+        var count = 0;
+        for (final row in list) {
+          if (row is! Map<String, dynamic>)
+            throw const FormatException('Invalid memorization record');
+          final item = MemorizationItem.fromJson(row);
+          if (!merge ||
+              !next.containsKey(item.id) ||
+              item.lastReviewedAt.isAfter(next[item.id]!.lastReviewedAt)) {
+            next[item.id] = item;
+            raw[item.id] = {...?raw[item.id], ...row};
             count++;
           }
-        } else {
-          _items[parsed.id] = parsed;
-          count++;
         }
-      }
-    }
+        await _save(next, raw);
+        return count;
+      });
 
-    await _persist();
-    notifyListeners();
-    return count;
-  }
-
-  /// Clears all memorization tracking data
-  Future<void> clearAll() async {
-    _items.clear();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_storageKey);
-    notifyListeners();
-  }
-
-  Future<void> _persist() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final list = _items.values.map((e) => e.toJson()).toList();
-      await prefs.setString(_storageKey, json.encode(list));
-    } catch (e) {
-      debugPrint('MemorizationService persist error: $e');
-    }
-  }
+  Future<void> clearAll() => _serialize(() async {
+        await _load();
+        _requireReadable();
+        await _save({}, {}, remove: true);
+      });
 }
