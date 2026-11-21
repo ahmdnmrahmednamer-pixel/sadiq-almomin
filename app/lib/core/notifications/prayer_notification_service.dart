@@ -229,15 +229,15 @@ class PrayerNotificationService extends ChangeNotifier {
   int _sleepAdhkarMinute = 30;
 
   /// Dedicated notification ID ranges with strict ownership:
-  /// - 100..139: Location-derived prayer notifications ONLY (adhan, pre-reminder,
+  /// - 100..399: Location-derived prayer notifications ONLY (adhan, pre-reminder,
   ///   iqamah, post-prayer adhkar, sunrise, duha, fajr-derived qiyam).
   /// - 801..803: Fixed-clock daily Adhkar reminders.
-  /// - 804: Fixed-clock Friday Sunnahs & Al-Kahf reminder (split out of 100..139).
+  /// - 804: Fixed-clock Friday Sunnahs & Al-Kahf reminder (split out of legacy 100..139).
   /// - 880..881: FajrQiyamAlarmService (880 derived Pre-Fajr, 881 Qiyam).
   /// - 990: KhatmaService fixed-clock reminder.
   /// - 995: Adhan snooze notification (cancelled by policy when location -> UNKNOWN).
   static const int prayerDerivedNotificationIdStart = 100;
-  static const int prayerDerivedNotificationIdEnd = 139;
+  static const int prayerDerivedNotificationIdEnd = 399;
   static const int morningAdhkarNotificationId = 801;
   static const int eveningAdhkarNotificationId = 802;
   static const int sleepAdhkarNotificationId = 803;
@@ -1155,7 +1155,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
   /// Zone-safe serializer for location-derived notification mutations so
   /// delayed `schedulePrayerNotifications` calls cannot interleave with or
-  /// enqueue derived 100..139 notifications after an `UNKNOWN` cancellation.
+  /// enqueue derived 100..399 notifications after an `UNKNOWN` cancellation.
   Future<T> _serializeDerivedOp<T>(Future<T> Function() action) async {
     final previous = _activeDerivedOp;
     final currentGate = Completer<void>();
@@ -1188,7 +1188,7 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
-  /// Cancels ONLY location-derived prayer notifications (100..139, plus legacy
+  /// Cancels ONLY location-derived prayer notifications (100..399, plus legacy
   /// pre-migration Friday slot if any), optionally cancels stale Adhan snooze
   /// (995) by policy, and migrates/rebuilds the fixed-clock Friday reminder on
   /// its dedicated ID (804). Never cancels Adhkar (801..803), Khatma (990), or
@@ -1526,8 +1526,9 @@ class PrayerNotificationService extends ChangeNotifier {
         if (isStale()) return;
         final now = DateTime.now();
 
+        final prayers = data.notificationPrayers ?? data.prayers;
         int notificationId = prayerDerivedNotificationIdStart;
-        for (final prayer in data.prayers) {
+        for (final prayer in prayers) {
           if (isStale()) return;
           if (!isPrayerEnabled(prayer.name)) continue;
           if (isTemporarilyMuted && prayer.time.isBefore(_muteUntil!)) continue;
@@ -1738,74 +1739,70 @@ class PrayerNotificationService extends ChangeNotifier {
 
         // Schedule Duha Prayer Reminder (صلاة الضحى والأوابين بعد الشروق)
         if (_duhaReminderEnabled && !isStale()) {
-          final shurouqPrayer = data.prayers.firstWhere(
-            (p) => p.name.contains('الشروق'),
-            orElse: () => data.prayers.first,
-          );
-          final duhaTime = shurouqPrayer.time.add(Duration(minutes: _duhaReminderMinutesAfterSunrise));
-          if (duhaTime.isAfter(now)) {
-            if (isStale()) return;
-            final duhaTz = tz.TZDateTime.from(duhaTime, tz.local);
-            final duhaDetails = AndroidNotificationDetails(
-              'prayer_duha_channel',
-              'تذكير صلاة الضحى',
-              channelDescription: 'صلاة الأوابين بعد شروق الشمس بـ ٢٥ دقيقة',
-              importance: Importance.high,
-              priority: Priority.high,
-              playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-              sound: const RawResourceAndroidNotificationSound('reminder_duha'),
-              enableVibration: true,
-            );
+          for (final shurouqPrayer in prayers.where((p) => p.name.contains('الشروق'))) {
+            final duhaTime = shurouqPrayer.time.add(Duration(minutes: _duhaReminderMinutesAfterSunrise));
+            if (duhaTime.isAfter(now)) {
+              if (isStale()) return;
+              final duhaTz = tz.TZDateTime.from(duhaTime, tz.local);
+              final duhaDetails = AndroidNotificationDetails(
+                'prayer_duha_channel',
+                'تذكير صلاة الضحى',
+                channelDescription: 'صلاة الأوابين بعد شروق الشمس بـ ٢٥ دقيقة',
+                importance: Importance.high,
+                priority: Priority.high,
+                playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+                sound: const RawResourceAndroidNotificationSound('reminder_duha'),
+                enableVibration: true,
+              );
 
-            await _localNotifications.zonedSchedule(
-              notificationId++,
-              'صلاة الضحى (صلاة الأوابين) ☀️',
-              'يصبح على كل سلامى من أحدكم صدقة.. وتجزئ من ذلك ركعتان يركعهما من الضحى',
-              duhaTz,
-              NotificationDetails(android: duhaDetails),
-              androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-              uiLocalNotificationDateInterpretation:
-                  UILocalNotificationDateInterpretation.absoluteTime,
-            );
-            if (isStale()) return;
+              await _localNotifications.zonedSchedule(
+                notificationId++,
+                'صلاة الضحى (صلاة الأوابين) ☀️',
+                'يصبح على كل سلامى من أحدكم صدقة.. وتجزئ من ذلك ركعتان يركعهما من الضحى',
+                duhaTz,
+                NotificationDetails(android: duhaDetails),
+                androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+                uiLocalNotificationDateInterpretation:
+                    UILocalNotificationDateInterpretation.absoluteTime,
+              );
+              if (isStale()) return;
+            }
           }
-        }
 
+        }
         // Schedule Qiyam Al-Layl & Tahajjud Reminder (قبل الفجر)
         if (_qiyamReminderEnabled && !isStale()) {
-          final fajrPrayer = data.prayers.firstWhere(
-            (p) => p.name.contains('الفجر'),
-            orElse: () => data.prayers.first,
-          );
-          final qiyamTime = fajrPrayer.time.subtract(Duration(minutes: _qiyamOffsetMinutes));
-          if (qiyamTime.isAfter(now)) {
-            if (isStale()) return;
-            final qiyamTz = tz.TZDateTime.from(qiyamTime, tz.local);
-            final qiyamDetails = AndroidNotificationDetails(
-              'prayer_qiyam_channel',
-              'تنبيه قيام الليل والتهجد',
-              channelDescription: 'تذكير إيماني بالثلث الأخير من الليل لقيام الليل والوتر والدعاء',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-              sound: const RawResourceAndroidNotificationSound('reminder_qiyam'),
-              enableVibration: true,
-            );
+          for (final fajrPrayer in prayers.where((p) => p.name.contains('الفجر'))) {
+            final qiyamTime = fajrPrayer.time.subtract(Duration(minutes: _qiyamOffsetMinutes));
+            if (qiyamTime.isAfter(now)) {
+              if (isStale()) return;
+              final qiyamTz = tz.TZDateTime.from(qiyamTime, tz.local);
+              final qiyamDetails = AndroidNotificationDetails(
+                'prayer_qiyam_channel',
+                'تنبيه قيام الليل والتهجد',
+                channelDescription: 'تذكير إيماني بالثلث الأخير من الليل لقيام الليل والوتر والدعاء',
+                importance: Importance.max,
+                priority: Priority.high,
+                playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+                sound: const RawResourceAndroidNotificationSound('reminder_qiyam'),
+                enableVibration: true,
+              );
 
-            await _localNotifications.zonedSchedule(
-              notificationId++,
-              'قيام الليل والتهجد 🌙',
-              'ركعتان في جوف الليل خير من الدنيا وما فيها — ثلث الليل الآخر وقت النزول الإلهي واستجابة الدعاء',
-              qiyamTz,
-              NotificationDetails(android: qiyamDetails),
-              androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-              uiLocalNotificationDateInterpretation:
-                  UILocalNotificationDateInterpretation.absoluteTime,
-            );
-            if (isStale()) return;
+              await _localNotifications.zonedSchedule(
+                notificationId++,
+                'قيام الليل والتهجد 🌙',
+                'ركعتان في جوف الليل خير من الدنيا وما فيها — ثلث الليل الآخر وقت النزول الإلهي واستجابة الدعاء',
+                qiyamTz,
+                NotificationDetails(android: qiyamDetails),
+                androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+                uiLocalNotificationDateInterpretation:
+                    UILocalNotificationDateInterpretation.absoluteTime,
+              );
+              if (isStale()) return;
+            }
           }
-        }
 
+        }
         if (isStale()) return;
         // Schedule fixed-clock Friday Sunnahs & Kahf Reminder on dedicated ID (804)
         await scheduleFridayReminder();

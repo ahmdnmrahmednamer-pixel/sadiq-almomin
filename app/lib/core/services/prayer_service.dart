@@ -96,6 +96,10 @@ class PrayerData {
   final double longitude;
   final String locationName;
   final List<PrayerInfo> prayers;
+
+  /// Independently calculated calendar days for a finite OS alarm horizon.
+  /// Null keeps explicit single-day callers unchanged.
+  final List<PrayerInfo>? notificationPrayers;
   final PrayerInfo? nextPrayer;
   final Duration timeToNextPrayer;
   final double qiblaDegrees;
@@ -106,6 +110,7 @@ class PrayerData {
     required this.longitude,
     required this.locationName,
     required this.prayers,
+    this.notificationPrayers,
     this.nextPrayer,
     this.timeToNextPrayer = Duration.zero,
     required this.qiblaDegrees,
@@ -625,6 +630,7 @@ class PrayerService extends ChangeNotifier {
         longitude: _currentData!.longitude,
         locationName: _currentData!.locationName,
         prayers: _currentData!.prayers,
+        notificationPrayers: _currentData!.notificationPrayers,
         nextPrayer: _currentData!.nextPrayer,
         timeToNextPrayer: diff,
         qiblaDegrees: _currentData!.qiblaDegrees,
@@ -1087,6 +1093,33 @@ class PrayerService extends ChangeNotifier {
       }
     }
 
+    // Never repeat today's wall-clock times on later days. Calculate each local
+    // calendar date separately, including DST/month/year boundaries.
+    final notificationPrayers = <PrayerInfo>[...resultList];
+    for (var day = 1; day < 7; day++) {
+      final date = DateTime(now.year, now.month, now.day + day);
+      final future = PrayerTimes(
+        coordinates: coords,
+        date: date,
+        calculationParameters: params,
+      );
+      final times = [
+        future.fajr,
+        future.sunrise,
+        future.dhuhr,
+        future.asr,
+        future.maghrib,
+        future.isha
+      ];
+      for (var i = 0; i < times.length; i++) {
+        final time = times[i].toLocal();
+        notificationPrayers.add(PrayerInfo(
+          name: rawList[i]['name'] as String,
+          time: time,
+          formattedTime: _formatTime(time),
+        ));
+      }
+    }
     final qiblaDeg = Qibla.qibla(coords);
 
     _currentData = PrayerData(
@@ -1094,6 +1127,7 @@ class PrayerService extends ChangeNotifier {
       longitude: lng,
       locationName: locName,
       prayers: resultList,
+      notificationPrayers: List.unmodifiable(notificationPrayers),
       nextPrayer: nextP,
       timeToNextPrayer: minDiff,
       qiblaDegrees: qiblaDeg,
