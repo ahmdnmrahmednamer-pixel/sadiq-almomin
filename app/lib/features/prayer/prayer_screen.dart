@@ -126,7 +126,7 @@ class PrayerScreen extends StatelessWidget {
                 // 1. مواقيت الصلاة والأذان
                 PortalCategoryCard(
                   numberText: '١',
-                  title: 'مواقيت الصلاة واستوديو الأذان',
+                  title: 'مواقيت الصلاة ومُشغِّل الأذان',
                   subtitle: 'حساب فلكي دقيق لمواقيت الصلوات الخمس مع نداء الأذان والإقامة بأصوات مؤذني الحرمين',
                   icon: Icons.access_time_filled_rounded,
                   color: AppColors.primaryGreen,
