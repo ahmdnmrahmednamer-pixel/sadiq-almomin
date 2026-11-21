@@ -243,15 +243,20 @@ class _FiqhLibraryScreenState extends State<FiqhLibraryScreen> {
             icon: Icons.balance_rounded,
             accentColor: AppColors.primaryGreen,
             onTap: () => _showTopicDetailSheet(context, t, isDark),
-            trailing: IconButton(
-              tooltip: _savingFavorites.contains(t.id) ? 'جارٍ حفظ المفضلة' : _service.isFavorite(t.id) ? 'إزالة من المفضلة' : 'حفظ في المفضلة',
-              icon: Icon(
-                _service.isFavorite(t.id)
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: _service.isFavorite(t.id) ? Colors.redAccent : Colors.grey,
+            trailing: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              excludeFromSemantics: true,
+              onTap: _savingFavorites.contains(t.id) ? () {} : null,
+              child: IconButton(
+                tooltip: _savingFavorites.contains(t.id) ? 'جارٍ حفظ المفضلة' : _service.isFavorite(t.id) ? 'إزالة من المفضلة' : 'حفظ في المفضلة',
+                icon: Icon(
+                  _service.isFavorite(t.id)
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  color: _service.isFavorite(t.id) ? Colors.redAccent : Colors.grey,
               ),
               onPressed: _savingFavorites.contains(t.id) ? null : () => _toggleFavorite(t.id),
+              ),
             ),
           ),
         )
