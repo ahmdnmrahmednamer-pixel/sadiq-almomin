@@ -61,7 +61,7 @@ class ZakatService extends ChangeNotifier {
 
   /// Sets the Hawl reminder date
   Future<void> setHawlDate(DateTime? date) async {
-    _calculation = _calculation.copyWith(hawlDate: date);
+    _calculation = _calculation.copyWith(hawlDate: date, clearHawlDate: date == null);
     await _persist();
     notifyListeners();
   }
