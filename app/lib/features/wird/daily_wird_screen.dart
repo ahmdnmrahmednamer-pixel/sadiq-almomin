@@ -15,6 +15,27 @@ class DailyWirdScreen extends StatefulWidget {
 class _DailyWirdScreenState extends State<DailyWirdScreen> {
   final DailyWirdService _service = DailyWirdService.instance;
   late ScreenStructureMode _layoutMode;
+  final Set<String> _savingTasks = {};
+  String? _failedTask;
+  DateTime? _failedDate;
+
+  Future<void> _toggleTask(String taskId, [DateTime? date]) async {
+    if (_savingTasks.contains(taskId)) return;
+    final requestedDate = date ?? DateTime.now();
+    setState(() {
+      _savingTasks.add(taskId);
+      if (_failedTask == taskId) _failedTask = null;
+    });
+    final saved = await _service.toggleTask(taskId, requestedDate);
+    if (!mounted) return;
+    setState(() {
+      _savingTasks.remove(taskId);
+      if (!saved) {
+        _failedTask = taskId;
+        _failedDate = requestedDate;
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -27,7 +48,6 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
@@ -55,16 +75,22 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
                 id: task.id,
                 title: task.title,
                 subtitle: '${task.timeSlot} • ${task.subtitle}',
-                badgeText: isDone ? 'تم بحمد الله ✓' : '+${task.rewardPoints} نقطة',
+                badgeText: _savingTasks.contains(task.id)
+                    ? 'جارٍ الحفظ'
+                    : isDone
+                        ? 'تم بحمد الله ✓'
+                        : '+${task.rewardPoints} نقطة',
                 category: task.timeSlot,
                 icon: isDone ? Icons.check_circle_rounded : task.icon,
                 accentColor:
                     isDone ? AppColors.primaryGreen : AppColors.accentGold,
-                onTap: () => _service.toggleTask(task.id),
+                onTap: () => _toggleTask(task.id),
                 trailing: Checkbox(
                   value: isDone,
                   activeColor: AppColors.primaryGreen,
-                  onChanged: (_) => _service.toggleTask(task.id),
+                  onChanged: _savingTasks.contains(task.id)
+                      ? null
+                      : (_) => _toggleTask(task.id),
                 ),
               );
             }).toList();
@@ -72,6 +98,27 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (_failedTask != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                                'لم يتم حفظ تغيير الورد: ${DailyWirdService.defaultTasks.firstWhere((task) => task.id == _failedTask).title}. لم يتغير الإنجاز المحفوظ.'),
+                            TextButton(
+                              onPressed: () =>
+                                  _toggleTask(_failedTask!, _failedDate),
+                              child: const Text('إعادة محاولة الحفظ'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 // Summary Progress Hero Card
                 Container(
                   padding: const EdgeInsets.all(18),
@@ -101,7 +148,8 @@ class _DailyWirdScreenState extends State<DailyWirdScreen> {
                                   value: ratio.clamp(0.0, 1.0),
                                   strokeWidth: 6,
                                   backgroundColor: Colors.white24,
-                                  valueColor: const AlwaysStoppedAnimation<Color>(
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
                                     AppColors.accentGold,
                                   ),
                                 ),
