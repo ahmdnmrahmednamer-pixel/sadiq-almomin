@@ -25,6 +25,7 @@ class AudioScreen extends StatefulWidget {
 class _AudioScreenState extends State<AudioScreen> {
   late final AudioPlayer _audioPlayer = widget.player ?? AudioPlayer();
   int _playRequest = 0;
+  String? _playbackError;
   List<Surah> _allSurahs = [];
   List<Surah> _filteredSurahs = [];
   bool _isLoadingSurahs = true;
@@ -145,13 +146,11 @@ class _AudioScreenState extends State<AudioScreen> {
       await _audioPlayer.pause();
     } catch (_) {
       if (mounted && request == _playRequest) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('تعذر الإيقاف المؤقت. أعد المحاولة؛ لم يتم تأكيد الإيقاف.'),
-        ));
+        setState(() => _playbackError = 'تعذر الإيقاف المؤقت. أعد المحاولة؛ لم يتم تأكيد الإيقاف.');
       }
       return;
     }
-    if (mounted && request == _playRequest) setState(() {});
+    if (mounted && request == _playRequest) setState(() => _playbackError = null);
   }
 
   Future<void> _playSurah(Surah surah, {bool forceReload = false, ReciterInfo? playbackReciter, Duration? initialPosition}) async {
@@ -185,6 +184,7 @@ class _AudioScreenState extends State<AudioScreen> {
     }
     if (!mounted || request != _playRequest) return;
     setState(() {
+      _playbackError = null;
       _currentSurah = surah;
       _playingReciterId = reciter.id;
       _isBuffering = true;
@@ -275,14 +275,12 @@ class _AudioScreenState extends State<AudioScreen> {
       await _audioPlayer.stop();
     } catch (_) {
       if (mounted && request == _playRequest) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('تعذر إيقاف التلاوة. أعد المحاولة؛ لم يتم تأكيد الإيقاف.'),
-        ));
+        setState(() => _playbackError = 'تعذر إيقاف التلاوة. أعد المحاولة؛ لم يتم تأكيد الإيقاف.');
       }
       return;
     }
     if (!mounted || request != _playRequest) return;
-    setState(() { _currentSurah = null; _playingReciterId = null; _isBuffering = false; });
+    setState(() { _currentSurah = null; _playingReciterId = null; _isBuffering = false; _playbackError = null; });
   }
 
   void _playNextSurah() {
@@ -877,6 +875,17 @@ class _AudioScreenState extends State<AudioScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (_playbackError != null)
+                          Semantics(
+                            liveRegion: true,
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(_playbackError!,
+                                style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13),
+                                softWrap: true,
+                              ),
+                            ),
+                          ),
                         // Progress Slider
                         Row(
                           children: [
