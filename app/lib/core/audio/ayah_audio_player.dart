@@ -24,6 +24,15 @@ class AyahAudioPlayer {
   StreamSubscription<PlayerState>? _playerStateSub;
   int _activePlaySessionId = 0;
 
+  /// Identifies the current request, including a start that is still loading.
+  int get activeRequestId => _activePlaySessionId;
+
+  /// Cancel only work still owned by the caller, never a newer request.
+  Future<void> stopRequestIfCurrent(int requestId) async {
+    if (requestId != _activePlaySessionId) return;
+    await stop();
+  }
+
   @visibleForTesting
   PlayResilientFn? playResilientRunner;
 
