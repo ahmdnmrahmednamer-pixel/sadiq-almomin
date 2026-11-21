@@ -110,14 +110,19 @@ void main() {
       'المؤلفون فقط'
     ]) {
       final option = find.text(label);
-      await tester.ensureVisible(option);
-      await tester.pumpAndSettle();
+      // These options are already visible. Forcing ancestor alignment with
+      // ensureVisible can move the outer horizontal TabBarView to another tab.
       final rect = tester.getRect(option);
       expect(rect.left, greaterThanOrEqualTo(0));
       expect(rect.right, lessThanOrEqualTo(360));
+      expect(rect.top, greaterThanOrEqualTo(0));
+      expect(rect.bottom, lessThanOrEqualTo(640));
+      expect(option.hitTestable(), findsOneWidget);
+      expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
       expect(find.bySemanticsLabel(RegExp(label)), findsWidgets);
       await tester.tap(option);
       await tester.pumpAndSettle();
+      expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
       expect(tester.takeException(), isNull);
     }
     final tabBar = tester.widget<TabBar>(find.byType(TabBar));
