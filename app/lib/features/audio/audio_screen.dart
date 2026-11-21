@@ -14,9 +14,11 @@ import 'downloads_manager_screen.dart';
 import 'widgets/islamic_audio_player_sheet.dart';
 
 class AudioScreen extends StatefulWidget {
-  const AudioScreen({super.key, this.player});
+  const AudioScreen({super.key, this.player, this.loadSource});
   @visibleForTesting
   final AudioPlayer? player;
+  @visibleForTesting
+  final Future<AudioSource> Function(String url, String cacheKey)? loadSource;
 
   @override
   State<AudioScreen> createState() => _AudioScreenState();
@@ -172,6 +174,7 @@ class _AudioScreenState extends State<AudioScreen> {
 
     final request = ++_playRequest;
     FastAudioService.instance.releaseAudioFocusFor(_audioPlayer);
+    final focusAtLoad = FastAudioService.instance.activePlaybackToken;
     try {
       await _audioPlayer.stop();
     } catch (_) {
@@ -182,7 +185,8 @@ class _AudioScreenState extends State<AudioScreen> {
       }
       return;
     }
-    if (!mounted || request != _playRequest) return;
+    if (!mounted || request != _playRequest ||
+        focusAtLoad != FastAudioService.instance.activePlaybackToken) return;
     setState(() {
       _playbackError = null;
       _currentSurah = surah;
@@ -197,13 +201,17 @@ class _AudioScreenState extends State<AudioScreen> {
       final url = SettingsService.instance.getSurahAudioUrl(surah.id, reciter.id);
       final cacheKey = 'surah_${reciter.id}_${surah.id}';
 
-      final source = await FastAudioService.instance.getFastAudioSource(
+      final source = await (widget.loadSource?.call(url, cacheKey) ?? FastAudioService.instance.getFastAudioSource(
         url,
         cacheKey: cacheKey,
         localDownloadedPath: localPath,
-      );
+      ));
 
       if (!mounted || request != _playRequest) return;
+      if (focusAtLoad != FastAudioService.instance.activePlaybackToken) {
+        setState(() { _isBuffering = false; _currentSurah = null; _playingReciterId = null; });
+        return;
+      }
       final started = await FastAudioService.instance.playWithZeroDelay(
         _audioPlayer,
         source,
