@@ -462,12 +462,14 @@ class PrayerNotificationService extends ChangeNotifier {
     final scheduledTz = tz.TZDateTime.from(snoozeTime, tz.local);
     final prayer = prayerName ?? 'الصلاة';
 
-    const androidDetails = AndroidNotificationDetails(
-      'prayer_reminder_channel',
+    final androidDetails = AndroidNotificationDetails(
+      _quietModeChannel('prayer_reminder_channel'),
       'تذكير ما بعد الغفوة',
       channelDescription: 'تنبيه الأذان بعد انتهاء فترة الغفوة',
       importance: Importance.max,
       priority: Priority.high,
+      playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
+      enableVibration: _soundMode != AdhanSoundMode.silent,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       actions: [
@@ -485,7 +487,7 @@ class PrayerNotificationService extends ChangeNotifier {
         'تذكير أذان $prayer (غفوة $minutes دقائق) ⏰',
         'انتهت فترة الغفوة — حان وقت أداء الصلاة والتطهر والوقوف بين يدي الله',
         scheduledTz,
-        const NotificationDetails(android: androidDetails),
+        NotificationDetails(android: androidDetails),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
@@ -1215,7 +1217,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
       final fridayTz = tz.TZDateTime.from(fridayTime, tz.local);
       final fridayDetails = AndroidNotificationDetails(
-        'prayer_friday_channel',
+        _quietModeChannel('prayer_friday_channel'),
         'تذكير سنن يوم الجمعة',
         channelDescription:
             'تذكير بقراءة سورة الكهف، الصلاة على النبي ﷺ، وساعة الاستجابة',
@@ -1224,7 +1226,7 @@ class PrayerNotificationService extends ChangeNotifier {
         playSound: _soundMode != AdhanSoundMode.silent &&
             _soundMode != AdhanSoundMode.vibrateOnly,
         sound: const RawResourceAndroidNotificationSound('reminder_salawat'),
-        enableVibration: true,
+        enableVibration: _soundMode != AdhanSoundMode.silent,
       );
 
       await _localNotifications.zonedSchedule(
@@ -1253,9 +1255,9 @@ class PrayerNotificationService extends ChangeNotifier {
       channelDescription: 'فحص فوري لصوت التنبيه وقناة الأذان',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: _soundMode != AdhanSoundMode.silent,
+      playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
       sound: _resolveSoundForVoice(voice, isFajr: false),
-      enableVibration: true,
+      enableVibration: _soundMode != AdhanSoundMode.silent,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       actions: const [
@@ -1297,14 +1299,14 @@ class PrayerNotificationService extends ChangeNotifier {
             .firstOrNull ??
         'iqamah';
     final androidDetails = AndroidNotificationDetails(
-      'prayer_iqamah_channel',
+      _quietModeChannel('prayer_iqamah_channel'),
       'تنبيه إقامة الصلاة',
       channelDescription: 'تنبيه بحلول وقت إقامة الصلاة المكتوبة',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: _soundMode != AdhanSoundMode.silent,
+      playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
       sound: RawResourceAndroidNotificationSound(rawSoundName),
-      enableVibration: true,
+      enableVibration: _soundMode != AdhanSoundMode.silent,
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       actions: const [
@@ -1330,6 +1332,14 @@ class PrayerNotificationService extends ChangeNotifier {
       payload: 'type=iqamah&prayer=الظهر',
     );
   }
+
+  // Android channel settings can determine sound/vibration independently of
+  // per-notification flags. Use the existing quiet channels for quiet modes.
+  String _quietModeChannel(String audibleChannel) => switch (_soundMode) {
+    AdhanSoundMode.silent => 'prayer_silent_channel',
+    AdhanSoundMode.vibrateOnly => 'prayer_vibrate_channel',
+    _ => audibleChannel,
+  };
 
   String _resolveChannelIdForVoice(String voiceKey, {required bool isFajr}) {
     if (_soundMode == AdhanSoundMode.silent) {
@@ -1401,6 +1411,9 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   String _resolveApproachingChannelId(String prayerName) {
+    if (_soundMode == AdhanSoundMode.silent || _soundMode == AdhanSoundMode.vibrateOnly) {
+      return _quietModeChannel('prayer_reminder_channel');
+    }
     if (!_preReminderVoiceEnabled || _soundMode == AdhanSoundMode.silent) {
       return 'prayer_reminder_channel';
     }
@@ -1450,7 +1463,7 @@ class PrayerNotificationService extends ChangeNotifier {
       priority: Priority.high,
       playSound: approSound != null,
       sound: approSound,
-      enableVibration: true,
+      enableVibration: _soundMode != AdhanSoundMode.silent,
       category: AndroidNotificationCategory.reminder,
       actions: const [
         AndroidNotificationAction(
@@ -1513,7 +1526,7 @@ class PrayerNotificationService extends ChangeNotifier {
               if (isStale()) return;
               final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
               final sunriseDetails = AndroidNotificationDetails(
-                'prayer_sunrise_channel',
+                _quietModeChannel('prayer_sunrise_channel'),
                 'تنبيه شروق الشمس',
                 channelDescription: 'تنبيه بحلول وقت شروق الشمس وانتهاء وقت الفجر',
                 importance: Importance.high,
@@ -1615,7 +1628,7 @@ class PrayerNotificationService extends ChangeNotifier {
                     priority: Priority.high,
                     playSound: approSound != null,
                     sound: approSound,
-                    enableVibration: true,
+                    enableVibration: _soundMode != AdhanSoundMode.silent,
                     category: AndroidNotificationCategory.reminder,
                   ),
                 ),
@@ -1640,14 +1653,14 @@ class PrayerNotificationService extends ChangeNotifier {
                       .firstOrNull ??
                   'iqamah';
               final iqamahDetails = AndroidNotificationDetails(
-                'prayer_iqamah_channel',
+                _quietModeChannel('prayer_iqamah_channel'),
                 'تنبيه إقامة الصلاة',
                 channelDescription: 'تنبيه بحلول وقت إقامة الصلاة المكتوبة',
                 importance: Importance.max,
                 priority: Priority.high,
                 playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
                 sound: RawResourceAndroidNotificationSound(iqamahRawSound),
-                enableVibration: true,
+                enableVibration: _soundMode != AdhanSoundMode.silent,
                 fullScreenIntent: true,
                 category: AndroidNotificationCategory.alarm,
                 actions: [
@@ -1687,14 +1700,14 @@ class PrayerNotificationService extends ChangeNotifier {
               if (isStale()) return;
               final adhkarTz = tz.TZDateTime.from(adhkarTime, tz.local);
               final adhkarDetails = AndroidNotificationDetails(
-                'prayer_post_adhkar_channel',
+                _quietModeChannel('prayer_post_adhkar_channel'),
                 'أذكار ما بعد الصلاة المكتوبة',
                 channelDescription: 'تذكير بالاستغفار والتسبيح وقراءة آية الكرسي دبر كل صلاة',
                 importance: Importance.high,
                 priority: Priority.high,
                 playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
                 sound: const RawResourceAndroidNotificationSound('reminder_istighfar'),
-                enableVibration: true,
+                enableVibration: _soundMode != AdhanSoundMode.silent,
               );
 
               await _localNotifications.zonedSchedule(
@@ -1720,14 +1733,14 @@ class PrayerNotificationService extends ChangeNotifier {
               if (isStale()) return;
               final duhaTz = tz.TZDateTime.from(duhaTime, tz.local);
               final duhaDetails = AndroidNotificationDetails(
-                'prayer_duha_channel',
+                _quietModeChannel('prayer_duha_channel'),
                 'تذكير صلاة الضحى',
                 channelDescription: 'صلاة الأوابين بعد شروق الشمس بـ ٢٥ دقيقة',
                 importance: Importance.high,
                 priority: Priority.high,
                 playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
                 sound: const RawResourceAndroidNotificationSound('reminder_duha'),
-                enableVibration: true,
+                enableVibration: _soundMode != AdhanSoundMode.silent,
               );
 
               await _localNotifications.zonedSchedule(
@@ -1753,14 +1766,14 @@ class PrayerNotificationService extends ChangeNotifier {
               if (isStale()) return;
               final qiyamTz = tz.TZDateTime.from(qiyamTime, tz.local);
               final qiyamDetails = AndroidNotificationDetails(
-                'prayer_qiyam_channel',
+                _quietModeChannel('prayer_qiyam_channel'),
                 'تنبيه قيام الليل والتهجد',
                 channelDescription: 'تذكير إيماني بالثلث الأخير من الليل لقيام الليل والوتر والدعاء',
                 importance: Importance.max,
                 priority: Priority.high,
                 playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
                 sound: const RawResourceAndroidNotificationSound('reminder_qiyam'),
-                enableVibration: true,
+                enableVibration: _soundMode != AdhanSoundMode.silent,
               );
 
               await _localNotifications.zonedSchedule(
