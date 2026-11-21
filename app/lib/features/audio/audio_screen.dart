@@ -330,7 +330,7 @@ class _AudioScreenState extends State<AudioScreen> {
     setState(() => _currentReciter = reciter);
     SettingsService.instance.setSelectedReciter(reciter.id);
     if (AyahAudioPlayer.instance.isPlaying.value) {
-      AyahAudioPlayer.instance.playReciterPreview(reciter);
+      AyahAudioPlayer.instance.previewReciterWithFeedback(context, reciter);
     }
   }
 
@@ -374,7 +374,7 @@ class _AudioScreenState extends State<AudioScreen> {
                     }
                   },
                   onPreview: () =>
-                      AyahAudioPlayer.instance.playReciterPreview(current),
+                      AyahAudioPlayer.instance.previewReciterWithFeedback(context, current),
                 );
               },
             ),
@@ -575,7 +575,7 @@ class _AudioScreenState extends State<AudioScreen> {
                               isPreviewing: isPreviewing,
                               onChanged: _selectReciter,
                               onPreview: () => AyahAudioPlayer.instance
-                                  .playReciterPreview(curReciter),
+                                  .previewReciterWithFeedback(context, curReciter),
                             ),
                           ],
                         ),
