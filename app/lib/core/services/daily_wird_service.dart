@@ -10,6 +10,14 @@ class DailyWirdService extends ChangeNotifier {
 
   static const String _prefKey = 'daily_wird_records_v1';
   bool _initialized = false;
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations =
+        result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
 
   /// Map of YYYY-MM-DD -> List of completed task IDs
   final Map<String, Set<String>> _dailyRecords = {};
@@ -86,23 +94,36 @@ class DailyWirdService extends ChangeNotifier {
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_initialized && !forceReload) return;
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_prefKey);
-    _dailyRecords.clear();
-    if (raw != null && raw.isNotEmpty) {
-      try {
+  Future<void> init({bool forceReload = false}) {
+    if (_initialized && !forceReload) return Future<void>.value();
+    return _serialize(() async {
+      await _load(forceReload: forceReload);
+    });
+  }
+
+  Future<bool> _load({bool forceReload = false}) async {
+    if (_initialized && !forceReload) return true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (forceReload) await prefs.reload();
+      final raw = prefs.getString(_prefKey);
+      final next = <String, Set<String>>{};
+      if (raw != null && raw.isNotEmpty) {
         final decoded = json.decode(raw) as Map<String, dynamic>;
         decoded.forEach((k, v) {
-          if (v is List) {
-            _dailyRecords[k] = v.map((e) => e.toString()).toSet();
-          }
+          if (v is List) next[k] = v.map((e) => e.toString()).toSet();
         });
-      } catch (_) {}
+      }
+      _dailyRecords
+        ..clear()
+        ..addAll(next);
+      _initialized = true;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('DailyWirdService load error: $e');
+      return false;
     }
-    _initialized = true;
-    notifyListeners();
   }
 
   Set<String> getCompletedToday([DateTime? date]) {
@@ -144,37 +165,65 @@ class DailyWirdService extends ChangeNotifier {
     return streak;
   }
 
-  Future<void> toggleTask(String taskId, [DateTime? date]) async {
+  Future<bool> toggleTask(String taskId, [DateTime? date]) {
+    // Capture the requested day before waiting in the queue (including midnight).
     final key = _todayKey(date);
-    final set = _dailyRecords.putIfAbsent(key, () => <String>{});
-    if (set.contains(taskId)) {
-      set.remove(taskId);
-    } else {
-      set.add(taskId);
+    return _serialize(() async {
+      if (!await _load()) return false;
+      final next = _copyRecords();
+      final tasks = next.putIfAbsent(key, () => <String>{});
+      if (!tasks.add(taskId)) tasks.remove(taskId);
+      return _persist(next);
+    });
+  }
+
+  Map<String, Set<String>> _copyRecords() =>
+      _dailyRecords.map((k, v) => MapEntry(k, Set<String>.of(v)));
+
+  Future<bool> _persist(Map<String, Set<String>> next) async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      final serializable = next.map((k, v) => MapEntry(k, v.toList()));
+      if (!await prefs.setString(_prefKey, json.encode(serializable))) {
+        throw StateError('Daily wird write rejected');
+      }
+      _dailyRecords
+        ..clear()
+        ..addAll(next);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // The plugin cache changes before the platform result is known.
+      try {
+        await prefs?.reload();
+      } catch (reloadError) {
+        debugPrint('DailyWirdService cache reload error: $reloadError');
+      }
+      debugPrint('DailyWirdService save error: $e');
+      return false;
     }
-    await _persist();
-    notifyListeners();
   }
 
-  Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    final serializable = _dailyRecords.map((k, v) => MapEntry(k, v.toList()));
-    await prefs.setString(_prefKey, json.encode(serializable));
-  }
+  Map<String, dynamic> exportData() =>
+      _dailyRecords.map((k, v) => MapEntry(k, v.toList()));
 
-  Map<String, dynamic> exportData() {
-    return _dailyRecords.map((k, v) => MapEntry(k, v.toList()));
-  }
-
-  Future<void> importData(Map<String, dynamic> imported, {bool replace = false}) async {
-    if (replace) _dailyRecords.clear();
+  Future<void> importData(Map<String, dynamic> imported,
+      {bool replace = false}) {
+    // Snapshot caller-owned lists before another queued operation can delay us.
+    final incoming = <String, Set<String>>{};
     imported.forEach((k, v) {
-      if (v is List) {
-        final cur = _dailyRecords.putIfAbsent(k, () => <String>{});
-        cur.addAll(v.map((e) => e.toString()));
+      if (v is List) incoming[k] = v.map((e) => e.toString()).toSet();
+    });
+    return _serialize(() async {
+      if (!await _load()) throw StateError('Daily wird could not be loaded');
+      final next = replace ? <String, Set<String>>{} : _copyRecords();
+      incoming.forEach((k, v) {
+        next.putIfAbsent(k, () => <String>{}).addAll(v);
+      });
+      if (!await _persist(next)) {
+        throw StateError('Daily wird could not be saved');
       }
     });
-    await _persist();
-    notifyListeners();
   }
 }
