@@ -26,7 +26,7 @@ void main() {
     // Use an empty stream override in unit tests to avoid missing native hardware channels
     AdhanSensorGestureService.instance.accelerometerStreamOverride = const Stream<AccelerometerEvent>.empty();
     await AdhanSensorGestureService.instance.init();
-    await PrayerNotificationService.instance.init();
+    await PrayerNotificationService.instance.init(forceReload: true);
     await PrayerTrackerService.instance.init();
   });
 
@@ -493,17 +493,21 @@ void main() {
       expect(getAdhanVoiceName('adhan_haza_albalushi'), contains('هزاع البلوشي'));
     });
 
-    test('PrayerNotificationService allows setting both general adhan and Fajr-specific adhan', () async {
-      final notifService = PrayerNotificationService.instance;
-      await notifService.setSelectedAdhanVoice('adhan_alqatami');
-      expect(notifService.selectedAdhanVoice, 'adhan_alqatami');
-
+    test('supported general and Fajr voices persist while unsupported voices cannot overwrite them', () async {
+      final notifications = PrayerNotificationService.instance;
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('notif_selected_adhan'), 'adhan_alqatami');
-
-      await notifService.setSelectedFajrVoice('adhan_fajr_alqatami');
-      expect(notifService.selectedFajrVoice, 'adhan_fajr_alqatami');
-      expect(prefs.getString('notif_selected_fajr_adhan'), 'adhan_fajr_alqatami');
+      await notifications.setSelectedAdhanVoice('adhan_hussary');
+      await notifications.setSelectedFajrVoice('adhan_fajr');
+      expect(notifications.selectedAdhanVoice, 'adhan_hussary');
+      expect(notifications.selectedFajrVoice, 'adhan_fajr');
+      expect(prefs.getString('notif_selected_adhan'), 'adhan_hussary');
+      expect(prefs.getString('notif_selected_fajr_adhan'), 'adhan_fajr');
+      await expectLater(notifications.setSelectedAdhanVoice('adhan_alqatami'), throwsStateError);
+      await expectLater(notifications.setSelectedFajrVoice('adhan_fajr_alqatami'), throwsStateError);
+      expect(notifications.selectedAdhanVoice, 'adhan_hussary');
+      expect(notifications.selectedFajrVoice, 'adhan_fajr');
+      expect(prefs.getString('notif_selected_adhan'), 'adhan_hussary');
+      expect(prefs.getString('notif_selected_fajr_adhan'), 'adhan_fajr');
     });
 
     testWidgets('Tapping adhan options modal contains direct navigation to Adhan Audio Studio',
