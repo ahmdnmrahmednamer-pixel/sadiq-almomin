@@ -195,6 +195,12 @@ class AudioDownloadService extends ChangeNotifier {
     required int surahId,
     required String surahName,
   }) async {
+    // Never save a fallback reciter under an unknown caller-supplied ID, or
+    // request a number outside the Quran's 114 surahs. Do not rewrite settings.
+    if (surahId < 1 || surahId > 114 ||
+        !SettingsService.availableReciters.any((reciter) => reciter.id == reciterId)) {
+      return false;
+    }
     final key = _key(reciterId, surahId);
     if (isDownloading(reciterId, surahId)) return false;
 
