@@ -113,7 +113,8 @@ class StoriesService extends ChangeNotifier {
   double getDownloadProgress(String id) => _activeProgress[id] ?? 0.0;
 
   Future<bool> downloadStory(String id) async {
-    final story = _storiesData.firstWhere((s) => s.id == id, orElse: () => _storiesData.first);
+    if (!_storiesData.any((story) => story.id == id)) return false;
+    final story = _storiesData.firstWhere((story) => story.id == id);
     if (isDownloading(id)) return false;
 
     await init();
@@ -162,6 +163,9 @@ class StoriesService extends ChangeNotifier {
         if (tempFile.existsSync()) {
           try {
             final length = tempFile.lengthSync();
+            if (length <= 1000) {
+              throw const FormatException('Downloaded story audio is too small');
+            }
             tempFile.renameSync(filePath);
 
             _downloadedLocalPaths[id] = filePath;
