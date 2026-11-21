@@ -85,11 +85,11 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                   await s.setSelectedReciter(val);
                   if (AyahAudioPlayer.instance.isPlaying.value) {
                     await AyahAudioPlayer.instance
-                        .playReciterPreview(s.currentReciter);
+                        .previewReciterWithFeedback(context, s.currentReciter);
                   }
                 },
                 onPreviewPressed: () {
-                  AyahAudioPlayer.instance.playReciterPreview(s.currentReciter);
+                  AyahAudioPlayer.instance.previewReciterWithFeedback(context, s.currentReciter);
                 },
               ),
             );
