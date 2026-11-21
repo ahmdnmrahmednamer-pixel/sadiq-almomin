@@ -196,6 +196,11 @@ class FastAudioService {
         priorCallback != onStopOther ? priorCallback : null);
     return _focusTransitions.run(() async {
       await _finishFocusStops(sessionToken);
+      if (sessionToken == _activePlaybackToken) {
+        // Keep the target reset inside the transition too. An older delayed
+        // reset must finish before a newer same-player request can start.
+        await _stopAndConfirm(player ?? _sharedPlayer);
+      }
       return sessionToken;
     });
   }
@@ -349,8 +354,6 @@ class FastAudioService {
         player: targetPlayer,
         onStopOther: onStopCallback,
       );
-      if (sessionToken != _activePlaybackToken) return false;
-      await _stopAndConfirm(targetPlayer);
       if (sessionToken != _activePlaybackToken) return false;
     } catch (error) {
       debugPrint('Audio focus stop failed: $error');
@@ -531,9 +534,6 @@ class FastAudioService {
     final token =
         await claimAudioFocus(player: player, onStopOther: onStopCallback);
     if (token != _activePlaybackToken) return false;
-    await _stopAndConfirm(player);
-    if (token != _activePlaybackToken) return false;
-
     await player.setAudioSource(
       source,
       initialPosition: initialPosition,
