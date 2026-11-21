@@ -10,42 +10,79 @@ class FiqhLibraryService extends ChangeNotifier {
 
   static const String _favPrefKey = 'fiqh_library_favorites_v1';
   bool _initialized = false;
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations = result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
+
   final Set<String> _favoriteIds = {};
 
   Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_initialized && !forceReload) return;
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_favPrefKey) ?? const <String>[];
-    _favoriteIds
-      ..clear()
-      ..addAll(stored);
-    _initialized = true;
-    notifyListeners();
+  Future<void> init({bool forceReload = false}) {
+    if (_initialized && !forceReload) return Future<void>.value();
+    return _serialize(() async { await _load(forceReload: forceReload); });
+  }
+
+  Future<bool> _load({bool forceReload = false}) async {
+    if (_initialized && !forceReload) return true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (forceReload) await prefs.reload();
+      final stored = prefs.getStringList(_favPrefKey) ?? const <String>[];
+      _favoriteIds..clear()..addAll(stored);
+      _initialized = true;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('FiqhLibraryService load error: $e');
+      return false;
+    }
   }
 
   bool isFavorite(String id) => _favoriteIds.contains(id);
 
-  Future<void> toggleFavorite(String id) async {
-    if (_favoriteIds.contains(id)) {
-      _favoriteIds.remove(id);
-    } else {
-      _favoriteIds.add(id);
+  Future<bool> toggleFavorite(String id) => _serialize(() async {
+    if (!await _load()) return false;
+    final next = Set<String>.of(_favoriteIds);
+    if (!next.add(id)) next.remove(id);
+    return _persist(next);
+  });
+
+  Future<bool> _persist(Set<String> next) async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setStringList(_favPrefKey, next.toList())) {
+        throw StateError('Fiqh favorites write rejected');
+      }
+      _favoriteIds..clear()..addAll(next);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      try {
+        await prefs?.reload();
+      } catch (reloadError) {
+        debugPrint('FiqhLibraryService cache reload error: $reloadError');
+      }
+      debugPrint('FiqhLibraryService save error: $e');
+      return false;
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_favPrefKey, _favoriteIds.toList());
-    notifyListeners();
   }
 
   List<String> exportFavorites() => _favoriteIds.toList();
 
-  Future<void> importFavorites(List<String> ids, {bool replace = false}) async {
-    if (replace) _favoriteIds.clear();
-    _favoriteIds.addAll(ids);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_favPrefKey, _favoriteIds.toList());
-    notifyListeners();
+  Future<void> importFavorites(List<String> ids, {bool replace = false}) {
+    final incoming = List<String>.of(ids);
+    return _serialize(() async {
+      if (!await _load()) throw StateError('Fiqh favorites could not be loaded');
+      final next = replace ? <String>{} : Set<String>.of(_favoriteIds);
+      next.addAll(incoming);
+      if (!await _persist(next)) throw StateError('Fiqh favorites could not be saved');
+    });
   }
 
   List<String> get chapters => const [

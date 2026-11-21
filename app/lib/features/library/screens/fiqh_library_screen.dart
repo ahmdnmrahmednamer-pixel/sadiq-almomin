@@ -21,10 +21,38 @@ class _FiqhLibraryScreenState extends State<FiqhLibraryScreen> {
   String _searchQuery = '';
   bool _favoritesOnly = false;
   late ScreenStructureMode _layoutMode;
+  final Set<String> _savingFavorites = {};
+  String? _failedFavorite;
+
+  Future<void> _toggleFavorite(String id) async {
+    if (_savingFavorites.contains(id)) return;
+    setState(() {
+      _savingFavorites.add(id);
+      if (_failedFavorite == id) _failedFavorite = null;
+    });
+    final saved = await _service.toggleFavorite(id);
+    if (!mounted) return;
+    setState(() {
+      _savingFavorites.remove(id);
+      if (!saved) _failedFavorite = id;
+    });
+  }
+
+  void _refreshFavorites() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _service.removeListener(_refreshFavorites);
+    super.dispose();
+  }
+
 
   @override
   void initState() {
     super.initState();
+    _service.addListener(_refreshFavorites);
     _service.init();
     _layoutMode = ScreenStructureMode.fromId(
       SettingsService.instance.screenLayoutMode,
@@ -216,16 +244,14 @@ class _FiqhLibraryScreenState extends State<FiqhLibraryScreen> {
             accentColor: AppColors.primaryGreen,
             onTap: () => _showTopicDetailSheet(context, t, isDark),
             trailing: IconButton(
-              tooltip: 'حفظ في المفضلة',
+              tooltip: _savingFavorites.contains(t.id) ? 'جارٍ حفظ المفضلة' : _service.isFavorite(t.id) ? 'إزالة من المفضلة' : 'حفظ في المفضلة',
               icon: Icon(
                 _service.isFavorite(t.id)
                     ? Icons.favorite_rounded
                     : Icons.favorite_border_rounded,
                 color: _service.isFavorite(t.id) ? Colors.redAccent : Colors.grey,
               ),
-              onPressed: () => setState(() {
-                _service.toggleFavorite(t.id);
-              }),
+              onPressed: _savingFavorites.contains(t.id) ? null : () => _toggleFavorite(t.id),
             ),
           ),
         )
@@ -254,6 +280,25 @@ class _FiqhLibraryScreenState extends State<FiqhLibraryScreen> {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (_failedFavorite != null)
+              Semantics(
+                liveRegion: true,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('لم يتم حفظ تغيير المفضلة: ${FiqhLibraryService.topics.firstWhere((topic) => topic.id == _failedFavorite).title}. لم تتغير المفضلة المحفوظة.'),
+                        TextButton(
+                          onPressed: () => _toggleFavorite(_failedFavorite!),
+                          child: const Text('إعادة محاولة الحفظ'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             AdaptiveLayoutSwitcherBar(
               currentMode: _layoutMode,
               onModeChanged: (m) {
