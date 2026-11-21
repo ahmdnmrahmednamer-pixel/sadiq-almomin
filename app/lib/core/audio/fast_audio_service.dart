@@ -496,27 +496,32 @@ class FastAudioService {
     }
   }
 
-  /// Sets up audio player and triggers play with minimum buffering latency
-  Future<void> playWithZeroDelay(
+  /// Starts only while this request still owns focus. Returns false on cancellation.
+  Future<bool> playWithZeroDelay(
     AudioPlayer player,
     AudioSource source, {
     double speed = 1.0,
     Duration? initialPosition,
     Future<void> Function()? onStopCallback,
   }) async {
-    await claimAudioFocus(player: player, onStopOther: onStopCallback);
+    final token = await claimAudioFocus(player: player, onStopOther: onStopCallback);
+    if (token != _activePlaybackToken) return false;
     try {
       await player.stop();
     } catch (_) {}
+    if (token != _activePlaybackToken) return false;
 
     await player.setAudioSource(
       source,
       initialPosition: initialPosition,
       preload: true,
     );
+    if (token != _activePlaybackToken) return false;
     if (speed != 1.0) {
       await player.setSpeed(speed);
     }
+    if (token != _activePlaybackToken) return false;
     unawaited(player.play());
+    return true;
   }
 }

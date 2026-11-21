@@ -14,14 +14,17 @@ import 'downloads_manager_screen.dart';
 import 'widgets/islamic_audio_player_sheet.dart';
 
 class AudioScreen extends StatefulWidget {
-  const AudioScreen({super.key});
+  const AudioScreen({super.key, this.player});
+  @visibleForTesting
+  final AudioPlayer? player;
 
   @override
   State<AudioScreen> createState() => _AudioScreenState();
 }
 
 class _AudioScreenState extends State<AudioScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  late final AudioPlayer _audioPlayer = widget.player ?? AudioPlayer();
+  int _playRequest = 0;
   List<Surah> _allSurahs = [];
   List<Surah> _filteredSurahs = [];
   bool _isLoadingSurahs = true;
@@ -88,6 +91,8 @@ class _AudioScreenState extends State<AudioScreen> {
 
   @override
   void dispose() {
+    _playRequest++;
+    FastAudioService.instance.releaseAudioFocusFor(_audioPlayer);
     AudioDownloadService.instance.removeListener(_onDownloadServiceUpdate);
     _sleepTimer?.cancel();
     _playerStateSub?.cancel();
@@ -134,7 +139,7 @@ class _AudioScreenState extends State<AudioScreen> {
     }
 
     // Only toggle play/pause if the EXACT same surah AND the EXACT same reciter are already loaded
-    if (!forceReload &&
+    if (!forceReload && !_isBuffering &&
         _currentSurah?.id == surah.id &&
         _playingReciterId == reciter.id) {
       if (_audioPlayer.playing) {
@@ -147,8 +152,19 @@ class _AudioScreenState extends State<AudioScreen> {
       return;
     }
 
-    await _audioPlayer.stop();
-    if (!mounted) return;
+    final request = ++_playRequest;
+    FastAudioService.instance.releaseAudioFocusFor(_audioPlayer);
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {
+      if (mounted && request == _playRequest) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر إيقاف التلاوة السابقة. لم يبدأ تسجيل جديد.'),
+        ));
+      }
+      return;
+    }
+    if (!mounted || request != _playRequest) return;
     setState(() {
       _currentSurah = surah;
       _playingReciterId = reciter.id;
@@ -168,19 +184,20 @@ class _AudioScreenState extends State<AudioScreen> {
         localDownloadedPath: localPath,
       );
 
-      await FastAudioService.instance.playWithZeroDelay(
+      if (!mounted || request != _playRequest) return;
+      final started = await FastAudioService.instance.playWithZeroDelay(
         _audioPlayer,
         source,
         speed: _playbackSpeed,
-        onStopCallback: () async {
-          try {
-            await _audioPlayer.stop();
-          } catch (_) {}
-          if (mounted) {
-            setState(() {});
-          }
-        },
+        onStopCallback: () => _stopSurah(expectedRequest: request),
       );
+      if (!mounted || request != _playRequest) return;
+      if (!started) {
+        setState(() { _isBuffering = false; _currentSurah = null; _playingReciterId = null; });
+        return;
+      }
+
+      setState(() => _isBuffering = false);
 
       // Pre-warm the next surah in background for instant transition
       if (surah.id < 114) {
@@ -214,7 +231,7 @@ class _AudioScreenState extends State<AudioScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && request == _playRequest) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e is ReciterRecordingUnavailable ? e.message : 'تعذر تشغيل التلاوة. يرجى التحقق من الملف أو الاتصال بالإنترنت.'),
@@ -223,9 +240,29 @@ class _AudioScreenState extends State<AudioScreen> {
         );
         setState(() {
           _isBuffering = false;
+          _currentSurah = null;
+          _playingReciterId = null;
         });
       }
     }
+  }
+
+  Future<void> _stopSurah({int? expectedRequest}) async {
+    if (expectedRequest != null && expectedRequest != _playRequest) return;
+    final request = ++_playRequest;
+    FastAudioService.instance.releaseAudioFocusFor(_audioPlayer);
+    try {
+      await _audioPlayer.stop();
+    } catch (_) {
+      if (mounted && request == _playRequest) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر إيقاف التلاوة. أعد المحاولة؛ لم يتم تأكيد الإيقاف.'),
+        ));
+      }
+      return;
+    }
+    if (!mounted || request != _playRequest) return;
+    setState(() { _currentSurah = null; _playingReciterId = null; _isBuffering = false; });
   }
 
   void _playNextSurah() {
@@ -852,28 +889,28 @@ class _AudioScreenState extends State<AudioScreen> {
                           ],
                         ),
 
-                        // Controls
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // Keep the loaded identity readable independently of controls.
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Expanded(
-                              child: Column(
+                            Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'سورة ${_currentSurah!.nameAr}',
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
                                   ),
                                   Text(
-                                    reciter.nameAr,
+                                    SettingsService.resolveReciter(_playingReciterId ?? reciter.id).nameAr,
                                     style: const TextStyle(color: AppColors.secondaryGreen, fontSize: 12),
-                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
                                   ),
                                 ],
-                              ),
                             ),
-                            Row(
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 // Speed button
                                 TextButton(
@@ -916,7 +953,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                           size: 40,
                                           color: AppColors.primaryGreen,
                                         ),
-                                  onPressed: () {
+                                  onPressed: _isBuffering ? null : () {
                                     if (_audioPlayer.playing) {
                                       _audioPlayer.pause();
                                     } else {
@@ -933,12 +970,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                 IconButton(
                                   icon: const Icon(Icons.close, size: 20),
                                   tooltip: 'إيقاف التلاوة',
-                                  onPressed: () {
-                                    _audioPlayer.stop();
-                                    setState(() {
-                                      _currentSurah = null;
-                                    });
-                                  },
+                                  onPressed: _stopSurah,
                                 ),
                               ],
                             ),
