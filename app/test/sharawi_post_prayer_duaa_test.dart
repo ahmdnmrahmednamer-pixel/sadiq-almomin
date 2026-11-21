@@ -98,7 +98,7 @@ void main() {
       expect(sharawiInAdhans, isEmpty, reason: 'Sheikh Al-Sha\'rawi is post-adhan duaa, not an adhan mu\'adhin');
     });
 
-    test('7. All 7 requested Sheikhs exist in adhan list with valid authentic URLs', () {
+    test('7. Catalog identities remain and reviewed sources never revert to false attribution', () {
       final adhanTracks = IslamicAudioService.allTracks
           .where((t) => t.type == IslamicAudioType.adhan)
           .toList();
@@ -108,10 +108,11 @@ void main() {
       // 1. ناصر القطامي
       expect(ids.contains('adhan_alqatami'), isTrue);
 
-      // 2. محمد صديق المنشاوي (verified authentic 020.mp3 Damascus Adhan)
+      // 2. Minshawi uses the reviewed source, not the old Damascus mapping.
       expect(ids.contains('adhan_menshawi'), isTrue);
       final menshawiTrack = adhanTracks.firstWhere((t) => t.id == 'adhan_menshawi');
-      expect(menshawiTrack.remoteUrl, contains('020.mp3'));
+      expect(menshawiTrack.remoteUrl, 'https://media.assabile.com/assabile/adhan_3435370/a2b25725149e.mp3');
+      expect(menshawiTrack.fallbackUrls, isEmpty);
 
       // 3. سيد النقشبندي
       expect(ids.contains('adhan_naqshbandi'), isTrue);
@@ -124,10 +125,12 @@ void main() {
 
       // 6. فارس عباد
       expect(ids.contains('adhan_fares_abbad'), isTrue);
+      final faresTrack = adhanTracks.firstWhere((t) => t.id == 'adhan_fares_abbad');
+      expect(faresTrack.remoteUrl, isNull);
+      expect(IslamicAudioService.isHeldRecording(faresTrack), isTrue);
 
       // 7. ياسر الدوسري
       expect(ids.contains('adhan_aldosari'), isTrue);
     });
   });
 }
-

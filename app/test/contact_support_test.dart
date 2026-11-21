@@ -193,7 +193,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final tile = find.text('الدعم والتواصل مع المطور');
+      await tester.tap(find.byKey(const ValueKey('settings_category_5')));
+      await tester.pumpAndSettle();
+      final tile = find.text('الدعم');
       await tester.scrollUntilVisible(
         tile,
         300,
