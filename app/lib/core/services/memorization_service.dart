@@ -1,8 +1,10 @@
-import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/memorization_item.dart';
+import '../utils/serial_task_queue.dart';
 
 class MemorizationStorageException implements Exception {
   final String message;
@@ -26,30 +28,9 @@ class MemorizationService extends ChangeNotifier {
       'تعذرت قراءة سجل الحفظ. لم نغير البيانات المحفوظة. استعد نسخة سليمة أو أعد فتح التطبيق قبل التسجيل.';
   static const _writeError =
       'لم يُحفظ تعديل سجل الحفظ. بقي السجل السابق كما كان. حاول مرة أخرى.';
-  final List<Future<void> Function()> _queue = [];
-  bool _busy = false;
+  final SerialTaskQueue _operations = SerialTaskQueue();
 
-  Future<T> _serialize<T>(Future<T> Function() action) {
-    final result = Completer<T>();
-    _queue.add(() async {
-      try {
-        result.complete(await action());
-      } catch (error, stack) {
-        result.completeError(error, stack);
-      } finally {
-        _busy = false;
-        _runNext();
-      }
-    });
-    _runNext();
-    return result.future;
-  }
-
-  void _runNext() {
-    if (_busy || _queue.isEmpty) return;
-    _busy = true;
-    unawaited(_queue.removeAt(0)());
-  }
+  Future<T> _serialize<T>(Future<T> Function() action) => _operations.run(action);
 
   bool get isInitialized => _isInitialized;
   int get totalTrackedAyahs => _items.length;
