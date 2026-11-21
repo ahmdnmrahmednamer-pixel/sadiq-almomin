@@ -2,13 +2,16 @@ import os
 import json
 import sqlite3
 import unittest
+import tempfile
 from normalizer import normalize_arabic
 from surahs_metadata import CANONICAL_SURAHS, CANONICAL_JUZ
 
 class TestMilestoneM1QuranCore(unittest.TestCase):
     def setUp(self):
         self.base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.db_path = os.path.join(self.base_dir, "..", "..", "app", "assets", "data", "quran.db")
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.db_path = os.path.join(self.temp.name, "quran.db")
         self.surahs_json = os.path.join(self.base_dir, "..", "..", "app", "assets", "data", "surahs.json")
         self.juz_json = os.path.join(self.base_dir, "..", "..", "app", "assets", "data", "juz.json")
         if not os.path.exists(self.db_path) or os.path.getsize(self.db_path) == 0:
@@ -18,6 +21,7 @@ class TestMilestoneM1QuranCore(unittest.TestCase):
     def test_database_tables_and_row_counts(self):
         self.assertTrue(os.path.exists(self.db_path), f"quran.db must exist at {self.db_path}")
         conn = sqlite3.connect(self.db_path)
+        self.addCleanup(conn.close)
         cur = conn.cursor()
 
         # Check tables
@@ -34,7 +38,6 @@ class TestMilestoneM1QuranCore(unittest.TestCase):
         reciters_count = cur.execute("SELECT COUNT(*) FROM reciter").fetchone()[0]
         self.assertEqual(reciters_count, 35, "quran.db must contain exactly 35 reciters per Appendix B")
 
-        conn.close()
 
     def test_json_assets_completeness(self):
         self.assertTrue(os.path.exists(self.surahs_json))
@@ -51,6 +54,7 @@ class TestMilestoneM1QuranCore(unittest.TestCase):
 
     def test_fts5_fulltext_search(self):
         conn = sqlite3.connect(self.db_path)
+        self.addCleanup(conn.close)
         cur = conn.cursor()
 
         # Query normalized term
@@ -58,7 +62,6 @@ class TestMilestoneM1QuranCore(unittest.TestCase):
         rows = cur.execute("SELECT rowid FROM ayah_fts WHERE ayah_fts MATCH ?", (query,)).fetchall()
         self.assertGreaterEqual(len(rows), 2, "FTS5 query for 'الرحمن' must return matches")
 
-        conn.close()
 
 if __name__ == "__main__":
     unittest.main()
