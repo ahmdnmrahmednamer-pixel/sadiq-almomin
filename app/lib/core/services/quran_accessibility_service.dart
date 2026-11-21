@@ -9,9 +9,10 @@ class QuranAccessibilityService {
     r'[\u06D6-\u06DC\u06DD\u06DE\u06DF\u06E0\u06E2\u06E3\u06E4\u06E7\u06E8\u06E9\u06EA\u06EB\u06EC\u06ED\u08D3-\u08FF]',
   );
 
-  /// Zero-width format and invisible joiner characters that cause TTS engines to pause incorrectly
+  /// Format controls and joiners removed by the existing normalization.
+  /// Keep line/paragraph separators for the whitespace collapse below.
   static final RegExp _zeroWidthChars = RegExp(
-    r'[\u2000-\u200F\u2028-\u202F\u205F-\u206F\uFEFF\u034F]',
+    r'[\u2000-\u200F\u202A-\u202F\u205F-\u206F\uFEFF\u034F]',
   );
 
   /// Converts complex Uthmani Quranic text into phonetically smooth Arabic
