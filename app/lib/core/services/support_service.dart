@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../theme/app_theme.dart';
 
 enum SupportCategory {
@@ -17,8 +18,18 @@ enum SupportCategory {
 class SupportService {
   static const String developerName = 'أحمد إبراهيم (Ahmed Ibrahim)';
   static const String developerEmail = 'ahmdnmrahmednamer@gmail.com';
-  static const String appVersion = '1.3.0';
-  static const String appBuild = '12';
+  @visibleForTesting
+  static Future<PackageInfo> Function() packageInfoProvider = PackageInfo.fromPlatform;
+
+  static Future<String> loadVersionDiagnostic() async {
+    try {
+      final info = await packageInfoProvider();
+      final version = info.version.trim();
+      final build = info.buildNumber.trim();
+      if (version.isNotEmpty && build.isNotEmpty) return 'v$version (Build $build)';
+    } catch (_) {}
+    return 'غير متاح';
+  }
   static const String githubRepoUrl =
       'https://github.com/ahmdnmrahmednamer-pixel/sadiq-almomin.git';
   static const String developerPlayStoreUrl =
@@ -98,6 +109,7 @@ class SupportService {
     required SupportCategory category,
     String? senderName,
     String? senderContact,
+    String versionDiagnostic = 'غير متاح',
   }) {
     final buffer = StringBuffer();
     buffer.writeln('السلام عليكم ورحمة الله وبركاته،');
@@ -113,7 +125,7 @@ class SupportService {
     if (senderContact != null && senderContact.trim().isNotEmpty) {
       buffer.writeln('• وسيلة التواصل: ${senderContact.trim()}');
     }
-    buffer.writeln('• إصدار تطبيق صديق المؤمن: v$appVersion (Build $appBuild)');
+    buffer.writeln('• إصدار تطبيق صديق المؤمن: $versionDiagnostic');
     try {
       buffer.writeln('• نظام التشغيل: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
     } catch (_) {
@@ -168,6 +180,7 @@ class SupportService {
       category: category,
       senderName: senderName,
       senderContact: senderContact,
+      versionDiagnostic: await loadVersionDiagnostic(),
     );
 
     final uri = createMailtoUri(
