@@ -48,6 +48,40 @@ void main() {
       });
     }
   });
+  testWidgets('conflicting source warning remains readable with disabled independent actions', (tester) async {
+    tester.view.physicalSize = const Size(320, 820);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    var calls = 0;
+    const key = ValueKey('unavailable_option_capture');
+    await tester.pumpWidget(MaterialApp(theme: ThemeData(fontFamily: 'Cairo'), home: Scaffold(body:
+      Directionality(textDirection: TextDirection.rtl, child: MediaQuery(data: const MediaQueryData(textScaler: TextScaler.linear(2)), child:
+      RepaintBoundary(key: key, child: SingleChildScrollView(child: AdhanVoiceOption(
+        name: 'الشيخ عبد الرحمن السديس', selected: true, playing: false,
+        downloaded: false, downloading: false,
+        unavailableReason: IslamicAudioService.unavailableRecordingReason('adhan_sudais'),
+        onListen: () => calls++, onAssign: () => calls++, onDownload: () => calls++,
+      ))))))));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.textContaining('مواعيد التذكير محفوظة'), findsOneWidget);
+    for (final button in tester.widgetList<ButtonStyleButton>(find.byWidgetPredicate((w) => w is ButtonStyleButton))) {
+      expect(button.onPressed, isNull);
+    }
+    expect(calls, 0);
+    const capture = String.fromEnvironment('ADHAN_PIXELS_DIR');
+    if (capture.isNotEmpty) {
+      final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+      await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 1);
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        Directory(capture).createSync(recursive: true);
+        File('$capture/conflicting-option-320-2x.png').writeAsBytesSync(data!.buffer.asUint8List());
+        image.dispose();
+      });
+    }
+  });
   testWidgets('preview-only recording keeps listen and download usable but blocks assignment', (tester) async {
     tester.view.physicalSize = const Size(320, 820);
     tester.view.devicePixelRatio = 1;
