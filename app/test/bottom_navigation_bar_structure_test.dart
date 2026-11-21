@@ -177,7 +177,10 @@ void main() {
       // Check AppBar Title
       expect(find.descendant(of: find.byType(AppBar), matching: find.text('الإعدادات')), findsOneWidget);
       // Check Home action button
-      expect(find.byIcon(Icons.home_rounded), findsOneWidget);
+      final home = find.byWidgetPredicate((widget) => widget is IconButton && widget.tooltip == 'الرئيسية');
+      expect(home, findsOneWidget);
+      expect(tester.widget<IconButton>(home).onPressed, isNotNull);
+      expect(find.byKey(const ValueKey('settings_category_0')), findsOneWidget);
     });
   });
 }
