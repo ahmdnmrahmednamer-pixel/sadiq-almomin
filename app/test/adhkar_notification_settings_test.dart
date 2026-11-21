@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
@@ -12,6 +13,25 @@ void main() {
     late PrayerNotificationService service;
 
     setUp(() async {
+      // Native replies must finish inside each widget test, rather than leave
+      // a missing-handler platform message in its discarded fake async zone.
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+              const MethodChannel('dexterous.com/flutter/local_notifications'),
+              (call) async {
+        if (call.method == 'getNotificationAppLaunchDetails') {
+          return {'notificationLaunchedApp': false};
+        }
+        if (call.method == 'initialize' ||
+            call.method == 'areNotificationsEnabled' ||
+            call.method == 'canScheduleExactNotifications' ||
+            call.method == 'requestNotificationsPermission' ||
+            call.method == 'requestExactAlarmsPermission') return true;
+        return null;
+      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(const MethodChannel('flutter_timezone'),
+              (_) async => 'Africa/Cairo');
       SharedPreferences.setMockInitialValues({
         'has_completed_onboarding': true,
         'notif_master_enabled': true,
