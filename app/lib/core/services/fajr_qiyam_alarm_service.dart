@@ -151,6 +151,15 @@ class FajrQiyamAlarmService extends ChangeNotifier {
 
   Future<void> init({bool forceReload = false}) async {
     if (_initialized && !forceReload) return;
+    if (forceReload) _initialized = false;
+    await prepareForScheduling();
+    await scheduleAlarms();
+    notifyListeners();
+  }
+
+  /// Saved choices only, no plugin initialization or alarm mutation.
+  Future<void> prepareForScheduling() async {
+    if (_initialized) return;
     final prefs = await SharedPreferences.getInstance();
     _preFajrEnabled = prefs.getBool('wake_pre_fajr_enabled') ?? true;
     _preFajrMinutesBefore = prefs.getInt('wake_pre_fajr_minutes') ?? 25;
@@ -164,8 +173,6 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         prefs.getString('wake_qiyam_tone') ?? 'duaa_sharawi_post_prayer';
 
     _initialized = true;
-    await scheduleAlarms();
-    notifyListeners();
   }
 
   bool get isQiyamFixedClock =>
