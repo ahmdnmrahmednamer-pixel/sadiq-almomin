@@ -257,4 +257,61 @@ void main() {
     expect(find.byTooltip('إزالة من المفضلة'), findsOneWidget);
     await t.pumpWidget(const SizedBox());
   });
+
+  for (final scale in [1.0, 2.0]) {
+    const mode = 'classic';
+    testWidgets('pending favorite cannot open topic sheet at $scale', (t) async {
+      await t.runAsync(() async {
+        await SettingsService.instance.init(forceReload: true);
+        await SettingsService.instance.setScreenLayoutMode(mode);
+      });
+      t.view.physicalSize = const Size(420, 1000);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.resetPhysicalSize);
+      addTearDown(t.view.resetDevicePixelRatio);
+      final boundary = GlobalKey();
+      await t.pumpWidget(RepaintBoundary(key: boundary, child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(fontFamily: 'Cairo'),
+        builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(scale)), child: child!),
+        home: const FiqhLibraryScreen())));
+      await t.pumpAndSettle();
+      final favorite = find.byTooltip('حفظ في المفضلة').first;
+      await t.ensureVisible(favorite);
+      await t.pumpAndSettle();
+      await t.runAsync(() async {
+        store.gate = Completer<void>();
+        await t.tap(favorite);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await t.pump();
+      final pending = find.byTooltip('جارٍ حفظ المفضلة').first;
+      expect(t.widget<IconButton>(find.ancestor(of: pending, matching: find.byType(IconButton)).first).onPressed, isNull);
+      await t.tap(pending);
+      await t.pump();
+      final openedSheet = find.byType(BottomSheet).evaluate().isNotEmpty;
+      final dir = Platform.environment['FIQH_PENDING_PIXELS'];
+      if (dir != null) await t.runAsync(() async {
+        final image = await (boundary.currentContext!.findRenderObject() as RenderRepaintBoundary).toImage();
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        await File('$dir/pending-$scale.png').writeAsBytes(bytes!.buffer.asUint8List());
+        image.dispose();
+      });
+      expect(store.writes, 1);
+      await t.runAsync(() async {
+        store.gate!.complete();
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      });
+      await t.pumpAndSettle();
+      expect(openedSheet, false, reason: 'pending favorite must not open the topic');
+      expect(service.isFavorite(FiqhLibraryService.topics.first.id), true);
+      final title = find.text(FiqhLibraryService.topics.first.title).first;
+      await t.ensureVisible(title);
+      await t.pumpAndSettle();
+      await t.tap(title);
+      await t.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
 }
