@@ -202,11 +202,46 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     return candidate.add(const Duration(days: 1));
   }
 
+  /// Selects only nights with an actual sunset and a following Fajr less than
+  /// 24 hours later. A passed last-third start does not invent tomorrow's time.
+  static DateTime? nextLastThirdForHorizon(
+    Iterable<PrayerInfo> prayers,
+    DateTime now, {
+    DateTime? previousMaghrib,
+  }) {
+    final sunsets = <DateTime>[
+      if (previousMaghrib != null) previousMaghrib,
+      ...prayers.where((p) => p.name.contains('المغرب')).map((p) => p.time),
+    ];
+    DateTime? next;
+    for (final fajr in prayers.where((p) => p.name.contains('الفجر'))) {
+      DateTime? sunset;
+      for (final candidate in sunsets) {
+        if (candidate.isBefore(fajr.time) &&
+            (sunset == null || candidate.isAfter(sunset))) {
+          sunset = candidate;
+        }
+      }
+      if (sunset == null) continue;
+      final night = fajr.time.difference(sunset);
+      if (night >= const Duration(days: 1)) continue;
+      final start = sunset.add(Duration(minutes: (night.inMinutes * 2 / 3).round()));
+      if (start.isAfter(now) && (next == null || start.isBefore(next))) next = start;
+    }
+    return next;
+  }
+
   /// Calculates the astronomical start of the Last Third of the Night (الثلث الأخير من الليل).
   /// Returns null when location is UNKNOWN instead of fabricating 18:00/04:45.
   DateTime? getLastThirdOfNightStart([PrayerData? data]) {
     final now = DateTime.now();
     final prayerData = data ?? PrayerService.instance.currentData;
+    if (prayerData?.notificationPrayers != null) {
+      return nextLastThirdForHorizon(
+        prayerData!.notificationPrayers!, now,
+        previousMaghrib: prayerData.previousMaghribTime,
+      );
+    }
     final fajrTime = getNextFajrTime(data);
     if (prayerData == null || prayerData.prayers.isEmpty || fajrTime == null) {
       return null;

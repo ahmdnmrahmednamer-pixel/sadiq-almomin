@@ -474,10 +474,20 @@ void main() {
     await waitForAllNotifOps();
     await tester.pump(const Duration(milliseconds: 100));
     await waitForAllNotifOps();
-    PrayerService.instance.stopLiveTicker();
     final data = PrayerService.instance.currentData!;
     expect(data.prayers, hasLength(6), reason: 'display stays today only');
     expect(data.notificationPrayers, hasLength(42));
+    final previous = adhan.PrayerTimes(coordinates: adhan.Coordinates(30,31),
+      date: DateTime(clock.year, clock.month, clock.day - 1),
+      calculationParameters: adhan.CalculationMethodParameters.egyptian());
+    expect(data.previousMaghribTime, previous.maghrib.toLocal());
+    await tester.pump(const Duration(seconds: 1));
+    expect(PrayerService.instance.currentData!.previousMaghribTime, previous.maghrib.toLocal(),
+      reason: 'countdown state copies retain the independently calculated prior sunset');
+    expect(identical(PrayerService.instance.currentData, data), isFalse,
+      reason: 'the ticker really produced a new countdown state');
+    PrayerService.instance.stopLiveTicker();
+
     for (var day = 0; day < 7; day++) {
       final date = DateTime(clock.year, clock.month, clock.day + day);
       final expected = adhan.PrayerTimes(coordinates: adhan.Coordinates(30,31), date: date,
