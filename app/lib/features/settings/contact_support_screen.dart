@@ -42,9 +42,8 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
       senderContact: _senderContactController.text,
     );
 
-    setState(() => _isSending = false);
-
     if (!mounted) return;
+    setState(() => _isSending = false);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,14 +68,17 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
     );
   }
 
-  void _copyFullMessage() {
+  Future<void> _copyFullMessage() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final versionDiagnostic = await SupportService.loadVersionDiagnostic();
+    if (!mounted) return;
     final fullText = SupportService.buildEmailBody(
       content: _messageController.text,
       category: _selectedCategory,
       senderName: _senderNameController.text,
       senderContact: _senderContactController.text,
+      versionDiagnostic: versionDiagnostic,
     );
 
     SupportService.copyToClipboard(
