@@ -1,9 +1,16 @@
 import 'dart:async';
 import 'dart:io';
+import '../utils/serial_task_queue.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
+
+class _AudioStopObligation {
+  const _AudioStopObligation(this.player, this.callback);
+  final AudioPlayer? player;
+  final Future<void> Function()? callback;
+}
 
 /// Centralized High-Performance Audio Engine & Smart Cache (محرك الصوت فائق السرعة v11)
 /// Ensures strict Sheikh/Muezzin audio fidelity:
@@ -28,6 +35,8 @@ class FastAudioService {
   StreamSubscription<PlayerState>? _sharedPlayerStateSub;
   Future<void> Function()? _activeCustomStopCallback;
   int _activeCallbackToken = 0;
+  SerialTaskQueue _focusTransitions = SerialTaskQueue();
+  final List<_AudioStopObligation> _pendingFocusStops = [];
 
   /// Shared AudioPlayer instance for direct service playback
   AudioPlayer get player => _sharedPlayer;
@@ -68,7 +77,8 @@ class FastAudioService {
   Future<void> Function(int token, String url)? onBeforePlayCallback;
 
   @visibleForTesting
-  Future<void> Function(AudioPlayer player, AudioSource source)? setAudioSourceOverride;
+  Future<void> Function(AudioPlayer player, AudioSource source)?
+      setAudioSourceOverride;
 
   @visibleForTesting
   Directory? get cacheDir => _cacheDir;
@@ -78,6 +88,8 @@ class FastAudioService {
 
   @visibleForTesting
   void resetForTesting() {
+    _focusTransitions = SerialTaskQueue();
+    _pendingFocusStops.clear();
     _activePlaybackToken = 0;
     _activeCallbackToken = 0;
     _activeCustomStopCallback = null;
@@ -91,31 +103,54 @@ class FastAudioService {
     _setupSharedPlayerListener();
   }
 
-  /// Stops whichever player is currently active across the app and releases callbacks
-  Future<void> stop() async {
-    _activePlaybackToken++;
-    _activeCallbackToken = 0;
-    final cb = _activeCustomStopCallback;
-    _activeCustomStopCallback = null;
-    final ap = _activePlayer;
-    _activePlayer = null;
-    try {
-      if (_sharedPlayer.playing) {
-        await _sharedPlayer.stop();
-      }
-    } catch (_) {}
-    if (ap != null && ap != _sharedPlayer) {
+  void _rememberFocusStop(
+      AudioPlayer? player, Future<void> Function()? callback) {
+    if (player == null && callback == null) return;
+    if (_pendingFocusStops.any((entry) =>
+        identical(entry.player, player) && entry.callback == callback)) return;
+    _pendingFocusStops.add(_AudioStopObligation(player, callback));
+  }
+
+  Future<void> _stopAndConfirm(AudioPlayer player) async {
+    await player.stop();
+    if (player.playing) throw StateError('Audio stop was not confirmed');
+  }
+
+  Future<void> _finishFocusStops(int token) async {
+    for (final entry in List<_AudioStopObligation>.of(_pendingFocusStops)) {
+      if (token != _activePlaybackToken) return;
       try {
-        if (ap.playing) {
-          await ap.stop();
+        final player = entry.player;
+        if (player != null && player.playing) await _stopAndConfirm(player);
+        if (entry.callback != null) await entry.callback!();
+        if (player != null && player.playing)
+          throw StateError('Prior audio is still playing');
+        _pendingFocusStops.remove(entry);
+      } catch (_) {
+        // Keep failed work for the next explicit retry. Do not lose a sounding
+        // owner, and do not overwrite a newer request while an old stop waits.
+        if (token == _activePlaybackToken) {
+          _activePlayer = entry.player;
+          _activeCustomStopCallback = entry.callback;
+          _activeCallbackToken = token;
         }
-      } catch (_) {}
+        rethrow;
+      }
     }
-    if (cb != null) {
-      try {
-        await cb();
-      } catch (_) {}
-    }
+  }
+
+  /// Revoke starts now, then confirm every known owner has stopped. Failure
+  /// remains retryable and is never reported as a successful stop.
+  Future<void> stop() {
+    final token = ++_activePlaybackToken;
+    _rememberFocusStop(_activePlayer, _activeCustomStopCallback);
+    if (_sharedPlayer.playing) _rememberFocusStop(_sharedPlayer, null);
+    _activePlayer = null;
+    _activeCustomStopCallback = null;
+    _activeCallbackToken = 0;
+    return _focusTransitions.run(() async {
+      await _finishFocusStops(token);
+    });
   }
 
   /// Synchronously registers audio focus ownership and returns the newly assigned session token.
@@ -133,50 +168,36 @@ class FastAudioService {
   /// Invalidates pending starts only for this player. Never stops another owner.
   void releaseAudioFocusFor(AudioPlayer player) {
     if (_activePlayer != player) return;
+    // Most owners release before awaiting their native stop. Keep the physical
+    // player known until a later claim can verify it really became silent.
+    if (player.playing) _rememberFocusStop(player, null);
     _activePlaybackToken++;
     _activeCallbackToken = 0;
     _activeCustomStopCallback = null;
     _activePlayer = null;
   }
 
-  /// Coordinates audio players across the app so only one audio stream plays at a time.
-  /// Synchronously registers focus and returns the assigned token after stopping prior audio.
+  /// Invalidates older starts immediately. Stop transitions run in admission
+  /// order, including failed prior-owner stops, before any new claim completes.
+  /// Throws when a prior stop fails or remains unconfirmed. Callers must not
+  /// load or play a fallback after that failure.
   Future<int> claimAudioFocus({
     AudioPlayer? player,
     Future<void> Function()? onStopOther,
-  }) async {
+  }) {
     final priorCallback = _activeCustomStopCallback;
     final priorPlayer = _activePlayer;
-    final sessionToken = registerAudioFocus(player: player, onStopOther: onStopOther);
-
-    if (player != null) {
-      try {
-        if (player.playing) {
-          await player.stop();
-        }
-      } catch (_) {}
-    }
-    if (_sharedPlayer != player) {
-      try {
-        if (_sharedPlayer.playing) {
-          await _sharedPlayer.stop();
-        }
-      } catch (_) {}
-    }
-    if (priorPlayer != null && priorPlayer != player && priorPlayer != _sharedPlayer) {
-      try {
-        if (priorPlayer.playing) {
-          await priorPlayer.stop();
-        }
-      } catch (_) {}
-    }
-    if (priorCallback != null && priorCallback != onStopOther) {
-      try {
-        await priorCallback();
-      } catch (_) {}
-    }
-
-    return sessionToken;
+    final sessionToken =
+        registerAudioFocus(player: player, onStopOther: onStopOther);
+    if (player != null && player.playing) _rememberFocusStop(player, null);
+    if (_sharedPlayer != player && _sharedPlayer.playing)
+      _rememberFocusStop(_sharedPlayer, null);
+    _rememberFocusStop(priorPlayer != player ? priorPlayer : null,
+        priorCallback != onStopOther ? priorCallback : null);
+    return _focusTransitions.run(() async {
+      await _finishFocusStops(sessionToken);
+      return sessionToken;
+    });
   }
 
   final Dio _dio = Dio(BaseOptions(
@@ -305,36 +326,38 @@ class FastAudioService {
   }) async {
     final targetPlayer = player ?? _sharedPlayer;
     final mainUrl = (primaryUrl ?? positionalPrimaryUrl ?? '').trim();
-    if (mainUrl.isEmpty && fallbackUrls.isEmpty && localDownloadedPath == null) {
+    if (mainUrl.isEmpty &&
+        fallbackUrls.isEmpty &&
+        localDownloadedPath == null) {
       return false;
     }
 
     // Android disallows cleartext HTTP traffic. This known Cairo relay redirects to cleartext HTTP.
     // Note: iOS App Transport Security (ATS) carries inferred cleartext risk for this relay unless exception is set.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      if (mainUrl.contains('radiojar.com/8s5u5tpdtwzuv') || mainUrl.contains('8s5u5tpdtwzuv')) {
+      if (mainUrl.contains('radiojar.com/8s5u5tpdtwzuv') ||
+          mainUrl.contains('8s5u5tpdtwzuv')) {
         return false;
       }
     }
 
-    // 1. Explicitly claim audio focus, returning the assigned session token
-    final sessionToken = await claimAudioFocus(
-      player: targetPlayer,
-      onStopOther: onStopCallback,
-    );
-    if (sessionToken != _activePlaybackToken) {
-      return false;
-    }
-
+    // A failed focus stop is terminal for this request. In particular it must
+    // never enter candidate fallback and start a second recording.
+    late final int sessionToken;
     try {
-      await targetPlayer.stop();
-    } catch (_) {}
-    if (sessionToken != _activePlaybackToken) {
+      sessionToken = await claimAudioFocus(
+        player: targetPlayer,
+        onStopOther: onStopCallback,
+      );
+      if (sessionToken != _activePlaybackToken) return false;
+      await _stopAndConfirm(targetPlayer);
+      if (sessionToken != _activePlaybackToken) return false;
+    } catch (error) {
+      debugPrint('Audio focus stop failed: $error');
       return false;
     }
 
-    final effectiveCacheKey =
-        cacheKey ?? 'stream_${mainUrl.hashCode.abs()}';
+    final effectiveCacheKey = cacheKey ?? 'stream_${mainUrl.hashCode.abs()}';
 
     final candidateUrls = <String>[
       if (mainUrl.isNotEmpty) mainUrl,
@@ -436,7 +459,8 @@ class FastAudioService {
       }
     }
 
-    if (sessionToken == _activePlaybackToken && sessionToken == _activeCallbackToken) {
+    if (sessionToken == _activePlaybackToken &&
+        sessionToken == _activeCallbackToken) {
       _activeCustomStopCallback = null;
     }
     return false;
@@ -504,11 +528,10 @@ class FastAudioService {
     Duration? initialPosition,
     Future<void> Function()? onStopCallback,
   }) async {
-    final token = await claimAudioFocus(player: player, onStopOther: onStopCallback);
+    final token =
+        await claimAudioFocus(player: player, onStopOther: onStopCallback);
     if (token != _activePlaybackToken) return false;
-    try {
-      await player.stop();
-    } catch (_) {}
+    await _stopAndConfirm(player);
     if (token != _activePlaybackToken) return false;
 
     await player.setAudioSource(
