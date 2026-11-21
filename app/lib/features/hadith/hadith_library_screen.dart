@@ -28,6 +28,42 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
   String _searchQuery = '';
   String _selectedCollectionId = 'nawawi40';
   int _selectedRiyadBookNumber = 0;
+  final Set<int> _savingFavorites = {};
+  int? _failedFavorite;
+
+  Future<void> _toggleFavorite(int id) async {
+    if (_savingFavorites.contains(id)) return;
+    setState(() {
+      _savingFavorites.add(id);
+      if (_failedFavorite == id) _failedFavorite = null;
+    });
+    final saved = await HadithService.instance.toggleFavorite(id);
+    if (!mounted) return;
+    setState(() {
+      _savingFavorites.remove(id);
+      if (!saved) _failedFavorite = id;
+    });
+  }
+
+  Widget _favoriteFailure() => Semantics(
+    liveRegion: true,
+    child: Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('لم يتم حفظ تغيير المفضلة: ${HadithService.instance.getHadithById(_failedFavorite!)?.title ?? _failedFavorite.toString()}. لم تتغير المفضلة المحفوظة.'),
+            TextButton(
+              onPressed: () => _toggleFavorite(_failedFavorite!),
+              child: const Text('إعادة محاولة الحفظ'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
 
   @override
   void initState() {
@@ -139,16 +175,19 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(
-                        isFav ? Icons.star : Icons.star_border,
-                        color: isFav ? AppColors.accentGold : Colors.grey.shade400,
-                        size: 22,
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      excludeFromSemantics: true,
+                      onTap: _savingFavorites.contains(hadith.id) ? () {} : null,
+                      child: IconButton(
+                        icon: Icon(
+                          isFav ? Icons.star : Icons.star_border,
+                          color: isFav ? AppColors.accentGold : Colors.grey.shade400,
+                          size: 22,
+                        ),
+                        tooltip: _savingFavorites.contains(hadith.id) ? 'جارٍ حفظ المفضلة' : isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
+                        onPressed: _savingFavorites.contains(hadith.id) ? null : () => _toggleFavorite(hadith.id),
                       ),
-                      tooltip: isFav ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
-                      onPressed: () {
-                        HadithService.instance.toggleFavorite(hadith.id);
-                      },
                     ),
                   ],
                 ),
@@ -351,6 +390,7 @@ class _HadithLibraryScreenState extends State<HadithLibraryScreen>
             textDirection: SettingsService.instance.textDirection,
             child: Column(
               children: [
+                if (_failedFavorite != null) _favoriteFailure(),
                 // 1. Search Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
