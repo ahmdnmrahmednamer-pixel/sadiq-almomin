@@ -57,41 +57,36 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
     }
   }
 
-  void _copyEmailAddress() {
-    SupportService.copyToClipboard(SupportService.developerEmail);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ البريد الإلكتروني للمطور إلى الحافظة: ${SupportService.developerEmail}'),
-        backgroundColor: AppColors.primaryGreen,
-        duration: Duration(seconds: 3),
-      ),
+  Future<void> _copyEmailAddress() async {
+    await SupportService.copyWithFeedback(
+      context: context,
+      text: SupportService.developerEmail,
+      successMessage: 'تم نسخ البريد الإلكتروني للمطور إلى الحافظة: ${SupportService.developerEmail}',
     );
   }
 
   Future<void> _copyFullMessage() async {
     if (!_formKey.currentState!.validate()) return;
-
+    final content = _messageController.text;
+    final subject = _subjectController.text;
+    final senderName = _senderNameController.text;
+    final senderContact = _senderContactController.text;
+    final category = _selectedCategory;
     final versionDiagnostic = await SupportService.loadVersionDiagnostic();
     if (!mounted) return;
     final fullText = SupportService.buildEmailBody(
-      content: _messageController.text,
-      category: _selectedCategory,
-      senderName: _senderNameController.text,
-      senderContact: _senderContactController.text,
+      content: content,
+      category: category,
+      senderName: senderName,
+      senderContact: senderContact,
       versionDiagnostic: versionDiagnostic,
     );
-
-    SupportService.copyToClipboard(
-      'إلى: ${SupportService.developerEmail}\n'
-      'الموضوع: ${SupportService.buildEmailSubject(subject: _subjectController.text, category: _selectedCategory)}\n\n'
-      '$fullText',
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ الرسالة بالكامل وعنوان البريد إلى الحافظة بنجاح'),
-        backgroundColor: AppColors.primaryGreen,
-      ),
+    await SupportService.copyWithFeedback(
+      context: context,
+      text: 'إلى: ${SupportService.developerEmail}\n'
+          'الموضوع: ${SupportService.buildEmailSubject(subject: subject, category: category)}\n\n'
+          '$fullText',
+      successMessage: 'تم نسخ الرسالة بالكامل وعنوان البريد إلى الحافظة بنجاح',
     );
   }
 
@@ -225,48 +220,34 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
                         ),
                       ),
                       const Divider(height: 18),
-                      InkWell(
+                      Semantics(
+                        button: true,
+                        label: 'نسخ بريد المطور: ${SupportService.developerEmail}',
                         onTap: _copyEmailAddress,
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.mail_rounded, color: AppColors.primaryGreen, size: 20),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    SupportService.developerEmail,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: AppColors.primaryGreen,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    'نسخ',
-                                    style: TextStyle(
-                                      color: AppColors.accentGold,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.copy_rounded, size: 14, color: AppColors.accentGold),
-                                ],
-                              ),
-                            ],
+                        excludeSemantics: true,
+                        child: InkWell(
+                          onTap: _copyEmailAddress,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.primaryGreen.withValues(alpha: 0.25)),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.mail_rounded, color: AppColors.primaryGreen, size: 20),
+                                SizedBox(width: 8),
+                                Expanded(child: Text(
+                                  SupportService.developerEmail,
+                                  textDirection: TextDirection.ltr,
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.primaryGreen),
+                                )),
+                                SizedBox(width: 8),
+                                Icon(Icons.copy_rounded, color: AppColors.accentGold, size: 18),
+                              ],
+                            ),
                           ),
                         ),
                       ),
