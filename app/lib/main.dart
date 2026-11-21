@@ -7,6 +7,7 @@ import 'core/services/prayer_service.dart';
 import 'core/services/adhkar_service.dart';
 import 'core/notifications/prayer_notification_service.dart';
 import 'core/services/khatma_service.dart';
+import 'core/notifications/prayer_renewal.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,7 @@ void main() async {
   await PrayerService.instance.init();
   await AdhkarService.instance.init();
   await KhatmaService.instance.init();
+  PrayerRenewal.bindForeground();
   runApp(
     const ProviderScope(
       child: AlMominApp(),
