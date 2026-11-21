@@ -13,6 +13,8 @@ class AyahGestureRecognizer extends TapGestureRecognizer {
   }) {
     onTapDown = _handleTapDown;
     onTapUp = _handleTapUp;
+    // RenderParagraph uses onTap for a TextSpan's semantic activation.
+    onTap = _handleTap;
     onTapCancel = _handleTapCancel;
   }
 
@@ -32,11 +34,13 @@ class AyahGestureRecognizer extends TapGestureRecognizer {
   }
 
   void _handleTapUp(TapUpDetails details) {
-    final triggered = _longPressTriggered;
     _longPressTimer?.cancel();
     _longPressTimer = null;
-    _longPressTriggered = false;
+  }
 
+  void _handleTap() {
+    final triggered = _longPressTriggered;
+    _longPressTriggered = false;
     if (!triggered) {
       onAyahTap?.call();
     }
