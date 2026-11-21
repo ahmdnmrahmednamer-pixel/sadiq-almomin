@@ -74,13 +74,17 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                 previewButtonLabel: 'استماع عينة',
                 previewTooltip:
                     'استماع عينة صوتية للشيخ ${s.currentReciter.nameAr}',
-                options: SettingsService.availableReciters
+                options: [
+                  if (s.currentReciter.serverUrl.isEmpty)
+                    AppDropdownOption<String>(value: s.selectedReciterId,
+                      label: s.currentReciter.nameAr),
+                  ...SettingsService.availableReciters
                     .map((r) => AppDropdownOption<String>(
                           value: r.id,
                           label: r.nameAr,
                           subtitle: r.style,
                         ))
-                    .toList(),
+                    .toList()],
                 onChanged: (val) async {
                   await s.setSelectedReciter(val);
                   if (AyahAudioPlayer.instance.isPlaying.value) {
