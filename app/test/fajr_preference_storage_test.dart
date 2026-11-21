@@ -147,6 +147,88 @@ void main() {
     expect(service.qiyamToneId, 'duaa_sharawi_post_prayer');
     expect(calls, isEmpty);
   });
+  test('fixed clock commits atomically and preserves legacy keys', () async {
+    await store.setValue('Int', 'flutter.wake_qiyam_fixed_hour', 2);
+    await store.setValue('Int', 'flutter.wake_qiyam_fixed_minute', 10);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    await service.init(forceReload: true);
+    expect(service.qiyamFixedHour, 2);
+    expect(service.qiyamFixedMinute, 10);
+    final before = store.writes;
+    expect(await service.setQiyamFixedTime(4, 35), true);
+    expect(store.writes, before + 1);
+    await service.init(forceReload: true);
+    expect(service.qiyamFixedHour, 4);
+    expect(service.qiyamFixedMinute, 35);
+    expect(prefs.getInt('wake_qiyam_fixed_hour'), 2);
+    expect(prefs.getInt('wake_qiyam_fixed_minute'), 10);
+    expect(prefs.getInt('wake_qiyam_fixed_minutes_v1'), 275);
+    expect(service.exportData()['qiyam_fixed_hour'], 4);
+    expect(service.exportData()['qiyam_fixed_minute'], 35);
+  });
+  for (final throwing in [false, true]) {
+    test('fixed clock rejected write cannot tear time throw=$throwing',
+        () async {
+      store.reject = !throwing;
+      store.throwing = throwing;
+      expect(await service.setQiyamFixedTime(5, 40), false);
+      expect(service.qiyamFixedHour, 3);
+      expect(service.qiyamFixedMinute, 15);
+      expect(calls, isEmpty);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      expect(prefs.get('wake_qiyam_fixed_minutes_v1'), isNull);
+      await service.init(forceReload: true);
+      expect(service.qiyamFixedHour, 3);
+      expect(service.qiyamFixedMinute, 15);
+    });
+  }
+  test(
+      'fixed clock pending commit is unpublished, then whole pair survives restart',
+      () async {
+    store.gate = Completer<void>();
+    final first = service.setQiyamFixedTime(1, 5);
+    while (store.writes == 0) {
+      await Future<void>.delayed(Duration.zero);
+    }
+    final second = service.setQiyamFixedTime(6, 45);
+    expect(service.qiyamFixedHour, 3);
+    expect(service.qiyamFixedMinute, 15);
+    expect(store.writes, 1);
+    store.gate!.complete();
+    expect(await first, true);
+    expect(await second, true);
+    await service.init(forceReload: true);
+    expect(service.qiyamFixedHour, 6);
+    expect(service.qiyamFixedMinute, 45);
+  });
+  test('backup fixed time uses the same atomic commit and propagates rejection',
+      () async {
+    store.reject = true;
+    await expectLater(
+        service.importData({'qiyam_fixed_hour': 7, 'qiyam_fixed_minute': 20}),
+        throwsStateError);
+    store.reject = false;
+    await service.importData({'qiyam_fixed_hour': 7, 'qiyam_fixed_minute': 20});
+    await service.init(forceReload: true);
+    expect(service.qiyamFixedHour, 7);
+    expect(service.qiyamFixedMinute, 20);
+  });
+  for (final invalid in [-1, 1440, 'invalid']) {
+    test('invalid packed time falls back to untouched legacy fields $invalid',
+        () async {
+      await store.setValue(invalid is int ? 'Int' : 'String',
+          'flutter.wake_qiyam_fixed_minutes_v1', invalid);
+      await store.setValue('Int', 'flutter.wake_qiyam_fixed_hour', 2);
+      await store.setValue('Int', 'flutter.wake_qiyam_fixed_minute', 50);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      await service.init(forceReload: true);
+      expect(service.qiyamFixedHour, 2);
+      expect(service.qiyamFixedMinute, 50);
+    });
+  }
   for (final scale in [1.0, 2.0]) {
     testWidgets('failed preference is readable without applying at $scale',
         (tester) async {
