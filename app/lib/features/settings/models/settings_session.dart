@@ -200,17 +200,23 @@ class SettingsSession {
         key: 'morning',
         read: () => n.morningAdhkarEnabled,
         write: n.toggleMorningAdhkar,
-        verify: (value) => _saved({'notif_morning_adhkar_enabled': value}));
+        verify: (value) async =>
+            await _saved({'notif_morning_adhkar_enabled': value}) &&
+            n.adhkarScheduleConfirmed('morning'));
     evening = draft.add<bool>(
         key: 'evening',
         read: () => n.eveningAdhkarEnabled,
         write: n.toggleEveningAdhkar,
-        verify: (value) => _saved({'notif_evening_adhkar_enabled': value}));
+        verify: (value) async =>
+            await _saved({'notif_evening_adhkar_enabled': value}) &&
+            n.adhkarScheduleConfirmed('evening'));
     sleep = draft.add<bool>(
         key: 'sleep',
         read: () => n.sleepAdhkarEnabled,
         write: n.toggleSleepAdhkar,
-        verify: (value) => _saved({'notif_sleep_adhkar_enabled': value}));
+        verify: (value) async =>
+            await _saved({'notif_sleep_adhkar_enabled': value}) &&
+            n.adhkarScheduleConfirmed('sleep'));
     shake = draft.add<bool>(
         key: 'shake',
         read: () => sensors.shakeToStopEnabled,
@@ -327,10 +333,12 @@ class SettingsSession {
           key: '${key}Time',
           read: () => (hour: hour(), minute: minute()),
           write: (value) => write(value.hour, value.minute),
-          verify: (value) => _saved({
+          verify: (value) async =>
+              await _saved({
                 'notif_${key}_adhkar_hour': value.hour,
                 'notif_${key}_adhkar_minute': value.minute
-              }));
+              }) &&
+              PrayerNotificationService.instance.adhkarScheduleConfirmed(key));
 
   static Future<bool> _saved(Map<String, Object> expected) async {
     final prefs = await SharedPreferences.getInstance();
