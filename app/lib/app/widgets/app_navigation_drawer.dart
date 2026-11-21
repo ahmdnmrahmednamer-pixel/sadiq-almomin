@@ -212,9 +212,9 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 3. قسم مكتبة العلماء والدروس =================
       _DrawerItemData(
-        title: 'إذاعات القرآن الكريم (MP3Quran)',
-        subtitle: 'بث إذاعات القرآن الكريم وتلاوات كبار القراء',
-        semanticLabel: 'إذاعات القرآن الكريم',
+        title: 'الإذاعة',
+        subtitle: '',
+        semanticLabel: 'الإذاعة',
         icon: Icons.podcasts_rounded,
         color: const Color(0xFF0F5B45),
         categoryKey: 'scholars',
