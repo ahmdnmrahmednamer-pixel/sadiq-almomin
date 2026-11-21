@@ -77,4 +77,28 @@ void main() {
     await service.init(forceReload: true);
     expect(service.exportData(), const ZakatCalculation().toJson());
   });
+  test('explicit null Hawl date clears saved date and survives reload', () async {
+    final prefs = await SharedPreferences.getInstance();
+    await service.setHawlDate(null);
+    expect(service.calculation.hawlDate, isNull);
+    expect(jsonDecode(prefs.getString('zakat_calculation_draft_v1')!)['hawl_date'], isNull);
+    expect(service.calculation.cashOnHand, draft.cashOnHand);
+    await service.init(forceReload: true);
+    expect(service.calculation.hawlDate, isNull);
+    expect(service.calculation.cashOnHand, draft.cashOnHand);
+  });
+  test('explicit Hawl date replacement keeps amount and publishes new date', () async {
+    final next = DateTime(2027, 7, 10);
+    final seen = <DateTime?>[];
+    void listener() => seen.add(service.calculation.hawlDate);
+    service.addListener(listener);
+    addTearDown(() => service.removeListener(listener));
+    await service.setHawlDate(next);
+    expect(service.calculation.hawlDate, next);
+    expect(service.calculation.cashOnHand, draft.cashOnHand);
+    expect(seen, [next]);
+    await service.init(forceReload: true);
+    expect(service.calculation.hawlDate, next);
+  });
+
 }
