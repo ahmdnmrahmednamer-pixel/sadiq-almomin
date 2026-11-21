@@ -2421,7 +2421,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(find.textContaining('04:45'), findsNothing);
         expect(find.textContaining('18:00'), findsNothing);
-        expect(find.text('يتطلب GPS'), findsWidgets);
+        expect(find.text('حدّث المواقيت'), findsWidgets);
         await _maybeCapturePng(tester, alarmKey, 'gps_only_alarm_unknown_360x800_2x.png');
 
         final alarmBtn = find.byKey(const ValueKey('gps_enable_retry_button'));
