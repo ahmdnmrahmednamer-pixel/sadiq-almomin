@@ -55,6 +55,84 @@ void main() {
     engine.resetForTesting();
   });
   tearDown(engine.resetForTesting);
+  for (final scale in [1.0, 2.0]) {
+    testWidgets(
+        'memorization label stays with loaded voice after saved reciter changes at $scale',
+        (t) async {
+      final player = MemorizationPlayer();
+      final boundary = GlobalKey();
+      t.view.physicalSize = const Size(360, 800);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.resetPhysicalSize);
+      addTearDown(t.view.resetDevicePixelRatio);
+      Future<AudioSource> source(String url, String key) async =>
+          AudioSource.uri(Uri.parse(url));
+      final loaded = SettingsService.instance.currentReciter;
+      Widget app() => RepaintBoundary(
+          key: boundary,
+          child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(fontFamily: 'Cairo'),
+              builder: (c, child) => MediaQuery(
+                  data: MediaQuery.of(c)
+                      .copyWith(textScaler: TextScaler.linear(scale)),
+                  child: Directionality(
+                      textDirection: TextDirection.rtl, child: child!)),
+              home: MemorizationScreen(player: player, loadSource: source)));
+      await t.pumpWidget(app());
+      await t.pumpAndSettle();
+      await t.tap(find.byTooltip('بدء التكرار والتحفيظ'));
+      await t.pumpAndSettle();
+      expect(player.starts, 1);
+      await SettingsService.instance.setSelectedReciter('banna');
+      await t.pumpWidget(app());
+      await t.pumpAndSettle();
+      expect(
+          find.textContaining('القارئ: ${loaded.nameAr}', findRichText: true),
+          findsOneWidget);
+      expect(
+          find.textContaining(
+              'القارئ: ${SettingsService.instance.currentReciter.nameAr}',
+              findRichText: true),
+          findsNothing);
+      expect(player.starts, 1);
+      final dir = Platform.environment['MEMO_LIFETIME_PIXELS_DIR'];
+      if (dir != null)
+        await t.runAsync(() async {
+          final image = await (boundary.currentContext!.findRenderObject()
+                  as RenderRepaintBoundary)
+              .toImage();
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('$dir/loaded-reciter-$scale.png')
+              .writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+      await t.tap(find.byTooltip('إيقاف مؤقت'));
+      await t.pumpAndSettle();
+      expect(
+          find.textContaining('القارئ: ${loaded.nameAr}', findRichText: true),
+          findsOneWidget);
+      await t.tap(find.byTooltip('بدء التكرار والتحفيظ'));
+      await t.pumpAndSettle();
+      expect(player.starts, 2);
+      expect(
+          find.textContaining(
+              'القارئ: ${SettingsService.instance.currentReciter.nameAr}',
+              findRichText: true),
+          findsOneWidget);
+      await t.tap(find.byTooltip('إيقاف كامل'));
+      await t.pumpAndSettle();
+      await SettingsService.instance.setSelectedReciter(loaded.id);
+      await t.pumpWidget(app());
+      await t.pumpAndSettle();
+      expect(
+          find.textContaining('القارئ: ${loaded.nameAr}', findRichText: true),
+          findsOneWidget);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
   for (final action in ['stop', 'pause', 'dispose', 'other-owner']) {
     testWidgets('memorization pending source does not start after $action',
         (t) async {

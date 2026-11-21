@@ -44,6 +44,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   StreamSubscription<PlayerState>? _playerStateSub;
   bool _isPlaying = false;
   int _playRequest = 0;
+  String? _loadedReciterId;
   int _currentAyahIndex = 0; // index inside _rangeAyahs
   int _currentAyahRepeat = 1;
   int _currentRangeRepeat = 1;
@@ -191,9 +192,9 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
     final focusAtLoad = FastAudioService.instance.activePlaybackToken;
     final ayah = _rangeAyahs[_currentAyahIndex];
     try {
-      final url = SettingsService.instance.getAyahAudioUrl(_selectedSurahId, ayah.ayahNumber);
-      _scrollToAyah(_currentAyahIndex);
       final reciterId = SettingsService.instance.selectedReciterId;
+      final url = SettingsService.instance.getAyahAudioUrl(_selectedSurahId, ayah.ayahNumber, reciterId);
+      _scrollToAyah(_currentAyahIndex);
       final cacheKey = 'ayah_${reciterId}_${_selectedSurahId}_${ayah.ayahNumber}';
       final source = await (widget.loadSource?.call(url, cacheKey) ?? FastAudioService.instance.getFastAudioSource(
         url,
@@ -211,7 +212,10 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
         onStopCallback: () => _stopPlayback(expectedRequest: request),
       );
       if (!mounted || request != _playRequest) return;
-      if (!started) setState(() { _isPlaying = false; _isDelaying = false; });
+      setState(() {
+        if (started) { _loadedReciterId = reciterId; }
+        else { _isPlaying = false; _isDelaying = false; }
+      });
     } catch (e) {
       if (!mounted || request != _playRequest) return;
       debugPrint('Memorization audio play error: $e');
@@ -266,6 +270,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
       _currentAyahIndex = 0;
       _currentAyahRepeat = 1;
       _currentRangeRepeat = 1;
+      _loadedReciterId = null;
     });
   }
 
@@ -775,6 +780,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
                 },
               ),
         bottomNavigationBar: MemorizationPlaybackBar(
+          loadedReciterId: _loadedReciterId,
           isDark: isDark,
           isPlaying: _isPlaying,
           currentAyahNumber: _rangeAyahs.isNotEmpty && _currentAyahIndex < _rangeAyahs.length

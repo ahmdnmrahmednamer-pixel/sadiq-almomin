@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 
 /// Bottom bar for Quran memorization audio loop controls.
 class MemorizationPlaybackBar extends StatelessWidget {
+  final String? loadedReciterId;
   final bool isDark;
   final bool isPlaying;
   final int currentAyahNumber;
@@ -19,6 +20,7 @@ class MemorizationPlaybackBar extends StatelessWidget {
 
   const MemorizationPlaybackBar({
     super.key,
+    this.loadedReciterId,
     required this.isDark,
     required this.isPlaying,
     required this.currentAyahNumber,
@@ -35,7 +37,9 @@ class MemorizationPlaybackBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reciter = SettingsService.instance.currentReciter;
+    final reciter = loadedReciterId == null
+        ? SettingsService.instance.currentReciter
+        : SettingsService.resolveReciter(loadedReciterId!);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
