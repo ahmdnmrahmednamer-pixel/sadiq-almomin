@@ -35,6 +35,54 @@ class CompletingSurahPlayer extends RecordingPlayer {
   }
 }
 
+class ResumeSurahPlayer extends RecordingPlayer {
+  final positions = StreamController<Duration>.broadcast();
+  Duration? loadedPosition;
+  @override
+  Stream<Duration> get positionStream => positions.stream;
+  @override
+  Future<Duration?> setAudioSource(AudioSource source,
+      {bool preload = true, int? initialIndex, Duration? initialPosition}) {
+    loadedPosition = initialPosition;
+    return super.setAudioSource(source,
+        preload: preload,
+        initialIndex: initialIndex,
+        initialPosition: initialPosition);
+  }
+
+  @override
+  Future<void> dispose() async {
+    await positions.close();
+    await super.dispose();
+  }
+}
+
+class StatefulSurahPlayer extends ResumeSurahPlayer {
+  bool active = false;
+  bool failPause = false;
+  Completer<void>? pauseGate;
+  @override
+  bool get playing => active;
+  @override
+  Future<void> play() async {
+    active = true;
+    await super.play();
+  }
+
+  @override
+  Future<void> stop() async {
+    await super.stop();
+    active = false;
+  }
+
+  @override
+  Future<void> pause() async {
+    if (failPause) throw StateError('pause failed');
+    active = false;
+    await pauseGate?.future;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory directory;
@@ -166,6 +214,155 @@ void main() {
     expect(player.starts, 1);
     await t.pumpWidget(const SizedBox());
   });
+  for (final path in ['bar', 'same-surah-row']) {
+    testWidgets('whole-surah resume reclaims central ownership through $path',
+        (t) async {
+      final player = ResumeSurahPlayer();
+      await mount(t, player);
+      await t.pumpAndSettle();
+      await t.pump(const Duration(seconds: 4));
+      await t.pumpAndSettle();
+      player.positions.add(const Duration(seconds: 45));
+      await t.pump();
+      var stops = 0;
+      final other = RecordingPlayer();
+      engine.registerAudioFocus(
+          player: other,
+          onStopOther: () async {
+            stops++;
+          });
+      if (path == 'bar') {
+        final bar = find
+            .ancestor(
+                of: find.byTooltip('إيقاف التلاوة'),
+                matching: find.byType(Column))
+            .first;
+        await t.tap(find.descendant(
+            of: bar, matching: find.byTooltip('تشغيل أو إيقاف الصوت')));
+      } else {
+        await t.tap(find.text('سورة الفاتحة').first);
+      }
+      await t.pump();
+      await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await t.pumpAndSettle();
+      expect(player.starts, 2);
+      expect(player.loadedPosition, const Duration(seconds: 45));
+      expect(stops, 1,
+          reason: 'resume must stop the intervening central owner');
+      await t.pumpWidget(const SizedBox());
+      await t.runAsync(() => other.dispose());
+    });
+  }
+
+  for (final action in ['stop', 'dispose', 'other-owner']) {
+    testWidgets('pending whole-surah resume cannot start after $action',
+        (t) async {
+      final player = ResumeSurahPlayer();
+      await mount(t, player);
+      await t.pumpAndSettle();
+      await t.pump(const Duration(seconds: 4));
+      await t.pumpAndSettle();
+      player.sourceGate = Completer<void>();
+      final bar = find
+          .ancestor(
+              of: find.byTooltip('إيقاف التلاوة'),
+              matching: find.byType(Column))
+          .first;
+      await t.tap(find.descendant(
+          of: bar, matching: find.byTooltip('تشغيل أو إيقاف الصوت')));
+      await t.pump();
+      await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await t.pump();
+      expect(player.sourceAssignments, 2);
+      if (action == 'stop') {
+        await t.tap(find.byTooltip('إيقاف التلاوة'));
+        await t.pump();
+      } else if (action == 'dispose') {
+        await t.pumpWidget(const SizedBox());
+      } else {
+        engine.registerAudioFocus();
+      }
+      player.sourceGate!.complete();
+      await t.pumpAndSettle();
+      expect(player.starts, 1);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('failed whole-surah pause stays unconfirmed at $scale',
+        (t) async {
+      final player = StatefulSurahPlayer();
+      await mount(t, player, scale: scale);
+      await t.pumpAndSettle();
+      await t.pump(const Duration(seconds: 4));
+      await t.pumpAndSettle();
+      player.failPause = true;
+      final bar = find
+          .ancestor(
+              of: find.byTooltip('إيقاف التلاوة'),
+              matching: find.byType(Column))
+          .first;
+      await t.tap(find.descendant(
+          of: bar, matching: find.byTooltip('تشغيل أو إيقاف الصوت')));
+      await t.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.textContaining('لم يتم تأكيد الإيقاف'), findsOneWidget);
+      expect(find.byTooltip('إيقاف التلاوة'), findsOneWidget);
+      expect(t.takeException(), isNull);
+      final dir = Platform.environment['SURAH_PLAYER_PIXELS_DIR'];
+      if (dir != null)
+        await t.runAsync(() async {
+          final image = await (boundary.currentContext!.findRenderObject()
+                  as RenderRepaintBoundary)
+              .toImage();
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('$dir/failed-pause-$scale.png')
+              .writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+      await t.pump(const Duration(seconds: 5));
+      await t.pumpAndSettle();
+      await t.tap(find.byTooltip('إيقاف التلاوة'));
+      await t.pumpAndSettle();
+      expect(find.byTooltip('إيقاف التلاوة'), findsNothing);
+      expect(player.playing, isFalse);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+  testWidgets('late whole-surah pause result cannot clear newer loaded surah',
+      (t) async {
+    final player = StatefulSurahPlayer();
+    await mount(t, player);
+    await t.pumpAndSettle();
+    await t.pump(const Duration(seconds: 4));
+    await t.pumpAndSettle();
+    player.pauseGate = Completer<void>();
+    final bar = find
+        .ancestor(
+            of: find.byTooltip('إيقاف التلاوة'), matching: find.byType(Column))
+        .first;
+    await t.tap(find.descendant(
+        of: bar, matching: find.byTooltip('تشغيل أو إيقاف الصوت')));
+    await t.pump();
+    await t.tap(find.text('سورة البقرة').first);
+    await t.pump();
+    await t.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await t.pumpAndSettle();
+    expect(player.starts, 2);
+    player.pauseGate!.complete();
+    await t.pumpAndSettle();
+    expect(player.playing, isTrue);
+    expect(find.byTooltip('إيقاف التلاوة'), findsOneWidget);
+    expect(find.textContaining('بدء تشغيل سورة البقرة'), findsOneWidget);
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox());
+  });
+
   for (final repeat in [false, true]) {
     testWidgets(
         'whole-surah completion keeps loaded reciter after browsing, repeat=$repeat',

@@ -130,7 +130,31 @@ class _AudioScreenState extends State<AudioScreen> {
     });
   }
 
-  Future<void> _playSurah(Surah surah, {bool forceReload = false, ReciterInfo? playbackReciter}) async {
+  Future<void> _toggleLoadedSurah() async {
+    final surah = _currentSurah;
+    if (surah == null || _isBuffering) return;
+    if (!_audioPlayer.playing) {
+      await _playSurah(surah, forceReload: true,
+          playbackReciter: SettingsService.resolveReciter(_playingReciterId ?? SettingsService.instance.selectedReciterId),
+          initialPosition: _currentPosition);
+      return;
+    }
+    final request = ++_playRequest;
+    FastAudioService.instance.releaseAudioFocusFor(_audioPlayer);
+    try {
+      await _audioPlayer.pause();
+    } catch (_) {
+      if (mounted && request == _playRequest) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر الإيقاف المؤقت. أعد المحاولة؛ لم يتم تأكيد الإيقاف.'),
+        ));
+      }
+      return;
+    }
+    if (mounted && request == _playRequest) setState(() {});
+  }
+
+  Future<void> _playSurah(Surah surah, {bool forceReload = false, ReciterInfo? playbackReciter, Duration? initialPosition}) async {
     final reciter = playbackReciter ?? _currentReciter ?? SettingsService.instance.currentReciter;
     if (!SettingsService.availableReciters.any((r) => r.id == reciter.id)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -143,13 +167,7 @@ class _AudioScreenState extends State<AudioScreen> {
     if (!forceReload && !_isBuffering &&
         _currentSurah?.id == surah.id &&
         _playingReciterId == reciter.id) {
-      if (_audioPlayer.playing) {
-        await _audioPlayer.pause();
-      } else {
-        await _audioPlayer.play();
-      }
-      if (!mounted) return;
-      setState(() {});
+      await _toggleLoadedSurah();
       return;
     }
 
@@ -170,7 +188,7 @@ class _AudioScreenState extends State<AudioScreen> {
       _currentSurah = surah;
       _playingReciterId = reciter.id;
       _isBuffering = true;
-      _currentPosition = Duration.zero;
+      _currentPosition = initialPosition ?? Duration.zero;
       _totalDuration = Duration.zero;
     });
 
@@ -190,6 +208,7 @@ class _AudioScreenState extends State<AudioScreen> {
         _audioPlayer,
         source,
         speed: _playbackSpeed,
+        initialPosition: initialPosition,
         onStopCallback: () => _stopSurah(expectedRequest: request),
       );
       if (!mounted || request != _playRequest) return;
@@ -956,14 +975,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                           size: 40,
                                           color: AppColors.primaryGreen,
                                         ),
-                                  onPressed: _isBuffering ? null : () {
-                                    if (_audioPlayer.playing) {
-                                      _audioPlayer.pause();
-                                    } else {
-                                      _audioPlayer.play();
-                                    }
-                                    setState(() {});
-                                  },
+                                  onPressed: _isBuffering ? null : _toggleLoadedSurah,
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.skip_next),
