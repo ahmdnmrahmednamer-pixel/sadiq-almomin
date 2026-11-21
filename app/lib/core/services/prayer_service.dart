@@ -1,14 +1,17 @@
 import 'dart:async';
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'settings_service.dart';
-import 'fajr_qiyam_alarm_service.dart';
 import '../models/arab_countries.dart';
+import '../models/prayer_data.dart';
 import '../notifications/prayer_notification_service.dart';
+import 'fajr_qiyam_alarm_service.dart';
+import 'prayer_schedule_calculator.dart';
+import 'settings_service.dart';
 
 export '../models/arab_countries.dart';
+export '../models/prayer_data.dart';
 
 class HijriDateHelper {
   static const List<String> hijriMonths = [
@@ -75,52 +78,6 @@ class HijriDateHelper {
     final d = date ?? DateTime.now();
     return arabicDays[d.weekday - 1];
   }
-}
-
-class PrayerInfo {
-  final String name;
-  final DateTime time;
-  final String formattedTime;
-  final bool isNext;
-
-  const PrayerInfo({
-    required this.name,
-    required this.time,
-    required this.formattedTime,
-    this.isNext = false,
-  });
-}
-
-class PrayerData {
-  final double latitude;
-  final double longitude;
-  final String locationName;
-  final List<PrayerInfo> prayers;
-
-  /// Independently calculated calendar days for a finite OS alarm horizon.
-  /// Null keeps explicit single-day callers unchanged.
-  final List<PrayerInfo>? notificationPrayers;
-
-  /// Yesterday's independently calculated sunset for the first horizon night.
-  /// Not an extra notification and not a repeated wall-clock approximation.
-  final DateTime? previousMaghribTime;
-  final PrayerInfo? nextPrayer;
-  final Duration timeToNextPrayer;
-  final double qiblaDegrees;
-  final DateTime lastUpdated;
-
-  const PrayerData({
-    required this.latitude,
-    required this.longitude,
-    required this.locationName,
-    required this.prayers,
-    this.notificationPrayers,
-    this.previousMaghribTime,
-    this.nextPrayer,
-    this.timeToNextPrayer = Duration.zero,
-    required this.qiblaDegrees,
-    required this.lastUpdated,
-  });
 }
 
 enum LocationErrorType {
@@ -1028,124 +985,14 @@ class PrayerService extends ChangeNotifier {
   }
 
   void _calculatePrayers(double lat, double lng, String locName, {bool updateSchedules = true}) {
-    final now = _nowProvider();
-    final coords = Coordinates(lat, lng);
-    final params = _getParams();
-    final pt = PrayerTimes(
-      coordinates: coords,
-      date: now,
-      calculationParameters: params,
-    );
-
-    // CRITICAL: Convert all adhan_dart UTC times to the device's local timezone
-    final rawList = [
-      {'name': 'الفجر', 'time': pt.fajr.toLocal()},
-      {'name': 'الشروق', 'time': pt.sunrise.toLocal()},
-      {'name': 'الظهر', 'time': pt.dhuhr.toLocal()},
-      {'name': 'العصر', 'time': pt.asr.toLocal()},
-      {'name': 'المغرب', 'time': pt.maghrib.toLocal()},
-      {'name': 'العشاء', 'time': pt.isha.toLocal()},
-    ];
-
-    // Find next prayer based on local time
-    PrayerInfo? nextP;
-    Duration minDiff = const Duration(days: 1);
-
-    for (final item in rawList) {
-      final pTime = item['time'] as DateTime?;
-      if (pTime != null && pTime.isAfter(now)) {
-        final diff = pTime.difference(now);
-        if (diff < minDiff) {
-          minDiff = diff;
-          nextP = PrayerInfo(
-            name: item['name'] as String,
-            time: pTime,
-            formattedTime: _formatTime(pTime),
-            isNext: true,
-          );
-        }
-      }
-    }
-
-    // If all prayers today passed, next is tomorrow's Fajr
-    if (nextP == null) {
-      final tomorrow = now.add(const Duration(days: 1));
-      final tomorrowPt = PrayerTimes(
-        coordinates: coords,
-        date: tomorrow,
-        calculationParameters: params,
-      );
-      final tFajr = tomorrowPt.fajr.toLocal();
-      minDiff = tFajr.difference(now);
-      nextP = PrayerInfo(
-        name: 'الفجر (غداً)',
-        time: tFajr,
-        formattedTime: _formatTime(tFajr),
-        isNext: true,
-      );
-    }
-
-    final List<PrayerInfo> resultList = [];
-    for (final item in rawList) {
-      final pTime = item['time'] as DateTime?;
-      final name = item['name'] as String;
-      if (pTime != null) {
-        resultList.add(PrayerInfo(
-          name: name,
-          time: pTime,
-          formattedTime: _formatTime(pTime),
-          isNext: nextP.name == name,
-        ));
-      }
-    }
-
-    // Never repeat today's wall-clock times on later days. Calculate each local
-    // calendar date separately, including DST/month/year boundaries.
-    final notificationPrayers = <PrayerInfo>[...resultList];
-    for (var day = 1; day < 7; day++) {
-      final date = DateTime(now.year, now.month, now.day + day);
-      final future = PrayerTimes(
-        coordinates: coords,
-        date: date,
-        calculationParameters: params,
-      );
-      final times = [
-        future.fajr,
-        future.sunrise,
-        future.dhuhr,
-        future.asr,
-        future.maghrib,
-        future.isha
-      ];
-      for (var i = 0; i < times.length; i++) {
-        final time = times[i].toLocal();
-        notificationPrayers.add(PrayerInfo(
-          name: rawList[i]['name'] as String,
-          time: time,
-          formattedTime: _formatTime(time),
-        ));
-      }
-    }
-    final previousDay = PrayerTimes(
-      coordinates: coords,
-      date: DateTime(now.year, now.month, now.day - 1),
-      calculationParameters: params,
-    );
-    final qiblaDeg = Qibla.qibla(coords);
-
-    _currentData = PrayerData(
+    _currentData = PrayerScheduleCalculator.calculate(
       latitude: lat,
       longitude: lng,
       locationName: locName,
-      prayers: resultList,
-      notificationPrayers: List.unmodifiable(notificationPrayers),
-      previousMaghribTime: previousDay.maghrib.toLocal(),
-      nextPrayer: nextP,
-      timeToNextPrayer: minDiff,
-      qiblaDegrees: qiblaDeg,
-      lastUpdated: now,
+      now: _nowProvider(),
+      parameters: _getParams(),
     );
-    countdownNotifier.value = minDiff;
+    countdownNotifier.value = _currentData!.timeToNextPrayer;
     if (updateSchedules) {
       try {
         PrayerNotificationService.instance.schedulePrayerNotifications(_currentData!);
@@ -1155,16 +1002,6 @@ class PrayerService extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
-  }
-
-  String _formatTime(DateTime dt) {
-    int hour = dt.hour;
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = hour >= 12 ? 'م' : 'ص';
-    if (hour > 12) hour -= 12;
-    if (hour == 0) hour = 12;
-    final hStr = hour.toString().padLeft(2, '0');
-    return '$hStr:$minute $period';
   }
 
   String formatCountdown(Duration d) {
