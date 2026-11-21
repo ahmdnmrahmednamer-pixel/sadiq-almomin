@@ -240,7 +240,7 @@ void main() {
 
       // Check title and noble dedication
       expect(find.text('النسخ الاحتياطي والاستعادة'), findsOneWidget);
-      expect(find.textContaining('نسخ احتياطي آمن'), findsOneWidget);
+      expect(find.textContaining('ملف JSON غير مشفر'), findsOneWidget);
 
       // Check stat titles
       expect(find.text('العلامات المرجعية'), findsOneWidget);

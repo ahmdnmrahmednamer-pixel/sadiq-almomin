@@ -77,6 +77,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   Future<void> _exportAndShare() async {
+    if (_isProcessing) return;
     setState(() => _isProcessing = true);
     try {
       final success = await BackupRestoreService.instance.shareBackupFile();
@@ -84,7 +85,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم تجهيز النسخة الاحتياطية بنجاح 📤', textAlign: TextAlign.right),
+            content: Text('تم تجهيز النسخة الاحتياطية بنجاح 📤',
+                textAlign: TextAlign.right),
             backgroundColor: Color(0xFF1B4D3E),
             duration: Duration(seconds: 3),
           ),
@@ -92,7 +94,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تعذر تصدير الملف، يمكنك نسخ النص يدوياً', textAlign: TextAlign.right),
+            content: Text('تعذر تصدير الملف، يمكنك نسخ النص يدوياً',
+                textAlign: TextAlign.right),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -103,81 +106,103 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   }
 
   Future<void> _copyJsonToClipboard() async {
+    if (_isProcessing) return;
     setState(() => _isProcessing = true);
     try {
       final json = await BackupRestoreService.instance.exportBackupJson();
-      await Clipboard.setData(ClipboardData(text: json)).catchError((_) {});
+      if (!mounted) return;
+      await Clipboard.setData(ClipboardData(text: json));
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('تم نسخ بيانات النسخة الاحتياطية إلى الحافظة بنجاح 📋', textAlign: TextAlign.right),
+          content: Text('تم نسخ بيانات النسخة الاحتياطية إلى الحافظة بنجاح 📋',
+              textAlign: TextAlign.right),
           backgroundColor: Color(0xFF1B4D3E),
         ),
       );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('تعذر نسخ النسخة الاحتياطية إلى الحافظة. حاول مرة أخرى.'),
+        backgroundColor: Colors.redAccent,
+      ));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData('text/plain');
-    if (data?.text != null && data!.text!.isNotEmpty) {
-      _importController.text = data.text!;
-    } else {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    try {
+      final data = await Clipboard.getData('text/plain');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+      if (data?.text != null && data!.text!.isNotEmpty) {
+        _importController.text = data.text!;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('الحافظة لا تحتوي على نص', textAlign: TextAlign.right),
           backgroundColor: Colors.orange,
-        ),
-      );
+        ));
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('تعذر قراءة الحافظة. حاول مرة أخرى.'),
+        backgroundColor: Colors.redAccent,
+      ));
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   Future<void> _confirmAndRestore() async {
-    if (_validationResult == null || !_validationResult!.isValid) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => Directionality(
-        textDirection: SettingsService.instance.textDirection,
-        child: AlertDialog(
-        title: Text(
-          _replaceMode ? 'تأكيد الاستبدال الكامل' : 'تأكيد الدمج الذكي',
-          textAlign: TextAlign.right,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Text(
-          _replaceMode
-              ? 'هل أنت متأكد من استبدال جميع بيانات التطبيق الحالية (العلامات، الختمة، الإعدادات) ببيانات النسخة الاحتياطية؟'
-              : 'سيتم دمج العلامات المرجعية والتقدم بدون حذف بياناتك الحالية. هل ترغب في المتابعة؟',
-          textAlign: TextAlign.right,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _replaceMode ? Colors.redAccent : const Color(0xFF1B4D3E),
-              foregroundColor: Colors.white,
-            ),
-            child: Text(_replaceMode ? 'نعم، استبدل' : 'نعم، ادمج'),
-          ),
-        ],
-        ),
-      ),
-    );
-
-    if (confirm != true) return;
-
+    if (_isProcessing || _validationResult?.isValid != true) return;
+    final reviewed = BackupRestoreService.instance
+        .validateBackup(_importController.text.trim());
+    if (!reviewed.isValid || reviewed.rawData == null) return;
+    final replace = _replaceMode;
     setState(() => _isProcessing = true);
     try {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => Directionality(
+          textDirection: SettingsService.instance.textDirection,
+          child: AlertDialog(
+            title: Text(
+              replace ? 'تأكيد الاستبدال الكامل' : 'تأكيد الدمج الذكي',
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              replace
+                  ? 'هل أنت متأكد من استبدال جميع بيانات التطبيق الحالية (العلامات، الختمة، الإعدادات) ببيانات النسخة الاحتياطية؟'
+                  : 'سيتم دمج العلامات المرجعية والتقدم بدون حذف بياناتك الحالية. هل ترغب في المتابعة؟',
+              textAlign: TextAlign.right,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      replace ? Colors.redAccent : const Color(0xFF1B4D3E),
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(replace ? 'نعم، استبدل' : 'نعم، ادمج'),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (confirm != true || !mounted) return;
       final success = await BackupRestoreService.instance.restoreBackup(
-        _validationResult!.rawData!,
-        replaceMode: _replaceMode,
+        reviewed.rawData!,
+        replaceMode: replace,
       );
 
       if (!mounted) return;
@@ -189,7 +214,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تمت استعادة البيانات بنجاح تام ولله الحمد 🕌', textAlign: TextAlign.right),
+            content: Text('تمت استعادة البيانات بنجاح تام ولله الحمد 🕌',
+                textAlign: TextAlign.right),
             backgroundColor: Color(0xFF1B4D3E),
             duration: Duration(seconds: 4),
           ),
@@ -197,11 +223,19 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('حدث خطأ أثناء استعادة البيانات', textAlign: TextAlign.right),
+            content: Text('حدث خطأ أثناء استعادة البيانات',
+                textAlign: TextAlign.right),
             backgroundColor: Colors.redAccent,
           ),
         );
       }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text(
+            'تعذر إكمال الاستعادة. قد تكون بعض البيانات تغيرت. راجع بياناتك قبل المحاولة مرة أخرى.'),
+        backgroundColor: Colors.redAccent,
+      ));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -243,7 +277,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'نسخ احتياطي آمن ومشفر لكافة بياناتك وختماتك محلياً',
+                      'النسخة ملف JSON غير مشفر وقد تحتوي على بياناتك الشخصية. احفظها وشاركها مع من تثق به فقط.',
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.bold,
@@ -428,7 +462,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                             value: true,
                             groupValue: _replaceMode,
                             activeColor: const Color(0xFF1B4D3E),
-                            onChanged: (v) => setState(() => _replaceMode = v ?? true),
+                            onChanged: _isProcessing ? null : (v) => setState(() => _replaceMode = v ?? true),
                           ),
                         ),
                         Expanded(
@@ -439,7 +473,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                             value: false,
                             groupValue: _replaceMode,
                             activeColor: const Color(0xFF1B4D3E),
-                            onChanged: (v) => setState(() => _replaceMode = v ?? false),
+                            onChanged: _isProcessing ? null : (v) => setState(() => _replaceMode = v ?? false),
                           ),
                         ),
                       ],
@@ -448,6 +482,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
 
                     // JSON Input Field
                     TextField(
+                      enabled: !_isProcessing,
                       controller: _importController,
                       maxLines: 4,
                       style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
@@ -457,7 +492,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.paste_rounded),
                           tooltip: 'لصق من الحافظة',
-                          onPressed: _pasteFromClipboard,
+                          onPressed: _isProcessing ? null : _pasteFromClipboard,
                         ),
                       ),
                     ),
@@ -582,7 +617,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'النسخة صالحة ومطابقة لسلامة البيانات ✓',
+                  'صيغة النسخة مقبولة للاستعادة. هذا ليس إثباتاً لمصدرها.',
                   style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
