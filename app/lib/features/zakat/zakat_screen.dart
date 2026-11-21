@@ -486,8 +486,11 @@ class _ZakatScreenState extends State<ZakatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 12,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const Text(
                   'ملخص الحساب الشرعي',
@@ -577,17 +580,15 @@ class _ZakatScreenState extends State<ZakatScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_month, color: AppColors.primaryGreen, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
+                    const Icon(Icons.calendar_month, color: AppColors.primaryGreen, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
                           _calc.hawlDate != null
                               ? 'موعد حولان الحول: ${_calc.hawlDate!.year}/${_calc.hawlDate!.month}/${_calc.hawlDate!.day}'
                               : 'تحديد موعد حولان الحول الهجري',
                           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
-                      ],
                     ),
                     const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.primaryGreen),
                   ],
@@ -613,8 +614,8 @@ class _ZakatScreenState extends State<ZakatScreen> {
               children: [
                 const Icon(Icons.tune, color: AppColors.primaryGreen, size: 20),
                 const SizedBox(width: 8),
-                const Text('إعدادات النصاب والأسعار', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const Spacer(),
+                const Expanded(child: Text('إعدادات النصاب والأسعار', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
+                const SizedBox(width: 8),
                 // Currency Picker Dropdown
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -720,7 +721,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
               children: [
                 Icon(icon, color: AppColors.primaryGreen, size: 20),
                 const SizedBox(width: 8),
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14))),
               ],
             ),
             const SizedBox(height: 12),
