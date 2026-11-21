@@ -369,6 +369,22 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                if (service.storageError != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        service.storageError!,
+                        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+                      ),
+                    ),
+                  ),
                 // Noble dedication & motivation banner
                 Container(
                   margin: const EdgeInsets.only(bottom: 12),
