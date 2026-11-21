@@ -422,7 +422,7 @@ class _PrayerTrackerScreenState extends State<PrayerTrackerScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'منبّه الاستعداد قبل الفجر ومنبّه قيام الليل 🌅🌙',
+                                  'منبّه الاستعداد قبل الفجر ومنبّه قيام الليل',
                                   style: TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.bold,
