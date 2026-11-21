@@ -48,6 +48,23 @@ class PrayerNotificationService extends ChangeNotifier {
   int _derivedScheduleGeneration = 0;
   Future<void>? _activeDerivedOp;
 
+  String? _prayerSchedulingError;
+  String? get prayerSchedulingError => _prayerSchedulingError;
+
+  /// Retries existing saved choices only. Does not request or grant permission.
+  Future<void> retryPrayerScheduling() async {
+    final data = PrayerService.instance.currentData;
+    if (!_masterEnabled) {
+      _prayerSchedulingError = 'تنبيهات الصلاة معطلة في إعدادات التطبيق.';
+      notifyListeners();
+    } else if (data == null) {
+      _prayerSchedulingError = 'لم تُجدول تنبيهات الصلاة: حدّث موقع الصلاة أولاً ثم أعد المحاولة.';
+      notifyListeners();
+    } else {
+      await schedulePrayerNotifications(data);
+    }
+  }
+
   static final StreamController<String> _adhanEventStream = StreamController<String>.broadcast();
   static Stream<String> get adhanEventStream => _adhanEventStream.stream;
 
@@ -1491,6 +1508,20 @@ class PrayerNotificationService extends ChangeNotifier {
       if (isStale()) return;
 
       try {
+        final android = _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        if (android != null) {
+          final notificationsAllowed = await android.areNotificationsEnabled();
+          if (isStale()) return;
+          final exactAllowed = await android.canScheduleExactNotifications();
+          if (isStale()) return;
+          if (notificationsAllowed == false || exactAllowed == false) {
+            _prayerSchedulingError = notificationsAllowed == false
+                ? 'لم تُجدول تنبيهات الصلاة: إشعارات التطبيق غير مسموحة. اسمح بها من إعدادات الجهاز ثم أعد المحاولة. لم نحذف الجدولة السابقة، لكن لا نعتمد عليها مع الإذن المغلق.'
+                : 'لم تُجدول تنبيهات الصلاة: إذن المنبهات الدقيقة غير مسموح. اسمح به من إعدادات الجهاز ثم أعد المحاولة. لم نحذف الجدولة السابقة، لكن النظام قد يكون ألغاها عند سحب الإذن.';
+            notifyListeners();
+            return;
+          }
+        }
         await _cancelLocationDerivedRange(generation);
         if (isStale()) return;
         final now = DateTime.now();
@@ -1782,7 +1813,15 @@ class PrayerNotificationService extends ChangeNotifier {
         if (isStale()) return;
         // Schedule Morning, Evening, and Sleep Adhkar Reminders on dedicated IDs (801..803)
         await scheduleAdhkarReminders();
+        if (!isStale()) {
+          _prayerSchedulingError = null;
+          notifyListeners();
+        }
       } catch (e) {
+        if (!isStale()) {
+          _prayerSchedulingError = 'تعذر إكمال جدولة تنبيهات الصلاة. بعض التنبيهات قد لا تعمل. راجع إذن الإشعارات والمنبهات الدقيقة ثم أعد المحاولة. نجاح فتح شاشة الأذان لا يثبت عمل التنبيه.';
+          notifyListeners();
+        }
         debugPrint('Error scheduling prayer notifications: $e');
       }
     });

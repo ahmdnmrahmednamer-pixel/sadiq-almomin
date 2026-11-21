@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,10 +14,67 @@ import 'package:almomin/features/settings/settings_screen.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  setUpAll(() async {
+      await (FontLoader('Cairo')..addFont(Future.value(ByteData.sublistView(File('assets/fonts/Cairo-Regular.ttf').readAsBytesSync())))).load();
+      const icons = String.fromEnvironment('MATERIAL_ICONS_FONT');
+      if (icons.isNotEmpty) await (FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(File(icons).readAsBytesSync())))).load();
+  });
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     await SettingsService.instance.init();
     await PrayerNotificationService.instance.init();
+  });
+
+  group('Prayer scheduling permission failures are visible and non-destructive', () {
+    const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+    final calls = <MethodCall>[];
+    var notificationsAllowed = true;
+    var exactAllowed = true;
+    var failSchedule = false;
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({'notif_master_enabled': true, 'notif_morning_adhkar_enabled': false, 'notif_evening_adhkar_enabled': false, 'notif_sleep_adhkar_enabled': false});
+      notificationsAllowed = true;
+      exactAllowed = true;
+      failSchedule = false;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+        calls.add(call);
+        if (call.method == 'areNotificationsEnabled') return notificationsAllowed;
+        if (call.method == 'canScheduleExactNotifications') return exactAllowed;
+        if (call.method == 'getNotificationAppLaunchDetails') return null;
+        if (call.method == 'zonedSchedule' && failSchedule) throw PlatformException(code: 'exact_alarms_not_permitted');
+        return true;
+      });
+      await PrayerNotificationService.instance.init(forceReload: true);
+      calls.clear();
+    });
+    PrayerData futureData() => PrayerData(latitude: 30, longitude: 31, locationName: 'القاهرة',
+      prayers: [PrayerInfo(name: 'الظهر', time: DateTime.now().add(const Duration(hours: 1)), formattedTime: '')],
+      qiblaDegrees: 135, lastUpdated: DateTime.now());
+    for (final denied in ['notifications', 'exact']) {
+      test('$denied permission denied preserves old schedule and reports specific error', () async {
+        notificationsAllowed = denied != 'notifications';
+        exactAllowed = denied != 'exact';
+        await PrayerNotificationService.instance.schedulePrayerNotifications(futureData());
+        expect(calls.where((c) => c.method == 'cancelAll' || ((c.method == 'cancel' || c.method == 'zonedSchedule') && (c.arguments as Map)['id'] >= 100 && (c.arguments as Map)['id'] <= 139)), isEmpty);
+        expect(PrayerNotificationService.instance.prayerSchedulingError, contains(denied == 'exact' ? 'المنبهات الدقيقة' : 'إشعارات التطبيق'));
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getBool('notif_master_enabled'), isTrue);
+        expect(calls.any((c) => c.method.startsWith('request')), isFalse);
+        notificationsAllowed = true;
+        exactAllowed = true;
+        await PrayerNotificationService.instance.schedulePrayerNotifications(futureData());
+        expect(calls.any((c) => c.method == 'zonedSchedule'), isTrue);
+        expect(PrayerNotificationService.instance.prayerSchedulingError, isNull);
+      });
+    }
+    test('permission revoked between check and scheduling exposes incomplete schedule', () async {
+      failSchedule = true;
+      await PrayerNotificationService.instance.schedulePrayerNotifications(futureData());
+      expect(PrayerNotificationService.instance.prayerSchedulingError, contains('تعذر إكمال'));
+      failSchedule = false;
+      await PrayerNotificationService.instance.schedulePrayerNotifications(futureData());
+      expect(PrayerNotificationService.instance.prayerSchedulingError, isNull);
+    });
   });
 
   group('PrayerNotificationService Extended Unit Tests (FR-NOT-006)', () {
@@ -614,6 +674,52 @@ void main() {
       expect(fajrAdhkar, isEmpty, reason: 'Expired prayer post-prayer adhkar must not be scheduled');
     });
   });
+
+  for (final scale in [1.0, 2.0]) {
+    testWidgets('permission warning and retry stay accessible at $scale', (tester) async {
+      tester.view.physicalSize = const Size(360, 840);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues({'notif_master_enabled': true, 'notif_morning_adhkar_enabled': false, 'notif_evening_adhkar_enabled': false, 'notif_sleep_adhkar_enabled': false});
+      const channel = MethodChannel('dexterous.com/flutter/local_notifications');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+        if (call.method == 'areNotificationsEnabled') return false;
+        if (call.method == 'getNotificationAppLaunchDetails') return null;
+        return true;
+      });
+      await tester.runAsync(() async {
+      await PrayerNotificationService.instance.init(forceReload: true);
+      await PrayerNotificationService.instance.schedulePrayerNotifications(PrayerData(latitude: 30, longitude: 31, locationName: 'القاهرة',
+        prayers: [PrayerInfo(name: 'الظهر', time: DateTime.now().add(const Duration(hours: 1)), formattedTime: '')], qiblaDegrees: 135, lastUpdated: DateTime.now()));
+      });
+      final boundary = GlobalKey();
+      final semantics = tester.ensureSemantics();
+      await tester.pumpWidget(RepaintBoundary(key: boundary, child: MaterialApp(debugShowCheckedModeBanner: false, theme: ThemeData(fontFamily: 'Cairo'),
+        builder: (c, child) => MediaQuery(data: MediaQuery.of(c).copyWith(textScaler: TextScaler.linear(scale)), child: child!), home: const SettingsScreen())));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('settings_category_4')));
+      await tester.pumpAndSettle();
+      final warning = find.textContaining('لم تُجدول تنبيهات الصلاة');
+      expect(warning, findsOneWidget);
+      expect(tester.getSemantics(warning).label, contains('إشعارات التطبيق'));
+      expect(find.text('إعادة محاولة جدولة الصلاة'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      const capture = String.fromEnvironment('PRAYER_PERMISSION_PIXELS');
+      if (capture.isNotEmpty) {
+      await tester.runAsync(() async {
+        final image = await tester.renderObject<RenderRepaintBoundary>(find.byKey(boundary)).toImage();
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        Directory(capture).createSync(recursive: true);
+        File('$capture/permission-warning-${scale}x.png').writeAsBytesSync(bytes!.buffer.asUint8List());
+        image.dispose();
+      });
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      semantics.dispose();
+    });
+  }
 
   group('SettingsScreen Extended Notifications UI Widget Tests', () {
     testWidgets('Renders Pre-Adhan, Qiyam, and Friday Sunnahs options', (tester) async {

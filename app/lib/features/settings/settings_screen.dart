@@ -539,6 +539,23 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
   }
 
   List<Widget> adhanPage() => [
+        AnimatedBuilder(
+          animation: PrayerNotificationService.instance,
+          builder: (context, _) {
+            final error = PrayerNotificationService.instance.prayerSchedulingError;
+            if (error == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Semantics(liveRegion: true, child: Text(error)),
+                TextButton(
+                  onPressed: PrayerNotificationService.instance.retryPrayerScheduling,
+                  child: Text(tr('إعادة محاولة جدولة الصلاة', 'Retry prayer scheduling')),
+                ),
+              ]),
+            );
+          },
+        ),
         SwitchListTile(
             title: Text(tr('التنبيهات', 'Notifications')),
             value: session.master.value.notifications,
