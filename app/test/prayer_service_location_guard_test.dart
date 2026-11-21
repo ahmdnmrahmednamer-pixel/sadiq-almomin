@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:adhan_dart/adhan_dart.dart' as adhan;
+import 'package:timezone/timezone.dart' as timezone;
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -450,6 +452,53 @@ void main() {
     await fakeProvider.dispose();
     await mockPrefs.waitForAllWrites();
     await waitForAllNotifOps();
+  });
+
+  testWidgets('seven calendar days survive stopped Dart ticker with distinct times and bounded IDs', (tester) async {
+    final oldZone = timezone.local;
+    timezone.setLocalLocation(timezone.getLocation('Africa/Cairo'));
+    addTearDown(() => timezone.setLocalLocation(oldZone));
+    final clock = DateTime(2027, 1, 31, 0, 0, 1);
+    PrayerService.instance.setClockForTesting(() => clock);
+    mockPrefs.reset({
+      PrayerService.locationSourceKey: PrayerService.locationSourceGps,
+      PrayerService.locationUpdatedAtMsKey: clock.toUtc().millisecondsSinceEpoch,
+      'last_latitude': 30.0, 'last_longitude': 31.0, 'last_city': 'موقع محفوظ',
+      'notif_master_enabled': true, 'notif_prayer_الشروق': true,
+    });
+    fakeProvider..serviceEnabled = true..checkPermissionResult = LocationPermission.denied;
+     await SettingsService.instance.init(forceReload: true); 
+    await tester.runAsync(() => PrayerNotificationService.instance.init(forceReload: true)); 
+    await PrayerService.instance.init(forceReload: true); 
+    await tester.pump(const Duration(milliseconds: 100));
+    await waitForAllNotifOps();
+    await tester.pump(const Duration(milliseconds: 100));
+    await waitForAllNotifOps();
+    PrayerService.instance.stopLiveTicker();
+    final data = PrayerService.instance.currentData!;
+    expect(data.prayers, hasLength(6), reason: 'display stays today only');
+    expect(data.notificationPrayers, hasLength(42));
+    for (var day = 0; day < 7; day++) {
+      final date = DateTime(clock.year, clock.month, clock.day + day);
+      final expected = adhan.PrayerTimes(coordinates: adhan.Coordinates(30,31), date: date,
+        calculationParameters: adhan.CalculationMethodParameters.egyptian());
+      final fajr = data.notificationPrayers![day * 6];
+      expect(fajr.time, expected.fajr.toLocal());
+      final scheduled = activeOsNotifications.values.where((v) => v['payload'] == 'type=adhan&prayer=الفجر');
+      expect(scheduled.any((v) => v['scheduledDateTime'] == timezone.TZDateTime.from(fajr.time, timezone.getLocation(v['timeZoneName'] as String)).toIso8601String().split('.').first), isTrue);
+    }
+    final derived = activeOsNotifications.entries.where((e) => e.key >= 100 && e.key <= 399).toList();
+    expect(derived.length, 161, reason: '23 independently dated alarms per day for all seven days');
+    expect(derived.map((e)=>e.key).toSet().length, derived.length);
+    expect(derived.any((e) => e.key > 139), isTrue);
+    final before = Map<int,Map<String,dynamic>>.from(activeOsNotifications);
+     await tester.pump(const Duration(days: 2)); 
+    expect(activeOsNotifications, before, reason: 'already handed to OS channel, no Dart ticker renewal needed inside finite window');
+    notifCalls.clear();
+    await PrayerService.instance.clearLocationToUnknown(); 
+    await waitForAllNotifOps();
+    expect(activeOsNotifications.keys.where((id) => id >= 100 && id <= 399), isEmpty);
+    expect(notifCalls.any((c)=>c.method=='cancelAll'), isFalse);
   });
 
   group('GPS-Only Core: Legacy Migration, Provenance, Freshness & Etiquette', () {
