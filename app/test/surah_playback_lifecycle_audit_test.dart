@@ -295,6 +295,7 @@ void main() {
   for (final scale in [1.0, 2.0]) {
     testWidgets('failed whole-surah pause stays unconfirmed at $scale',
         (t) async {
+      final semantics = t.ensureSemantics();
       final player = StatefulSurahPlayer();
       await mount(t, player, scale: scale);
       await t.pumpAndSettle();
@@ -324,13 +325,74 @@ void main() {
               .writeAsBytes(bytes!.buffer.asUint8List());
           image.dispose();
         });
-      await t.pump(const Duration(seconds: 5));
-      await t.pumpAndSettle();
+      final failure =
+          t.getSemantics(find.textContaining('لم يتم تأكيد الإيقاف'));
+      expect(failure.getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+      final stopRect = t.getRect(find.byTooltip('إيقاف التلاوة'));
+      expect(stopRect.bottom, lessThanOrEqualTo(800));
+      expect(stopRect.top, greaterThanOrEqualTo(0));
+
       await t.tap(find.byTooltip('إيقاف التلاوة'));
       await t.pumpAndSettle();
       expect(find.byTooltip('إيقاف التلاوة'), findsNothing);
       expect(player.playing, isFalse);
       await t.pumpWidget(const SizedBox());
+      semantics.dispose();
+    });
+  }
+  for (final scale in [1.0, 2.0]) {
+    testWidgets(
+        'failed pause Stop supports immediate semantic action at $scale',
+        (t) async {
+      final semantics = t.ensureSemantics();
+      final player = StatefulSurahPlayer();
+      await mount(t, player, scale: scale);
+      await t.pumpAndSettle();
+      await t.pump(const Duration(seconds: 4));
+      await t.pumpAndSettle();
+      player.failPause = true;
+      final bar = find
+          .ancestor(
+              of: find.byTooltip('إيقاف التلاوة'),
+              matching: find.byType(Column))
+          .first;
+      await t.tap(find.descendant(
+          of: bar, matching: find.byTooltip('تشغيل أو إيقاف الصوت')));
+      await t.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.textContaining('لم يتم تأكيد الإيقاف'), findsOneWidget);
+      expect(find.byTooltip('إيقاف التلاوة'), findsOneWidget);
+      expect(t.takeException(), isNull);
+      final dir = Platform.environment['SURAH_PLAYER_PIXELS_DIR'];
+      if (dir != null)
+        await t.runAsync(() async {
+          final image = await (boundary.currentContext!.findRenderObject()
+                  as RenderRepaintBoundary)
+              .toImage();
+          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+          await File('$dir/failed-pause-$scale.png')
+              .writeAsBytes(bytes!.buffer.asUint8List());
+          image.dispose();
+        });
+      final failure =
+          t.getSemantics(find.textContaining('لم يتم تأكيد الإيقاف'));
+      expect(failure.getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+      final stopRect = t.getRect(find.byTooltip('إيقاف التلاوة'));
+      expect(stopRect.bottom, lessThanOrEqualTo(800));
+      expect(stopRect.top, greaterThanOrEqualTo(0));
+
+      final stopNode = t.getSemantics(find.byTooltip('إيقاف التلاوة'));
+      expect(stopNode.getSemanticsData().hasAction(ui.SemanticsAction.tap),
+          isTrue);
+      t.binding.performSemanticsAction(ui.SemanticsActionEvent(
+          type: ui.SemanticsAction.tap,
+          viewId: t.view.viewId,
+          nodeId: stopNode.id));
+      await t.pumpAndSettle();
+      expect(find.byTooltip('إيقاف التلاوة'), findsNothing);
+      expect(player.playing, isFalse);
+      await t.pumpWidget(const SizedBox());
+      semantics.dispose();
     });
   }
   testWidgets('late whole-surah pause result cannot clear newer loaded surah',
