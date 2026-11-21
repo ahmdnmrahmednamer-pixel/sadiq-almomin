@@ -1,8 +1,10 @@
-import 'dart:async';
-import '../text/arabic_normalizer.dart';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../text/arabic_normalizer.dart';
+import '../utils/serial_task_queue.dart';
 
 /// حالة أداء الفريضة في نموذج محاسبة الصلوات اليومي
 enum PrayerPerformanceStatus {
@@ -285,32 +287,9 @@ class PrayerTrackerService extends ChangeNotifier {
   bool _historyReadable = true;
   String? _storageError;
   String? get storageError => _storageError;
-  final List<Future<void> Function()> _edits = [];
-  bool _editing = false;
+  final SerialTaskQueue _operations = SerialTaskQueue();
 
-  Future<T> _serialize<T>(Future<T> Function() action) {
-    final result = Completer<T>();
-    _edits.add(() async {
-      try {
-        final value = await action();
-        _editing = false;
-        _runNext();
-        result.complete(value);
-      } catch (error, stack) {
-        _editing = false;
-        _runNext();
-        result.completeError(error, stack);
-      }
-    });
-    _runNext();
-    return result.future;
-  }
-
-  void _runNext() {
-    if (_editing || _edits.isEmpty) return;
-    _editing = true;
-    unawaited(_edits.removeAt(0)());
-  }
+  Future<T> _serialize<T>(Future<T> Function() action) => _operations.run(action);
 
   static String formatDateKey(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
