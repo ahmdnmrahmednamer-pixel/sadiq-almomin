@@ -210,8 +210,8 @@ void main() {
   tearDown(() async {
     DynamicHttpOverrides.activeHandler = null;
     for (final sid in [1, 2, 3, 4, 5, 112, 113, 114]) {
-      if (service.isDownloading('mishari_alafasy', sid)) {
-        service.cancelDownload('mishari_alafasy', sid);
+      if (service.isDownloading('alafasy', sid)) {
+        service.cancelDownload('alafasy', sid);
       }
     }
     for (final c in activeControllers) {
@@ -233,7 +233,7 @@ void main() {
 
   group('AudioDownloadService Baseline Controls', () {
     test('Control 1: Single successful download completes and marks Surah downloaded', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 1;
       const surahName = 'الفاتحة';
       final fakeData = Uint8List(2048);
@@ -281,7 +281,7 @@ void main() {
     });
 
     test('Control 2: Cancelled download cleans up temp files and returns false', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 2;
       const surahName = 'البقرة';
 
@@ -328,7 +328,7 @@ void main() {
     });
 
     test('Control 3: Pre-existing valid download is preserved when a re-download attempt is cancelled', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 3;
       const surahName = 'آل عمران';
       final initialData = Uint8List(3000);
@@ -413,7 +413,7 @@ void main() {
     });
 
     test('Control 4: Network failure during re-download preserves existing valid download and cleans temp files', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 4;
       const surahName = 'النساء';
       final initialData = Uint8List(3500);
@@ -499,7 +499,7 @@ void main() {
     });
 
     test('Control 5: Repeated cancel/retry properly targets new cancel token and cleans up state', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 5;
       const surahName = 'المائدة';
 
@@ -612,7 +612,7 @@ void main() {
 
   group('AudioDownloadService cancel/re-download race repro', () {
     test('Race 1: Re-download immediately after cancel must not crash on shared temp file or fail early', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 112;
       const surahName = 'الإخلاص';
 
@@ -716,7 +716,7 @@ void main() {
     });
 
     test('Race 2: Re-download after cancel must complete successfully without being deleted by old request catch block', () async {
-      const reciterId = 'mishari_alafasy';
+      const reciterId = 'alafasy';
       const surahId = 113;
       const surahName = 'الفلق';
 
