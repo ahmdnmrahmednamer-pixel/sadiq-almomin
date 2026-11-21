@@ -323,6 +323,7 @@ String _frequencyLabel(ShortReminderFrequency value) => switch(value) {
   ShortReminderFrequency.hourly => 'كل ساعة',
   ShortReminderFrequency.twoHourly => 'كل ساعتين',
   ShortReminderFrequency.daily => 'كل ٢٤ ساعة',
+  ShortReminderFrequency.custom => 'مدة مخصصة',
 };
 
 class _ShortAudioReminders extends StatelessWidget {
@@ -358,8 +359,10 @@ class _ShortAudioReminders extends StatelessWidget {
                                     ? 'الصلاة على النبي'
                                     : 'الاستغفار والحوقلة',
                                 style: Theme.of(context).textTheme.titleMedium),
+                            if (service.shortFrequency(key) == ShortReminderFrequency.custom)
+                              Text('التكرار المخصص: كل ${service.shortInterval(key).minutes} دقيقة. يمكن تعديله من الإعدادات الرئيسية.'),
                             Wrap(spacing: 8, children: [
-                              for (final value in ShortReminderFrequency.values)
+                              for (final value in ShortReminderFrequency.values.where((value) => value != ShortReminderFrequency.custom))
                                 ChoiceChip(
                                     label: Text(_frequencyLabel(value), semanticsLabel: '${key == 'salawat' ? 'الصلاة على النبي' : 'الاستغفار والحوقلة'}، ${_frequencyLabel(value)}'),
                                     selected:
