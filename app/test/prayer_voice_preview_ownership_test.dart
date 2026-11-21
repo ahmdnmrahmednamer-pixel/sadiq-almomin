@@ -101,6 +101,17 @@ void main() {
     }
   });
   setUp(() async {
+    // Native calls must resolve within each test's fake-clock scope. Leaving
+    // unhandled initialization work pending can strand the shared queue after
+    // an earlier widget test disposes its clock.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('dexterous.com/flutter/local_notifications'), (call) async {
+      if (call.method == 'initialize' || call.method == 'areNotificationsEnabled' || call.method == 'canScheduleExactNotifications') return true;
+      if (call.method == 'getNotificationAppLaunchDetails') return {'notificationLaunchedApp':false};
+      return null;
+    });
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(const MethodChannel('flutter_timezone'), (_) async => 'Africa/Cairo');
     SharedPreferences.setMockInitialValues({'notif_master_enabled': false});
     await SettingsService.instance.init(forceReload: true);
     await notifications.init(forceReload: true);
@@ -236,8 +247,10 @@ void main() {
             .getSemanticsData()
             .hasAction(ui.SemanticsAction.tap),
         isTrue);
-    t.binding.pipelineOwner.semanticsOwner!
-        .performAction(t.getSemantics(listenButton).id, ui.SemanticsAction.tap);
+    t.binding.performSemanticsAction(ui.SemanticsActionEvent(
+        type: ui.SemanticsAction.tap,
+        nodeId: t.getSemantics(listenButton).id,
+        viewId: t.view.viewId));
     await t.pumpAndSettle();
     expect(player.plays, 1);
     expect(notifications.getPrayerVoice('الفجر'), 'adhan_fajr');
