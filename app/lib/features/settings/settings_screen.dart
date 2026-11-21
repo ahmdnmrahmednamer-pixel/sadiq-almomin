@@ -556,6 +556,12 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
             );
           },
         ),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(tr(
+              'تُحسب تنبيهات الصلاة لكل يوم على حدة لليوم وستة أيام تالية. افتح التطبيق لتحديث الموقع والجدولة قبل انتهاء هذه المدة. إغلاقه مدة أطول قد يوقف تنبيهات الصلاة؛ هذه ليست جدولة دائمة في الخلفية.',
+              'Prayer alerts are calculated separately for today and the next six days. Open the app to refresh location and scheduling before this window ends. Keeping it closed longer may stop prayer alerts; this is not permanent background renewal.')),
+        ),
         SwitchListTile(
             title: Text(tr('التنبيهات', 'Notifications')),
             value: session.master.value.notifications,
