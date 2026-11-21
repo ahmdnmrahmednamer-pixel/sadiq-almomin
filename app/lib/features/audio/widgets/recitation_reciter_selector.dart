@@ -39,6 +39,8 @@ class _RecitationReciterSelectorState extends State<RecitationReciterSelector> {
     // Derive categories from the real catalog, including less common styles.
     final styles =
         SettingsService.availableReciters.map((r) => r.style).toSet();
+    final unavailable = !SettingsService.availableReciters.any((r) => r.id == widget.reciter.id);
+    if (unavailable) styles.add(widget.reciter.style);
     final reciters = SettingsService.availableReciters
         .where((r) => r.style == _style)
         .toList();
@@ -73,6 +75,10 @@ class _RecitationReciterSelectorState extends State<RecitationReciterSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (unavailable) ...[
+          Semantics(liveRegion: true, child: const Text('القارئ المحفوظ غير متاح. اختر نوع التلاوة وقارئاً آخر بنفسك؛ لم يتغير اختيارك المحفوظ.')),
+          const SizedBox(height: 10),
+        ],
         DropdownButtonFormField<String>(
           key: ValueKey('recitation_style_$_style'),
           initialValue: _style,

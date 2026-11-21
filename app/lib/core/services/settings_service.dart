@@ -30,6 +30,12 @@ class VerseRecordingUnavailable implements Exception {
       'تسجيل الآيات المنفصلة للقارئ المختار غير متاح هنا. اختر قارئاً آخر بنفسك من إعدادات القارئ؛ لم يتغير اختيارك المحفوظ.';
 }
 
+class ReciterRecordingUnavailable implements Exception {
+  final String reciterId;
+  const ReciterRecordingUnavailable(this.reciterId);
+  String get message => 'القارئ المحفوظ غير متاح هنا. اختر قارئاً آخر بنفسك؛ لم يتغير اختيارك المحفوظ ولم يتم تشغيل قارئ بديل.';
+}
+
 class SettingsService extends ChangeNotifier {
   static final SettingsService instance = SettingsService._internal();
   SettingsService._internal();
@@ -657,12 +663,13 @@ class SettingsService extends ChangeNotifier {
   bool _screenReaderOptimized = false;
   bool get screenReaderOptimized => _screenReaderOptimized;
 
-  ReciterInfo get currentReciter {
-    return availableReciters.firstWhere(
-      (r) => r.id == _selectedReciterId,
-      orElse: () => availableReciters.first,
-    );
-  }
+  /// A missing saved ID remains missing until the user chooses another voice.
+  static ReciterInfo resolveReciter(String id) =>
+      availableReciters.where((r) => r.id == id).firstOrNull ??
+      ReciterInfo(id: id, nameAr: 'القارئ المحفوظ غير متاح', style: 'غير متاح',
+          serverUrl: '', subfolder: '', hasVerseAudio: false);
+
+  ReciterInfo get currentReciter => resolveReciter(_selectedReciterId);
 
   Future<void> init({bool forceReload = false}) async {
     _prefs = await SharedPreferences.getInstance();
@@ -1003,10 +1010,8 @@ class SettingsService extends ChangeNotifier {
 
   String getSurahAudioUrl(int surahId, [String? reciterId]) {
     final rid = reciterId ?? _selectedReciterId;
-    final reciter = availableReciters.firstWhere(
-      (r) => r.id == rid,
-      orElse: () => availableReciters.first,
-    );
+    final reciter = availableReciters.where((r) => r.id == rid).firstOrNull;
+    if (reciter == null) throw ReciterRecordingUnavailable(rid);
     final sStr = surahId.toString().padLeft(3, '0');
     return '${reciter.serverUrl}$sStr.mp3';
   }
