@@ -53,96 +53,162 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
         return Directionality(
           textDirection: SettingsService.instance.textDirection,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white24 : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'اليوم ${day.dayNumber} من شهر رمضان المبارك',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primaryGreen),
-                    ),
-                    Text(
-                      '${day.dayName} · ${day.gregorianDate.day}/${day.gregorianDate.month}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondaryGreen, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.4)),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildTimeStat('الإمساك', day.imsakTime, Icons.alarm_rounded, AppColors.accentGold),
-                          _buildTimeStat('الفجر', day.fajrTime, Icons.wb_twilight_rounded, AppColors.primaryGreen),
-                          _buildTimeStat('الشروق', day.sunriseTime, Icons.wb_sunny_rounded, Colors.orange),
-                        ],
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      const Divider(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildTimeStat('الظهر', day.dhuhrTime, Icons.sunny, AppColors.primaryGreen),
-                          _buildTimeStat('العصر', day.asrTime, Icons.wb_cloudy_rounded, AppColors.primaryGreen),
-                          _buildTimeStat('المغرب (الإفطار)', day.maghribTime, Icons.nightlight_round, AppColors.accentGold, isHighlight: true),
-                          _buildTimeStat('العشاء', day.ishaTime, Icons.bedtime_rounded, AppColors.primaryGreen),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : const Color(0xFFFBFBFB),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
+                  const SizedBox(height: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.auto_awesome, color: AppColors.accentGold, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          day.dailyDuaa,
-                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, height: 1.4),
+                      Text(
+                        'اليوم ${day.dayNumber} من شهر رمضان المبارك',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primaryGreen,
+                        ),
+                      ),
+                      Text(
+                        '${day.dayName} · ${day.gregorianDate.day}/${day.gregorianDate.month}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.secondaryGreen,
+                          fontSize: 13,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
-              ],
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.accentGold.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Wrap(
+                          alignment: WrapAlignment.spaceAround,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildTimeStat(
+                              'الإمساك',
+                              day.imsakTime,
+                              Icons.alarm_rounded,
+                              AppColors.accentGold,
+                            ),
+                            _buildTimeStat(
+                              'الفجر',
+                              day.fajrTime,
+                              Icons.wb_twilight_rounded,
+                              AppColors.primaryGreen,
+                            ),
+                            _buildTimeStat(
+                              'الشروق',
+                              day.sunriseTime,
+                              Icons.wb_sunny_rounded,
+                              Colors.orange,
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 20),
+                        Wrap(
+                          alignment: WrapAlignment.spaceAround,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            _buildTimeStat(
+                              'الظهر',
+                              day.dhuhrTime,
+                              Icons.sunny,
+                              AppColors.primaryGreen,
+                            ),
+                            _buildTimeStat(
+                              'العصر',
+                              day.asrTime,
+                              Icons.wb_cloudy_rounded,
+                              AppColors.primaryGreen,
+                            ),
+                            _buildTimeStat(
+                              'المغرب (الإفطار)',
+                              day.maghribTime,
+                              Icons.nightlight_round,
+                              AppColors.accentGold,
+                              isHighlight: true,
+                            ),
+                            _buildTimeStat(
+                              'العشاء',
+                              day.ishaTime,
+                              Icons.bedtime_rounded,
+                              AppColors.primaryGreen,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkCard
+                          : const Color(0xFFFBFBFB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome,
+                          color: AppColors.accentGold,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            day.dailyDuaa,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
         );
@@ -150,22 +216,38 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildTimeStat(String title, String time, IconData icon, Color color, {bool isHighlight = false}) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: isHighlight ? 22 : 18),
-        const SizedBox(height: 4),
-        Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isHighlight ? AppColors.accentGold : AppColors.mutedText)),
-        const SizedBox(height: 2),
-        Text(
-          time,
-          style: TextStyle(
-            fontSize: isHighlight ? 13.5 : 12,
-            fontWeight: FontWeight.w900,
-            color: isHighlight ? AppColors.primaryGreen : null,
+  Widget _buildTimeStat(
+    String title,
+    String time,
+    IconData icon,
+    Color color, {
+    bool isHighlight = false,
+  }) {
+    return SizedBox(
+      width: 96 * MediaQuery.textScalerOf(context).scale(12) / 12,
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: isHighlight ? 22 : 18),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isHighlight ? AppColors.accentGold : AppColors.mutedText,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            time,
+            style: TextStyle(
+              fontSize: isHighlight ? 13.5 : 12,
+              fontWeight: FontWeight.w900,
+              color: isHighlight ? AppColors.primaryGreen : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
