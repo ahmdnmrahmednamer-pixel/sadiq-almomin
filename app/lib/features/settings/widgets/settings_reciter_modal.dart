@@ -310,13 +310,15 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                   return;
                 }
                 await SettingsService.instance.setSelectedReciter(r.id);
-                await AyahAudioPlayer.instance.playReciterPreview(r);
+                final playing = await AyahAudioPlayer.instance.playReciterPreview(r);
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        'تم اعتماد القارئ: ${r.nameAr} — جاري سماع صوته الآن 🎧',
+                        playing
+                            ? 'تم اعتماد القارئ: ${r.nameAr}، تم تشغيل عينته.'
+                            : 'تم اعتماد القارئ: ${r.nameAr}، والعينة متوقفة أو غير متاحة. يمكنك إعادة المحاولة أو اختيار قارئ آخر بنفسك؛ لم يتم تشغيل قارئ بديل.',
                         style: const TextStyle(fontWeight: FontWeight.w800),
                       ),
                       backgroundColor: AppColors.primaryGreen,
