@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/notifications/prayer_notification_service.dart';
 import '../../../../core/services/adhan_sensor_gesture_service.dart';
-import '../../../../core/services/islamic_audio_service.dart';
 import '../../../../core/services/settings_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/ui/app_dropdown_field.dart';
@@ -307,7 +306,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary:
               const Icon(Icons.nightlight_round, color: AppColors.accentGold),
-          title: const Text('تنبيه قيام الليل والتهجد 🌙'),
+          title: const Text('تنبيه قيام الليل والتهجد'),
           value: pn.qiyamReminderEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
@@ -331,7 +330,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary:
               const Icon(Icons.mosque_rounded, color: AppColors.primaryGreen),
-          title: const Text('تذكير سنن يوم الجمعة المباركة 🕌'),
+          title: const Text('تذكير سنن يوم الجمعة المباركة'),
           value: pn.fridayReminderEnabled,
           activeThumbColor: AppColors.accentGold,
           activeTrackColor: AppColors.primaryGreen,
@@ -482,7 +481,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary: const Icon(Icons.record_voice_over_rounded,
               color: AppColors.accentGold),
-          title: const Text('تشغيل دعاء الشيخ الشعراوي بعد الأذان 🎧',
+          title: const Text('تشغيل دعاء الشيخ الشعراوي بعد الأذان',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: s.playSharawiDuaaAfterAdhan,
           activeThumbColor: AppColors.accentGold,
@@ -518,7 +517,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary: const Icon(Icons.vibration_rounded,
               color: AppColors.primaryGreen),
-          title: const Text('إيقاف الأذان عند هز الهاتف 📳',
+          title: const Text('إيقاف الأذان عند هز الهاتف',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: AdhanSensorGestureService.instance.shakeToStopEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -530,7 +529,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary: const Icon(Icons.screen_rotation_rounded,
               color: AppColors.accentGold),
-          title: const Text('كتم الأذان عند قلب الهاتف على وجهه 📱',
+          title: const Text('كتم الأذان عند قلب الهاتف على وجهه',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: AdhanSensorGestureService.instance.flipToMuteEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -542,7 +541,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary: const Icon(Icons.volume_up_rounded,
               color: AppColors.primaryGreen),
-          title: const Text('التسبيح بزر رفع الصوت في المسبحة (+١) 🔊',
+          title: const Text('التسبيح بزر رفع الصوت في المسبحة (+١)',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: s.tasbihVolumeButtonEnabled,
           activeThumbColor: AppColors.accentGold,
@@ -553,7 +552,7 @@ class SettingsAdhanAndSensorsSection extends StatelessWidget {
         SwitchListTile(
           secondary: const Icon(Icons.linear_scale_rounded,
               color: AppColors.accentGold),
-          title: const Text('إظهار سليدر حبات المسبحة التفاعلي 📿',
+          title: const Text('إظهار سليدر حبات المسبحة التفاعلي',
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5)),
           value: s.tasbihSliderEnabled,
           activeThumbColor: AppColors.accentGold,
