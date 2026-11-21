@@ -11,6 +11,13 @@ class EgyptianHeritageService extends ChangeNotifier {
   EgyptianHeritageService._internal();
 
   bool _isInitialized = false;
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations = result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
   final Set<String> _favoriteIds = {};
   String _selectedGoldKarat = '21';
 
@@ -36,49 +43,69 @@ class EgyptianHeritageService extends ChangeNotifier {
   List<EgyptianIbtihalItem> get ibtihalat => ibtihalatCatalog;
   List<EgyptianFatwaItem> get darAlIftaRulings => darAlIftaFatwas;
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) {
+    if (_isInitialized && !forceReload) return Future<void>.value();
+    return _serialize(() async { await _load(forceReload: forceReload); });
+  }
+
+  Future<bool> _load({bool forceReload = false}) async {
+    if (_isInitialized && !forceReload) return true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final favs = prefs.getStringList('egyptian_heritage_favorites') ?? [];
-      _favoriteIds
-        ..clear()
-        ..addAll(favs);
-      _selectedGoldKarat = prefs.getString('egyptian_preferred_gold_karat') ?? '21';
+      if (forceReload) await prefs.reload();
+      final favs = prefs.getStringList('egyptian_heritage_favorites') ?? <String>[];
+      final karat = prefs.getString('egyptian_preferred_gold_karat') ?? '21';
+      _favoriteIds..clear()..addAll(favs);
+      _selectedGoldKarat = karat;
+      _isInitialized = true;
+      notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('EgyptianHeritageService init error: $e');
+      return false;
     }
-    _isInitialized = true;
-    notifyListeners();
   }
 
   bool isFavorite(String id) => _favoriteIds.contains(id);
 
-  Future<void> toggleFavorite(String id) async {
-    if (_favoriteIds.contains(id)) {
-      _favoriteIds.remove(id);
-    } else {
-      _favoriteIds.add(id);
-    }
+  Future<bool> toggleFavorite(String id) => _serialize(() async {
+    if (!await _load()) return false;
+    final next = Set<String>.of(_favoriteIds);
+    if (!next.add(id)) next.remove(id);
+    return _persist(next);
+  });
+
+  Future<bool> _persist(Set<String> next) async {
+    SharedPreferences? prefs;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('egyptian_heritage_favorites', _favoriteIds.toList());
-    } catch (_) {}
-    notifyListeners();
+      prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setStringList('egyptian_heritage_favorites', next.toList())) {
+        throw StateError('Egyptian heritage favorites write rejected');
+      }
+      _favoriteIds..clear()..addAll(next);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      try {
+        await prefs?.reload();
+      } catch (reloadError) {
+        debugPrint('EgyptianHeritageService cache reload error: $reloadError');
+      }
+      debugPrint('EgyptianHeritageService save error: $e');
+      return false;
+    }
   }
 
   List<String> exportFavorites() => _favoriteIds.toList();
 
-  Future<void> importFavorites(List<String> ids, {bool replace = true}) async {
-    if (replace) {
-      _favoriteIds.clear();
-    }
-    _favoriteIds.addAll(ids);
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList('egyptian_heritage_favorites', _favoriteIds.toList());
-    } catch (_) {}
-    notifyListeners();
+  Future<void> importFavorites(List<String> ids, {bool replace = true}) {
+    final incoming = List<String>.of(ids);
+    return _serialize(() async {
+      if (!await _load()) throw StateError('Egyptian heritage favorites could not be loaded');
+      final next = replace ? <String>{} : Set<String>.of(_favoriteIds);
+      next.addAll(incoming);
+      if (!await _persist(next)) throw StateError('Egyptian heritage favorites could not be saved');
+    });
   }
 
   /// Calculates Haversine distance in kilometers between two coordinates.
