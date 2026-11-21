@@ -82,7 +82,7 @@ void showSettingsPreReminderModal(BuildContext context) {
                 ),
                 icon: const Icon(Icons.record_voice_over_rounded, color: AppColors.accentGold, size: 20),
                 label: const Text(
-                  'تخصيص التنبيهات الصوتية (اقتربت صلاة...) 🎧',
+                  'تخصيص التنبيهات الصوتية (اقتربت صلاة...)',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
@@ -494,7 +494,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                                     color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
                                   ),
                                   label: Text(
-                                    isPlaying ? 'إيقاف الاستماع' : 'استماع للمقطع 🎧',
+                                    isPlaying ? 'إيقاف الاستماع' : 'استماع للمقطع',
                                     style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -523,7 +523,7 @@ class _ApproachingPrayerVoiceModalContentState extends State<_ApproachingPrayerV
                                   },
                                   icon: const Icon(Icons.notifications_active_rounded, size: 16, color: AppColors.accentGold),
                                   label: const Text(
-                                    'تجربة الإشعار 🔔',
+                                    'تجربة الإشعار',
                                     style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
                                   ),
                                 ),
@@ -628,7 +628,7 @@ void showSettingsQiyamOffsetModal(BuildContext context) {
                 ),
                 icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
                 label: const Text(
-                  'استماع لتنبيه قيام الليل (قوموا لقيام الليل) 🎧',
+                  'استماع لتنبيه قيام الليل (قوموا لقيام الليل)',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
@@ -726,7 +726,7 @@ void showSettingsDuhaOffsetModal(BuildContext context) {
                 ),
                 icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
                 label: const Text(
-                  'استماع لتنبيه صلاة الضحى 🎧',
+                  'استماع لتنبيه صلاة الضحى',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
@@ -823,7 +823,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
                 ),
                 icon: const Icon(Icons.play_circle_fill_rounded, color: AppColors.accentGold, size: 20),
                 label: const Text(
-                  'استماع لتذكير الاستغفار والحوقلة 🎧',
+                  'استماع لتذكير الاستغفار والحوقلة',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
@@ -840,7 +840,7 @@ void showSettingsPostAdhkarModal(BuildContext context) {
                 ),
                 icon: const Icon(Icons.record_voice_over_rounded, color: AppColors.accentGold, size: 20),
                 label: const Text(
-                  'استمع لدعاء الشيخ الشعراوي بعد الصلاة 🎧',
+                  'استمع لدعاء الشيخ الشعراوي بعد الصلاة',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
