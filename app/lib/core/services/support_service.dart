@@ -59,16 +59,10 @@ class SupportService {
       if (launchedWeb) return true;
     } catch (_) {}
 
-    await copyToClipboard(developerPlayStoreUrl);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم نسخ رابط برامج المطور على متجر Google Play إلى الحافظة بنجاح'),
-          backgroundColor: AppColors.primaryGreen,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
+    await copyWithFeedback(
+      context: context, text: developerPlayStoreUrl,
+      successMessage: 'تم نسخ رابط برامج المطور على متجر Google Play إلى الحافظة بنجاح',
+    );
     return false;
   }
 
@@ -81,16 +75,10 @@ class SupportService {
       if (launched) return true;
     } catch (_) {}
 
-    await copyToClipboard(developerFacebookUrl);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم نسخ رابط حساب المطور على فيسبوك إلى الحافظة بنجاح'),
-          backgroundColor: AppColors.primaryGreen,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
+    await copyWithFeedback(
+      context: context, text: developerFacebookUrl,
+      successMessage: 'تم نسخ رابط حساب المطور على فيسبوك إلى الحافظة بنجاح',
+    );
     return false;
   }
 
@@ -197,7 +185,29 @@ class SupportService {
   }
 
   /// Copies support email or full text to clipboard
-  static Future<void> copyToClipboard(String text) async {
-    await Clipboard.setData(ClipboardData(text: text)).catchError((_) {});
+  static Future<bool> copyToClipboard(String text) async {
+    try {
+      await Clipboard.setData(ClipboardData(text: text));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Announce the result only after the platform confirms the clipboard write.
+  static Future<bool> copyWithFeedback({
+    required BuildContext context,
+    required String text,
+    required String successMessage,
+  }) async {
+    final copied = await copyToClipboard(text);
+    if (!context.mounted) return copied;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(copied ? successMessage : 'تعذر النسخ إلى الحافظة. لم تُنسخ البيانات. حاول مرة أخرى.'),
+      backgroundColor: copied ? AppColors.primaryGreen : Colors.red.shade700,
+      duration: Duration(seconds: copied ? 3 : 8),
+    ));
+    return copied;
   }
 }
