@@ -100,6 +100,10 @@ class PrayerData {
   /// Independently calculated calendar days for a finite OS alarm horizon.
   /// Null keeps explicit single-day callers unchanged.
   final List<PrayerInfo>? notificationPrayers;
+
+  /// Yesterday's independently calculated sunset for the first horizon night.
+  /// Not an extra notification and not a repeated wall-clock approximation.
+  final DateTime? previousMaghribTime;
   final PrayerInfo? nextPrayer;
   final Duration timeToNextPrayer;
   final double qiblaDegrees;
@@ -111,6 +115,7 @@ class PrayerData {
     required this.locationName,
     required this.prayers,
     this.notificationPrayers,
+    this.previousMaghribTime,
     this.nextPrayer,
     this.timeToNextPrayer = Duration.zero,
     required this.qiblaDegrees,
@@ -631,6 +636,7 @@ class PrayerService extends ChangeNotifier {
         locationName: _currentData!.locationName,
         prayers: _currentData!.prayers,
         notificationPrayers: _currentData!.notificationPrayers,
+        previousMaghribTime: _currentData!.previousMaghribTime,
         nextPrayer: _currentData!.nextPrayer,
         timeToNextPrayer: diff,
         qiblaDegrees: _currentData!.qiblaDegrees,
@@ -1120,6 +1126,11 @@ class PrayerService extends ChangeNotifier {
         ));
       }
     }
+    final previousDay = PrayerTimes(
+      coordinates: coords,
+      date: DateTime(now.year, now.month, now.day - 1),
+      calculationParameters: params,
+    );
     final qiblaDeg = Qibla.qibla(coords);
 
     _currentData = PrayerData(
@@ -1128,6 +1139,7 @@ class PrayerService extends ChangeNotifier {
       locationName: locName,
       prayers: resultList,
       notificationPrayers: List.unmodifiable(notificationPrayers),
+      previousMaghribTime: previousDay.maghrib.toLocal(),
       nextPrayer: nextP,
       timeToNextPrayer: minDiff,
       qiblaDegrees: qiblaDeg,
