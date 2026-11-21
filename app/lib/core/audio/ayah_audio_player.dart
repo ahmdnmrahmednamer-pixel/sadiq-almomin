@@ -80,10 +80,14 @@ class AyahAudioPlayer {
       if (state.processingState == ProcessingState.completed) {
         final finishedKey = currentPlayingKey.value;
         final sessionId = _activePlaySessionId;
+        final finishedReciterId =
+            _playingReciterId ?? SettingsService.instance.selectedReciterId;
+        final focusToken = FastAudioService.instance.activePlaybackToken;
         currentPlayingKey.value = null;
         isPlaying.value = false;
         if (finishedKey != null && SettingsService.instance.autoPlayNextAyah) {
-          _advanceToNextAyahIfPossible(finishedKey, sessionId);
+          _advanceToNextAyahIfPossible(
+              finishedKey, sessionId, finishedReciterId, focusToken);
         }
       } else {
         isPlaying.value = state.playing;
@@ -117,8 +121,8 @@ class AyahAudioPlayer {
   String? _lastSurahName;
   String? _playingReciterId;
 
-  Future<void> _advanceToNextAyahIfPossible(
-      String finishedKey, int sessionId) async {
+  Future<void> _advanceToNextAyahIfPossible(String finishedKey, int sessionId,
+      String finishedReciterId, int focusToken) async {
     int currentSessionToken = sessionId;
     try {
       if (currentSessionToken != _activePlaySessionId) return;
@@ -129,13 +133,16 @@ class AyahAudioPlayer {
       if (surahId == null || ayahNumber == null) return;
 
       final surahs = await (loadSurahsRunner ?? QuranRepository.loadSurahs)();
-      if (currentSessionToken != _activePlaySessionId) return;
+      if (currentSessionToken != _activePlaySessionId ||
+          focusToken != FastAudioService.instance.activePlaybackToken) return;
 
       final surah = surahs.where((s) => s.id == surahId).firstOrNull;
       if (surah != null && ayahNumber < surah.ayahCount) {
         final nextAyah = ayahNumber + 1;
-        final selectedId = SettingsService.instance.selectedReciterId;
-        final reciter = SettingsService.instance.currentReciter;
+        // Automatic continuation belongs to the recording that just finished,
+        // not a newly browsed or externally saved preference.
+        final selectedId = finishedReciterId;
+        final reciter = SettingsService.resolveReciter(finishedReciterId);
         final primaryUrl = SettingsService.instance
             .getAyahAudioUrl(surahId, nextAyah, selectedId);
 
