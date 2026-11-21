@@ -1,4 +1,5 @@
 import '../../core/services/settings_service.dart';
+import '../../core/notifications/active_prayer_alert.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
@@ -34,12 +35,16 @@ class AdhanControlScreen extends StatefulWidget {
   final String prayerName;
   final bool isIqamah;
   final bool autoPlay;
+  final int? nativeNotificationId;
+  final String? notificationKind;
 
   const AdhanControlScreen({
     super.key,
     this.prayerName = 'الظهر',
     this.isIqamah = false,
     this.autoPlay = true,
+    this.nativeNotificationId,
+    this.notificationKind,
   });
 
   @override
@@ -62,6 +67,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
   bool _isMutedOrStopped = false;
   bool _isPrayerLogged = false;
   bool _showDedicatedStopView = false;
+  bool _stopInFlight = false;
+  int _audioGeneration = 0;
+  late final Future<ActivePrayerAlert> _nativeAlert;
 
   final audioService = IslamicAudioService.instance;
   final sensorService = AdhanSensorGestureService.instance;
@@ -71,6 +79,9 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
   @override
   void initState() {
     super.initState();
+    _nativeAlert = ActivePrayerAlert.capture(widget.nativeNotificationId);
+    // Retain failure for explicit stop feedback, without an unhandled init error.
+    _nativeAlert.ignore();
 
     _pulseController = AnimationController(
       vsync: this,
@@ -104,7 +115,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     audioService.addListener(_onAudioStateChanged);
 
     // Auto-play Adhan/Iqamah if requested and not already playing
-    if (widget.autoPlay && !audioService.isPlaying) {
+    if (widget.autoPlay && widget.nativeNotificationId == null && widget.notificationKind == null && !audioService.isPlaying) {
       _startAudioPlayback();
     }
   }
@@ -170,6 +181,14 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
         trackId = prayerSpecific;
       }
     }
+    final normalizedId = trackId == 'adhan_cairo' ? 'adhan_cairo_refaat' : trackId == 'iqamah_makkah' ? 'iqamah_full' : trackId;
+    final matches = IslamicAudioService.allTracks.where((track) => track.id == normalizedId || track.rawNotificationSound == normalizedId);
+    if (matches.isEmpty || IslamicAudioService.isHeldRecording(matches.first)) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('التسجيل المحفوظ غير متاح للتشغيل. اختر تسجيلاً آخر بنفسك من خيارات الأذان؛ لم يتغير اختيارك المحفوظ.'),
+      ));
+      return;
+    }
     await audioService.playTrackById(trackId);
     if (mounted) setState(() {});
   }
@@ -186,82 +205,100 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     }
   }
 
-  void _handleGestureStop({required bool isShake}) {
-    _triggerStopVibration();
-    final wasAdhan = audioService.currentTrack?.type == IslamicAudioType.adhan;
-    audioService.stop();
-    setState(() {
-      _isMutedOrStopped = true;
-      _showDedicatedStopView = true;
-      _lastGestureTriggered = isShake
-          ? 'تم إيقاف الأذان بنجاح عبر هز الهاتف 📳'
-          : 'تم كتم الأذان بنجاح عند قلب الهاتف على وجهه 📱';
-    });
-
-    if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan && !widget.isIqamah) {
-      audioService.playTrackById('duaa_sharawi_post_prayer');
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _lastGestureTriggered!,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-        ),
-        backgroundColor: AppColors.primaryGreen,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _stopAdhanManually() {
-    _triggerStopVibration();
-    final wasAdhan = audioService.currentTrack?.type == IslamicAudioType.adhan;
-    audioService.stop();
-    setState(() {
-      _isMutedOrStopped = true;
-      _showDedicatedStopView = true;
-      _lastGestureTriggered = 'تم إيقاف الأذان يدوياً ⏹️';
-    });
-
-    if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan && !widget.isIqamah) {
-      audioService.playTrackById('duaa_sharawi_post_prayer');
+  Future<bool> _stopCurrentAlert() async {
+    if (_stopInFlight) return false;
+    _audioGeneration++;
+    setState(() => _stopInFlight = true);
+    try {
+      var failed = false;
+      try { await (await _nativeAlert).stop(); } catch (_) { failed = true; }
+      try {
+        await audioService.stop();
+        if (audioService.isPlaying) failed = true;
+      } catch (_) { failed = true; }
+      _iqamahCountdownTimer?.cancel();
+      if (mounted) setState(() => _isIqamahCountdownActive = false);
+      if (failed) throw StateError('Alert stop unconfirmed');
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر تأكيد إيقاف الصوت. يمكنك إيقاف التنبيه من إشعار النظام.'),
+        ));
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _stopInFlight = false);
     }
   }
 
-  void _togglePlayPause() {
+  Future<void> _closeScreen() async {
+    if (!await _stopCurrentAlert() || !mounted) return;
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/home');
+    }
+  }
+
+  Future<void> _handleGestureStop({required bool isShake}) async {
+    await _stopAdhanManually(gesture: isShake ? 'هز الهاتف' : 'قلب الهاتف');
+  }
+
+  Future<void> _stopAdhanManually({String? gesture}) async {
+    final wasAdhan = audioService.currentTrack?.type == IslamicAudioType.adhan;
+    if (!await _stopCurrentAlert() || !mounted) return;
+    _triggerStopVibration();
+    setState(() {
+      _isMutedOrStopped = true;
+      _showDedicatedStopView = true;
+      _lastGestureTriggered = gesture == null ? 'تم إيقاف الأذان يدوياً' : 'تم إيقاف الأذان عبر $gesture';
+    });
+    if (wasAdhan && SettingsService.instance.playSharawiDuaaAfterAdhan && !widget.isIqamah) {
+      await audioService.playTrackById('duaa_sharawi_post_prayer');
+    }
+  }
+
+  Future<void> _togglePlayPause() async {
+    if (_stopInFlight) return;
     if (SettingsService.instance.hapticEnabled) HapticFeedback.lightImpact();
     if (audioService.isPlaying) {
-      audioService.pause();
+      await audioService.pause();
     } else {
-      audioService.resume();
-      setState(() {
+      final generation = ++_audioGeneration;
+      // Explicit playback may begin after a notification, but never on entry.
+      try {
+        await (await _nativeAlert).stop();
+      } catch (_) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('تعذر إيقاف تنبيه النظام؛ لم يبدأ صوت آخر فوقه.'),
+        ));
+        return;
+      }
+      if (!mounted || generation != _audioGeneration) return;
+      if (audioService.currentTrack == null) {
+        await _startAudioPlayback();
+      } else {
+        await audioService.resume();
+      }
+      if (!mounted || generation != _audioGeneration) return;
+      if (mounted) setState(() {
         _isMutedOrStopped = false;
         _showDedicatedStopView = false;
       });
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  void _snoozeAdhan(int minutes) {
+  Future<void> _snoozeAdhan(int minutes) async {
+    if (!await _stopCurrentAlert() || !mounted) return;
     _triggerStopVibration();
-    audioService.stop();
-    notifService.snoozeAdhan(minutes, widget.prayerName);
-
+    await notifService.snoozeAdhan(minutes, widget.prayerName);
+    if (!mounted) return;
     setState(() {
       _isMutedOrStopped = true;
-      _lastGestureTriggered = 'تم تفعيل الغفوة: سيعاد التنبيه بعد $minutes دقائق ⏰';
+      _lastGestureTriggered = 'تم طلب الغفوة بعد $minutes دقائق؛ تحقق من أذونات التنبيهات.';
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم تأجيل أذان ${widget.prayerName} لمدة $minutes دقائق ⏰'),
-        backgroundColor: AppColors.accentGold,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
   }
 
   void _startIqamahCountdown(int minutes) {
@@ -1009,6 +1046,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
   @override
   void dispose() {
+    _audioGeneration++;
     audioService.removeListener(_onAudioStateChanged);
     _clockTimer?.cancel();
     _iqamahCountdownTimer?.cancel();
@@ -1024,9 +1062,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
     final themeData = _getAtmosphereTheme(widget.prayerName);
     final timeStr =
         '${_currentTime.hour.toString().padLeft(2, '0')}:${_currentTime.minute.toString().padLeft(2, '0')}:${_currentTime.second.toString().padLeft(2, '0')}';
-    final activeVoiceTitle = widget.isIqamah
+    final activeVoiceTitle = audioService.currentTrack?.title ?? (widget.nativeNotificationId != null || widget.notificationKind != null
+        ? 'صوت تنبيه النظام حسب قناة الإشعار'
+        : widget.isIqamah
         ? getIqamahVoiceName(notifService.selectedIqamahVoice)
-        : getAdhanVoiceName(notifService.getPrayerVoice(widget.prayerName));
+        : getAdhanVoiceName(notifService.getPrayerVoice(widget.prayerName)));
 
     final currentData = PrayerService.instance.currentData;
     final locationName = currentData?.locationName ?? 'الموقع غير محدد عبر GPS';
@@ -1055,11 +1095,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     children: [
                       IconButton(
                         icon: const Icon(Icons.close_rounded, color: Colors.white),
-                        tooltip: 'إغلاق والعودة',
-                        onPressed: () => Navigator.of(context).pop(),
+                        tooltip: 'إيقاف الصوت والإغلاق',
+                        onPressed: _stopInFlight ? null : _closeScreen,
                       ),
                       // Top pill badge
-                      Container(
+                      Flexible(child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                         decoration: BoxDecoration(
                           color: themeData.primaryAccent.withValues(alpha: 0.18),
@@ -1071,17 +1111,17 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                           children: [
                             Icon(themeData.celestialIcon, size: 16, color: themeData.primaryAccent),
                             const SizedBox(width: 6),
-                            Text(
+                            Flexible(child:Text(
                               widget.isIqamah ? 'شاشة إقامة الصلاة' : 'شاشة تحكم نداء الحق',
                               style: TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
                                 color: themeData.primaryAccent,
                               ),
-                            ),
+                            )),
                           ],
                         ),
-                      ),
+                      )),
                       Row(
                         children: [
                           IconButton(
@@ -1149,9 +1189,15 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
           // Prayer Headline & Spiritual Atmosphere Title
           Text(
-            widget.isIqamah
-                ? 'حان الآن موعد إقامة صلاة ${widget.prayerName}'
-                : 'الله أكبر.. حان الآن أذان ${widget.prayerName}',
+            widget.notificationKind == 'prereminder'
+                ? 'تذكير قبل صلاة ${widget.prayerName}'
+                : widget.notificationKind == 'reminder'
+                    ? 'تذكير صلاة ${widget.prayerName}'
+                    : !widget.autoPlay && widget.nativeNotificationId == null && widget.notificationKind == null
+                        ? 'معاينة ${widget.isIqamah ? 'إقامة' : 'أذان'} ${widget.prayerName}'
+                        : widget.isIqamah
+                    ? 'حان الآن موعد إقامة صلاة ${widget.prayerName}'
+                    : 'الله أكبر.. حان الآن أذان ${widget.prayerName}',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 22,
@@ -1325,7 +1371,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onPressed: _isMutedOrStopped ? null : _stopAdhanManually,
+              onPressed: _isMutedOrStopped || _stopInFlight ? null : _stopAdhanManually,
               icon: const Icon(Icons.stop_circle_rounded, size: 26),
               label: Text(
                 _isMutedOrStopped ? 'تم إيقاف الأذان' : 'إيقاف الأذان فوراً',
@@ -1354,7 +1400,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                   audioService.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   size: 18,
                 ),
-                label: Text(audioService.isPlaying ? 'إيقاف مؤقت' : 'استئناف'),
+                label: Text(audioService.isPlaying ? 'إيقاف مؤقت' : audioService.currentTrack == null ? 'تشغيل الأذان الآن' : 'استئناف'),
               ),
 
               // Snooze 5 min
@@ -1781,7 +1827,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _closeScreen,
                   icon: const Icon(Icons.home_rounded, size: 18),
                   label: const Text('العودة للتطبيق', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
@@ -1907,19 +1953,19 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.sensors_rounded, color: Colors.greenAccent, size: 16),
               SizedBox(width: 6),
-              Text(
-                'مستشعرات الحركة نشطة وتعمل الآن',
+              Flexible(child:Text(
+                sensorService.isListening ? 'مستشعرات الحركة قيد الاستماع' : 'تعذر بدء مستشعرات الحركة',
                 style: TextStyle(
                   color: Colors.greenAccent,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
-              ),
+              )),
             ],
           ),
           const SizedBox(height: 8),
