@@ -1,4 +1,6 @@
 import 'stories_service.dart';
+import '../models/ayah_note.dart';
+import '../models/memorization_item.dart';
 import 'adhan_sensor_gesture_service.dart';
 import 'ramadan_service.dart';
 import 'hajj_umrah_service.dart';
@@ -418,6 +420,21 @@ class BackupRestoreService {
     }
     final bookmarks = data['bookmarks'];
     if (bookmarks is List && bookmarks.any((entry) => entry is! String)) {
+      return false;
+    }
+    // Parse every nested note and memorization record before any restore write.
+    // Use the same model readers as import so legacy optional fields, numeric
+    // coercions and unknown extensions keep their existing meaning.
+    try {
+      for (final row in data['ayah_notes'] as List? ?? const []) {
+        if (row is! Map<String, dynamic>) return false;
+        AyahNote.fromJson(row);
+      }
+      for (final row in data['memorization_items'] as List? ?? const []) {
+        if (row is! Map<String, dynamic>) return false;
+        MemorizationItem.fromJson(row);
+      }
+    } catch (_) {
       return false;
     }
     return true;
