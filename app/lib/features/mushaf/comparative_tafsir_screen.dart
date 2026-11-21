@@ -31,7 +31,7 @@ class _ComparativeTafsirScreenState extends State<ComparativeTafsirScreen> {
   late int _selectedAyahNumber;
   String _firstEditionId = 'muyassar';
   String _secondEditionId = 'ibn_kathir';
-  String _thirdEditionId = 'shaarawi';
+  String _thirdEditionId = 'saadi';
   bool _showThirdEdition = true;
 
   TafsirResult? _firstResult;
@@ -431,3 +431,4 @@ class _ComparativeTafsirScreenState extends State<ComparativeTafsirScreen> {
     );
   }
 }
+

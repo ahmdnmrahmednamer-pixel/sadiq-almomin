@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 /// One focus target for a complete verse, including its visual verse number.
-/// Gesture callbacks also expose the same actions to assistive technology.
+/// Gesture callbacks expose tap and long-press to assistive technology. No custom spoken
+/// gesture instructions are added; the screen reader announces its own default actions.
 class AyahInteraction extends StatelessWidget {
   final String label;
   final VoidCallback onTap;

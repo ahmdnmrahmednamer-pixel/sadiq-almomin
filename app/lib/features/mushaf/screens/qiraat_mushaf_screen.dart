@@ -21,6 +21,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
   late final BudurSource _source;
   List<Surah> _surahs = [];
   List<BudurPassage> _passages = [];
+  String _sourceText = '';
   int _surah = 1, _ayah = 0, _count = 7, _version = 0;
   bool _busy = true;
   bool _referenceBusy = false;
@@ -57,6 +58,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
         _surahs = surahs;
         _count = ayahs.length;
         _passages = passages;
+        _sourceText = text;
         _busy = false;
       });
     } catch (_) {
@@ -64,7 +66,7 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
         setState(() {
           _busy = false;
           _error =
-              'تعذر تحميل نص البدور الزاهرة. تحقق من الاتصال وأعد المحاولة.';
+              'تعذر قراءة نص البدور الزاهرة المدمج. أعد المحاولة.';
         });
     }
   }
@@ -125,9 +127,12 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final shown = _ayah == 0
-        ? _passages
-        : _passages.where((p) => p.ayahs.contains(_ayah)).toList();
+    final shown = [
+      ...(_ayah == 0 ? _passages
+          : _passages.where((p) => p.ayahs.contains(_ayah))),
+      ...BudurSource.sharedContexts(_sourceText,
+          surahId: _surah, ayahNumber: _ayah),
+    ];
     return Directionality(
         textDirection: SettingsService.instance.textDirection,
         child: Scaffold(
@@ -225,6 +230,11 @@ class _QiraatMushafScreenState extends State<QiraatMushafScreen> {
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .labelMedium),
+                                                  if (p.contextNote.isNotEmpty)
+                                                    Padding(
+                                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                                        child: Text(p.contextNote,
+                                                            style: Theme.of(context).textTheme.bodyMedium)),
                                                   if (p.ayahs.length > 1)
                                                     const Text(
                                                         'مقطع ذو مواضع متعددة؛ ليس كل ما فيه خاصًا بكل آية.'),

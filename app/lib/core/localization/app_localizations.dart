@@ -97,11 +97,11 @@ class QuranTranslationEdition {
 
   static const List<QuranTranslationEdition> availableTranslations = [
     QuranTranslationEdition(
-      id: 'en_saheeh',
+      id: 'en_rwwad',
       languageCode: 'en',
-      nameAr: 'الإنجليزية — صحيح إنترناشونال (Saheeh International)',
-      nameNative: 'English — Saheeh International',
-      author: 'Saheeh International',
+      nameAr: 'الإنجليزية: مركز رواد الترجمة',
+      nameNative: 'English: Rowwad Translation Center',
+      author: 'Rowwad Translation Center',
     ),
     QuranTranslationEdition(
       id: 'fr_hamidullah',

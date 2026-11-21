@@ -24,6 +24,7 @@ class AsbabNuzul {
   final String source;
   final bool hasSpecificIncident;
   final bool hasSourceText;
+  final List<LubabEntry> sourceEntries;
 
   const AsbabNuzul({
     required this.surahId,
@@ -33,6 +34,7 @@ class AsbabNuzul {
     required this.source,
     this.hasSpecificIncident = true,
     this.hasSourceText = false,
+    this.sourceEntries = const [],
   });
 }
 
@@ -95,7 +97,7 @@ class QuranLinguisticsResult {
     }
 
     buffer.writeln('نص المصدر (${asbabNuzul.source}):');
-    buffer.writeln(asbabNuzul.narration);
+    buffer.writeln(asbabNuzul.sourceEntries.isEmpty?asbabNuzul.narration:asbabNuzul.sourceEntries.map((e)=>e.annotatedText).join('\n\n'));
     buffer.writeln();
 
     buffer.writeln('📐 الإعراب والدلالة النحوية:');
@@ -120,16 +122,16 @@ class QuranLinguisticsService {
       if(entries.isNotEmpty){
         final pages=entries.expand((e)=>e.pages).toSet().toList();
         return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'نص لباب النقول',
-          narration:entries.map((e)=>e.text).join('\n\n'),
-          source:'لباب النقول، السيوطي. ص ${pages.join("، ")}. الموسوعة القرآنية\n${LubabSource.sourceUrl}\nمقطع يبدأ بلفظ الآية وقد يشمل سياق ما بعدها. ليس حكمًا على صحة الرواية أو إثباتًا لسبب خاص.',
+          narration:entries.map((e)=>e.text).join('\n\n'),sourceEntries:entries,
+          source:'لباب النقول، السيوطي. ص ${pages.join("، ")}. الموسوعة القرآنية\n${LubabSource.sourceUrl}\nمقطع مرتبط باقتباس الآية أو بالمدى الصريح الذي ذكره المؤلف. ليس حكمًا على صحة الرواية أو إثباتًا لسبب خاص. النص كما ورد في المصدر، وقد تظهر أخطاء نسخ في الاقتباس القرآني داخله.',
           hasSpecificIncident:false,hasSourceText:true);
       }
       return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'لباب النقول',
-        narration:'لم يُثبت ربط هذا الموضع في الفهرس بعد. هذا لا يعني عدم وجود سبب نزول لهذه الآية.',
+        narration:'لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول.',
         source:'لباب النقول، السيوطي',hasSpecificIncident:false);
     }catch(_){
       return AsbabNuzul(surahId:surah,ayahNumber:ayah,title:'لباب النقول',
-        narration:'تعذر تحميل نص المصدر أو تغيّرت نسخته. هذا لا يعني عدم وجود سبب نزول لهذه الآية.',
+        narration:'تعذر تحميل نص لباب النقول الآن. حاول مرة أخرى.',
         source:'لباب النقول، السيوطي',hasSpecificIncident:false);
     }
   }

@@ -85,7 +85,9 @@ class AyahAudioPlayer {
         final focusToken = FastAudioService.instance.activePlaybackToken;
         currentPlayingKey.value = null;
         isPlaying.value = false;
-        if (finishedKey != null && SettingsService.instance.autoPlayNextAyah) {
+        if (finishedKey != null && _scope != null) {
+          _advanceScoped(finishedKey, sessionId);
+        } else if (finishedKey != null && SettingsService.instance.autoPlayNextAyah) {
           _advanceToNextAyahIfPossible(
               finishedKey, sessionId, finishedReciterId, focusToken);
         }
@@ -108,6 +110,9 @@ class AyahAudioPlayer {
     _lastSurahName = null;
     _playingReciterId = null;
     _activePlaySessionId = 0;
+    _scope = null;
+    _passesLeft = 0;
+    scopedActive.value = false;
     _setupPlayerStateListener();
   }
 
@@ -190,8 +195,115 @@ class AyahAudioPlayer {
     }
   }
 
+  List<String>? _scope;
+  int _passesLeft = 0;
+  bool _startingScope = false;
+
+  /// True while a surah/page/juz scope is the active playback (playing or paused).
+  final ValueNotifier<bool> scopedActive = ValueNotifier<bool>(false);
+
+  /// Keys ("surah:ayah") of the active scope, or null.
+  List<String>? get activeScope => _scope == null ? null : List.unmodifiable(_scope!);
+
+  /// Plays [keys] in order with the selected reciter. [passes] is the number of
+  /// times the whole scope plays (1 = once, no repeat). A tap on any single ayah
+  /// afterwards (playAyah) leaves the scope and plays only that ayah.
+  Future<void> playScope(BuildContext context, List<String> keys, {int passes = 1}) async {
+    if (keys.isEmpty) return;
+    _scope = List<String>.from(keys);
+    _passesLeft = passes < 1 ? 1 : passes;
+    scopedActive.value = true;
+    final parts = keys.first.split(':');
+    _startingScope = true;
+    try {
+      await playAyah(context, int.parse(parts[0]), int.parse(parts[1]));
+    } finally {
+      _startingScope = false;
+    }
+  }
+
+  /// Pause when playing, resume when paused (scope or single ayah).
+  Future<void> togglePause() async {
+    if (currentPlayingKey.value == null) return;
+    if (_isPlayerPlaying) {
+      await _player.pause();
+      isPlaying.value = false;
+    } else {
+      isPlaying.value = true;
+      await _player.play();
+    }
+  }
+
+  /// Sets how many passes remain for the active scope (1 = this pass is the last).
+  void setScopePasses(int passes) {
+    if (_scope == null) return;
+    _passesLeft = passes < 1 ? 1 : passes;
+  }
+
+  int get scopePassesLeft => _passesLeft;
+
+  Future<void> _advanceScoped(String finishedKey, int sessionId) async {
+    final scope = _scope;
+    if (scope == null || sessionId != _activePlaySessionId) return;
+    final i = scope.indexOf(finishedKey);
+    String? next;
+    if (i >= 0 && i < scope.length - 1) {
+      next = scope[i + 1];
+    } else if (_passesLeft > 1) {
+      _passesLeft--;
+      next = scope.first;
+    }
+    if (next == null) {
+      _scope = null;
+      _passesLeft = 0;
+      scopedActive.value = false;
+      return;
+    }
+    final parts = next.split(':');
+    final surahId = int.parse(parts[0]);
+    final ayah = int.parse(parts[1]);
+    final reciter = SettingsService.instance.currentReciter;
+    final primaryUrl = SettingsService.instance.getAyahAudioUrl(surahId, ayah);
+    final sStr = surahId.toString().padLeft(3, '0');
+    final aStr = ayah.toString().padLeft(3, '0');
+    final fallback = [
+      'https://everyayah.com/data/Minshawy_Murattal_128kbps/$sStr$aStr.mp3',
+      'https://everyayah.com/data/Husary_128kbps/$sStr$aStr.mp3',
+      'https://everyayah.com/data/Alafasy_128kbps/$sStr$aStr.mp3',
+    ].where((u) => u != primaryUrl).toList();
+    final token = ++_activePlaySessionId;
+    currentPlayingKey.value = next;
+    _playingReciterId = reciter.id;
+    isPlaying.value = true;
+    try {
+      final ok = await (playResilientRunner ?? FastAudioService.instance.playResilient)(
+        primaryUrl,
+        player: _player,
+        primaryUrl: primaryUrl,
+        fallbackUrls: fallback,
+        cacheKey: 'ayah_${reciter.id}_${surahId}_$ayah',
+        onStopCallback: stop,
+      );
+      if (token != _activePlaySessionId) return;
+      if (!ok) throw Exception('scoped playback failed');
+    } catch (_) {
+      if (token == _activePlaySessionId) {
+        _scope = null;
+        _passesLeft = 0;
+        scopedActive.value = false;
+        currentPlayingKey.value = null;
+        isPlaying.value = false;
+      }
+    }
+  }
+
   Future<void> playAyah(BuildContext context, int surahId, int ayahNumber,
       {String? surahName}) async {
+    if (!_startingScope && _scope != null) {
+      _scope = null;
+      _passesLeft = 0;
+      scopedActive.value = false;
+    }
     final key = '$surahId:$ayahNumber';
     final selectedId = SettingsService.instance.selectedReciterId;
     final reciter = SettingsService.instance.currentReciter;
@@ -362,6 +474,9 @@ class AyahAudioPlayer {
   }
 
   Future<void> stop() async {
+    _scope = null;
+    _passesLeft = 0;
+    scopedActive.value = false;
     final sessionId = ++_activePlaySessionId;
     try {
       await _stopPlayer();
@@ -377,3 +492,4 @@ class AyahAudioPlayer {
     _player.dispose();
   }
 }
+

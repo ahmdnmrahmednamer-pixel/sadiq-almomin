@@ -83,6 +83,11 @@ flutter:
     - assets/fonts/
 
   fonts:
+    - family: Kitab
+      fonts:
+        - asset: assets/fonts/Kitab-Regular.ttf
+        - asset: assets/fonts/Kitab-Bold.ttf
+          weight: 700
     - family: Amiri
       fonts:
         - asset: assets/fonts/Amiri-Regular.ttf
@@ -100,3 +105,4 @@ flutter:
     - family: AmiriQuran
       fonts:
         - asset: assets/fonts/AmiriQuran-Regular.ttf
+

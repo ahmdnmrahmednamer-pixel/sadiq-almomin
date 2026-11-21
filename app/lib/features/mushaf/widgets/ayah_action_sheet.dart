@@ -16,9 +16,9 @@ import 'ayah_card_share_sheet.dart';
 import '../memorization_screen.dart';
 import '../comparative_tafsir_screen.dart';
 import '../tadabbur_journal_screen.dart';
-import '../screens/audio_tafsir_screen.dart';
 import '../screens/qiraat_mushaf_screen.dart';
 import '../screens/quran_irab_screen.dart';
+import '../screens/quran_english_screen.dart';
 import '../../settings/widgets/settings_reciter_modal.dart';
 
 class AyahActionSheet extends StatefulWidget {
@@ -98,6 +98,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
       surah: widget.surah,
       ayah: widget.ayah,
       initialTabIndex: initialTab,
+      focusedSection: true,
     );
   }
 
@@ -125,16 +126,6 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
     );
   }
 
-  void _showAudioTafsir() {
-    Navigator.pop(context);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AudioTafsirScreen(),
-      ),
-    );
-  }
-
   void _showMemorization() {
     Navigator.pop(context);
     Navigator.push(
@@ -151,99 +142,63 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
   }
 
   Future<void> _markReinforcement() async {
-    try {
-      await MemorizationService.instance.recordReview(
-        surahId: widget.surah.id,
-        ayahNumber: widget.ayah.ayahNumber,
-        surahName: widget.surah.nameAr,
-        rating: MemorizationRating.hard,
-      );
-      if (!mounted) return;
-      setState(() {});
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.timelapse, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'تم تحديد الآية: تحتاج تثبيت ومراجعة',
-                  style: TextStyle(fontSize: 13),
-                ),
+    await MemorizationService.instance.recordReview(
+      surahId: widget.surah.id,
+      ayahNumber: widget.ayah.ayahNumber,
+      surahName: widget.surah.nameAr,
+      rating: MemorizationRating.hard,
+    );
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.timelapse, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'تم تحديد الآية: تحتاج تثبيت ومراجعة',
+                style: TextStyle(fontSize: 13),
               ),
-            ],
-          ),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF1B4332),
-        ),
-      );
-    } on MemorizationStorageException catch (error) {
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          scrollable: true,
-          title: const Text('لم يُحفظ التعديل'),
-          content: Text(error.message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('حسنًا'),
-            )
+            ),
           ],
         ),
-      );
-    }
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF1B4332),
+      ),
+    );
   }
 
   Future<void> _markForgotten() async {
-    try {
-      await MemorizationService.instance.recordReview(
-        surahId: widget.surah.id,
-        ayahNumber: widget.ayah.ayahNumber,
-        surahName: widget.surah.nameAr,
-        rating: MemorizationRating.forgot,
-      );
-      if (!mounted) return;
-      setState(() {});
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.replay_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'تم تحديد الآية: نسيتها وتحتاج إعادة حفظ',
-                  style: TextStyle(fontSize: 13),
-                ),
+    await MemorizationService.instance.recordReview(
+      surahId: widget.surah.id,
+      ayahNumber: widget.ayah.ayahNumber,
+      surahName: widget.surah.nameAr,
+      rating: MemorizationRating.forgot,
+    );
+    if (!mounted) return;
+    setState(() {});
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.replay_rounded, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'تم تحديد الآية: نسيتها وتحتاج إعادة حفظ',
+                style: TextStyle(fontSize: 13),
               ),
-            ],
-          ),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF8B2500),
-        ),
-      );
-    } on MemorizationStorageException catch (error) {
-      if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          scrollable: true,
-          title: const Text('لم يُحفظ التعديل'),
-          content: Text(error.message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('حسنًا'),
-            )
+            ),
           ],
         ),
-      );
-    }
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF8B2500),
+      ),
+    );
   }
 
   void _showTadabburNote() {
@@ -285,6 +240,52 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
     final isReinforced = memItem?.lastRating == MemorizationRating.hard;
     final isForgotten = memItem?.lastRating == MemorizationRating.forgot;
 
+    final compactHeader = MediaQuery.textScalerOf(context).scale(10) > 13;
+    final changeReciterButton = TextButton.icon(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        backgroundColor: isDark ? Colors.white10 : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+      ),
+      icon: const Icon(Icons.person_search_rounded,
+          size: 16, color: AppColors.primaryGreen),
+      label: const Text(
+        'تغيير القارئ',
+        style: TextStyle(
+            fontSize: 11.5,
+            color: AppColors.primaryGreen,
+            fontWeight: FontWeight.bold),
+      ),
+      onPressed: _showReciterSelector,
+    );
+    final titleBlock = Semantics(
+      container: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'سورة ${widget.surah.nameAr} — آية ${widget.ayah.ayahNumber}',
+            style: const TextStyle(
+              fontSize: 16.5,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'صفحة ${widget.ayah.page} · جزء ${widget.ayah.juz} · حزب ${widget.ayah.hizb}',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppColors.mutedText,
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: Container(
@@ -323,29 +324,10 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'سورة ${widget.surah.nameAr} — آية ${widget.ayah.ayahNumber}',
-                          style: const TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryGreen,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'صفحة ${widget.ayah.page} · جزء ${widget.ayah.juz} · حزب ${widget.ayah.hizb}',
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: AppColors.mutedText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  if (compactHeader)
+                    const Spacer()
+                  else
+                    Expanded(child: titleBlock),
 
                   // Quick Action Icons in Header
                   IconButton(
@@ -408,6 +390,10 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (compactHeader)
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: titleBlock),
                     // 1. Ayah Text Display Card
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -467,114 +453,100 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                               width: isPlayingThisAyah ? 1.5 : 1.0,
                             ),
                           ),
-                          child: Row(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Play / Stop Icon Button
-                              InkWell(
-                                onTap: () {
-                                  if (isPlayingThisAyah) {
-                                    AyahAudioPlayer.instance.stop();
-                                  } else {
-                                    AyahAudioPlayer.instance.playAyah(
-                                      context,
-                                      widget.surah.id,
-                                      widget.ayah.ayahNumber,
-                                      surahName: widget.surah.nameAr,
-                                    );
-                                  }
-                                },
-                                borderRadius: BorderRadius.circular(24),
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: isPlayingThisAyah
-                                        ? AppColors.accentGold
-                                        : AppColors.primaryGreen,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    isPlayingThisAyah
-                                        ? Icons.pause_rounded
-                                        : Icons.play_arrow_rounded,
-                                    color: isPlayingThisAyah
-                                        ? Colors.black
-                                        : Colors.white,
-                                    size: 24,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-
-                              // Playback label & Current Reciter
-                              Expanded(
-                                child: InkWell(
-                                  onTap: () {
-                                    if (isPlayingThisAyah) {
-                                      AyahAudioPlayer.instance.stop();
-                                    } else {
-                                      AyahAudioPlayer.instance.playAyah(
-                                        context,
-                                        widget.surah.id,
-                                        widget.ayah.ayahNumber,
-                                        surahName: widget.surah.nameAr,
-                                      );
-                                    }
-                                  },
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
+                              Row(
+                                children: [
+                                  // Play / Stop Icon Button
+                                  InkWell(
+                                    onTap: () {
+                                      if (isPlayingThisAyah) {
+                                        AyahAudioPlayer.instance.stop();
+                                      } else {
+                                        AyahAudioPlayer.instance.playAyah(
+                                          context,
+                                          widget.surah.id,
+                                          widget.ayah.ayahNumber,
+                                          surahName: widget.surah.nameAr,
+                                        );
+                                      }
+                                    },
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: isPlayingThisAyah
+                                            ? AppColors.accentGold
+                                            : AppColors.primaryGreen,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
                                         isPlayingThisAyah
-                                            ? 'إيقاف تلاوة الآية'
-                                            : 'استماع للآية الكريمة',
-                                        style: TextStyle(
-                                          fontSize: 13.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: isPlayingThisAyah
-                                              ? AppColors.accentGold
-                                              : AppColors.primaryGreen,
-                                        ),
+                                            ? Icons.pause_rounded
+                                            : Icons.play_arrow_rounded,
+                                        color: isPlayingThisAyah
+                                            ? Colors.black
+                                            : Colors.white,
+                                        size: 24,
                                       ),
-                                      Text(
-                                        'بصوت: ${currentReciter.nameAr}',
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          color: isDark
-                                              ? Colors.white70
-                                              : Colors.black54,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                              ),
+                                  const SizedBox(width: 10),
 
-                              // Change Reciter Button
-                              TextButton.icon(
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  backgroundColor:
-                                      isDark ? Colors.white10 : Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    side: BorderSide(
-                                        color:
-                                            Colors.grey.withValues(alpha: 0.3)),
+                                  // Playback label & Current Reciter
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () {
+                                        if (isPlayingThisAyah) {
+                                          AyahAudioPlayer.instance.stop();
+                                        } else {
+                                          AyahAudioPlayer.instance.playAyah(
+                                            context,
+                                            widget.surah.id,
+                                            widget.ayah.ayahNumber,
+                                            surahName: widget.surah.nameAr,
+                                          );
+                                        }
+                                      },
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            isPlayingThisAyah
+                                                ? 'إيقاف تلاوة الآية'
+                                                : 'استماع للآية الكريمة',
+                                            style: TextStyle(
+                                              fontSize: 13.5,
+                                              fontWeight: FontWeight.bold,
+                                              color: isPlayingThisAyah
+                                                  ? AppColors.accentGold
+                                                  : AppColors.primaryGreen,
+                                            ),
+                                          ),
+                                          Text(
+                                            'بصوت: ${currentReciter.nameAr}',
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              color: isDark
+                                                  ? Colors.white70
+                                                  : Colors.black54,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                icon: const Icon(Icons.person_search_rounded,
-                                    size: 16, color: AppColors.primaryGreen),
-                                label: const Text(
-                                  'تغيير القارئ',
-                                  style: TextStyle(
-                                      fontSize: 11.5,
-                                      color: AppColors.primaryGreen,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                onPressed: _showReciterSelector,
+
+                                  if (!compactHeader) changeReciterButton,
+                                ],
                               ),
+                              if (compactHeader)
+                                Align(
+                                  alignment: AlignmentDirectional.centerEnd,
+                                  child: changeReciterButton,
+                                ),
                             ],
                           ),
                         );
@@ -584,7 +556,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                     const SizedBox(height: 16),
 
                     // Section 1: 📖 التفاسير وعلوم القرآن
-                    _buildSectionHeader('التفاسير وعلوم القرآن الكريم',
+                    _buildSectionHeader('📖 التفاسير وعلوم القرآن الكريم',
                         AppColors.primaryGreen),
                     const SizedBox(height: 8),
                     Wrap(
@@ -598,6 +570,22 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                           subtitle: '',
                           color: AppColors.primaryGreen,
                           onTap: _showTafseer,
+                        ),
+                        _buildFeatureButton(
+                          icon: Icons.translate,
+                          label: 'الترجمة الإنجليزية',
+                          subtitle: '',
+                          color: AppColors.primaryGreen,
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => QuranEnglishScreen(
+                                        surah: widget.surah.id,
+                                        ayah: widget.ayah.ayahNumber,
+                                        ayahCount: widget.surah.ayahCount)));
+                          },
                         ),
                         _buildFeatureButton(
                           icon: Icons.compare_arrows_rounded,
@@ -634,13 +622,6 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
                           color: AppColors.secondaryGreen,
                           onTap: _showQiraat,
                         ),
-                        _buildFeatureButton(
-                          icon: Icons.graphic_eq_rounded,
-                          label: 'التفسير الصوتي',
-                          subtitle: '',
-                          color: AppColors.accentGold,
-                          onTap: _showAudioTafsir,
-                        ),
                       ],
                     ),
 
@@ -648,7 +629,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
 
                     // Section 2: ✍️ الحفظ والتدبر والملاحظات
                     _buildSectionHeader(
-                        'الحفظ والتدبر والخواطر', AppColors.secondaryGreen),
+                        '✍️ الحفظ والتدبر والخواطر', AppColors.secondaryGreen),
                     const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.spaceAround,
@@ -737,7 +718,7 @@ class _AyahActionSheetState extends State<AyahActionSheet> {
 
                     // Section 3: 🎨 المشاركة والتصميم الدعوي
                     _buildSectionHeader(
-                        'النشر والتصميم الدعوي', AppColors.accentGold),
+                        '🎨 النشر والتصميم الدعوي', AppColors.accentGold),
                     const SizedBox(height: 8),
                     Wrap(
                       alignment: WrapAlignment.spaceAround,

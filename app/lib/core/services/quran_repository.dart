@@ -168,6 +168,18 @@ class QuranRepository {
     return pagesMap[pageNumber] ?? [];
   }
 
+  /// All ayahs of a juz (1..30) in mushaf order.
+  static Future<List<Ayah>> getAyahsForJuz(int juz) async {
+    if (juz < 1 || juz > 30) return [];
+    final pagesMap = await loadAllPages();
+    final pages = pagesMap.keys.toList()..sort();
+    return [
+      for (final p in pages)
+        for (final a in pagesMap[p]!)
+          if (a.juz == juz) a
+    ];
+  }
+
   /// Retrieves metadata for a given page (surah name, juz, start ayah, etc.)
   static Future<PageMetadata?> getPageMetadata(int pageNumber) async {
     if (pageNumber < 1 || pageNumber > 604) return null;
@@ -297,3 +309,4 @@ class QuranRepository {
     return result;
   }
 }
+

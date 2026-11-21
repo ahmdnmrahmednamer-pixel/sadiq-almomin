@@ -15,11 +15,16 @@ class AyahLinguisticsSheet extends StatefulWidget {
   final Ayah ayah;
   final int initialTabIndex;
 
+  /// When true, only the section named by [initialTabIndex] is shown (no tab bar),
+  /// so opening one specific section does not also offer the others.
+  final bool focusedSection;
+
   const AyahLinguisticsSheet({
     super.key,
     required this.surah,
     required this.ayah,
     this.initialTabIndex = 0,
+    this.focusedSection = false,
   });
 
   static void show(
@@ -27,6 +32,7 @@ class AyahLinguisticsSheet extends StatefulWidget {
     required Surah surah,
     required Ayah ayah,
     int initialTabIndex = 0,
+    bool focusedSection = false,
   }) {
     showModalBottomSheet(
       context: context,
@@ -36,6 +42,7 @@ class AyahLinguisticsSheet extends StatefulWidget {
         surah: surah,
         ayah: ayah,
         initialTabIndex: initialTabIndex,
+        focusedSection: focusedSection,
       ),
     );
   }
@@ -49,6 +56,9 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
   late TabController _tabController;
   late Future<QuranLinguisticsResult> _detailsFuture;
   int _selectedSectionIndex = 0;
+  // Copy and share are hidden when a focused Asbab section has no source text,
+  // so nothing empty is exported. Source credit stays in the section itself.
+  bool _actionsVisible = true;
 
   @override
   void initState() {
@@ -64,6 +74,11 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
       surahId: widget.surah.id,
       ayahNumber: widget.ayah.ayahNumber,
     );
+    if (widget.focusedSection && widget.initialTabIndex == 1) {
+      _detailsFuture.then((d) {
+        if (mounted && !d.asbabNuzul.hasSourceText) setState(() => _actionsVisible = false);
+      }).catchError((_) {});
+    }
   }
 
   void _onTabChanged() {
@@ -143,9 +158,11 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
                           'سورة ${widget.surah.nameAr} — آية ${_toArabicIndic(widget.ayah.ayahNumber)}',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                         ),
-                        const Text(
-                          'إعراب القرآن · أسباب النزول · الغريب · البلاغة',
-                          style: TextStyle(fontSize: 12, color: AppColors.mutedText),
+                        Text(
+                          widget.focusedSection
+                              ? const ['معاني الكلمات', 'أسباب النزول', 'إعراب الآية', 'البلاغة والبيان'][_selectedSectionIndex]
+                              : 'إعراب القرآن · أسباب النزول · الغريب · البلاغة',
+                          style: const TextStyle(fontSize: 12, color: AppColors.mutedText),
                         ),
                       ],
                     ),
@@ -197,7 +214,8 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
               ),
             ),
 
-            // Linguistic Section Tabs
+            // Linguistic Section Tabs (hidden when a single section was requested)
+            if (!widget.focusedSection)
             TabBar(
               controller: _tabController,
               onTap: _navigateToTab,
@@ -230,6 +248,18 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
 
                   final data = snapshot.data!;
 
+                  if (widget.focusedSection) {
+                    switch (_selectedSectionIndex) {
+                      case 0:
+                        return _buildWordMeaningsTab(data);
+                      case 1:
+                        return _buildAsbabTab(data);
+                      case 2:
+                        return _buildGrammarTab(data);
+                      default:
+                        return _buildRhetoricTab(data);
+                    }
+                  }
                   return TabBarView(
                     controller: _tabController,
                     children: [
@@ -244,6 +274,7 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
             ),
 
             // Footer Actions
+            if (_actionsVisible)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -491,3 +522,4 @@ class _AyahLinguisticsSheetState extends State<AyahLinguisticsSheet>
     );
   }
 }
+

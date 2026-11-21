@@ -48,6 +48,17 @@ void main() {
       expect(res.asbabNuzul.source, contains('ليس حكمًا على صحة الرواية'));
     });
 
+    test('Copy keeps index context separate from untouched source text', () async {
+      const entry=LubabEntry('SYNTHETIC_SOURCE_TEXT',[7],contextNote:'SYNTHETIC_INDEX_CONTEXT');
+      QuranLinguisticsService.setSourceForTesting(FixtureLubab([entry]));
+      final res=await QuranLinguisticsService.getDetails(surahId:49,ayahNumber:3);
+      expect(res.asbabNuzul.narration,entry.text);
+      expect(res.asbabNuzul.sourceEntries.single.contextNote,entry.contextNote);
+      final shared=res.formatForShare('الحجرات');
+      expect(shared,contains('[تنبيه الفهرس: SYNTHETIC_INDEX_CONTEXT]'));
+      expect(shared,contains('SYNTHETIC_SOURCE_TEXT'));
+    });
+
     test('Source errors are unavailable, not an invented cause for the selected verse', () async {
       final source = FixtureLubab([], fail: true);
       QuranLinguisticsService.setSourceForTesting(source);
@@ -56,7 +67,7 @@ void main() {
         expect(res.asbabNuzul.hasSpecificIncident, isFalse);
         expect(res.asbabNuzul.hasSourceText, isFalse);
         expect(res.asbabNuzul.narration,
-            'تعذر تحميل نص المصدر أو تغيّرت نسخته. هذا لا يعني عدم وجود سبب نزول لهذه الآية.');
+            'تعذر تحميل نص لباب النقول الآن. حاول مرة أخرى.');
       }
       expect(source.calls, [(108, 1), (111, 1)]);
     });
@@ -76,7 +87,7 @@ void main() {
       expect(res.asbabNuzul.hasSourceText, isFalse);
       expect(res.asbabNuzul.hasSpecificIncident, isFalse);
       expect(res.asbabNuzul.narration,
-          'لم يُثبت ربط هذا الموضع في الفهرس بعد. هذا لا يعني عدم وجود سبب نزول لهذه الآية.');
+          'لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول.');
     });
 
     test('Formats linguistics results for share and copy per FR-QUR-006', () async {
@@ -85,7 +96,7 @@ void main() {
 
       expect(shareText.contains('سورة الإخلاص'), isTrue);
       expect(shareText.contains('نص المصدر (لباب النقول، السيوطي)'), isTrue);
-      expect(shareText, contains('لم يُثبت ربط هذا الموضع'));
+      expect(shareText, contains('لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول'));
       expect(shareText, contains('الجدول في إعراب القرآن الكريم، محمود صافي'));
       expect(shareText.contains('الإعراب والدلالة النحوية'), isTrue);
       expect(shareText.contains('تطبيق صديق المؤمن'), isTrue);
@@ -149,7 +160,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('لباب النقول'), findsOneWidget);
-      expect(find.textContaining('لم يُثبت ربط هذا الموضع'), findsOneWidget);
+      expect(find.textContaining('لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول'), findsOneWidget);
       expect(find.text('سؤال المشركين عن نسب الله وصفته'), findsNothing);
 
       // Switch to I'rab Tab
@@ -158,6 +169,43 @@ void main() {
 
       expect(find.text('فتح إعراب الآية'), findsOneWidget);
       expect(find.textContaining('محمود صافي'), findsOneWidget);
+    });
+
+    testWidgets('Asbab opened on its own shows only that section, in plain wording', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(body: AyahLinguisticsSheet(surah: testSurah, ayah: testAyah, initialTabIndex: 1, focusedSection: true)),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.byType(TabBar), findsNothing);
+      expect(find.text('معاني الكلمات'), findsNothing);
+      expect(find.text('إعراب الآية'), findsNothing);
+      expect(find.text('البلاغة والبيان'), findsNothing);
+      expect(find.textContaining('لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول'), findsOneWidget);
+      expect(find.textContaining('الفهرس'), findsNothing);
+      expect(find.textContaining('يعني عدم'), findsNothing);
+      // Nothing to export when there is no passage; the source credit stays.
+      expect(find.text('نسخ البيانات'), findsNothing);
+      expect(find.text('مشاركة الفائدة'), findsNothing);
+      expect(find.textContaining('لباب النقول، السيوطي'), findsOneWidget);
+    });
+
+    testWidgets('Asbab with a linked passage keeps copy and share', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      QuranLinguisticsService.setSourceForTesting(FixtureLubab([const LubabEntry('SYNTHETIC_SOURCE_TEXT', [7])]));
+      await tester.pumpWidget(const MaterialApp(
+        home: Scaffold(body: AyahLinguisticsSheet(surah: testSurah, ayah: testAyah, initialTabIndex: 1, focusedSection: true)),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('SYNTHETIC_SOURCE_TEXT'), findsOneWidget);
+      expect(find.text('نسخ البيانات'), findsOneWidget);
+      expect(find.text('مشاركة الفائدة'), findsOneWidget);
     });
 
     testWidgets('AyahActionSheet includes dedicated buttons for Meanings, Asbab, and Irab', (tester) async {

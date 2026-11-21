@@ -1,6 +1,8 @@
+import 'widgets/scoped_playback_bar.dart';
 import '../../core/text/arabic_normalizer.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import '../../core/models/ayah.dart';
 import '../../core/models/surah.dart';
 import '../../core/services/quran_repository.dart';
@@ -11,6 +13,7 @@ import '../../core/audio/ayah_audio_player.dart';
 import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
 import 'widgets/ayah_interaction.dart';
+import 'widgets/ayah_keyboard_focus.dart';
 import 'surah_reader_screen.dart';
 import '../../core/services/quran_accessibility_service.dart';
 import '../../core/ui/app_dropdown_field.dart';
@@ -23,10 +26,15 @@ enum _PageModeMenuAction {
 
 class PageModeMushafScreen extends StatefulWidget {
   final int initialPage;
+  /// Marks one ayah (for example a saved bookmark) on the opened page.
+  final int? highlightSurah;
+  final int? highlightAyah;
 
   const PageModeMushafScreen({
     super.key,
     this.initialPage = 1,
+    this.highlightSurah,
+    this.highlightAyah,
   });
 
   @override
@@ -48,6 +56,13 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
     _pageController = PageController(initialPage: _currentPage - 1);
     _fontSize = SettingsService.instance.mushafFontSize;
     _recordCurrentPageRead();
+    if (widget.highlightAyah != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        SemanticsService.sendAnnouncement(View.of(context),
+            'العلامة المرجعية: الآية ${widget.highlightAyah}', TextDirection.rtl);
+      });
+    }
   }
 
   @override
@@ -358,6 +373,26 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
       textDirection: SettingsService.instance.textDirection,
       child: Scaffold(
         backgroundColor: pageBg,
+        bottomNavigationBar: _showControls
+            ? FutureBuilder<List<List<Ayah>>>(
+                key: ValueKey('page-scope-$_currentPage'),
+                future: () async {
+                  final page = await QuranRepository.getAyahsForPage(_currentPage);
+                  final juz = page.isEmpty ? <Ayah>[] : await QuranRepository.getAyahsForJuz(page.first.juz);
+                  return [page, juz];
+                }(),
+                builder: (context, snap) {
+                  final data = snap.data;
+                  if (data == null || data[0].isEmpty) return const SizedBox.shrink();
+                  List<String> k(List<Ayah> l) => [for (final a in l) '${a.surahId}:${a.ayahNumber}'];
+                  return ScopedPlaybackBar(
+                    keys: k(data[0]),
+                    scopeName: 'الصفحة',
+                    alternates: {'الجزء ${data[0].first.juz}': k(data[1])},
+                  );
+                },
+              )
+            : null,
         appBar: _showControls
             ? AppBar(
                 toolbarHeight: isLargeText
@@ -516,11 +551,6 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                                         'صفحة ${_toArabicIndic(_currentPage)} من ٦٠٤',
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
-                                      const SizedBox(height: 2),
-                                      const Text(
-                                        'اضغط للقفز المباشر أو التمرير',
-                                        style: TextStyle(fontSize: 10, color: AppColors.mutedText),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -617,6 +647,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                   // Page Content
                   Expanded(
                     child: SingleChildScrollView(
+                      padding: EdgeInsets.only(bottom: _showControls ? 112 : 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: _renderPageContent(ayahs, playingKey, textColor, isDark, isSepia),
@@ -781,10 +812,37 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
 
       // Continuous Ayah RichText: Ayah text followed immediately by its number (e.g. قل هو الله احد 1 الله الصمد 2)
       widgets.add(
-        RichText(
+        AyahKeyboardFocus(
+          initialIndex: widget.highlightAyah != null && widget.highlightSurah == surahId
+              ? surahAyahs.indexWhere((a) => a.ayahNumber == widget.highlightAyah)
+              : null,
+          segmentLengths: [
+            for (final a in surahAyahs)
+              '${a.cleanTextUthmani} '.length + '﴿${SettingsService.instance.formatAyahNumber(a.ayahNumber)}﴾ '.length,
+          ],
+          onPlay: (i) {
+            final a = surahAyahs[i];
+            final key = AyahAudioPlayer.instance.currentPlayingKey.value;
+            if (key == '$surahId:${a.ayahNumber}') {
+              AyahAudioPlayer.instance.stop();
+            } else {
+              AyahAudioPlayer.instance.playAyah(context, a.surahId, a.ayahNumber);
+            }
+          },
+          onOpen: (i) async {
+            final a = surahAyahs[i];
+            final surah = await QuranRepository.getSurahById(a.surahId);
+            if (surah != null && context.mounted) {
+              AyahActionSheet.show(context, surah: surah, ayah: a);
+            }
+          },
+          builder: (context, activeIndex, paragraphKey) => RichText(
+          key: paragraphKey,
           textAlign: TextAlign.justify,
           text: TextSpan(
-            children: surahAyahs.expand((ayah) {
+            children: surahAyahs.asMap().entries.expand((entry) {
+              final ayah = entry.value;
+              final isKb = activeIndex == entry.key;
               final isPlaying = playingKey == '$surahId:${ayah.ayahNumber}';
               void playOrStopAyah() {
                 if (isPlaying) {
@@ -821,17 +879,20 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
               _pageRecognizers.add(numRec);
 
               final formattedNumber = SettingsService.instance.formatAyahNumber(ayah.ayahNumber);
+              final isTarget = widget.highlightAyah != null &&
+                  ayah.surahId == widget.highlightSurah &&
+                  ayah.ayahNumber == widget.highlightAyah;
 
               return [
                 TextSpan(
                   text: '${ayah.cleanTextUthmani} ',
-                  semanticsLabel: '${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}',
+                  semanticsLabel: '${isTarget ? 'العلامة المرجعية. ' : ''}${QuranAccessibilityService.toScreenReaderText(ayah.cleanTextUthmani)} ${ayah.ayahNumber}',
                   recognizer: ayahRec,
                   style: TextStyle(
                     fontSize: _fontSize,
                     height: 2.1,
                     color: isPlaying ? AppColors.accentGold : textColor,
-                    backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : Colors.transparent,
+                    backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : (isTarget ? AppColors.accentGold.withValues(alpha: 0.30) : isKb ? AppColors.primaryGreen.withValues(alpha: 0.22) : Colors.transparent),
                     fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
                     fontFamilyFallback: const [
                       'Traditional Arabic',
@@ -845,6 +906,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                   text: '﴿$formattedNumber﴾ ',
                   recognizer: numRec,
                   style: TextStyle(
+                    fontFamily: 'Amiri',
                     fontSize: _fontSize * 0.92,
                     height: 2.1,
                     color: isPlaying
@@ -862,6 +924,7 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
               ];
             }).toList(),
           ),
+        ),
         ),
       );
     });

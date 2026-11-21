@@ -3,6 +3,7 @@ import '../../../core/models/surah.dart';
 import '../../../core/services/quran_linguistics_service.dart';
 import '../../../core/services/quran_repository.dart';
 import '../../../core/services/settings_service.dart';
+import '../../../core/services/lubab_source.dart';
 import '../../../core/theme/app_theme.dart';
 
 /// شاشة «أسباب نزول الآيات وسياق التنزيل»
@@ -26,6 +27,9 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
   late int _selectedAyah;
   bool _isLoading = true;
   int _requestVersion=0;
+  final LubabSource _chapterSource=LubabSource();
+  Future<List<LubabEntry>>? _chapterContext;
+  Future<List<LubabEntry>>? _frontmatter;
   Surah? _currentSurah;
   AsbabNuzul? _asbabNuzul;
   final TextEditingController _searchController = TextEditingController();
@@ -61,7 +65,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
 
   Future<void> _loadData() async {
     final version=++_requestVersion;
-    setState(()=>_asbabNuzul=null);
+    setState((){_asbabNuzul=null;_chapterContext=null;});
     final result = await QuranLinguisticsService.getDetails(
       surahId: _selectedSurahId,
       ayahNumber: _selectedAyah,
@@ -109,7 +113,7 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                   builder: (ctx) => AlertDialog(
                     title: const Text('عن أسباب نزول الآيات'),
                     content: const Text(
-                      'نص لباب النقول للسيوطي من الموسوعة القرآنية. الفهرس ينقل إلى عنوان الآية في الكتاب، ولا يحكم على صحة الرواية. المقطع قد يشمل سياق ما بعدها.',
+                      'نص لباب النقول للسيوطي من الموسوعة القرآنية. الفهرس يربط الآية باقتباسها في النص أو بمدى صريح ذكره المؤلف، ولا يحكم على صحة الرواية. المقطع قد يشمل سياق ما بعدها.',
                       style: TextStyle(height: 1.6),
                     ),
                     actions: [
@@ -345,14 +349,31 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                             ],
                           ),
                           const Divider(height: 22),
-                          Text(
-                            _asbabNuzul?.narration ?? 'جاري استدعاء سبب النزول...',
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              height: 1.85,
-                              fontWeight: FontWeight.w500,
+                          if (_asbabNuzul?.sourceEntries.isNotEmpty ?? false)
+                            for (final entry in _asbabNuzul!.sourceEntries) ...[
+                              if (entry != _asbabNuzul!.sourceEntries.first)
+                                const Divider(height: 30),
+                              if (entry.contextNote != null)
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text('تنبيه الفهرس: ${entry.contextNote}',
+                                    style: const TextStyle(fontSize: 13, height: 1.6,
+                                      fontWeight: FontWeight.bold)),
+                                ),
+                              Text(entry.text, style: const TextStyle(
+                                fontSize: 14.5, height: 1.85, fontWeight: FontWeight.w500)),
+                            ]
+                          else
+                            Text(
+                              _asbabNuzul?.narration ?? 'جاري استدعاء سبب النزول...',
+                              style: const TextStyle(fontSize: 14.5, height: 1.85,
+                                fontWeight: FontWeight.w500),
                             ),
-                          ),
                           const SizedBox(height: 16),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -383,6 +404,53 @@ class _QuranAsbabNuzulScreenState extends State<QuranAsbabNuzulScreen> {
                     ),
 
                     const SizedBox(height: 16),
+
+                    Card(child:ExpansionTile(
+                      key:ValueKey('lubab-context-$_selectedSurahId-$_selectedAyah'),
+                      title:const Text('سياق السورة في الكتاب'),
+                      subtitle:const Text('ليس ربطًا بالآية المختارة'),
+                      onExpansionChanged:(open){if(open&&_chapterContext==null){setState((){_chapterContext=_chapterSource.fetchChapterContext(_selectedSurahId);});}},
+                      children:[Padding(padding:const EdgeInsets.all(16),child:FutureBuilder<List<LubabEntry>>(
+                        future:_chapterContext,
+                        builder:(context,snapshot){
+                          if(snapshot.hasError)return const Text('تعذر تحميل سياق المصدر.');
+                          if(snapshot.connectionState!=ConnectionState.done)return const CircularProgressIndicator();
+                          final entries=snapshot.data??const <LubabEntry>[];
+                          if(entries.isEmpty)return const Text('لم يُثبت لهذا الموضع عنوان سورة مستقل في هذه النسخة. لا يعني ذلك نفي سبب النزول.');
+                          return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                            const Text('هذا نص فصل السورة كاملًا من لباب النقول، وليس سببًا خاصًا للآية المختارة ولا حكمًا على صحة الروايات. النص كما ورد وقد يحوي أخطاء نسخ. المصدر: الموسوعة القرآنية.'),
+                            for(final entry in entries)...[
+                              Text('صفحات المصدر: ${entry.pages.join("، ")}'),
+                              SelectableText(entry.text,style:const TextStyle(fontSize:14.5,height:1.85)),
+                            ],
+                          ]);
+                        },
+                      ))],
+                    )),
+                    const SizedBox(height:16),
+
+                    Card(child:ExpansionTile(
+                      title:const Text('مقدمة الكتاب'),
+                      subtitle:const Text('منهج المؤلف وتنبيهاته، ليست تفسيرًا للآية'),
+                      onExpansionChanged:(open){if(open&&_frontmatter==null){setState((){_frontmatter=_chapterSource.fetchFrontmatter();});}},
+                      children:[Padding(padding:const EdgeInsets.all(16),child:FutureBuilder<List<LubabEntry>>(
+                        future:_frontmatter,
+                        builder:(context,snapshot){
+                          if(snapshot.hasError)return const Text('تعذر تحميل مقدمة المصدر.');
+                          if(snapshot.connectionState!=ConnectionState.done)return const CircularProgressIndicator();
+                          final entries=snapshot.data??const <LubabEntry>[];
+                          if(entries.isEmpty)return const Text('مقدمة المصدر غير متاحة في هذه النسخة.');
+                          return Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+                            const Text('مقدمة لباب النقول وتنبيهات المؤلف كما وردت في المصدر، وليست نسبة سبب نزول للآية المختارة.'),
+                            for(final entry in entries)...[
+                              Text('صفحات المصدر: ${entry.pages.join("، ")}'),
+                              SelectableText(entry.text,style:const TextStyle(fontSize:14.5,height:1.85)),
+                            ],
+                          ]);
+                        },
+                      ))],
+                    )),
+                    const SizedBox(height:16),
 
                     // 4. Quick Rule & Lesson Card
                     Container(

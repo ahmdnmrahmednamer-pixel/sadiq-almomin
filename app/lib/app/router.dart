@@ -73,6 +73,7 @@ import '../features/topics/topic_detail_screen.dart';
 import '../features/wird/daily_wird_screen.dart';
 import '../features/zakat/kaffarah_fidyah_screen.dart';
 import '../features/zakat/zakat_screen.dart';
+import '../core/feature_flags.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _rootNavigatorKey = rootNavigatorKey;
@@ -501,12 +502,14 @@ final GoRouter appRouter = GoRouter(
     ),
 
     // Root-isolated full-page feature & detail routes (outside MainScaffold / bottom nav)
-    _isolatedFeatureRoute(path: '/mushaf-reader', builder: (context, state) => const MushafScreen()),
+    _isolatedFeatureRoute(path: '/mushaf-reader', builder: (context, state) => MushafScreen(initialTab: state.uri.queryParameters['tab'] == 'bookmarks' ? 3 : 0)),
     _isolatedFeatureRoute(path: '/audio', builder: (context, state) => const AudioScreen()),
     // Preserve old links without keeping the retired library reachable.
     GoRoute(path: '/scholars-audio', redirect: (context, state) => '/library'),
     _isolatedFeatureRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
-    _isolatedFeatureRoute(path: '/islamic-radio', builder: (context, state) => const CuratedRadioScreen()),
+    GoRoute(path: '/islamic-radio', redirect: (context, state) => '/curated-radio'),
+    if (kCuratedRadioEnabled)
+      _isolatedFeatureRoute(path: '/curated-radio', builder: (context, state) => const CuratedRadioScreen()),
     _isolatedFeatureRoute(path: '/downloaded-books', builder: (context, state) => const DownloadedBooksScreen()),
     _isolatedFeatureRoute(path: '/fiqh-library', builder: (context, state) => const FiqhLibraryScreen()),
     _isolatedFeatureRoute(path: '/quran-sciences', builder: (context, state) => const QuranSciencesScreen()),

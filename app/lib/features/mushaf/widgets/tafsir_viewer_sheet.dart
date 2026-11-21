@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'tafsir_book_sections_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/models/surah.dart';
@@ -19,7 +20,8 @@ class TafsirViewerSheet extends StatefulWidget {
     required this.initialAyah,
   });
 
-  static void show(BuildContext context, {required Surah surah, required Ayah ayah}) {
+  static void show(BuildContext context,
+      {required Surah surah, required Ayah ayah}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -46,8 +48,11 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
   void initState() {
     super.initState();
     _currentAyahNumber = widget.initialAyah.ayahNumber;
-    _selectedEditionId = TafsirService.getEdition(SettingsService.instance.defaultTafsirEdition).id;
-    _fontSize = (SettingsService.instance.mushafFontSize * 0.7).clamp(14.0, 26.0);
+    _selectedEditionId =
+        TafsirService.getEdition(SettingsService.instance.defaultTafsirEdition)
+            .id;
+    _fontSize =
+        (SettingsService.instance.mushafFontSize * 0.7).clamp(14.0, 26.0);
     _loadTafsir();
   }
 
@@ -55,15 +60,25 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
     final version = ++_requestVersion;
     final ayah = _currentAyahNumber;
     final edition = _selectedEditionId;
-    setState(() { _isLoading = true; _loadError = null; _tafsirResult = null; });
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+      _tafsirResult = null;
+    });
     try {
-      final res = await TafsirService.getTafsir(surahId:widget.surah.id,
-        ayahNumber:ayah, editionId:edition);
+      final res = await TafsirService.getTafsir(
+          surahId: widget.surah.id, ayahNumber: ayah, editionId: edition);
       if (!mounted || version != _requestVersion) return;
-      setState(() { _tafsirResult = res; _isLoading = false; });
+      setState(() {
+        _tafsirResult = res;
+        _isLoading = false;
+      });
     } catch (_) {
       if (!mounted || version != _requestVersion) return;
-      setState(() { _loadError = 'تعذر تحميل التفسير. حاول مرة أخرى.'; _isLoading = false; });
+      setState(() {
+        _loadError = 'تعذر تحميل التفسير. حاول مرة أخرى.';
+        _isLoading = false;
+      });
     }
   }
 
@@ -106,8 +121,8 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final mediaQuery = MediaQuery.of(context);
     final keyboardBottom = mediaQuery.viewInsets.bottom;
-    final availableHeight =
-        (mediaQuery.size.height - keyboardBottom).clamp(0.0, mediaQuery.size.height);
+    final availableHeight = (mediaQuery.size.height - keyboardBottom)
+        .clamp(0.0, mediaQuery.size.height);
     final isCompactHeight = availableHeight < 620;
     final sheetHeight = keyboardBottom > 0
         ? (availableHeight - 8.0).clamp(0.0, availableHeight)
@@ -131,300 +146,457 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
             ],
           ),
           child: Column(
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 44,
-                height: 4,
-                margin: isCompactHeight
-                    ? const EdgeInsets.only(top: 6, bottom: 4)
-                    : const EdgeInsets.only(top: 12, bottom: 8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(2),
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: isCompactHeight
+                      ? const EdgeInsets.only(top: 6, bottom: 4)
+                      : const EdgeInsets.only(top: 12, bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
 
-            // Sheet Top Header
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: isCompactHeight ? 0 : 4,
-              ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-                  final isCompact = constraints.maxWidth < 520 || textScale >= 1.35;
-                  final titleRow = Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen.withValues(alpha: 0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.menu_book_rounded, color: AppColors.primaryGreen, size: 20),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Semantics(
-                          header: true,
-                          child: Text(
-                            'سورة ${widget.surah.nameAr} — الآية $_currentAyahNumber',
-                            softWrap: true,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                  final secondaryActions = _buildHeaderSecondaryActions();
-                  final closeButton = IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    tooltip: 'إغلاق',
-                    onPressed: () => Navigator.pop(context),
-                  );
-                  if (!isCompact) {
-                    return Row(
-                      children: [
-                        Expanded(child: titleRow),
-                        const SizedBox(width: 8),
-                        ...secondaryActions,
-                        closeButton,
-                      ],
-                    );
-                  }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [Expanded(child: titleRow), closeButton],
-                      ),
-                      Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Wrap(spacing: 4, runSpacing: 4, children: secondaryActions),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-
-            if (!isCompactHeight) ...[
-              _buildDropdownSelectors(),
-              const Divider(height: 1),
-            ],
-
-            // Content Area
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen))
-                  : ListView(
-                      padding: EdgeInsets.only(
-                        top: isCompactHeight ? 0 : 16,
-                        bottom: 16,
-                      ),
-                      children: [
-                        if (isCompactHeight) ...[
-                          _buildDropdownSelectors(),
-                          const Divider(height: 1),
-                          const SizedBox(height: 16),
-                        ],
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Ayah Text Container
-                              Semantics(
-                                container: true,
-                                label: 'نص الآية رقم $_currentAyahNumber: ${_tafsirResult?.ayahText ?? ""}',
-                                child: Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF232A26) : const Color(0xFFF9F7F1),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: AppColors.accentGold.withValues(alpha: 0.6), width: 1.2),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        _tafsirResult?.ayahText ?? '',
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 19,
-                                          height: 2.0,
-                                          fontWeight: FontWeight.bold,
-                                          color: AppColors.accentGold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          TextButton.icon(
-                                            style: TextButton.styleFrom(
-                                              foregroundColor: AppColors.primaryGreen,
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            ),
-                                            icon: const Icon(Icons.play_circle_outline, size: 18),
-                                            label: const Text('استمع للآية', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                            onPressed: () {
-                                              AyahAudioPlayer.instance.playAyah(
-                                                context,
-                                                widget.surah.id,
-                                                _currentAyahNumber,
-                                                surahName: widget.surah.nameAr,
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-
-                              // Edition details card
-                              Row(
-                                children: [
-                                  const Icon(Icons.auto_stories, color: AppColors.secondaryGreen, size: 18),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      _tafsirResult?.editionName ?? '',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.secondaryGreen),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'تأليف: ${_tafsirResult?.author ?? ""}',
-                                style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
-                              ),
-                              const SizedBox(height: 12),
-
-                              if (_tafsirResult?.sourceUrl != null)
-                                SelectableText('المصدر: ${_tafsirResult!.sourceUrl}',
-                                  style: const TextStyle(fontSize:11, color:AppColors.mutedText)),
-                              // Exegesis Content Text
-                              Semantics(
-                                container: true,
-                                label: 'شرح التفسير: ${_tafsirResult?.tafsirText ?? ""}',
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text(
-                                    _loadError ?? _tafsirResult?.tafsirText ?? '',
-                                    textAlign: TextAlign.justify,
-                                    style: TextStyle(
-                                      fontSize: _fontSize,
-                                      height: 1.9,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-
-            // Bottom Navigation: Previous Ayah / Next Ayah
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompactHeight || mediaQuery.textScaler.scale(1.0) >= 1.25
-                    ? 4
-                    : 16,
-                vertical: isCompactHeight ? 2 : 8,
-              ),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E2522) : Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
-              ),
-              child: SafeArea(
-                top: false,
+              // Sheet Top Header
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: isCompactHeight ? 0 : 4,
+                ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final textScale = MediaQuery.textScalerOf(context).scale(1.0);
-                    final useCompactFooter = constraints.maxWidth < 320 || textScale >= 1.25;
-                    final footerButtonStyle = TextButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: useCompactFooter ? 2 : 6,
-                        vertical: useCompactFooter ? 2 : 4,
-                      ),
-                      minimumSize: const Size(48, 48),
-                      tapTargetSize: MaterialTapTargetSize.padded,
-                    );
-                    final prevButton = _buildFooterNavButton(
-                      label: 'الآية السابقة',
-                      icon: Icons.arrow_back_ios,
-                      iconAtStart: true,
-                      constrainLabel: useCompactFooter,
-                      style: footerButtonStyle,
-                      onPressed: _currentAyahNumber > 1 ? _goToPreviousAyah : null,
-                    );
-                    final counterText = Text(
-                      'الآية $_currentAyahNumber من ${widget.surah.ayahCount}',
-                      textAlign: TextAlign.center,
-                      softWrap: true,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    );
-                    final nextButton = _buildFooterNavButton(
-                      label: 'الآية التالية',
-                      icon: Icons.arrow_back_ios,
-                      iconAtStart: false,
-                      constrainLabel: useCompactFooter,
-                      style: footerButtonStyle,
-                      onPressed: _currentAyahNumber < widget.surah.ayahCount ? _goToNextAyah : null,
-                    );
-                    if (!useCompactFooter) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          prevButton,
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: counterText,
+                    final textScale =
+                        MediaQuery.textScalerOf(context).scale(1.0);
+                    final isCompact =
+                        constraints.maxWidth < 520 || textScale >= 1.35;
+                    final titleRow = Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.primaryGreen.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.menu_book_rounded,
+                              color: AppColors.primaryGreen, size: 20),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              'سورة ${widget.surah.nameAr} — الآية $_currentAyahNumber',
+                              softWrap: true,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                           ),
-                          nextButton,
+                        ),
+                      ],
+                    );
+                    final secondaryActions = _buildHeaderSecondaryActions();
+                    final closeButton = IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      tooltip: 'إغلاق',
+                      onPressed: () => Navigator.pop(context),
+                    );
+                    if (!isCompact) {
+                      return Row(
+                        children: [
+                          Expanded(child: titleRow),
+                          const SizedBox(width: 8),
+                          ...secondaryActions,
+                          closeButton,
                         ],
                       );
                     }
                     return Column(
-                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        counterText,
-                        SizedBox(height: isCompactHeight ? 2 : 4),
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(child: prevButton),
-                            const SizedBox(width: 4),
-                            Expanded(child: nextButton),
-                          ],
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [Expanded(child: titleRow), closeButton],
+                        ),
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: secondaryActions),
                         ),
                       ],
                     );
                   },
                 ),
               ),
-            ),
-          ],
+
+              if (!isCompactHeight) ...[
+                _buildDropdownSelectors(),
+                const Divider(height: 1),
+              ],
+
+              // Content Area
+              Expanded(
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                            color: AppColors.primaryGreen))
+                    : ListView(
+                        padding: EdgeInsets.only(
+                          top: isCompactHeight ? 0 : 16,
+                          bottom: 16,
+                        ),
+                        children: [
+                          if (isCompactHeight) ...[
+                            _buildDropdownSelectors(),
+                            const Divider(height: 1),
+                            const SizedBox(height: 16),
+                          ],
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Ayah Text Container
+                                Semantics(
+                                  container: true,
+                                  label:
+                                      'نص الآية رقم $_currentAyahNumber: ${_tafsirResult?.ayahText ?? ""}',
+                                  child: Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? const Color(0xFF232A26)
+                                          : const Color(0xFFF9F7F1),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                          color: AppColors.accentGold
+                                              .withValues(alpha: 0.6),
+                                          width: 1.2),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        ExcludeSemantics(
+                                            child: Text(
+                                          _tafsirResult?.ayahText ?? '',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 19,
+                                            height: 2.0,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.accentGold,
+                                          ),
+                                        )),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            TextButton.icon(
+                                              style: TextButton.styleFrom(
+                                                foregroundColor:
+                                                    AppColors.primaryGreen,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 2),
+                                              ),
+                                              icon: const Icon(
+                                                  Icons.play_circle_outline,
+                                                  size: 18),
+                                              label: const Text('استمع للآية',
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              onPressed: () {
+                                                AyahAudioPlayer.instance
+                                                    .playAyah(
+                                                  context,
+                                                  widget.surah.id,
+                                                  _currentAyahNumber,
+                                                  surahName:
+                                                      widget.surah.nameAr,
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+
+                                // Edition details card
+                                Row(
+                                  children: [
+                                    const Icon(Icons.auto_stories,
+                                        color: AppColors.secondaryGreen,
+                                        size: 18),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        _tafsirResult?.editionName ?? '',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: AppColors.secondaryGreen),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'تأليف: ${_tafsirResult?.author ?? ""}',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: AppColors.mutedText),
+                                ),
+                                const SizedBox(height: 12),
+
+                                if (_tafsirResult?.hasBookSections ?? false)
+                                  Align(
+                                      alignment:
+                                          AlignmentDirectional.centerStart,
+                                      child: TextButton.icon(
+                                          icon: const Icon(Icons.menu_book),
+                                          label: const Text('أقسام الكتاب'),
+                                          onPressed: () {
+                                            final edition = _selectedEditionId;
+                                            showModalBottomSheet(
+                                                context: context,
+                                                isScrollControlled: true,
+                                                builder: (_) =>
+                                                    TafsirBookSectionsSheet(
+                                                        bookName: _tafsirResult
+                                                                ?.editionName ??
+                                                            '',
+                                                        fontSize: _fontSize,
+                                                        loadSections: () =>
+                                                            TafsirService
+                                                                .getBookSections(
+                                                                    edition)));
+                                          })),
+                                if (_tafsirResult?.sourceUrl != null)
+                                  SelectableText(
+                                      'المصدر: ${_tafsirResult!.sourceUrl}',
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.mutedText)),
+                                if (_tafsirResult?.sourceNotice != null)
+                                  Text(_tafsirResult!.sourceNotice!,
+                                      style: const TextStyle(height: 1.6)),
+                                if (_tafsirResult?.sourcePages.isNotEmpty ??
+                                    false)
+                                  for (final page in _tafsirResult!.sourcePages)
+                                    Builder(builder: (context) {
+                                      final pageTitle = _selectedEditionId ==
+                                              'muyassar'
+                                          ? (page.sourceId != null &&
+                                                  page.sourceId! < 0
+                                              ? 'النص الأول'
+                                              : 'النص الثاني')
+                                          : 'مقطع المصدر ${page.sourceId ?? ''}${page.part.isEmpty ? '' : '، ج${page.part}'}';
+                                      final bodyStyle = TextStyle(
+                                          fontSize: _fontSize,
+                                          height: 1.9,
+                                          fontFamilyFallback: const ['Kitab']);
+                                      return Card(
+                                          child: Padding(
+                                              padding: const EdgeInsets.all(12),
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment
+                                                          .stretch,
+                                                  children: [
+                                                    Semantics(
+                                                        header: true,
+                                                        child: Text(pageTitle)),
+                                                    // Selection area keeps the exact text copyable while each page body stays plain
+                                                    // static text for screen readers (no text-field role, no nested scroll view).
+                                                    SelectionArea(
+                                                        child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .stretch,
+                                                            children: [
+                                                          if (page.sourceLabel !=
+                                                              null)
+                                                            Text(page
+                                                                .sourceLabel!),
+                                                          if (page.sourceUrl !=
+                                                              null)
+                                                            Text(
+                                                                page.sourceUrl!,
+                                                                style:
+                                                                    const TextStyle(
+                                                                        fontSize:
+                                                                            11)),
+                                                        ])),
+                                                    if (page.focusOffset > 0)
+                                                      ExpansionTile(
+                                                          title: Text(page
+                                                              .previousContextTitle),
+                                                          children: [
+                                                            SelectionArea(
+                                                                child: Text(
+                                                                    String.fromCharCodes(page
+                                                                        .text
+                                                                        .runes
+                                                                        .take(page
+                                                                            .focusOffset)),
+                                                                    style:
+                                                                        bodyStyle))
+                                                          ]),
+                                                    Semantics(
+                                                        container: true,
+                                                        label:
+                                                            'شرح التفسير: $pageTitle',
+                                                        child: SelectionArea(
+                                                            child: Text(
+                                                                String.fromCharCodes(page
+                                                                    .text.runes
+                                                                    .skip(page
+                                                                        .focusOffset)),
+                                                                style:
+                                                                    bodyStyle))),
+                                                  ])));
+                                    }),
+                                // Flat edition text does not duplicate the source-page reader.
+                                if (!(_tafsirResult?.sourcePages.isNotEmpty ??
+                                    false))
+                                  Semantics(
+                                    container: true,
+                                    label:
+                                        'شرح التفسير: ${_tafsirResult?.tafsirText ?? ""}',
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4),
+                                      child: Text(
+                                        _loadError ??
+                                            _tafsirResult?.tafsirText ??
+                                            '',
+                                        textAlign: TextAlign.justify,
+                                        style: TextStyle(
+                                          fontSize: _fontSize,
+                                          height: 1.9,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+
+              // Bottom Navigation: Previous Ayah / Next Ayah
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompactHeight ||
+                          mediaQuery.textScaler.scale(1.0) >= 1.25
+                      ? 4
+                      : 16,
+                  vertical: isCompactHeight ? 2 : 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E2522) : Colors.grey.shade50,
+                  border: Border(
+                      top: BorderSide(
+                          color: Colors.grey.withValues(alpha: 0.2))),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final textScale =
+                          MediaQuery.textScalerOf(context).scale(1.0);
+                      final useCompactFooter =
+                          constraints.maxWidth < 320 || textScale >= 1.25;
+                      final footerButtonStyle = TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: useCompactFooter ? 2 : 6,
+                          vertical: useCompactFooter ? 2 : 4,
+                        ),
+                        minimumSize: const Size(48, 48),
+                        tapTargetSize: MaterialTapTargetSize.padded,
+                      );
+                      final prevButton = _buildFooterNavButton(
+                        label: 'الآية السابقة',
+                        icon: Icons.arrow_back_ios,
+                        iconAtStart: true,
+                        constrainLabel: useCompactFooter,
+                        style: footerButtonStyle,
+                        onPressed:
+                            _currentAyahNumber > 1 ? _goToPreviousAyah : null,
+                      );
+                      final counterText = Text(
+                        'الآية $_currentAyahNumber من ${widget.surah.ayahCount}',
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
+                      );
+                      final nextButton = _buildFooterNavButton(
+                        label: 'الآية التالية',
+                        icon: Icons.arrow_back_ios,
+                        iconAtStart: false,
+                        constrainLabel: useCompactFooter,
+                        style: footerButtonStyle,
+                        onPressed: _currentAyahNumber < widget.surah.ayahCount
+                            ? _goToNextAyah
+                            : null,
+                      );
+                      if (!useCompactFooter) {
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            prevButton,
+                            Flexible(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: counterText,
+                              ),
+                            ),
+                            nextButton,
+                          ],
+                        );
+                      }
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          counterText,
+                          SizedBox(height: isCompactHeight ? 2 : 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(child: prevButton),
+                              const SizedBox(width: 4),
+                              Expanded(child: nextButton),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -492,7 +664,8 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
       softWrap: true,
       textAlign: TextAlign.center,
     );
-    final labelChild = constrainLabel ? Flexible(child: textWidget) : textWidget;
+    final labelChild =
+        constrainLabel ? Flexible(child: textWidget) : textWidget;
     final iconWidget = Icon(icon, size: 14);
     final gap = SizedBox(width: constrainLabel ? 2 : 4);
     final children = iconAtStart
@@ -530,12 +703,13 @@ class _TafsirViewerSheetState extends State<TafsirViewerSheet> {
       IconButton(
         icon: const Icon(Icons.copy_rounded, size: 20),
         tooltip: 'نسخ التفسير',
-        onPressed: _copyTafsir,
+        onPressed: (_tafsirResult?.hasSourceText ?? false) ? _copyTafsir : null,
       ),
       IconButton(
         icon: const Icon(Icons.share_rounded, size: 20),
         tooltip: 'مشاركة التفسير',
-        onPressed: _shareTafsir,
+        onPressed:
+            (_tafsirResult?.hasSourceText ?? false) ? _shareTafsir : null,
       ),
     ];
   }

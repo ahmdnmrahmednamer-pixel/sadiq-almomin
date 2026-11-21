@@ -277,7 +277,7 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                         const SizedBox(height: 10),
                         Text(
                           '«أَفَلَا يَتَدَبَّرُونَ الْقُرْآنَ أَمْ عَلَىٰ قُلُوبٍ أَقْفَالُهَا»\n\n'
-                          'اضغط مطولاً على أي آية في المصحف أو شاشة القراءة، ثم اختر «تدبر وخاطرة» لتدوين ما فتح الله به عليك وحفظه هنا للرجوع إليه دائماً 🌿',
+                          'لا توجد خواطر محفوظة.',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 13.5, color: Colors.grey.shade600, height: 1.6),
                         ),

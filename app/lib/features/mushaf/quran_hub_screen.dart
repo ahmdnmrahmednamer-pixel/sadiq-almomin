@@ -6,9 +6,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/portal_category_card.dart';
 
 /// بوابة «القرآن الكريم وعلومه» (QuranHubScreen)
-/// مقسمة إلى ٩ محاور قرآنية مستقلة:
+/// مقسمة إلى ٨ محاور قرآنية مستقلة:
 /// 1. القرآن المكتوب
-/// 2. التلاوات
 /// 3. المحفّظ
 /// 4. التجويد
 /// 5. خواطري
@@ -126,20 +125,19 @@ class QuranHubScreen extends StatelessWidget {
             PortalCategoryCard(
               numberText: '١',
               title: 'القرآن المكتوب',
-              subtitle: 'قراءة السور والأجزاء والصفحات والعلامات المرجعية',
+              subtitle: 'قراءة السور والأجزاء والصفحات',
               icon: Icons.menu_book_rounded,
               color: AppColors.primaryGreen,
               onTap: () => context.push('/mushaf-reader'),
             ),
 
-            // 2. التلاوات
             PortalCategoryCard(
               numberText: '٢',
-              title: 'التلاوات',
-              subtitle: 'الاستماع لتلاوات القرآن الكريم',
-              icon: Icons.record_voice_over_rounded,
-              color: const Color(0xFF1E8260),
-              onTap: () => context.push('/audio'),
+              title: 'العلامات المرجعية',
+              subtitle: 'الآيات المحفوظة',
+              icon: Icons.bookmark_rounded,
+              color: AppColors.accentGold,
+              onTap: () => context.push('/mushaf-reader?tab=bookmarks'),
             ),
 
             // 3. المحفّظ
@@ -219,3 +217,4 @@ class QuranHubScreen extends StatelessWidget {
     );
   }
 }
+

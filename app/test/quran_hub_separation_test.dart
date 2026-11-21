@@ -241,7 +241,7 @@ SemanticsNode _findSingleCardSemanticNode(WidgetTester tester, String title) {
   expect(
     matches.length,
     equals(1),
-    reason: 'Expected exactly 1 semantic node for exact title or title plus badge "$title" (found ${matches.length})',
+    reason: 'Expected exactly 1 semantic node starting with "$title،" (found ${matches.length})',
   );
   return matches.single;
 }
@@ -428,7 +428,7 @@ void main() {
 
         const expectedTitles = <String>[
           'القرآن المكتوب',
-          'التلاوات',
+          'العلامات المرجعية',
           'المحفّظ',
           'التجويد',
           'خواطري',
@@ -480,7 +480,7 @@ void main() {
           }
 
           expect(seenCards.length, equals(9));
-          expect(seenCards.containsKey('التلاوات'), isTrue);
+          expect(seenCards.containsKey('التلاوات'), isFalse);
           expect(seenCards.containsKey('المحفّظ'), isTrue);
           expect(seenCards.containsKey('التجويد'), isTrue);
           expect(seenCards.containsKey('خواطري'), isTrue);
@@ -567,7 +567,7 @@ void main() {
 
         const remainingRouteChecks = <(String, String)>[
           ('القرآن المكتوب', '/mushaf-reader'),
-          ('التلاوات', '/audio'),
+          ('العلامات المرجعية', '/mushaf-reader?tab=bookmarks'),
           ('البحث القرآني', '/search'),
           ('التفاسير', '/comparative-tafsir'),
           ('الإعراب', '/quran-irab'),
@@ -855,3 +855,4 @@ void main() {
     );
   });
 }
+

@@ -32,8 +32,12 @@ class MushafScreen extends StatefulWidget {
   final Future<String?> Function(BuildContext context)?
       voiceSearchLauncherForTesting;
 
+  /// 0 surahs, 1 juz, 2 pages, 3 bookmarks.
+  final int initialTab;
+
   const MushafScreen({
     super.key,
+    this.initialTab = 0,
     this.headerDestinationBuilderForTesting,
     this.voiceSearchLauncherForTesting,
   });
@@ -53,7 +57,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 4, vsync: this, initialIndex: widget.initialTab.clamp(0, 3));
     _loadData();
   }
 
@@ -620,7 +624,7 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                     ),
                                     const SizedBox(height: 6),
                                     const Text(
-                                      'اضغط على أيقونة الإشارة المرجعية أثناء القراءة لحفظ الآية هنا',
+                                      'لا توجد آيات محفوظة',
                                       style: TextStyle(color: AppColors.mutedText, fontSize: 13),
                                     ),
                                   ],
@@ -669,7 +673,11 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PageModeMushafScreen(initialPage: b.pageNumber),
+                                              builder: (_) => PageModeMushafScreen(
+                                                initialPage: b.pageNumber,
+                                                highlightSurah: b.surahId,
+                                                highlightAyah: b.ayahNumber,
+                                              ),
                                             ),
                                           );
                                         },
@@ -725,3 +733,4 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
     );
   }
 }
+

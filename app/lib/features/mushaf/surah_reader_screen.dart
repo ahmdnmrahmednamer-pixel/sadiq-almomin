@@ -10,10 +10,12 @@ import '../../core/audio/ayah_audio_player.dart';
 import '../../core/gestures/ayah_gesture_recognizer.dart';
 import 'widgets/ayah_action_sheet.dart';
 import 'widgets/ayah_interaction.dart';
+import 'widgets/ayah_keyboard_focus.dart';
 import 'widgets/ayah_linguistics_sheet.dart';
 import 'widgets/ayah_card_share_sheet.dart';
 import 'page_mode_mushaf_screen.dart';
 import '../settings/widgets/settings_reciter_modal.dart';
+import 'widgets/scoped_playback_bar.dart';
 import '../../core/services/khatma_service.dart';
 import '../../core/services/quran_accessibility_service.dart';
 import '../../core/ui/app_dropdown_field.dart';
@@ -258,6 +260,10 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
 
     return Scaffold(
       backgroundColor: pageBg,
+      bottomNavigationBar: ScopedPlaybackBar(
+        keys: List<String>.generate(widget.surah.ayahCount, (i) => '${widget.surah.id}:${i + 1}'),
+        scopeName: 'السورة',
+      ),
       appBar: AppBar(
         toolbarHeight: isLargeText ? (textScale >= 1.75 ? 104.0 : 80.0) : null,
         titleSpacing: isLargeText ? 8.0 : null,
@@ -447,11 +453,6 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                               '${widget.surah.isMakki ? "مكية" : "مدنية"} — آياتها ${widget.surah.ayahCount} — ترتيبها ${widget.surah.revelationOrder}',
                               style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : AppColors.mutedText),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '💡 اضغط ضغطة عادية للاستماع للآية، وضغطة مطولة لفتح كافة خيارات الآية',
-                              style: TextStyle(fontSize: 12, color: isDark ? AppColors.softGold : AppColors.secondaryGreen),
-                            ),
                           ],
                         ),
                       ),
@@ -476,11 +477,27 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                       ),
 
                     // Text Mode Ayah Flow: Ayah text followed immediately by its number (e.g. قل هو الله احد 1 الله الصمد 2)
-                    RichText(
+                    AyahKeyboardFocus(
+                      segmentLengths: [
+                        for (final a in ayahs)
+                          '${a.cleanTextUthmani} '.length + '﴿${SettingsService.instance.formatAyahNumber(a.ayahNumber)}﴾ '.length,
+                      ],
+                      onOpen: (i) => AyahActionSheet.show(context, surah: widget.surah, ayah: ayahs[i]),
+                      onPlay: (i) {
+                        final a = ayahs[i];
+                        if (playingKey == '${widget.surah.id}:${a.ayahNumber}') {
+                          AyahAudioPlayer.instance.stop();
+                        } else {
+                          AyahAudioPlayer.instance.playAyah(context, widget.surah.id, a.ayahNumber, surahName: widget.surah.nameAr);
+                        }
+                      },
+                      builder: (context, activeIndex, paragraphKey) => RichText(
+                      key: paragraphKey,
                       textAlign: TextAlign.justify,
                       text: TextSpan(
                         children: ayahs.expand((ayah) {
                           final isPlaying = playingKey == '${widget.surah.id}:${ayah.ayahNumber}';
+                          final isKb = activeIndex != null && ayahs.indexOf(ayah) == activeIndex;
 
                           void handleAyahTap() {
                             if (isPlaying) {
@@ -529,7 +546,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                                 fontSize: _fontSize,
                                 height: 2.2,
                                 color: isPlaying ? AppColors.accentGold : textColor,
-                                backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : Colors.transparent,
+                                backgroundColor: isPlaying ? AppColors.accentGold.withValues(alpha: 0.18) : (isKb ? AppColors.primaryGreen.withValues(alpha: 0.22) : Colors.transparent),
                                 fontWeight: isPlaying ? FontWeight.bold : FontWeight.w500,
                                 fontFamilyFallback: const [
                                   'Traditional Arabic',
@@ -543,6 +560,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                               text: '﴿$formattedNumber﴾ ',
                               recognizer: recNum,
                               style: TextStyle(
+                                fontFamily: 'Amiri',
                                 fontSize: _fontSize * 0.95,
                                 height: 2.2,
                                 color: isPlaying
@@ -560,6 +578,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                           ];
                         }).toList(),
                       ),
+                    ),
                     ),
                     const SizedBox(height: 40),
                   ],
@@ -602,7 +621,7 @@ class _SurahReaderScreenState extends State<SurahReaderScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'عرض بطاقات الآيات: اضغط ضغطة عادية للاستماع للآية، وضغطة مطولة لعرض كافة خيارات الآية والتفاسير.',
+                    'عرض بطاقات الآيات',
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,

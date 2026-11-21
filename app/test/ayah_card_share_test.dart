@@ -167,6 +167,14 @@ void main() {
         ),
       );
 
+      // The tafsir loads bundled assets with real async IO; fake-async never
+      // completes it, so the progress spinner animates forever and
+      // pumpAndSettle times out. Let real IO finish first, then settle.
+      for (var i = 0; i < 40 && find.text('تحميل التفسير...').evaluate().isNotEmpty; i++) {
+        await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 100)));
+        await tester.pump();
+      }
+      expect(find.text('تحميل التفسير...'), findsNothing, reason: 'tafsir load finished');
       await tester.pumpAndSettle();
 
       expect(find.text('تصميم بطاقة الآية الدعوية'), findsOneWidget);
@@ -196,3 +204,4 @@ void main() {
     });
   });
 }
+

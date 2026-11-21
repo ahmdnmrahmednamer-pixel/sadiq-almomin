@@ -112,7 +112,7 @@ void main() {
             .map((r) => Ayah.fromRow(Map<String, dynamic>.from(r)))
             .toList();
     var count = 0;
-    for (final n in [3, 5, 6, 10, 11, 13, 16, 18, 21, 23, 24, 28, 30, 32, 34, 53, 56]) {
+    for (final n in [3, 4, 5, 6, 7, 10, 11, 13, 16, 18, 21, 23, 24, 28, 29, 30, 32, 34, 53, 56, 58, 65]) {
       final passages = BudurSource.passages(
           source, surahs.singleWhere((s) => s.id == n), ayahs(n));
       for (final p in passages) {
@@ -122,10 +122,22 @@ void main() {
           expect(p.ayahs, isNotEmpty,
               reason:
                   'reviewed reference must appear under its own verse n=$n text=${p.text}');
+          if ([4, 7, 29, 58, 65].contains(n)) {
+            expect(ref.exactText, isNotNull);
+            expect(BudurReferenceResolver.references(n, '${p.text} CHANGED_REFERENCE'), isEmpty);
+            expect(BudurReferenceResolver.references(114, p.text), isEmpty);
+            final targetPrefix = ref.exactText!.substring(0, 80);
+            expect(source.contains(targetPrefix), isTrue);
+            final changedTargetSource = source.replaceFirst(
+                targetPrefix, '$targetPrefix CHANGED_TARGET');
+            expect(BudurReferenceResolver.resolve(changedTargetSource, ref,
+                surahs.singleWhere((s) => s.id == ref.surah), ayahs(ref.surah)),
+                isNull, reason: 'new exact references require reviewed target text');
+          }
           if (n == 3) {
             expect(p.ayahs, [49]);
             final changed =
-                source.replaceFirst(p.text, '${p.text} EXTRA_UNREVIEWED');
+                source.replaceFirst(p.text, '${p.text.replaceFirst('وأبرئ', 'UNREVIEWED_QUOTE')} EXTRA_UNREVIEWED');
             final changedPassage = BudurSource.passages(
                     changed, surahs.singleWhere((s) => s.id == 3), ayahs(3))
                 .singleWhere(
@@ -170,6 +182,6 @@ void main() {
         }
       }
     }
-    expect(count, 20);
+    expect(count, 25);
   });
 }

@@ -7,6 +7,11 @@ class BudurVerseLinker {
   // comparison keys only, never the displayed Quran or source-book text.
   static String normalize(String value) =>
       ArabicNormalizer.normalizeForQuranSearch(value)
+          // The stored Uthmani form of ula'ika has a dagger alif before its
+          // hamza seat. Search canonicalization otherwise leaves "اولايك".
+          // Restrict this spelling bridge to the whole demonstrative token.
+          .replaceAllMapped(RegExp(r'(^|\s)([وفبلك]?)اولايك(?=\s|$)'),
+              (m) => '${m.group(1)}${m.group(2)}اوليك')
           .replaceAll(RegExp('[^ء-ي ]'), ' ')
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
@@ -46,29 +51,7 @@ class BudurVerseLinker {
   /// Returns all whole-token occurrences, including repeated occurrences in one
   /// verse. Never use global Quran ids as within-surah verse numbers.
   static List<BudurOccurrence> occurrences(String quote, List<Ayah> ayahs) {
-    final q = normalize(quote);
-    if (q.isEmpty) return const [];
-    final results = <BudurOccurrence>[];
-    var offset = 0;
-    for (final ayah in ayahs) {
-      var words = normalize(ayah.cleanTextUthmani);
-      // The app stores the basmala in verse 1 of most surahs. It is not an
-      // additional verse or evidence for a repeated quote in that chapter.
-      if (ayah.ayahNumber == 1 && ayah.surahId != 1 && ayah.surahId != 9) {
-        words = words.replaceFirst(RegExp(r'^بسم الله الرحمن الرحيم\s*'), '');
-      }
-      final padded = ' $words ';
-      var from = 0;
-      while (true) {
-        final i = padded.indexOf(' $q ', from);
-        if (i < 0) break;
-        results.add(BudurOccurrence(
-            ayah.ayahNumber, offset + i, offset + i + q.length));
-        from = i + 1;
-      }
-      offset += padded.length;
-    }
-    return results;
+    return BudurVerseIndex(ayahs).occurrences(quote);
   }
 
   /// Independent anchors are quotations occurring once in this surah, not
@@ -78,10 +61,11 @@ class BudurVerseLinker {
   /// order, or an intervening repeated/derived match.
   static List<List<int>> link(
       List<String> texts, List<bool> blocks, List<Ayah> ayahs,
-      {bool Function(int index)? repeatedReviewed}) {
+      {bool Function(int index)? repeatedReviewed, BudurVerseIndex? verseIndex}) {
+    final index=verseIndex??BudurVerseIndex(ayahs);
     final quoted = texts.map(quotes).toList();
     final all = quoted
-        .map((qs) => qs.map((q) => occurrences(q, ayahs)).toList())
+        .map((qs) => qs.map((q) => index.occurrences(q)).toList())
         .toList();
     final authorBoth = texts
         .map(
@@ -154,4 +138,36 @@ class BudurVerseLinker {
 class BudurOccurrence {
   final int ayah, start, end;
   const BudurOccurrence(this.ayah, this.start, this.end);
+}
+
+/// One immutable normalized Quran search view per source chapter. Display text
+/// stays unchanged. Offsets match the original whole-token occurrence method.
+class BudurVerseIndex {
+  final List<(int,int,String)> _verses=[];
+  final Map<String,List<BudurOccurrence>> _cache={};
+  BudurVerseIndex(List<Ayah> ayahs){
+    var offset=0;
+    for(final ayah in ayahs){
+      var words=BudurVerseLinker.normalize(ayah.cleanTextUthmani);
+      if(ayah.ayahNumber==1&&ayah.surahId!=1&&ayah.surahId!=9){
+        words=words.replaceFirst(RegExp(r'^بسم الله الرحمن الرحيم\s*'),'');
+      }
+      final padded=' $words ';
+      _verses.add((ayah.ayahNumber,offset,padded));offset+=padded.length;
+    }
+  }
+  List<BudurOccurrence> occurrences(String quote){
+    final q=BudurVerseLinker.normalize(quote);if(q.isEmpty)return const [];
+    return _cache.putIfAbsent(q,(){
+      final result=<BudurOccurrence>[];
+      for(final verse in _verses){
+        var from=0;
+        while(true){
+          final at=verse.$3.indexOf(' $q ',from);if(at<0)break;
+          result.add(BudurOccurrence(verse.$1,verse.$2+at,verse.$2+at+q.length));from=at+1;
+        }
+      }
+      return List.unmodifiable(result);
+    });
+  }
 }

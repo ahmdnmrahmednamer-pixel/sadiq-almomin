@@ -64,7 +64,7 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        'إضافة بطاقة تدبُّر وعمل بالآية الكريمة',
+                        'إضافة بطاقة تدبُّر وعمل بالآية الكريمة 🌿',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                       ),
                       const SizedBox(height: 12),
@@ -392,3 +392,4 @@ class _TadabburJournalScreenState extends State<TadabburJournalScreen> {
     );
   }
 }
+

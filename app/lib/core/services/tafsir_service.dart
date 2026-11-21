@@ -1,4 +1,5 @@
 import 'quran_repository.dart';
+import 'bundled_tafsir_source.dart';
 import 'verse_source_client.dart';
 import 'package:flutter/foundation.dart';
 
@@ -26,6 +27,9 @@ class TafsirResult {
   final String tafsirText;
   final bool hasSourceText;
   final String? sourceUrl;
+  final List<BundledTafsirPage> sourcePages;
+  final String? sourceNotice;
+  final bool hasBookSections;
 
   const TafsirResult({
     required this.editionId,
@@ -37,13 +41,16 @@ class TafsirResult {
     required this.tafsirText,
     this.hasSourceText = true,
     this.sourceUrl,
+    this.sourcePages=const [],
+    this.sourceNotice,
+    this.hasBookSections=false,
   });
 
   /// Formatted text for copying and sharing per FR-TAF-005
   String formatForShare(String surahName) {
     return '﴿$ayahText﴾\n[سورة $surahName، الآية $ayahNumber]\n\n'
         '📖 من $editionName ($author):\n'
-        '$tafsirText\n\n'
+        '${sourceNotice==null?'':'$sourceNotice\n\n'}$tafsirText\n\n'
         '${sourceUrl == null ? '' : 'المصدر: $sourceUrl\n'}'
         'تطبيق صديق المؤمن';
   }
@@ -54,6 +61,15 @@ class TafsirService {
   @visibleForTesting
   static void setClientForTesting(AlQuranCloudTafsirClient? client) {
     _client = client ?? AlQuranCloudTafsirClient();
+  }
+  static BundledTafsirSource _bundled=BundledTafsirSource();
+  @visibleForTesting static void setBundledSourceForTesting(BundledTafsirSource? source){_bundled=source??BundledTafsirSource();}
+  // Other imported editions remain in preparation until source boundaries are reviewed.
+  static const _bundledEditions={'muyassar':'muyassar_witness','waseet':'azhar_spans_private','al_durrah':'durra_spans_private','saadi':'saadi_roots','jalalayn':'jalalayn_corrected','ibn_kathir':'ibn_kathir_pages','tabari':'tabari_roots','baghawi':'baghawi_roots','qurtubi':'qurtubi_printed'};
+  static Future<List<BundledTafsirBookSection>> getBookSections(String editionId)async {
+    final bundledId=_bundledEditions[editionId];
+    if(bundledId==null)return const [];
+    return await _bundled.bookSections(bundledId);
   }
   static const _liveEditions = {
     'jalalayn': 'ar.jalalayn', 'qurtubi': 'ar.qurtubi', 'baghawi': 'ar.baghawi',
@@ -108,22 +124,10 @@ class TafsirService {
       description: 'شرح منهجي وافٍ لأسرار النظم القرآني ولطائف البلاغة والتوجيه التربوي.',
     ),
     TafsirEdition(
-      id: 'shaarawi',
-      nameAr: 'خواطر الإمام محمد متولي الشعراوي',
-      authorAr: 'إمام الدعاة الشيخ محمد متولي الشعراوي رحمه الله',
-      description: 'خواطر إيمانية وبيانية تكشف دقائق الفروق اللغوية وأسرار الإعجاز القرآني.',
-    ),
-    TafsirEdition(
       id: 'al_durrah',
       nameAr: 'تفسير القرآن الكريم وإعرابه وبيانه',
       authorAr: 'العلامة الشيخ محمد علي طه الدرة',
       description: 'موسوعة فريدة في الإعراب النحوي الشامل لكل مفردة قرآنية، مع بيان المعاني وبلاغة النظم.',
-    ),
-    TafsirEdition(
-      id: 'almukhtasar_audio',
-      nameAr: 'المختصر الصوتي في تفسير القرآن الكريم',
-      authorAr: 'مركز تفسير للدراسات القرآنية (الأسمري، الغامدي، الشايع)',
-      description: 'المشروع المعتمد لتقريب معاني التنزيل صوتياً ومرئياً عبر يوتيوب والبودكاست وتيليجرام.',
     ),
   ];
 
@@ -142,6 +146,16 @@ class TafsirService {
   }) async {
     final ayah = await QuranRepository.getAyah(surahId, ayahNumber);
     final edition = getEdition(editionId);
+    final bundledId=_bundledEditions[editionId];
+    if(bundledId!=null){
+      try{
+        final entry=await _bundled.fetch(bundledId,surahId,ayahNumber);
+        final text=entry==null?'لم يُثبت نص هذه الآية في نسخة المصدر المضمّنة. لا يُستبدل بنص آية مجاورة.':entry.pages.map((p)=>'${p.sourceLabel==null?'':'${p.sourceLabel}\n'}${p.sourceUrl==null?'':'${p.sourceUrl}\n'}${p.part.isEmpty?'':'ج${p.part}'}${p.page==null?'':'${p.part.isEmpty?'':' '}ص${p.page}'}${p.part.isEmpty&&p.page==null?'':'\n'}${p.text}').join('\n\n');
+        return TafsirResult(editionId:edition.id,editionName:edition.nameAr,author:edition.authorAr,surahId:surahId,ayahNumber:ayahNumber,ayahText:ayah?.cleanTextUthmani??'',tafsirText:text,hasSourceText:entry!=null,sourceUrl:bundledId=='muyassar_witness'?null:entry?.sourceUrl??'https://quranpedia.net',hasBookSections:entry?.hasBookSections??false,sourcePages:bundledId!='jalalayn'?(entry?.pages??const []):const [],sourceNotice:bundledId=='muyassar_witness'?entry?.sourceWarning:bundledId.endsWith('_spans_private')?entry?.sourceWarning:bundledId=='jalalayn_corrected'?'نص المصدر محفوظ كما ورد. قد يجمع مقطع واحد أكثر من آية. أُصلحت أرقام تنقل خالفت النص، ولا يُستكمل الموضع الناقص بنص مولد. ${entry?.sourceWarning??''}':bundledId=='qurtubi_printed'?'نص الطبعة مع سياقه وحواشيه. الموضع من عناوين السورة والآيات المطبوعة؛ وقد تشترك آيات في مقطع واحد. أُثبتت ثلاثة مواضع من التعليق الصريح لغيابها عن رقم العنوان. الرسم كما ورد في الطبعة. ${entry?.editionDetails??''}':bundledId=='ibn_kathir_pages'?'صفحات المصدر مع سياقها وهوامشها. موضع الآية من عنوان الكتاب المطبوع، وقد تشترك آيات في المقطع. طبعة دار الكتب العلمية 1419هـ، تحقيق محمد حسين شمس الدين.':bundledId!='jalalayn'?'صفحات المصدر مع سياقها وهوامشها، وليست مقاطع مستقلة لكل آية. الروابط مقيدة بسورة الكتاب وقد يشترك مقطع في آيات متعددة. ${entry?.editionDetails??''}${bundledId=='saadi_roots'&&entry?.sourceWarning!=null?' ${entry!.sourceWarning}':''}':null);
+      }catch(_){
+        return TafsirResult(editionId:edition.id,editionName:edition.nameAr,author:edition.authorAr,surahId:surahId,ayahNumber:ayahNumber,ayahText:ayah?.cleanTextUthmani??'',tafsirText:'تعذر قراءة حزمة التفسير المضمّنة. لا يُعرض نص بديل.',hasSourceText:false);
+      }
+    }
     final liveId = _liveEditions[editionId];
     if (liveId != null) {
       try {

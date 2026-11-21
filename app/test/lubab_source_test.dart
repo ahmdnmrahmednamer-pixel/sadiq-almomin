@@ -14,7 +14,7 @@ class LubabAdapter implements HttpClientAdapter {
 void main(){
  const text='قوله تعالى لفظ تجريبي SOURCE\nتتمة وحاشية محفوظتان';
  Map<String,dynamic> index()=>{'bookId':69,'provider':'quranpedia.net','linkType':'explicit_heading_quote','records':[{'surah':2,'ayah':3,'segments':[{'id':1,'from':0,'to':text.runes.length}]}],'pages':[{'id':1,'page':7,'sha256':sha256.convert(utf8.encode(text)).toString()}]};
- LubabSource source({String value=text,int author=14264,Map<String,dynamic>? custom})=>LubabSource(dio:Dio()..httpClientAdapter=LubabAdapter({'contents':[{'id':1,'text':value}]},author:author),loadIndex:()async=>custom??index());
+ LubabSource source({String value=text,int author=14264,Map<String,dynamic>? custom})=>LubabSource(useBundled:false,dio:Dio()..httpClientAdapter=LubabAdapter({'contents':[{'id':1,'text':value}]},author:author),loadIndex:()async=>custom??index());
  test('returns verbatim source entry with notes and printed page',()async{final p=await source().fetch(2,3);expect(p.single.text,text);expect(p.single.pages,[7]);});
  test('does not reuse adjacent verse or return unindexed content',()async{expect(await source().fetch(2,4),isEmpty);});
  test('fails closed on source correction rather than using stale offsets',()async{expect(()=>source(value:'changed').fetch(2,3),throwsFormatException);});
