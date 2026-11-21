@@ -339,7 +339,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                       ),
                       child: Center(
                         child: Text(
-                          'دعاء الأذان والصلاة 🎧',
+                          'دعاء الأذان والصلاة',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -367,7 +367,7 @@ class _SharawiPostPrayerDuaaCardState extends State<SharawiPostPrayerDuaaCard> {
                       ),
                       child: Center(
                         child: Text(
-                          'دعاء ختام الصلاة والمناجاة 🤲',
+                          'دعاء ختام الصلاة والمناجاة',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
