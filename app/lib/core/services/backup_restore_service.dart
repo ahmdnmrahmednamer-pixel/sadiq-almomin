@@ -398,6 +398,31 @@ class BackupRestoreService {
     }
   }
 
+  /// Reject invalid section containers before any persistent data is changed.
+  /// Missing/null sections remain compatible with older partial backups.
+  static bool _hasValidSectionShapes(Map<String, dynamic> data) {
+    const mapSections = <String>[
+      'settings', 'reading_position', 'khatma', 'adhkar', 'location',
+      'prayer_tracker', 'zakat_calculation', 'daily_wird_records',
+      'fajr_qiyam_alarms', 'scholars_library', 'extended_features',
+    ];
+    const listSections = <String>[
+      'bookmarks', 'ayah_notes', 'memorization_items', 'hadith_favorites',
+      'egyptian_heritage_favorites', 'fiqh_library_favorites',
+    ];
+    for (final key in mapSections) {
+      if (data[key] != null && data[key] is! Map<String, dynamic>) return false;
+    }
+    for (final key in listSections) {
+      if (data[key] != null && data[key] is! List) return false;
+    }
+    final bookmarks = data['bookmarks'];
+    if (bookmarks is List && bookmarks.any((entry) => entry is! String)) {
+      return false;
+    }
+    return true;
+  }
+
   /// Validates a raw JSON backup string
   BackupValidationResult validateBackup(String jsonString) {
     if (jsonString.trim().isEmpty) {
@@ -437,6 +462,13 @@ class BackupRestoreService {
         return const BackupValidationResult(
           isValid: false,
           errorMessage: 'لا توجد بيانات داخل النسخة الاحتياطية',
+        );
+      }
+
+      if (!_hasValidSectionShapes(data)) {
+        return const BackupValidationResult(
+          isValid: false,
+          errorMessage: 'صيغة أحد أقسام النسخة الاحتياطية غير صالحة',
         );
       }
 
@@ -490,9 +522,9 @@ class BackupRestoreService {
     bool replaceMode = true,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final data = backupEnvelope['data'] as Map<String, dynamic>?;
-      if (data == null) return false;
+      if (data == null || !_hasValidSectionShapes(data)) return false;
+      final prefs = await SharedPreferences.getInstance();
 
       // 1. Restore / Merge Bookmarks
       final importedBookmarks = (data['bookmarks'] as List<dynamic>?)
