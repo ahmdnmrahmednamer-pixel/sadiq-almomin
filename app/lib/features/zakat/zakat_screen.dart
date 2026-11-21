@@ -28,6 +28,41 @@ class _ZakatScreenState extends State<ZakatScreen> {
   late final TextEditingController _silverPriceController;
 
   late ZakatCalculation _calc;
+  int _saveRevision = 0;
+  bool _saving = false;
+  bool _saveFailed = false;
+  VoidCallback? _retrySave;
+
+  Future<void> _saveDraft(ZakatCalculation next, {bool resetInputs = false}) async {
+    final revision = ++_saveRevision;
+    setState(() {
+      _saving = true;
+      _saveFailed = false;
+      _retrySave = () => _saveDraft(next, resetInputs: resetInputs);
+    });
+    final saved = await ZakatService.instance.updateCalculation(next);
+    if (!mounted || revision != _saveRevision) return;
+    setState(() {
+      _saving = false;
+      _saveFailed = !saved;
+      if (saved && resetInputs) {
+        _calc = next;
+        for (final controller in [
+          _cashController, _gold24Controller, _gold21Controller, _gold18Controller,
+          _silverController, _tradeGoodsController, _debtsReceivableController,
+          _debtsPayableController,
+        ]) {
+          controller.clear();
+        }
+      }
+    });
+    if (saved && resetInputs) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تمت إعادة تعيين حاسبة الزكاة')),
+      );
+    }
+  }
+
 
   @override
   void initState() {
@@ -111,30 +146,16 @@ class _ZakatScreenState extends State<ZakatScreen> {
         silverPricePerGram: _parse(_silverPriceController.text) > 0 ? _parse(_silverPriceController.text) : _calc.silverPricePerGram,
       );
     });
-    ZakatService.instance.updateCalculation(_calc);
+    _saveDraft(_calc);
   }
 
   void _resetAll() {
-    setState(() {
-      _cashController.clear();
-      _gold24Controller.clear();
-      _gold21Controller.clear();
-      _gold18Controller.clear();
-      _silverController.clear();
-      _tradeGoodsController.clear();
-      _debtsReceivableController.clear();
-      _debtsPayableController.clear();
-      _calc = ZakatCalculation(
-        currency: _calc.currency,
-        goldPricePerGram24: _calc.goldPricePerGram24,
-        silverPricePerGram: _calc.silverPricePerGram,
-        nisabBasis: _calc.nisabBasis,
-      );
-    });
-    ZakatService.instance.reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تمت إعادة تعيين حاسبة الزكاة')),
-    );
+    _saveDraft(ZakatCalculation(
+      currency: _calc.currency,
+      goldPricePerGram24: _calc.goldPricePerGram24,
+      silverPricePerGram: _calc.silverPricePerGram,
+      nisabBasis: _calc.nisabBasis,
+    ), resetInputs: true);
   }
 
   void _shareZakatSummary() {
@@ -173,11 +194,11 @@ class _ZakatScreenState extends State<ZakatScreen> {
       locale: const Locale('ar'),
     );
 
-    if (picked != null) {
+    if (picked != null && mounted) {
       setState(() {
         _calc = _calc.copyWith(hawlDate: picked);
       });
-      await ZakatService.instance.setHawlDate(picked);
+      await _saveDraft(_calc);
     }
   }
 
@@ -212,6 +233,28 @@ class _ZakatScreenState extends State<ZakatScreen> {
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (_saving || _saveFailed)
+              Semantics(
+                liveRegion: true,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(_saving
+                            ? 'جارٍ حفظ حساب الزكاة'
+                            : 'لم يتم حفظ التغييرات. الحساب المعروض مسودة غير محفوظة.'),
+                        if (_saveFailed)
+                          TextButton(
+                            onPressed: _retrySave,
+                            child: const Text('إعادة محاولة الحفظ'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             // Noble Dedication Banner for Momin Ibrahim
             _buildDedicationBanner(context),
             const SizedBox(height: 12),
@@ -596,7 +639,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                           setState(() {
                             _calc = _calc.copyWith(currency: val);
                           });
-                          ZakatService.instance.updateCalculation(_calc);
+                          _saveDraft(_calc);
                         }
                       },
                     ),
@@ -628,7 +671,7 @@ class _ZakatScreenState extends State<ZakatScreen> {
                 setState(() {
                   _calc = _calc.copyWith(nisabBasis: basis);
                 });
-                ZakatService.instance.updateCalculation(_calc);
+                _saveDraft(_calc);
               },
             ),
             const SizedBox(height: 12),
