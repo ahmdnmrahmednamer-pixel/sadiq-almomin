@@ -189,21 +189,28 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
           unknownFallback: 'الموقع غير محدد عبر GPS',
         );
 
+        final titleStyle = Theme.of(context).textTheme.titleLarge!.copyWith(
+          fontWeight: FontWeight.w900,
+          height: 1.3,
+        );
         return Directionality(
           textDirection: SettingsService.instance.textDirection,
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('إمساكية ومحراب رمضان المبارك', style: TextStyle(fontWeight: FontWeight.w900)),
+              toolbarHeight: 16 + MediaQuery.textScalerOf(context).scale(20) * 3.2,
+              title: Text('إمساكية ومحراب رمضان المبارك', softWrap: true, overflow: TextOverflow.visible, style: titleStyle),
               bottom: TabBar(
                 controller: _tabController,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 labelColor: AppColors.accentGold,
-                unselectedLabelColor: isDark ? Colors.white70 : Colors.white60,
+                unselectedLabelColor: isDark ? Colors.white70 : AppColors.primaryGreen,
                 indicatorColor: AppColors.accentGold,
                 indicatorWeight: 3,
-                tabs: const [
-                  Tab(icon: Icon(Icons.table_chart_rounded, size: 20), text: 'الإمساكية (٣٠ يوماً)'),
-                  Tab(icon: Icon(Icons.task_alt_rounded, size: 20), text: 'متابع الصيام والعبادات'),
-                  Tab(icon: Icon(Icons.volunteer_activism_rounded, size: 20), text: 'أدعية وسنن الصائم'),
+                tabs: [
+                  Tab(height: 36 + MediaQuery.textScalerOf(context).scale(14) * 1.6, icon: const Icon(Icons.table_chart_rounded, size: 20), text: 'الإمساكية (٣٠ يوماً)'),
+                  Tab(height: 36 + MediaQuery.textScalerOf(context).scale(14) * 1.6, icon: const Icon(Icons.task_alt_rounded, size: 20), text: 'متابع الصيام والعبادات'),
+                  Tab(height: 36 + MediaQuery.textScalerOf(context).scale(14) * 1.6, icon: const Icon(Icons.volunteer_activism_rounded, size: 20), text: 'أدعية وسنن الصائم'),
                 ],
               ),
             ),
@@ -551,8 +558,10 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       const Text('سجل إنجاز العبادات الرمضانية', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.primaryGreen)),
                       Container(
@@ -579,9 +588,9 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildTrackerStat('الصيام', '$fastedCount / 30', Icons.check_circle_rounded, AppColors.primaryGreen),
-                      _buildTrackerStat('التراويح', '$taraweehCount ليلة', Icons.nightlight_round, AppColors.accentGold),
-                      _buildTrackerStat('الورد القرآني', '$quranCount جزء', Icons.menu_book_rounded, AppColors.secondaryGreen),
+                      Expanded(child: _buildTrackerStat('الصيام', '$fastedCount / 30', Icons.check_circle_rounded, AppColors.primaryGreen)),
+                      Expanded(child: _buildTrackerStat('التراويح', '$taraweehCount ليلة', Icons.nightlight_round, AppColors.accentGold)),
+                      Expanded(child: _buildTrackerStat('الورد القرآني', '$quranCount جزء', Icons.menu_book_rounded, AppColors.secondaryGreen)),
                     ],
                   ),
                 ],
