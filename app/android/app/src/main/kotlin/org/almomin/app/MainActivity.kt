@@ -1,6 +1,7 @@
 package org.almomin.app
 
 import android.app.NotificationManager
+import android.os.Bundle
 import android.os.Build
 import android.view.KeyEvent
 import io.flutter.embedding.android.FlutterActivity
@@ -12,8 +13,20 @@ class MainActivity: FlutterActivity() {
     private var volumeChannel: MethodChannel? = null
     private var interceptVolumeUp: Boolean = false
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        PrayerRenewalCoordinator.job?.interruptForForeground()
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onDestroy() {
+        PrayerRenewalCoordinator.job?.interruptForForeground()
+        PrayerRenewalCoordinator.detach()
+        super.onDestroy()
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        PrayerRenewalCoordinator.attach(flutterEngine, applicationContext)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "almomin/adhan_permissions")
             .setMethodCallHandler { call, result ->
                 when (call.method) {
