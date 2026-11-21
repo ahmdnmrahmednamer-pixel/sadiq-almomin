@@ -6,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'islamic_audio_service.dart';
 import 'prayer_service.dart';
+import '../utils/serial_task_queue.dart';
 
 /// Result of the requested OS mutations, not a guarantee of alarm delivery.
 /// Applied can include cancellation of disabled or unavailable alarms.
@@ -333,52 +334,72 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     return '${hour12.toString().padLeft(2, '0')}:$minStr $period';
   }
 
-  Future<void> setPreFajrEnabled(bool enabled) async {
-    _preFajrEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('wake_pre_fajr_enabled', enabled);
+  final SerialTaskQueue _preferenceQueue = SerialTaskQueue();
+  String? _preferenceError;
+  String? get preferenceError => _preferenceError;
+
+  Future<bool> _saveChoice(
+    Future<bool> Function(SharedPreferences prefs) write,
+    VoidCallback publish,
+  ) => _preferenceQueue.run(() async {
+    SharedPreferences? prefs;
+    try {
+      prefs = await SharedPreferences.getInstance();
+      if (!await write(prefs)) throw StateError('Alarm choice was not saved');
+    } catch (_) {
+      // The plugin cache is optimistic even when the durable write fails.
+      try { await prefs?.reload(); } catch (_) {}
+      _preferenceError = 'تعذر حفظ إعداد المنبّه. لم يُطبّق الاختيار الجديد ولم تُحدّث التنبيهات. أعد اختيار الإعداد للمحاولة مرة أخرى.';
+      notifyListeners();
+      return false;
+    }
+    publish();
+    _preferenceError = null;
     await scheduleAlarms();
     notifyListeners();
+    return true;
+  });
+
+  Future<bool> setPreFajrEnabled(bool enabled) {
+    final value = enabled;
+    return _saveChoice((prefs) => prefs.setBool('wake_pre_fajr_enabled', value),
+        () => _preFajrEnabled = value);
   }
 
-  Future<void> setPreFajrMinutesBefore(int minutes) async {
-    _preFajrMinutesBefore = minutes.clamp(5, 120);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('wake_pre_fajr_minutes', _preFajrMinutesBefore);
-    await scheduleAlarms();
-    notifyListeners();
+  Future<bool> setPreFajrMinutesBefore(int minutes) {
+    final value = minutes.clamp(5, 120);
+    return _saveChoice((prefs) => prefs.setInt('wake_pre_fajr_minutes', value),
+        () => _preFajrMinutesBefore = value);
   }
 
-  Future<void> setPreFajrTone(String toneId) async {
-    _preFajrToneId = toneId;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('wake_pre_fajr_tone', toneId);
-    await scheduleAlarms();
-    notifyListeners();
+  Future<bool> setPreFajrTone(String toneId) {
+    final value = toneId;
+    return _saveChoice((prefs) => prefs.setString('wake_pre_fajr_tone', value),
+        () => _preFajrToneId = value);
   }
 
-  Future<void> setQiyamEnabled(bool enabled) async {
-    _qiyamEnabled = enabled;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('wake_qiyam_enabled', enabled);
-    await scheduleAlarms();
-    notifyListeners();
+  Future<bool> setQiyamEnabled(bool enabled) {
+    final value = enabled;
+    return _saveChoice((prefs) => prefs.setBool('wake_qiyam_enabled', value),
+        () => _qiyamEnabled = value);
   }
 
-  Future<void> setQiyamMode(String mode) async {
-    _qiyamMode = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('wake_qiyam_mode', mode);
-    await scheduleAlarms();
-    notifyListeners();
+  Future<bool> setQiyamMode(String mode) {
+    final value = mode;
+    return _saveChoice((prefs) => prefs.setString('wake_qiyam_mode', value),
+        () => _qiyamMode = value);
   }
 
-  Future<void> setQiyamMinutesBeforeFajr(int minutes) async {
-    _qiyamMinutesBeforeFajr = minutes.clamp(20, 180);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('wake_qiyam_minutes_before', _qiyamMinutesBeforeFajr);
-    await scheduleAlarms();
-    notifyListeners();
+  Future<bool> setQiyamMinutesBeforeFajr(int minutes) {
+    final value = minutes.clamp(20, 180);
+    return _saveChoice((prefs) => prefs.setInt('wake_qiyam_minutes_before', value),
+        () => _qiyamMinutesBeforeFajr = value);
+  }
+
+  Future<bool> setQiyamTone(String toneId) {
+    final value = toneId;
+    return _saveChoice((prefs) => prefs.setString('wake_qiyam_tone', value),
+        () => _qiyamToneId = value);
   }
 
   Future<void> setQiyamFixedTime(int hour, int minute) async {
@@ -387,14 +408,6 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('wake_qiyam_fixed_hour', _qiyamFixedHour);
     await prefs.setInt('wake_qiyam_fixed_minute', _qiyamFixedMinute);
-    await scheduleAlarms();
-    notifyListeners();
-  }
-
-  Future<void> setQiyamTone(String toneId) async {
-    _qiyamToneId = toneId;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('wake_qiyam_tone', toneId);
     await scheduleAlarms();
     notifyListeners();
   }
@@ -636,22 +649,22 @@ class FajrQiyamAlarmService extends ChangeNotifier {
 
   Future<void> importData(Map<String, dynamic> data) async {
     if (data['pre_fajr_enabled'] is bool) {
-      await setPreFajrEnabled(data['pre_fajr_enabled'] as bool);
+      if (!await setPreFajrEnabled(data['pre_fajr_enabled'] as bool)) throw StateError('Alarm preference restore failed');
     }
     if (data['pre_fajr_minutes'] is int) {
-      await setPreFajrMinutesBefore(data['pre_fajr_minutes'] as int);
+      if (!await setPreFajrMinutesBefore(data['pre_fajr_minutes'] as int)) throw StateError('Alarm preference restore failed');
     }
     if (data['pre_fajr_tone'] is String) {
-      await setPreFajrTone(data['pre_fajr_tone'] as String);
+      if (!await setPreFajrTone(data['pre_fajr_tone'] as String)) throw StateError('Alarm preference restore failed');
     }
     if (data['qiyam_enabled'] is bool) {
-      await setQiyamEnabled(data['qiyam_enabled'] as bool);
+      if (!await setQiyamEnabled(data['qiyam_enabled'] as bool)) throw StateError('Alarm preference restore failed');
     }
     if (data['qiyam_mode'] is String) {
-      await setQiyamMode(data['qiyam_mode'] as String);
+      if (!await setQiyamMode(data['qiyam_mode'] as String)) throw StateError('Alarm preference restore failed');
     }
     if (data['qiyam_minutes_before'] is int) {
-      await setQiyamMinutesBeforeFajr(data['qiyam_minutes_before'] as int);
+      if (!await setQiyamMinutesBeforeFajr(data['qiyam_minutes_before'] as int)) throw StateError('Alarm preference restore failed');
     }
     if (data['qiyam_fixed_hour'] is int && data['qiyam_fixed_minute'] is int) {
       await setQiyamFixedTime(
@@ -660,7 +673,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
       );
     }
     if (data['qiyam_tone'] is String) {
-      await setQiyamTone(data['qiyam_tone'] as String);
+      if (!await setQiyamTone(data['qiyam_tone'] as String)) throw StateError('Alarm preference restore failed');
     }
   }
 }
