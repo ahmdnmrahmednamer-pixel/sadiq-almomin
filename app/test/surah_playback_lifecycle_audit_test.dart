@@ -6,11 +6,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:almomin/core/audio/fast_audio_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/services/quran_repository.dart';
 import 'package:almomin/features/audio/audio_screen.dart';
 import 'zero_delay_owner_audit_test.dart' show RecordingPlayer;
+
+class CompletingSurahPlayer extends RecordingPlayer {
+  final states = StreamController<PlayerState>.broadcast();
+  final sources = <AudioSource>[];
+  @override
+  Stream<PlayerState> get playerStateStream => states.stream;
+  @override
+  Future<Duration?> setAudioSource(AudioSource source,
+      {bool preload = true, int? initialIndex, Duration? initialPosition}) {
+    sources.add(source);
+    return super.setAudioSource(source,
+        preload: preload,
+        initialIndex: initialIndex,
+        initialPosition: initialPosition);
+  }
+
+  @override
+  Future<void> dispose() async {
+    await states.close();
+    await super.dispose();
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -143,6 +166,48 @@ void main() {
     expect(player.starts, 1);
     await t.pumpWidget(const SizedBox());
   });
+  for (final repeat in [false, true]) {
+    testWidgets(
+        'whole-surah completion keeps loaded reciter after browsing, repeat=$repeat',
+        (t) async {
+      final player = CompletingSurahPlayer();
+      await mount(t, player);
+      await t.pumpAndSettle();
+      await t.drag(find.byType(CustomScrollView), const Offset(0, 1000));
+      await t.pumpAndSettle();
+      final fields = find.byType(DropdownButtonFormField<String>);
+      await t.ensureVisible(fields.first);
+      await t.tap(fields.first);
+      await t.pumpAndSettle();
+      await t.tap(find.text('مجود').last);
+      await t.pumpAndSettle();
+      await t.tap(fields.last);
+      await t.pumpAndSettle();
+      await t.tap(find.text('محمد صديق المنشاوي').last);
+      await t.pumpAndSettle();
+      if (repeat) {
+        await t.tap(find.byTooltip('تكرار السورة معطل'));
+        await t.pump();
+      }
+      final initial = (player.sources.single as UriAudioSource).uri.toString();
+      player.states.add(PlayerState(false, ProcessingState.completed));
+      await t.pump();
+      await t.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)));
+      await t.pumpAndSettle();
+      expect(player.starts, 2);
+      expect(
+          (player.sources.last as UriAudioSource).uri.toString(),
+          repeat
+              ? initial
+              : SettingsService.instance
+                  .getSurahAudioUrl(2, 'minshawi_murattal'));
+      expect(SettingsService.instance.currentReciter.nameAr, contains('مجود'));
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
   testWidgets(
       'newer whole-surah request alone starts after overlapping source loads',
       (t) async {

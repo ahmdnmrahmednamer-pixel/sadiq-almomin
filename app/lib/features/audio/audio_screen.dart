@@ -70,7 +70,8 @@ class _AudioScreenState extends State<AudioScreen> {
             state.processingState == ProcessingState.loading;
         if (state.processingState == ProcessingState.completed) {
           if (_repeatSingle && _currentSurah != null) {
-            _playSurah(_currentSurah!);
+            _playSurah(_currentSurah!, forceReload: true,
+                playbackReciter: SettingsService.resolveReciter(_playingReciterId ?? SettingsService.instance.selectedReciterId));
           } else {
             _playNextSurah();
           }
@@ -129,8 +130,8 @@ class _AudioScreenState extends State<AudioScreen> {
     });
   }
 
-  Future<void> _playSurah(Surah surah, {bool forceReload = false}) async {
-    final reciter = _currentReciter ?? SettingsService.instance.currentReciter;
+  Future<void> _playSurah(Surah surah, {bool forceReload = false, ReciterInfo? playbackReciter}) async {
+    final reciter = playbackReciter ?? _currentReciter ?? SettingsService.instance.currentReciter;
     if (!SettingsService.availableReciters.any((r) => r.id == reciter.id)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(ReciterRecordingUnavailable(reciter.id).message),
@@ -269,14 +270,16 @@ class _AudioScreenState extends State<AudioScreen> {
     if (_currentSurah == null || _allSurahs.isEmpty) return;
     final nextId = _currentSurah!.id < 114 ? _currentSurah!.id + 1 : 1;
     final next = _allSurahs.firstWhere((s) => s.id == nextId, orElse: () => _allSurahs.first);
-    _playSurah(next);
+    _playSurah(next, forceReload: true,
+        playbackReciter: SettingsService.resolveReciter(_playingReciterId ?? SettingsService.instance.selectedReciterId));
   }
 
   void _playPreviousSurah() {
     if (_currentSurah == null || _allSurahs.isEmpty) return;
     final prevId = _currentSurah!.id > 1 ? _currentSurah!.id - 1 : 114;
     final prev = _allSurahs.firstWhere((s) => s.id == prevId, orElse: () => _allSurahs.first);
-    _playSurah(prev);
+    _playSurah(prev, forceReload: true,
+        playbackReciter: SettingsService.resolveReciter(_playingReciterId ?? SettingsService.instance.selectedReciterId));
   }
 
   Future<void> _downloadSurah(Surah surah, ReciterInfo reciter) async {
