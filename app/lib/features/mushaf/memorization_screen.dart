@@ -20,12 +20,18 @@ class MemorizationScreen extends StatefulWidget {
   final int initialSurahId;
   final int initialFromAyah;
   final int initialToAyah;
+  @visibleForTesting
+  final AudioPlayer? player;
+  @visibleForTesting
+  final Future<AudioSource> Function(String url, String cacheKey)? loadSource;
 
   const MemorizationScreen({
     super.key,
     this.initialSurahId = 1,
     this.initialFromAyah = 1,
     this.initialToAyah = 7,
+    this.player,
+    this.loadSource,
   });
 
   @override
@@ -37,6 +43,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   late final AudioPlayer _player;
   StreamSubscription<PlayerState>? _playerStateSub;
   bool _isPlaying = false;
+  int _playRequest = 0;
   int _currentAyahIndex = 0; // index inside _rangeAyahs
   int _currentAyahRepeat = 1;
   int _currentRangeRepeat = 1;
@@ -75,7 +82,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
     _fromAyah = widget.initialFromAyah;
     _toAyah = widget.initialToAyah;
 
-    _player = AudioPlayer();
+    _player = widget.player ?? AudioPlayer();
     _initAudioListeners();
     _loadInitialData();
   }
@@ -180,23 +187,33 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
       return;
     }
 
+    final request = ++_playRequest;
+    final focusAtLoad = FastAudioService.instance.activePlaybackToken;
     final ayah = _rangeAyahs[_currentAyahIndex];
     try {
       final url = SettingsService.instance.getAyahAudioUrl(_selectedSurahId, ayah.ayahNumber);
       _scrollToAyah(_currentAyahIndex);
       final reciterId = SettingsService.instance.selectedReciterId;
       final cacheKey = 'ayah_${reciterId}_${_selectedSurahId}_${ayah.ayahNumber}';
-      final source = await FastAudioService.instance.getFastAudioSource(
+      final source = await (widget.loadSource?.call(url, cacheKey) ?? FastAudioService.instance.getFastAudioSource(
         url,
         cacheKey: cacheKey,
-      );
-      await FastAudioService.instance.playWithZeroDelay(
+      ));
+      if (!mounted || request != _playRequest) return;
+      if (focusAtLoad != FastAudioService.instance.activePlaybackToken) {
+        setState(() { _isPlaying = false; _isDelaying = false; });
+        return;
+      }
+      final started = await FastAudioService.instance.playWithZeroDelay(
         _player,
         source,
         speed: _playbackSpeed,
-        onStopCallback: _stopPlayback,
+        onStopCallback: () => _stopPlayback(expectedRequest: request),
       );
+      if (!mounted || request != _playRequest) return;
+      if (!started) setState(() { _isPlaying = false; _isDelaying = false; });
     } catch (e) {
+      if (!mounted || request != _playRequest) return;
       debugPrint('Memorization audio play error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,21 +228,38 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   }
 
   Future<void> _pausePlayback() async {
+    final request = ++_playRequest;
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     _autoscrollToken++;
     _delayTimer?.cancel();
-    await _player.pause();
-    if (!mounted) return;
+    try { await _player.pause(); } catch (_) {
+      if (mounted && request == _playRequest) _showStopFailure();
+      return;
+    }
+    if (!mounted || request != _playRequest) return;
     setState(() {
       _isPlaying = false;
       _isDelaying = false;
     });
   }
 
-  Future<void> _stopPlayback() async {
+  void _showStopFailure() {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('تعذر إيقاف التلاوة. أعد المحاولة؛ لم يتم تأكيد الإيقاف.'),
+    ));
+  }
+
+  Future<void> _stopPlayback({int? expectedRequest}) async {
+    if (expectedRequest != null && expectedRequest != _playRequest) return;
+    final request = ++_playRequest;
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     _autoscrollToken++;
     _delayTimer?.cancel();
-    await _player.stop();
-    if (!mounted) return;
+    try { await _player.stop(); } catch (_) {
+      if (mounted && request == _playRequest) _showStopFailure();
+      return;
+    }
+    if (!mounted || request != _playRequest) return;
     setState(() {
       _isPlaying = false;
       _isDelaying = false;
@@ -583,6 +617,8 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
 
   @override
   void dispose() {
+    _playRequest++;
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     _autoscrollToken++;
     _delayTimer?.cancel();
     _playerStateSub?.cancel();
