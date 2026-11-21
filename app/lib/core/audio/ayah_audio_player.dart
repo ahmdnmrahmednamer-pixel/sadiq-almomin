@@ -54,6 +54,9 @@ class AyahAudioPlayer {
   }
 
   Future<void> _stopPlayer() async {
+    // Revoke this player's pending central-engine start before any await.
+    // Another player's focus must remain untouched.
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     if (stopPlayerRunner != null) {
       await stopPlayerRunner!();
     } else {
@@ -343,10 +346,11 @@ class AyahAudioPlayer {
   }
 
   Future<void> stop() async {
-    _activePlaySessionId++;
+    final sessionId = ++_activePlaySessionId;
     try {
       await _stopPlayer();
     } catch (_) {}
+    if (sessionId != _activePlaySessionId) return;
     currentPlayingKey.value = null;
     isPlaying.value = false;
   }
