@@ -18,6 +18,7 @@ class RamadanScreen extends StatefulWidget {
 class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<RamadanDay> _imsakiyyahList = [];
+  final ScrollController _imsakiyyahHorizontal = ScrollController();
 
   @override
   void initState() {
@@ -30,6 +31,7 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
   @override
   void dispose() {
     _tabController.dispose();
+    _imsakiyyahHorizontal.dispose();
     super.dispose();
   }
 
@@ -436,97 +438,115 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      children: [
-        // Table Header
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primaryGreen,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            children: [
-              SizedBox(width: 48, child: Text('رمضان', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
-              Expanded(flex: 2, child: Text('التاريخ واليوم', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
-              Expanded(child: Text('الإمساك', textAlign: TextAlign.center, style: TextStyle(color: AppColors.softGold, fontWeight: FontWeight.w900, fontSize: 12))),
-              Expanded(child: Text('الفجر', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
-              Expanded(child: Text('الإفطار', textAlign: TextAlign.center, style: TextStyle(color: AppColors.softGold, fontWeight: FontWeight.w900, fontSize: 12))),
-              Expanded(child: Text('العشاء', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
-            ],
+    final tableScale = MediaQuery.textScalerOf(context).scale(12) / 12;
+    return LayoutBuilder(builder: (context, constraints) {
+      final minimumWidth = 650 * tableScale;
+      return Scrollbar(
+        controller: _imsakiyyahHorizontal,
+        thumbVisibility: true,
+        scrollbarOrientation: ScrollbarOrientation.top,
+        child: SingleChildScrollView(
+          key: const ValueKey('ramadan_imsakiyyah_horizontal'),
+          controller: _imsakiyyahHorizontal,
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: constraints.maxWidth > minimumWidth
+                ? constraints.maxWidth : minimumWidth,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+              children: [
+                // Table Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 48 * tableScale, child: Text('رمضان', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
+                      Expanded(flex: 2, child: Text('التاريخ واليوم', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
+                      Expanded(child: Text('الإمساك', textAlign: TextAlign.center, style: TextStyle(color: AppColors.softGold, fontWeight: FontWeight.w900, fontSize: 12))),
+                      Expanded(child: Text('الفجر', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
+                      Expanded(child: Text('الإفطار', textAlign: TextAlign.center, style: TextStyle(color: AppColors.softGold, fontWeight: FontWeight.w900, fontSize: 12))),
+                      Expanded(child: Text('العشاء', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // 30 Days rows
+                ..._imsakiyyahList.map((day) {
+                  final isEven = day.dayNumber % 2 == 0;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () => _showDayDetails(day),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isEven
+                            ? (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF7FBF8))
+                            : (isDark ? Colors.transparent : Colors.white),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+                      ),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 48 * tableScale,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '${day.dayNumber}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
+                                Text('${day.gregorianDate.day}/${day.gregorianDate.month}', style: const TextStyle(fontSize: 10, color: AppColors.mutedText)),
+                              ],
+                            ),
+                          ),
+                          Expanded(child: Text(day.imsakTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                          Expanded(child: Text(day.fajrTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentGold.withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                day.maghribTime,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF8B6508), fontSize: 11),
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Text(day.ishaTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 6),
-
-        // 30 Days rows
-        ..._imsakiyyahList.map((day) {
-          final isEven = day.dayNumber % 2 == 0;
-          return InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => _showDayDetails(day),
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              decoration: BoxDecoration(
-                color: isEven
-                    ? (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF7FBF8))
-                    : (isDark ? Colors.transparent : Colors.white),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 48,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryGreen.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        '${day.dayNumber}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 12),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
-                        Text('${day.gregorianDate.day}/${day.gregorianDate.month}', style: const TextStyle(fontSize: 10, color: AppColors.mutedText)),
-                      ],
-                    ),
-                  ),
-                  Expanded(child: Text(day.imsakTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                  Expanded(child: Text(day.fajrTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentGold.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        day.maghribTime,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF8B6508), fontSize: 11),
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Text(day.ishaTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                ],
-              ),
-            ),
-          );
-        }),
-        const SizedBox(height: 16),
-      ],
-    );
+      );
+    });
   }
 
   // 2. Fasting & Worship Tracker Tab
