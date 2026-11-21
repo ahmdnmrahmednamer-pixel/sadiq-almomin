@@ -355,7 +355,8 @@ class IslamicAudioService extends ChangeNotifier {
       quality: 'تسجيل تاريخي، MP3 16 كيلوبت/ث',
       categoryAr: 'أذان مصر',
       muezzinName: 'الشيخ محمود خليل الحصري',
-      fileSizeBytes: 256128,
+      // Bundled asset size. The remote historical source is 256128 bytes.
+      fileSizeBytes: 892655,
     ),
     IslamicAudioTrack(
       id: 'adhan_abdulbasit',
