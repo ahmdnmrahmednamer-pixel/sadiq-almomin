@@ -33,6 +33,19 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
     super.dispose();
   }
 
+  Future<void> _toggleTracker(Future<bool> Function() toggle) async {
+    bool saved = false;
+    try {
+      saved = await toggle();
+    } catch (_) {}
+    if (!mounted || saved) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('تعذر تأكيد حفظ سجل العبادة. يرجى المحاولة مرة أخرى.'),
+      duration: Duration(seconds: 8),
+    ));
+  }
+
   void _showDayDetails(RamadanDay day) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -630,7 +643,8 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                           size: 24,
                         ),
                         tooltip: 'صمت هذا اليوم',
-                        onPressed: () => RamadanService.instance.toggleFasted(day.dayNumber),
+                        onPressed: () => _toggleTracker(
+                          () => RamadanService.instance.toggleFasted(day.dayNumber)),
                       ),
                       IconButton(
                         icon: Icon(
@@ -639,7 +653,8 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                           size: 24,
                         ),
                         tooltip: 'صليت التراويح / القيام',
-                        onPressed: () => RamadanService.instance.toggleTaraweeh(day.dayNumber),
+                        onPressed: () => _toggleTracker(
+                          () => RamadanService.instance.toggleTaraweeh(day.dayNumber)),
                       ),
                       IconButton(
                         icon: Icon(
@@ -648,7 +663,8 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                           size: 24,
                         ),
                         tooltip: 'قرأت الورد القرآني',
-                        onPressed: () => RamadanService.instance.toggleQuran(day.dayNumber),
+                        onPressed: () => _toggleTracker(
+                          () => RamadanService.instance.toggleQuran(day.dayNumber)),
                       ),
                     ],
                   ),
