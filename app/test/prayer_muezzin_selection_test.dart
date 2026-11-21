@@ -65,6 +65,27 @@ void main() {
       expect(prefs.getString('notif_prayer_voice_العصر'), savedBefore);
     });
 
+    test('newly held catalog entries preserve old saved reminders and reject all new setters', () async {
+      final service = PrayerNotificationService.instance;
+      final prefs = await SharedPreferences.getInstance();
+      for (final id in [
+        'adhan_azhar', 'adhan_morocco_qarawiyyin', 'adhan_tunis_zaytouna',
+        'adhan_khalil_aqsa', 'adhan_fatih_istanbul', 'adhan_alzamil',
+        'adhan_fares_abbad', 'adhan_sudais', 'adhan_shuraim', 'adhan_bosnia',
+      ]) {
+        await prefs.setString('notif_prayer_voice_العصر', id);
+        final enabled = service.isPrayerEnabled('العصر');
+        await service.init(forceReload: true);
+        expect(service.getPrayerVoice('العصر'), id);
+        expect(service.isPrayerEnabled('العصر'), enabled);
+        await expectLater(service.setPrayerVoice('العصر', id), throwsStateError);
+        await expectLater(service.setAllPrayersVoice(id), throwsStateError);
+        await expectLater(service.setSelectedAdhanVoice(id), throwsStateError);
+        await expectLater(service.setSelectedFajrVoice(id), throwsStateError);
+        expect(prefs.getString('notif_prayer_voice_العصر'), id);
+      }
+    });
+
     test('Initializes distinct Muezzin voices for each of the 5 prayers', () {
       final notif = PrayerNotificationService.instance;
 

@@ -100,11 +100,27 @@ class IslamicAudioService extends ChangeNotifier {
   };
   static bool isHeldLegacyAdhkar(IslamicAudioTrack track) =>
       heldLegacyAdhkarIds.contains(track.id);
-  /// A stored ID is retained while its recording is unavailable.
-  static String? unavailableRecordingReason(String id) =>
-      id == 'adhan_haza_albalushi'
-          ? 'التسجيل غير متاح حتى مراجعة الاسم والمصدر. اختر تسجيلا آخر بنفسك. مواعيد التذكير محفوظة.'
-          : null;
+  /// Unavailable sources retain their IDs and downloaded bytes.
+  /// This affects catalog playback and new assignments, not stored alarm times.
+  static const unavailableAdhanSourceReasons = <String, String>{
+    'adhan_haza_albalushi': 'التسجيل غير متاح حتى مراجعة الاسم والمصدر.',
+    'adhan_azhar': 'رابط التسجيل غير متاح حاليا. لم يثبت مصدر بديل مطابق.',
+    'adhan_morocco_qarawiyyin': 'رابط التسجيل غير متاح حاليا. لم يثبت مصدر بديل مطابق.',
+    'adhan_tunis_zaytouna': 'رابط التسجيل غير متاح حاليا. لم يثبت مصدر بديل مطابق.',
+    'adhan_khalil_aqsa': 'رابط التسجيل غير متاح حاليا. لم يثبت مصدر بديل مطابق.',
+    'adhan_fatih_istanbul': 'رابط التسجيل غير متاح حاليا. لم يثبت مصدر بديل مطابق.',
+    'adhan_alzamil': 'مصدر التسجيل ينسبه إلى اسم مختلف. الاستماع محجوب حتى مراجعة النسبة.',
+    'adhan_fares_abbad': 'مصدر التسجيل ينسبه إلى اسم مختلف. الاستماع محجوب حتى مراجعة النسبة.',
+    'adhan_sudais': 'مصدر التسجيل ينسبه إلى اسم مختلف. الاستماع محجوب حتى مراجعة النسبة.',
+    'adhan_shuraim': 'مصدر التسجيل ينسبه إلى اسم مختلف. الاستماع محجوب حتى مراجعة النسبة.',
+    'adhan_bosnia': 'مصدر التسجيل يذكر بلدا مختلفا. الاستماع محجوب حتى مراجعة المصدر.',
+  };
+
+  static String? unavailableRecordingReason(String id) {
+    final reason = unavailableAdhanSourceReasons[id];
+    return reason == null ? null :
+        '$reason اختر تسجيلا آخر بنفسك. مواعيد التذكير محفوظة.';
+  }
 
   static bool isHeldRecording(IslamicAudioTrack track) =>
       isHeldLegacyAdhkar(track) || unavailableRecordingReason(track.id) != null;
@@ -588,13 +604,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_alzamil',
       title: 'أذان الشيخ ماجد الزامل',
-      subtitle: 'نبرة صوت ندية رقيقة مفعمة بالسكينة والخشوع الرباني',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/048-1.mp3',
+      remoteUrl: null,
       fallbackUrls: [],
       durationFormatted: '03:38',
-      quality: 'استوديو عالي النقاء HD',
+      quality: 'غير متاح',
       categoryAr: 'أذان الخليج والشام',
       muezzinName: 'الشيخ ماجد الزامل',
       fileSizeBytes: 3500000,
@@ -754,13 +770,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_bosnia',
       title: 'أذان سراييفو والبوسنة والهرسك',
-      subtitle: 'أذان جامع الغازي خسرو بك — شجن البلقان والنمط العثماني',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/007.mp3',
+      remoteUrl: null,
       fallbackUrls: [],
       durationFormatted: '02:48',
-      quality: 'عالي النقاء HD',
+      quality: 'غير متاح',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'مؤذن سراييفو',
       fileSizeBytes: 2680000,
@@ -1034,13 +1050,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_fares_abbad',
       title: 'أذان الشيخ فارس عباد',
-      subtitle: 'صدح ندي خاشع يأسر القلوب لنداء الحق من اليمن والخليج',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/076-3.mp3',
+      remoteUrl: null,
       fallbackUrls: [],
       durationFormatted: '02:41',
-      quality: 'استوديو نقي 192kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'أذان الخليج والشام',
       muezzinName: 'الشيخ فارس عباد',
       fileSizeBytes: 2275000,
@@ -1062,13 +1078,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_sudais',
       title: 'أذان الشيخ عبد الرحمن السديس',
-      subtitle: 'نداء الحق بنبرة إمام وخطيب المسجد الحرام بمكة المكرمة',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/032.mp3',
+      remoteUrl: null,
       fallbackUrls: [],
       durationFormatted: '03:15',
-      quality: 'استوديو نقي 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'أذان الحرمين',
       muezzinName: 'الشيخ عبد الرحمن السديس',
       fileSizeBytes: 3100000,
@@ -1076,13 +1092,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_shuraim',
       title: 'أذان الشيخ سعود الشريم',
-      subtitle: 'أداء وقور مفعم بالسكينة والإخبات من رحاب الكعبة المشرفة',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/033.mp3',
+      remoteUrl: null,
       fallbackUrls: [],
       durationFormatted: '03:30',
-      quality: 'عالي النقاء 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'أذان الحرمين',
       muezzinName: 'الشيخ سعود الشريم',
       fileSizeBytes: 3350000,
@@ -1157,12 +1173,12 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_azhar',
       title: 'أذان الجامع الأزهر الشريف (القاهرة)',
-      subtitle: 'صوت مئذنة الأزهر الشريف ومنارة العلم والإسلام لألف عام',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/039.mp3',
+      remoteUrl: null,
       durationFormatted: '03:30',
-      quality: 'عالي النقاء 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'أذان مصر',
       muezzinName: 'مؤذن الجامع الأزهر',
       fileSizeBytes: 3350000,
@@ -1170,12 +1186,12 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_morocco_qarawiyyin',
       title: 'أذان جامع القرويين (فاس - المغرب)',
-      subtitle: 'الأذان المغربي العتيق بالصيغة واللحن الأندلسي الأصيل',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/040.mp3',
+      remoteUrl: null,
       durationFormatted: '03:10',
-      quality: 'استوديو نقي 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'مؤذن جامع القرويين',
       fileSizeBytes: 3050000,
@@ -1183,12 +1199,12 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_tunis_zaytouna',
       title: 'أذان جامع الزيتونة المعمور (تونس)',
-      subtitle: 'الأداء التونسي الخاشع من منارة الزيتونة التاريخية',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/041.mp3',
+      remoteUrl: null,
       durationFormatted: '03:15',
-      quality: 'عالي النقاء 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'مؤذن جامع الزيتونة',
       fileSizeBytes: 3120000,
@@ -1196,12 +1212,12 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_khalil_aqsa',
       title: 'أذان الحرم الإبراهيمي الشريف (الخليل)',
-      subtitle: 'نداء التوحيد والصمود من جوار خليل الرحمن إبراهيم عليه السلام',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/042.mp3',
+      remoteUrl: null,
       durationFormatted: '03:00',
-      quality: 'تسجيل تاريخي نقي 320kbps',
+      quality: 'غير متاح',
       categoryAr: 'القدس الشريف',
       muezzinName: 'مؤذن الحرم الإبراهيمي',
       fileSizeBytes: 2900000,
@@ -1209,12 +1225,12 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_fatih_istanbul',
       title: 'أذان جامع الفاتح الكبير (إسطنبول)',
-      subtitle: 'الأذان العثماني الرخيم بمقام الرست والنهوند العذب',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/043.mp3',
+      remoteUrl: null,
       durationFormatted: '03:22',
-      quality: 'عالي النقاء 320kbps HD',
+      quality: 'غير متاح',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'مؤذن جامع الفاتح',
       fileSizeBytes: 3250000,
