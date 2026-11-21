@@ -122,7 +122,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Text(
-                      'القارئ الحالي: ${SettingsService.availableReciters.firstWhere((r) => r.id == currentReciterId, orElse: () => SettingsService.availableReciters.first).nameAr}',
+                      'القارئ الحالي: ${SettingsService.resolveReciter(currentReciterId).nameAr}',
                       softWrap: true,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -152,7 +152,7 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                         ),
                       ),
                       Text(
-                        'القارئ الحالي: ${SettingsService.availableReciters.firstWhere((r) => r.id == currentReciterId, orElse: () => SettingsService.availableReciters.first).nameAr}',
+                        'القارئ الحالي: ${SettingsService.resolveReciter(currentReciterId).nameAr}',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: isDark ? Colors.white70 : AppColors.mutedText,
