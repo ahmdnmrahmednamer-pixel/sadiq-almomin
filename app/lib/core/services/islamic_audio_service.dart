@@ -642,9 +642,10 @@ class IslamicAudioService extends ChangeNotifier {
 
   Future<void> playTrack(IslamicAudioTrack track) async {
     _isOnlinePreview = false;
-    _onlinePreviewSession++;
+    final session = ++_onlinePreviewSession;
+    bool isCurrent() => session == _onlinePreviewSession;
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
-    if (_legacyStopFailed) return;
+    if (!isCurrent() || _legacyStopFailed) return;
     if (isHeldRecording(track)) {
       _heldLegacyTrack = track;
       notifyListeners();
@@ -675,16 +676,22 @@ class IslamicAudioService extends ChangeNotifier {
 
     try {
       await init();
+      if (!isCurrent()) return;
       try {
         await _player.stop();
       } catch (_) {}
+      if (!isCurrent()) return;
       await FastAudioService.instance.claimAudioFocus(player: _player, onStopOther: stop);
+      if (!isCurrent()) return;
       await _player.setVolume(1.0);
+      if (!isCurrent()) return;
       // 1. Check if user explicitly downloaded the HD file (offline HD playback)
       final localPath = getLocalAudioPath(track.id);
       if (localPath != null) {
         await _player.setFilePath(localPath);
+        if (!isCurrent()) return;
         await _player.setSpeed(_playbackSpeed);
+        if (!isCurrent()) return;
         unawaited(_player.play());
       }
       // 2. If a Studio HD remote stream exists, try resilient HD streaming & disk caching first,
@@ -699,8 +706,10 @@ class IslamicAudioService extends ChangeNotifier {
           fallbackUrls: track.fallbackUrls,
           cacheKey: cacheKey,
         );
+        if (!isCurrent()) return;
         if (success) {
           await _player.setSpeed(_playbackSpeed);
+          if (!isCurrent()) return;
         } else if (track.assetPath != null) {
           // Seamless offline fallback to remastered 44.1kHz Stereo bundled asset
           if (!kIsWeb && File(track.assetPath!).existsSync()) {
@@ -708,7 +717,9 @@ class IslamicAudioService extends ChangeNotifier {
           } else {
             await _player.setAsset(track.assetPath!);
           }
+          if (!isCurrent()) return;
           await _player.setSpeed(_playbackSpeed);
+          if (!isCurrent()) return;
           unawaited(_player.play());
         } else {
           throw Exception('Failed to stream audio track ${track.id}');
@@ -721,12 +732,15 @@ class IslamicAudioService extends ChangeNotifier {
         } else {
           await _player.setAsset(track.assetPath!);
         }
+        if (!isCurrent()) return;
         await _player.setSpeed(_playbackSpeed);
+        if (!isCurrent()) return;
         unawaited(_player.play());
       } else {
         throw Exception('No playable audio source found for ${track.id}');
       }
     } catch (e) {
+      if (!isCurrent()) return;
       debugPrint('Error playing ${track.id}: $e');
       _isBuffering = false;
       _isPlaying = false;
@@ -766,8 +780,10 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> stop() async {
-    _onlinePreviewSession++;
+    final session = ++_onlinePreviewSession;
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     _isOnlinePreview = false;
+    _isBuffering = false;
     if (disableNativePlayerForTesting) {
       _isPlaying = false;
       _currentTrack = null;
@@ -777,9 +793,12 @@ class IslamicAudioService extends ChangeNotifier {
     }
     try {
       await _player.stop();
+      if (session != _onlinePreviewSession) return;
+      _isPlaying = false;
     } catch (e) {
       debugPrint('Audio stop error: $e');
     }
+    if (session != _onlinePreviewSession) return;
     _currentTrack = null;
     _position = Duration.zero;
     notifyListeners();
