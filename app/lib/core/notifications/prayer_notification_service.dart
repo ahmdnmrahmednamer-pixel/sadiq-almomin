@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'notification_destination.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -343,7 +344,7 @@ class PrayerNotificationService extends ChangeNotifier {
         final payload = launchDetails!.notificationResponse!.payload;
         if (payload != null && payload.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handlePayloadNavigation(payload);
+            _handlePayloadNavigation(payload, notificationId: launchDetails.notificationResponse!.id);
           });
         }
       }
@@ -517,39 +518,13 @@ class PrayerNotificationService extends ChangeNotifier {
     final payload = response.payload;
     if (payload != null && payload.isNotEmpty) {
       _adhanEventStream.add(payload);
-      _handlePayloadNavigation(payload);
+      _handlePayloadNavigation(payload, notificationId: response.id);
     }
   }
 
-  void _handlePayloadNavigation(String payload) {
+  void _handlePayloadNavigation(String payload, {int? notificationId}) {
     try {
-      final reminderUri = Uri.parse('app://reminder?$payload');
-      if (reminderUri.queryParameters['type'] == 'short_reminder') {
-        appRouter.push('/settings');
-        return;
-      }
-      if (payload.contains('type=adhkar')) {
-        final uri = Uri.parse('app://adhkar?$payload');
-        final cat = uri.queryParameters['category'];
-        int targetIndex = 0;
-        if (cat == 'morning') {
-          targetIndex = 0;
-        } else if (cat == 'evening') {
-          targetIndex = 1;
-        } else if (cat == 'sleep') {
-          targetIndex = 3;
-        }
-        appRouter.push('/adhkar?index=$targetIndex');
-        return;
-      }
-
-      final uri = Uri.parse('app://adhan?$payload');
-      final prayer = uri.queryParameters['prayer'] ?? 'الظهر';
-      final isIqamah = uri.queryParameters['type'] == 'iqamah';
-
-      appRouter.push(
-        '/adhan-control?prayer=${Uri.encodeComponent(prayer)}&isIqamah=$isIqamah&autoPlay=true',
-      );
+      appRouter.push(notificationDestination(payload, notificationId: notificationId));
     } catch (e) {
       debugPrint('Payload navigation error: $e');
     }
