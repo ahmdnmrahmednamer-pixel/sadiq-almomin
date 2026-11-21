@@ -37,6 +37,56 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
   bool _isBuffering = false;
   ScreenStructureMode _layoutMode = ScreenStructureMode.classic;
   bool _showHubOverview = false;
+  final Set<String> _savingFavorites = {};
+  String? _failedFavorite;
+  String? _failedFavoriteTitle;
+
+  Future<void> _toggleFavorite(String id, String title) async {
+    if (_savingFavorites.contains(id)) return;
+    setState(() {
+      _savingFavorites.add(id);
+      if (_failedFavorite == id) _failedFavorite = null;
+    });
+    final saved = await _service.toggleFavorite(id);
+    if (!mounted) return;
+    setState(() {
+      _savingFavorites.remove(id);
+      if (!saved) {
+        _failedFavorite = id;
+        _failedFavoriteTitle = title;
+      }
+    });
+  }
+
+  Widget _favoriteButton(String id, String title) {
+    final saving = _savingFavorites.contains(id);
+    final favorite = _service.isFavorite(id);
+    return IconButton(
+      tooltip: saving ? 'جارٍ حفظ المفضلة' : favorite ? 'إزالة من المفضلة' : 'حفظ في المفضلة',
+      icon: Icon(favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        color: favorite ? Colors.redAccent : Colors.grey),
+      onPressed: saving ? null : () => _toggleFavorite(id, title),
+    );
+  }
+
+  Widget _favoriteFailure() => Semantics(
+    liveRegion: true,
+    child: Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('لم يتم حفظ تغيير المفضلة: $_failedFavoriteTitle. لم تتغير المفضلة المحفوظة.'),
+            TextButton(
+              onPressed: () => _toggleFavorite(_failedFavorite!, _failedFavoriteTitle!),
+              child: const Text('إعادة محاولة الحفظ'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   @override
   void initState() {
@@ -202,6 +252,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  if (_failedFavorite != null) _favoriteFailure(),
                   AdaptiveLayoutSwitcherBar(
                     currentMode: _layoutMode,
                     onModeChanged: (m) {
@@ -247,6 +298,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_failedFavorite != null) _favoriteFailure(),
         _buildHeroBanner(
           title: 'إذاعة القرآن الكريم من القاهرة',
           subtitle:
@@ -264,7 +316,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
 
   Widget _buildRadioStationCard(EgyptianRadioStation station, bool isDark) {
     final isPlaying = _playingId == station.id;
-    final isFav = _service.isFavorite(station.id);
     final isCairoUnsupported = station.id == 'eqr_cairo_main' &&
         (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
 
@@ -325,16 +376,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: 'حفظ في المفضلة',
-                  icon: Icon(
-                    isFav
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: isFav ? Colors.redAccent : Colors.grey,
-                  ),
-                  onPressed: () => _service.toggleFavorite(station.id),
-                ),
+                _favoriteButton(station.id, station.name),
                 Semantics(
                   label: isCairoUnsupported
                       ? '${station.name} غير متاح على أجهزة أندرويد لعدم التشفير'
@@ -481,6 +523,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_failedFavorite != null) _favoriteFailure(),
         _buildHeroBanner(
           title: 'مدرسة الابتهالات المصرية وخواطر الشعراوي',
           subtitle:
@@ -552,7 +595,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
 
   Widget _buildIbtihalCard(EgyptianIbtihalItem item, bool isDark) {
     final isPlaying = _playingId == item.id;
-    final isFav = _service.isFavorite(item.id);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -587,15 +629,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    isFav
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: isFav ? Colors.redAccent : Colors.grey,
-                  ),
-                  onPressed: () => _service.toggleFavorite(item.id),
-                ),
+                _favoriteButton(item.id, item.title),
                 IconButton(
                   tooltip: 'تشغيل الابتهال',
                   icon: Icon(
@@ -648,7 +682,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
 
   Widget _buildShaarawiCard(ShaarawiReflectionItem item, bool isDark) {
     final isPlaying = _playingId == item.id;
-    final isFav = _service.isFavorite(item.id);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -690,16 +723,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     ),
                   ),
                 ),
-                IconButton(
-                  tooltip: 'حفظ في المفضلة',
-                  icon: Icon(
-                    isFav
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    color: isFav ? Colors.redAccent : Colors.grey,
-                  ),
-                  onPressed: () => _service.toggleFavorite(item.id),
-                ),
+                _favoriteButton(item.id, item.title),
                 IconButton(
                   tooltip: 'تشغيل أو إيقاف الصوت',
                   icon: Icon(
@@ -772,6 +796,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_failedFavorite != null) _favoriteFailure(),
         _buildHeroBanner(
           title: 'دليل مساجد مصر التاريخية ومآذن المحروسة',
           subtitle:
@@ -805,7 +830,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     toLng: mosque.longitude,
                   )
                 : null;
-            final isFav = _service.isFavorite(mosque.id);
 
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
@@ -869,16 +893,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                               ),
                             ),
                           ),
-                        IconButton(
-                          tooltip: 'حفظ في المفضلة',
-                          icon: Icon(
-                            isFav
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            color: isFav ? Colors.redAccent : Colors.grey,
-                          ),
-                          onPressed: () => _service.toggleFavorite(mosque.id),
-                        ),
+                        _favoriteButton(mosque.id, mosque.name),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -914,6 +929,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        if (_failedFavorite != null) _favoriteFailure(),
         _buildHeroBanner(
           title: 'الفتاوى الميسرة — دار الإفتاء المصرية والأزهر الشريف',
           subtitle:
@@ -968,7 +984,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
           _buildEmptyState('لا توجد فتاوى مطابقة للبحث الحالي')
         else
           ...fatwas.map((fatwa) {
-            final isFav = _service.isFavorite(fatwa.id);
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
               shape: RoundedRectangleBorder(
@@ -1019,16 +1034,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                             );
                           },
                         ),
-                        IconButton(
-                          tooltip: 'حفظ في المفضلة',
-                          icon: Icon(
-                            isFav
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            color: isFav ? Colors.redAccent : Colors.grey,
-                          ),
-                          onPressed: () => _service.toggleFavorite(fatwa.id),
-                        ),
+                        _favoriteButton(fatwa.id, fatwa.title),
                       ],
                     ),
                     const SizedBox(height: 8),
