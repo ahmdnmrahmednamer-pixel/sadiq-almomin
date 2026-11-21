@@ -158,6 +158,67 @@ void main() {
     expect(player.sourceAssignments, 1);
   }
 
+  for (final action in ['stop', 'dispose', 'success']) {
+    testWidgets('pre-engine whole-surah source control $action', (t) async {
+      final player = RecordingPlayer();
+      final pending = Completer<AudioSource>();
+      await t.pumpWidget(MaterialApp(
+          home: AudioScreen(
+              player: player, loadSource: (_, __) => pending.future)));
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(find.text('سورة الفاتحة'), 250,
+          scrollable: find.byType(Scrollable).first);
+      await t.pumpAndSettle();
+      await t.tap(find.text('سورة الفاتحة'));
+      await t.pump();
+      if (action == 'stop') {
+        await t.tap(find.byTooltip('إيقاف التلاوة'));
+        await t.pump();
+      }
+      if (action == 'dispose') await t.pumpWidget(const SizedBox());
+      pending.complete(
+          AudioSource.uri(Uri.parse('https://example.invalid/pending.mp3')));
+      await t.pumpAndSettle();
+      expect(player.starts, action == 'success' ? 1 : 0);
+      expect(player.sourceAssignments, action == 'success' ? 1 : 0);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
+  for (final phase in ['initial-stop', 'source']) {
+    testWidgets(
+        'pre-engine whole-surah load cannot reclaim focus during $phase',
+        (t) async {
+      final player = RecordingPlayer();
+      final pending = Completer<AudioSource>();
+      if (phase == 'initial-stop') player.blockedStop = Completer<void>();
+      await t.pumpWidget(MaterialApp(
+          home: AudioScreen(
+              player: player, loadSource: (_, __) => pending.future)));
+      await t.pumpAndSettle();
+      await t.scrollUntilVisible(find.text('سورة الفاتحة'), 250,
+          scrollable: find.byType(Scrollable).first);
+      await t.pumpAndSettle();
+      await t.tap(find.text('سورة الفاتحة'));
+      await t.pump();
+      final newer = engine.registerAudioFocus();
+      if (phase == 'initial-stop') {
+        player.blockedStop!.complete();
+        await t.pump();
+      }
+      pending.complete(
+          AudioSource.uri(Uri.parse('https://example.invalid/pending.mp3')));
+      await t.pumpAndSettle();
+      expect(player.starts, 0);
+      expect(player.sourceAssignments, 0);
+      expect(engine.activePlaybackToken, newer);
+      expect(find.textContaining('بدء تشغيل سورة'), findsNothing);
+      expect(t.takeException(), isNull);
+      await t.pumpWidget(const SizedBox());
+    });
+  }
+
   for (final action in ['stop', 'dispose', 'other-owner']) {
     testWidgets('whole-surah pending source cannot start after $action',
         (t) async {
