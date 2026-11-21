@@ -403,7 +403,7 @@ class PrayerNotificationService extends ChangeNotifier {
     _foregroundInitialized = true;
     await scheduleShortReminders();
     try {
-      scheduleAdhkarReminders();
+      await scheduleAdhkarReminders();
     } catch (_) {}
     notifyListeners();
   }
@@ -435,6 +435,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> _loadSavedSchedulingPreferences({bool reload = false}) async {
+    _adhkarRegistrations.clear();
     final prefs = await SharedPreferences.getInstance();
     if (reload) await prefs.reload();
     for (final key in shortReminderIds.keys) {
@@ -1919,17 +1920,81 @@ class PrayerNotificationService extends ChangeNotifier {
     });
   }
 
-  /// Schedules recurring daily notifications for Morning, Evening, and Sleep Adhkar
+  final Map<String,
+          ({bool master, ({bool enabled, int hour, int minute}) state})>
+      _adhkarRegistrations = {};
+  Future<void>? _adhkarOperation;
+
+  ({bool enabled, int hour, int minute}) _adhkarState(String key) =>
+      switch (key) {
+        'morning' => (
+            enabled: _morningAdhkarEnabled,
+            hour: _morningAdhkarHour,
+            minute: _morningAdhkarMinute
+          ),
+        'evening' => (
+            enabled: _eveningAdhkarEnabled,
+            hour: _eveningAdhkarHour,
+            minute: _eveningAdhkarMinute
+          ),
+        'sleep' => (
+            enabled: _sleepAdhkarEnabled,
+            hour: _sleepAdhkarHour,
+            minute: _sleepAdhkarMinute
+          ),
+        _ => throw ArgumentError.value(key, 'key'),
+      };
+
+  /// Confirms native registration/cancellation for these settings, not playback.
+  bool adhkarScheduleConfirmed(String key) =>
+      _adhkarRegistrations[key] ==
+      (master: _masterEnabled, state: _adhkarState(key));
+
   Future<bool> scheduleAdhkarReminders() async {
-    if (!_masterEnabled || !_isInitialized) return false;
+    final prior = _adhkarOperation;
+    final gate = Completer<void>();
+    _adhkarOperation = gate.future;
+    try {
+      if (prior != null) await prior;
+      return await _scheduleAdhkarReminders();
+    } finally {
+      gate.complete();
+      if (identical(_adhkarOperation, gate.future)) _adhkarOperation = null;
+    }
+  }
+
+  /// Schedules recurring daily notifications for Morning, Evening, and Sleep Adhkar
+  Future<bool> _scheduleAdhkarReminders() async {
+    _adhkarRegistrations.clear();
+    if (!_isInitialized) return false;
+    final states = {
+      for (final key in ['morning', 'evening', 'sleep']) key: _adhkarState(key)
+    };
+    final master = _masterEnabled;
+    final morning = states['morning']!;
+    final evening = states['evening']!;
+    final sleep = states['sleep']!;
+    var permissionsAllowed = true;
+    try {
+      final android = _localNotifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+      if (master && states.values.any((state) => state.enabled) && android != null) {
+        permissionsAllowed = await android.areNotificationsEnabled() != false &&
+            await android.canScheduleExactNotifications() != false;
+      }
+    } catch (e) {
+      permissionsAllowed = false;
+      debugPrint('Unable to check adhkar scheduling permission: $e');
+    }
     var applied = true;
     _ensureTimeZonesInitialized();
     final now = DateTime.now();
 
     // 1. Morning Adhkar
     try {
-      if (_morningAdhkarEnabled) {
-        var morningTarget = DateTime(now.year, now.month, now.day, _morningAdhkarHour, _morningAdhkarMinute);
+      if (master && morning.enabled) {
+        if (!permissionsAllowed) throw StateError('Adhkar scheduling permission denied');
+        var morningTarget = DateTime(
+            now.year, now.month, now.day, morning.hour, morning.minute);
         if (morningTarget.isBefore(now)) {
           morningTarget = morningTarget.add(const Duration(days: 1));
         }
@@ -1952,12 +2017,20 @@ class PrayerNotificationService extends ChangeNotifier {
           morningTz,
           const NotificationDetails(android: morningDetails),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,
           payload: 'type=adhkar&category=morning',
         );
       } else {
         await _localNotifications.cancel(morningAdhkarNotificationId);
+      }
+      if (master == _masterEnabled &&
+          states['morning'] == _adhkarState('morning')) {
+        _adhkarRegistrations['morning'] =
+            (master: master, state: states['morning']!);
+      } else {
+        applied = false;
       }
     } catch (e) {
       applied = false;
@@ -1966,8 +2039,10 @@ class PrayerNotificationService extends ChangeNotifier {
 
     // 2. Evening Adhkar
     try {
-      if (_eveningAdhkarEnabled) {
-        var eveningTarget = DateTime(now.year, now.month, now.day, _eveningAdhkarHour, _eveningAdhkarMinute);
+      if (master && evening.enabled) {
+        if (!permissionsAllowed) throw StateError('Adhkar scheduling permission denied');
+        var eveningTarget = DateTime(
+            now.year, now.month, now.day, evening.hour, evening.minute);
         if (eveningTarget.isBefore(now)) {
           eveningTarget = eveningTarget.add(const Duration(days: 1));
         }
@@ -1990,12 +2065,20 @@ class PrayerNotificationService extends ChangeNotifier {
           eveningTz,
           const NotificationDetails(android: eveningDetails),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,
           payload: 'type=adhkar&category=evening',
         );
       } else {
         await _localNotifications.cancel(eveningAdhkarNotificationId);
+      }
+      if (master == _masterEnabled &&
+          states['evening'] == _adhkarState('evening')) {
+        _adhkarRegistrations['evening'] =
+            (master: master, state: states['evening']!);
+      } else {
+        applied = false;
       }
     } catch (e) {
       applied = false;
@@ -2004,8 +2087,10 @@ class PrayerNotificationService extends ChangeNotifier {
 
     // 3. Sleep Adhkar
     try {
-      if (_sleepAdhkarEnabled) {
-        var sleepTarget = DateTime(now.year, now.month, now.day, _sleepAdhkarHour, _sleepAdhkarMinute);
+      if (master && sleep.enabled) {
+        if (!permissionsAllowed) throw StateError('Adhkar scheduling permission denied');
+        var sleepTarget =
+            DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
         if (sleepTarget.isBefore(now)) {
           sleepTarget = sleepTarget.add(const Duration(days: 1));
         }
@@ -2028,12 +2113,20 @@ class PrayerNotificationService extends ChangeNotifier {
           sleepTz,
           const NotificationDetails(android: sleepDetails),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,
           payload: 'type=adhkar&category=sleep',
         );
       } else {
         await _localNotifications.cancel(sleepAdhkarNotificationId);
+      }
+      if (master == _masterEnabled &&
+          states['sleep'] == _adhkarState('sleep')) {
+        _adhkarRegistrations['sleep'] =
+            (master: master, state: states['sleep']!);
+      } else {
+        applied = false;
       }
     } catch (e) {
       applied = false;
@@ -2043,6 +2136,10 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> cancelAll() async {
+    _adhkarRegistrations.clear();
+    final adhkarPending = _adhkarOperation;
+    if (adhkarPending != null) await adhkarPending;
+    _adhkarRegistrations.clear();
     ++_shortGeneration;
     final shortPending = _shortOperation;
     if (shortPending != null) await shortPending;
