@@ -7,6 +7,10 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'islamic_audio_service.dart';
 import 'prayer_service.dart';
 
+/// Result of the requested OS mutations, not a guarantee of alarm delivery.
+/// Applied can include cancellation of disabled or unavailable alarms.
+enum AlarmScheduleOutcome { applied, superseded, failed }
+
 /// نموذج نغمة التنبيه لمنبه الفجر وقيام الليل
 class WakeUpAlarmTone {
   final String id;
@@ -415,14 +419,14 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   ///   and ensures fixed-clock Qiyam (881 when mode == 'fixed_time') remains
   ///   scheduled if enabled.
   /// - When verified GPS exists: schedules enabled alarms.
-  Future<void> syncWithLocationAvailability([PrayerData? data]) async {
+  Future<AlarmScheduleOutcome> syncWithLocationAvailability([PrayerData? data]) async {
     final int generation = ++_alarmScheduleGeneration;
-    await _serializeAlarmOp<void>(() async {
-      if (generation != _alarmScheduleGeneration) return;
+    return _serializeAlarmOp<AlarmScheduleOutcome>(() async {
+      if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
       try {
         if (!_initialized) {
           final prefs = await SharedPreferences.getInstance();
-          if (generation != _alarmScheduleGeneration) return;
+          if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
           _preFajrEnabled = prefs.getBool('wake_pre_fajr_enabled') ?? true;
           _preFajrMinutesBefore = prefs.getInt('wake_pre_fajr_minutes') ?? 25;
           _preFajrToneId =
@@ -439,44 +443,47 @@ class FajrQiyamAlarmService extends ChangeNotifier {
 
         final effectiveData = data ?? PrayerService.instance.currentData;
         if (effectiveData == null || effectiveData.prayers.isEmpty) {
-          if (generation != _alarmScheduleGeneration) return;
+          if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
           await _notifications.cancel(preFajrAlarmNotificationId);
-          if (generation != _alarmScheduleGeneration) return;
+          if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
           if (!isQiyamFixedClock) {
             await _notifications.cancel(qiyamAlarmNotificationId);
           } else if (_qiyamEnabled) {
-            await _scheduleQiyamAlarmLocked(generation, null);
+            return await _scheduleQiyamAlarmLocked(generation, null);
           } else {
             await _notifications.cancel(qiyamAlarmNotificationId);
           }
-          return;
+          return generation == _alarmScheduleGeneration
+              ? AlarmScheduleOutcome.applied : AlarmScheduleOutcome.superseded;
         }
 
-        await _scheduleAlarmsLocked(generation, effectiveData);
+        return await _scheduleAlarmsLocked(generation, effectiveData);
       } catch (e) {
         debugPrint('FajrQiyamAlarmService sync error: $e');
+        return AlarmScheduleOutcome.failed;
       }
     });
   }
 
   /// Schedules the actual OS alarm notifications for Pre-Fajr (880) and Qiyam (881)
-  Future<void> scheduleAlarms([PrayerData? data]) async {
+  Future<AlarmScheduleOutcome> scheduleAlarms([PrayerData? data]) async {
     final int generation = ++_alarmScheduleGeneration;
-    await _serializeAlarmOp<void>(() async {
-      await _scheduleAlarmsLocked(generation, data);
+    return _serializeAlarmOp<AlarmScheduleOutcome>(() async {
+      return _scheduleAlarmsLocked(generation, data);
     });
   }
 
-  Future<void> _scheduleQiyamAlarmLocked(
+  Future<AlarmScheduleOutcome> _scheduleQiyamAlarmLocked(
     int generation, [
     PrayerData? data,
   ]) async {
-    if (generation != _alarmScheduleGeneration) return;
+    if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
     try {
       tz_data.initializeTimeZones();
     } catch (_) {}
     final qiyamTime = _qiyamEnabled ? getNextQiyamWakeTime(data) : null;
-    if (qiyamTime == null || generation != _alarmScheduleGeneration) return;
+    if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
+    if (qiyamTime == null) return AlarmScheduleOutcome.applied;
 
     final tzQiyam = tz.TZDateTime.from(qiyamTime, tz.local);
     final tone = getToneById(_qiyamToneId);
@@ -494,7 +501,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
       category: AndroidNotificationCategory.alarm,
     );
 
-    if (generation != _alarmScheduleGeneration) return;
+    if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
     await _notifications.zonedSchedule(
       qiyamAlarmNotificationId,
       'منبّه قيام الليل والثلث الأخير 🌙',
@@ -506,22 +513,24 @@ class FajrQiyamAlarmService extends ChangeNotifier {
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'type=adhan&prayer=الفجر',
     );
+    return generation == _alarmScheduleGeneration
+        ? AlarmScheduleOutcome.applied : AlarmScheduleOutcome.superseded;
   }
 
-  Future<void> _scheduleAlarmsLocked(
+  Future<AlarmScheduleOutcome> _scheduleAlarmsLocked(
     int generation, [
     PrayerData? data,
   ]) async {
-    if (generation != _alarmScheduleGeneration) return;
+    if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
     try {
       try {
         tz_data.initializeTimeZones();
       } catch (_) {}
       // Cancel previous ID 880 (Pre-Fajr) and ID 881 (Qiyam) before rescheduling
       await _notifications.cancel(preFajrAlarmNotificationId);
-      if (generation != _alarmScheduleGeneration) return;
+      if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
       await _notifications.cancel(qiyamAlarmNotificationId);
-      if (generation != _alarmScheduleGeneration) return;
+      if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
 
       final preFajrWake = _preFajrEnabled ? getNextPreFajrWakeTime(data) : null;
       if (preFajrWake != null) {
@@ -542,7 +551,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
           category: AndroidNotificationCategory.alarm,
         );
 
-        if (generation != _alarmScheduleGeneration) return;
+        if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
         await _notifications.zonedSchedule(
           preFajrAlarmNotificationId,
           'منبّه الاستعداد لصلاة الفجر 🌅 (باقي $_preFajrMinutesBefore دقيقة)',
@@ -554,12 +563,13 @@ class FajrQiyamAlarmService extends ChangeNotifier {
               UILocalNotificationDateInterpretation.absoluteTime,
           payload: 'type=adhan&prayer=الفجر',
         );
-        if (generation != _alarmScheduleGeneration) return;
+        if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
       }
 
-      await _scheduleQiyamAlarmLocked(generation, data);
+      return await _scheduleQiyamAlarmLocked(generation, data);
     } catch (e) {
       debugPrint('FajrQiyamAlarmService schedule error: $e');
+      return AlarmScheduleOutcome.failed;
     }
   }
 
