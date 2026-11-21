@@ -533,15 +533,28 @@ class BackupRestoreService {
   }
 
 
-  /// Restores backup data into the app state
+  /// A false platform result is a failed write, not a completed restore step.
+  Future<void> _confirmPreferenceWrite(Future<bool> Function() write) async {
+    try {
+      if (!await write()) throw const _BackupPreferenceWriteFailure();
+    } catch (_) {
+      // Keep storage failures distinct from legacy merge JSON parse fallbacks.
+      throw const _BackupPreferenceWriteFailure();
+    }
+  }
+
+  /// Restores backup data into the app state. Earlier successful writes are
+  /// not rolled back if a later step fails.
   Future<bool> restoreBackup(
     Map<String, dynamic> backupEnvelope, {
     bool replaceMode = true,
   }) async {
+    SharedPreferences? recoveryPrefs;
     try {
       final data = backupEnvelope['data'] as Map<String, dynamic>?;
       if (data == null || !_hasValidSectionShapes(data)) return false;
       final prefs = await SharedPreferences.getInstance();
+      recoveryPrefs = prefs;
 
       // 1. Restore / Merge Bookmarks
       final importedBookmarks = (data['bookmarks'] as List<dynamic>?)
@@ -549,11 +562,11 @@ class BackupRestoreService {
               .toList() ??
           [];
       if (replaceMode) {
-        await prefs.setStringList('bookmarks', importedBookmarks);
+        await _confirmPreferenceWrite(() => prefs.setStringList('bookmarks', importedBookmarks));
       } else {
         final current = prefs.getStringList('bookmarks') ?? [];
         final merged = {...current, ...importedBookmarks}.toList();
-        await prefs.setStringList('bookmarks', merged);
+        await _confirmPreferenceWrite(() => prefs.setStringList('bookmarks', merged));
       }
 
       // 2. Settings
@@ -561,158 +574,158 @@ class BackupRestoreService {
       if (settings != null) {
         if (replaceMode || !prefs.containsKey('mushaf_font_size')) {
           if (settings['mushaf_font_size'] is num) {
-            await prefs.setDouble('mushaf_font_size',
-                (settings['mushaf_font_size'] as num).toDouble());
+            await _confirmPreferenceWrite(() => prefs.setDouble('mushaf_font_size',
+                (settings['mushaf_font_size'] as num).toDouble()));
           }
         }
         if (replaceMode || !prefs.containsKey('selected_reciter_id')) {
           if (settings['selected_reciter_id'] != null) {
-            await prefs.setString('selected_reciter_id',
-                settings['selected_reciter_id'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString('selected_reciter_id',
+                settings['selected_reciter_id'].toString()));
           }
         }
         if (replaceMode || !prefs.containsKey('calculation_method')) {
           if (settings['calculation_method'] != null) {
-            await prefs.setString('calculation_method',
-                settings['calculation_method'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString('calculation_method',
+                settings['calculation_method'].toString()));
           }
         }
         if (replaceMode || !prefs.containsKey('theme_mode')) {
           if (settings['theme_mode'] != null) {
-            await prefs.setString(
-                'theme_mode', settings['theme_mode'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString(
+                'theme_mode', settings['theme_mode'].toString()));
           }
         }
         if (replaceMode || !prefs.containsKey('adhan_alerts')) {
           if (settings['adhan_alerts'] is bool) {
-            await prefs.setBool(
-                'adhan_alerts', settings['adhan_alerts'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'adhan_alerts', settings['adhan_alerts'] as bool));
           }
         }
         if (settings['app_language'] != null) {
-          await prefs.setString(
-              'app_language', settings['app_language'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString(
+              'app_language', settings['app_language'].toString()));
         }
         if (settings['quran_translation_edition'] != null) {
-          await prefs.setString('quran_translation_edition',
-              settings['quran_translation_edition'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString('quran_translation_edition',
+              settings['quran_translation_edition'].toString()));
         }
         if (settings['bilingual_display_enabled'] is bool) {
-          await prefs.setBool('bilingual_display_enabled',
-              settings['bilingual_display_enabled'] as bool);
+          await _confirmPreferenceWrite(() => prefs.setBool('bilingual_display_enabled',
+              settings['bilingual_display_enabled'] as bool));
         }
         if (settings['hijri_adjustment_days'] is int) {
-          await prefs.setInt('hijri_adjustment_days',
-              settings['hijri_adjustment_days'] as int);
+          await _confirmPreferenceWrite(() => prefs.setInt('hijri_adjustment_days',
+              settings['hijri_adjustment_days'] as int));
         }
         if (settings['default_playback_speed'] is num) {
-          await prefs.setDouble('default_playback_speed',
-              (settings['default_playback_speed'] as num).toDouble());
+          await _confirmPreferenceWrite(() => prefs.setDouble('default_playback_speed',
+              (settings['default_playback_speed'] as num).toDouble()));
         }
         if (settings['ayah_repeat_count'] is int) {
-          await prefs.setInt('ayah_repeat_count',
-              settings['ayah_repeat_count'] as int);
+          await _confirmPreferenceWrite(() => prefs.setInt('ayah_repeat_count',
+              settings['ayah_repeat_count'] as int));
         }
         if (settings['default_tafsir_edition'] != null) {
-          await prefs.setString('default_tafsir_edition',
-              settings['default_tafsir_edition'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString('default_tafsir_edition',
+              settings['default_tafsir_edition'].toString()));
         }
         if (settings['fiqh_madhhab'] != null) {
-          await prefs.setString(
-              'fiqh_madhhab', settings['fiqh_madhhab'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString(
+              'fiqh_madhhab', settings['fiqh_madhhab'].toString()));
         }
         if (settings['mushaf_default_mode'] != null) {
-          await prefs.setString('mushaf_default_mode',
-              settings['mushaf_default_mode'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString('mushaf_default_mode',
+              settings['mushaf_default_mode'].toString()));
         }
         if (settings['screen_layout_mode'] != null) {
-          await prefs.setString('screen_layout_mode',
-              settings['screen_layout_mode'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString('screen_layout_mode',
+              settings['screen_layout_mode'].toString()));
         }
         if (settings['tasbih_vibration'] is bool) {
-          await prefs.setBool(
-              'tasbih_vibration', settings['tasbih_vibration'] as bool);
+          await _confirmPreferenceWrite(() => prefs.setBool(
+              'tasbih_vibration', settings['tasbih_vibration'] as bool));
         }
         if (settings['scholar_audio_source_pref_v11'] != null) {
-          await prefs.setString('scholar_audio_source_pref_v11',
-              settings['scholar_audio_source_pref_v11'].toString());
+          await _confirmPreferenceWrite(() => prefs.setString('scholar_audio_source_pref_v11',
+              settings['scholar_audio_source_pref_v11'].toString()));
         }
         if (replaceMode || !prefs.containsKey('keep_screen_on')) {
           if (settings['keep_screen_on'] is bool) {
-            await prefs.setBool(
-                'keep_screen_on', settings['keep_screen_on'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'keep_screen_on', settings['keep_screen_on'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('auto_play_next_ayah')) {
           if (settings['auto_play_next_ayah'] is bool) {
-            await prefs.setBool(
-                'auto_play_next_ayah', settings['auto_play_next_ayah'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'auto_play_next_ayah', settings['auto_play_next_ayah'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('download_wifi_only')) {
           if (settings['download_wifi_only'] is bool) {
-            await prefs.setBool(
-                'download_wifi_only', settings['download_wifi_only'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'download_wifi_only', settings['download_wifi_only'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('auto_silent_prayer')) {
           if (settings['auto_silent_prayer'] is bool) {
-            await prefs.setBool(
-                'auto_silent_prayer', settings['auto_silent_prayer'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'auto_silent_prayer', settings['auto_silent_prayer'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('sunan_rawatib_reminder')) {
           if (settings['sunan_rawatib_reminder'] is bool) {
-            await prefs.setBool('sunan_rawatib_reminder',
-                settings['sunan_rawatib_reminder'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool('sunan_rawatib_reminder',
+                settings['sunan_rawatib_reminder'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('quran_numbering_style')) {
           if (settings['quran_numbering_style'] != null) {
-            await prefs.setString('quran_numbering_style',
-                settings['quran_numbering_style'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString('quran_numbering_style',
+                settings['quran_numbering_style'].toString()));
           }
         }
         if (replaceMode || !prefs.containsKey('show_juz_overlay')) {
           if (settings['show_juz_overlay'] is bool) {
-            await prefs.setBool(
-                'show_juz_overlay', settings['show_juz_overlay'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'show_juz_overlay', settings['show_juz_overlay'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('audio_quality_preset')) {
           if (settings['audio_quality_preset'] != null) {
-            await prefs.setString('audio_quality_preset',
-                settings['audio_quality_preset'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString('audio_quality_preset',
+                settings['audio_quality_preset'].toString()));
           }
         }
         if (replaceMode || !prefs.containsKey('play_sharawi_duaa_after_adhan')) {
           if (settings['play_sharawi_duaa_after_adhan'] is bool) {
-            await prefs.setBool('play_sharawi_duaa_after_adhan',
-                settings['play_sharawi_duaa_after_adhan'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool('play_sharawi_duaa_after_adhan',
+                settings['play_sharawi_duaa_after_adhan'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('pre_adhan_alert')) {
           if (settings['pre_adhan_alert'] is bool) {
-            await prefs.setBool(
-                'pre_adhan_alert', settings['pre_adhan_alert'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'pre_adhan_alert', settings['pre_adhan_alert'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('iqamah_alert')) {
           if (settings['iqamah_alert'] is bool) {
-            await prefs.setBool(
-                'iqamah_alert', settings['iqamah_alert'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'iqamah_alert', settings['iqamah_alert'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('tasbih_cycle_alert')) {
           if (settings['tasbih_cycle_alert'] is bool) {
-            await prefs.setBool(
-                'tasbih_cycle_alert', settings['tasbih_cycle_alert'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'tasbih_cycle_alert', settings['tasbih_cycle_alert'] as bool));
           }
         }
         if (replaceMode || !prefs.containsKey('screen_reader_optimized')) {
           if (settings['screen_reader_optimized'] is bool) {
-            await prefs.setBool('screen_reader_optimized',
-                settings['screen_reader_optimized'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool('screen_reader_optimized',
+                settings['screen_reader_optimized'] as bool));
           }
         }
       }
@@ -722,20 +735,20 @@ class BackupRestoreService {
       if (reading != null) {
         if (replaceMode || (prefs.getInt('last_read_page_number') ?? 1) <= 1) {
           if (reading['last_read_surah_id'] is int) {
-            await prefs.setInt(
-                'last_read_surah_id', reading['last_read_surah_id'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt(
+                'last_read_surah_id', reading['last_read_surah_id'] as int));
           }
           if (reading['last_read_ayah_number'] is int) {
-            await prefs.setInt('last_read_ayah_number',
-                reading['last_read_ayah_number'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt('last_read_ayah_number',
+                reading['last_read_ayah_number'] as int));
           }
           if (reading['last_read_page_number'] is int) {
-            await prefs.setInt('last_read_page_number',
-                reading['last_read_page_number'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt('last_read_page_number',
+                reading['last_read_page_number'] as int));
           }
           if (reading['last_read_surah_name'] != null) {
-            await prefs.setString('last_read_surah_name',
-                reading['last_read_surah_name'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString('last_read_surah_name',
+                reading['last_read_surah_name'].toString()));
           }
         }
       }
@@ -744,11 +757,11 @@ class BackupRestoreService {
       final khatma = data['khatma'] as Map<String, dynamic>?;
       if (khatma != null) {
         if (replaceMode) {
-          await prefs.setString('active_khatma_plan', json.encode(khatma));
+          await _confirmPreferenceWrite(() => prefs.setString('active_khatma_plan', json.encode(khatma)));
         } else {
           final currentKhatmaStr = prefs.getString('active_khatma_plan');
           if (currentKhatmaStr == null || currentKhatmaStr.isEmpty) {
-            await prefs.setString('active_khatma_plan', json.encode(khatma));
+            await _confirmPreferenceWrite(() => prefs.setString('active_khatma_plan', json.encode(khatma)));
           } else {
             try {
               final currentKhatma =
@@ -756,9 +769,11 @@ class BackupRestoreService {
               final currentPage = (currentKhatma['currentPage'] as int?) ?? 1;
               final importedPage = (khatma['currentPage'] as int?) ?? 1;
               if (importedPage > currentPage) {
-                await prefs.setString(
-                    'active_khatma_plan', json.encode(khatma));
+                await _confirmPreferenceWrite(() => prefs.setString(
+                    'active_khatma_plan', json.encode(khatma)));
               }
+            } on _BackupPreferenceWriteFailure {
+              rethrow;
             } catch (_) {}
           }
         }
@@ -769,54 +784,54 @@ class BackupRestoreService {
       if (adhkar != null) {
         if (replaceMode) {
           if (adhkar['tasbih_count'] is int) {
-            await prefs.setInt('tasbih_count', adhkar['tasbih_count'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt('tasbih_count', adhkar['tasbih_count'] as int));
           }
           if (adhkar['tasbih_target'] is int) {
-            await prefs.setInt('tasbih_target', adhkar['tasbih_target'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt('tasbih_target', adhkar['tasbih_target'] as int));
           }
           if (adhkar['tasbih_total_today'] is int) {
-            await prefs.setInt(
-                'tasbih_total_today', adhkar['tasbih_total_today'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt(
+                'tasbih_total_today', adhkar['tasbih_total_today'] as int));
             final now = DateTime.now();
             final todayKey =
                 '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
             final savedDate = (adhkar['tasbih_last_date'] as String?) ?? '';
-            await prefs.setString(
+            await _confirmPreferenceWrite(() => prefs.setString(
               'tasbih_last_date',
               savedDate.isNotEmpty ? savedDate : todayKey,
-            );
+            ));
           }
           if (adhkar['adhkar_daily_counts_v1'] is String) {
-            await prefs.setString('adhkar_daily_counts_v1',
-                adhkar['adhkar_daily_counts_v1'] as String);
+            await _confirmPreferenceWrite(() => prefs.setString('adhkar_daily_counts_v1',
+                adhkar['adhkar_daily_counts_v1'] as String));
           }
           if (adhkar['tasbih_phrase'] != null) {
-            await prefs.setString(
-                'tasbih_phrase', adhkar['tasbih_phrase'].toString());
+            await _confirmPreferenceWrite(() => prefs.setString(
+                'tasbih_phrase', adhkar['tasbih_phrase'].toString()));
           }
           if (adhkar['tasbih_haptic'] is bool) {
-            await prefs.setBool(
-                'tasbih_haptic', adhkar['tasbih_haptic'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'tasbih_haptic', adhkar['tasbih_haptic'] as bool));
           }
           final volBtn = adhkar['tasbih_volume_button_enabled'] ??
               adhkar['tasbih_volume_up_button_enabled'];
           if (volBtn is bool) {
-            await prefs.setBool('tasbih_volume_button_enabled', volBtn);
-            await prefs.setBool('tasbih_volume_up_button_enabled', volBtn);
+            await _confirmPreferenceWrite(() => prefs.setBool('tasbih_volume_button_enabled', volBtn));
+            await _confirmPreferenceWrite(() => prefs.setBool('tasbih_volume_up_button_enabled', volBtn));
           }
           if (adhkar['tasbih_slider_enabled'] is bool) {
-            await prefs.setBool('tasbih_slider_enabled',
-                adhkar['tasbih_slider_enabled'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool('tasbih_slider_enabled',
+                adhkar['tasbih_slider_enabled'] as bool));
           }
           if (adhkar['tasbih_slider_step_value'] is int) {
-            await prefs.setInt('tasbih_slider_step_value',
-                adhkar['tasbih_slider_step_value'] as int);
+            await _confirmPreferenceWrite(() => prefs.setInt('tasbih_slider_step_value',
+                adhkar['tasbih_slider_step_value'] as int));
           }
         } else {
           final curTotal = prefs.getInt('tasbih_total_today') ?? 0;
           final impTotal = (adhkar['tasbih_total_today'] as int?) ?? 0;
           if (impTotal > curTotal) {
-            await prefs.setInt('tasbih_total_today', impTotal);
+            await _confirmPreferenceWrite(() => prefs.setInt('tasbih_total_today', impTotal));
           }
         }
       }
@@ -831,19 +846,21 @@ class BackupRestoreService {
       final trackerData = data['prayer_tracker'] as Map<String, dynamic>?;
       if (trackerData != null) {
         if (replaceMode) {
-          await prefs.setString(
-              'prayer_tracker_records_v1', json.encode(trackerData));
+          await _confirmPreferenceWrite(() => prefs.setString(
+              'prayer_tracker_records_v1', json.encode(trackerData)));
         } else {
           final curJson = prefs.getString('prayer_tracker_records_v1');
           if (curJson == null || curJson.isEmpty) {
-            await prefs.setString(
-                'prayer_tracker_records_v1', json.encode(trackerData));
+            await _confirmPreferenceWrite(() => prefs.setString(
+                'prayer_tracker_records_v1', json.encode(trackerData)));
           } else {
             try {
               final cur = json.decode(curJson) as Map<String, dynamic>;
               cur.addAll(trackerData);
-              await prefs.setString(
-                  'prayer_tracker_records_v1', json.encode(cur));
+              await _confirmPreferenceWrite(() => prefs.setString(
+                  'prayer_tracker_records_v1', json.encode(cur)));
+            } on _BackupPreferenceWriteFailure {
+              rethrow;
             } catch (_) {}
           }
         }
@@ -924,39 +941,39 @@ class BackupRestoreService {
                 .toList() ??
             [];
         if (scholarsData['scholars_last_played_lecture'] is String) {
-          await prefs.setString('scholars_last_played_lecture',
-              scholarsData['scholars_last_played_lecture'] as String);
+          await _confirmPreferenceWrite(() => prefs.setString('scholars_last_played_lecture',
+              scholarsData['scholars_last_played_lecture'] as String));
         }
         if (replaceMode) {
-          await prefs.setStringList('scholars_fav_lectures', favLecs);
-          await prefs.setStringList('scholars_fav_profiles', favProfs);
+          await _confirmPreferenceWrite(() => prefs.setStringList('scholars_fav_lectures', favLecs));
+          await _confirmPreferenceWrite(() => prefs.setStringList('scholars_fav_profiles', favProfs));
         } else {
           final curL = prefs.getStringList('scholars_fav_lectures') ?? [];
           final curP = prefs.getStringList('scholars_fav_profiles') ?? [];
-          await prefs.setStringList(
-              'scholars_fav_lectures', {...curL, ...favLecs}.toList());
-          await prefs.setStringList(
-              'scholars_fav_profiles', {...curP, ...favProfs}.toList());
+          await _confirmPreferenceWrite(() => prefs.setStringList(
+              'scholars_fav_lectures', {...curL, ...favLecs}.toList()));
+          await _confirmPreferenceWrite(() => prefs.setStringList(
+              'scholars_fav_profiles', {...curP, ...favProfs}.toList()));
         }
       }
 
       Future<void> restoreOrMergeList(String prefKey, List<dynamic> rawList) async {
         final imported = rawList.map((e) => e.toString()).toList();
         if (replaceMode) {
-          await prefs.setStringList(prefKey, imported);
+          await _confirmPreferenceWrite(() => prefs.setStringList(prefKey, imported));
         } else {
           final current = prefs.getStringList(prefKey) ?? const <String>[];
-          await prefs.setStringList(prefKey, {...current, ...imported}.toList());
+          await _confirmPreferenceWrite(() => prefs.setStringList(prefKey, {...current, ...imported}.toList()));
         }
       }
 
       Future<void> restoreOrMaxInt(String prefKey, int importedVal) async {
         if (replaceMode) {
-          await prefs.setInt(prefKey, importedVal);
+          await _confirmPreferenceWrite(() => prefs.setInt(prefKey, importedVal));
         } else {
           final current = prefs.getInt(prefKey) ?? 0;
           if (importedVal > current) {
-            await prefs.setInt(prefKey, importedVal);
+            await _confirmPreferenceWrite(() => prefs.setInt(prefKey, importedVal));
           }
         }
       }
@@ -1021,12 +1038,12 @@ class BackupRestoreService {
               'stories_favorites', extData['stories_favorites'] as List);
         }
         if (extData['stories_last_read'] is String) {
-          await prefs.setString(
-              'stories_last_read', extData['stories_last_read'] as String);
+          await _confirmPreferenceWrite(() => prefs.setString(
+              'stories_last_read', extData['stories_last_read'] as String));
         }
         if (extData['hadith_last_read_id'] is int) {
-          await prefs.setInt('hadith_last_read_id',
-              extData['hadith_last_read_id'] as int);
+          await _confirmPreferenceWrite(() => prefs.setInt('hadith_last_read_id',
+              extData['hadith_last_read_id'] as int));
         }
         if (extData['quran_search_history_v1'] is List) {
           await restoreOrMergeList('quran_search_history_v1',
@@ -1039,22 +1056,22 @@ class BackupRestoreService {
         if (extData['sensor_gestures'] is Map) {
           final sg = extData['sensor_gestures'] as Map;
           if (sg['notif_shake_to_stop'] is bool) {
-            await prefs.setBool(
-                'notif_shake_to_stop', sg['notif_shake_to_stop'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'notif_shake_to_stop', sg['notif_shake_to_stop'] as bool));
           }
           if (sg['notif_flip_to_mute'] is bool) {
-            await prefs.setBool(
-                'notif_flip_to_mute', sg['notif_flip_to_mute'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'notif_flip_to_mute', sg['notif_flip_to_mute'] as bool));
           }
           if (sg['notif_overlay_window'] is bool) {
-            await prefs.setBool(
-                'notif_overlay_window', sg['notif_overlay_window'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool(
+                'notif_overlay_window', sg['notif_overlay_window'] as bool));
           }
         }
         if (extData['voluntary_fasting'] is Map) {
           final vf = extData['voluntary_fasting'] as Map;
           if (vf['suhoor_reminder'] is bool) {
-            await prefs.setBool('voluntary_fast_suhoor_reminder', vf['suhoor_reminder'] as bool);
+            await _confirmPreferenceWrite(() => prefs.setBool('voluntary_fast_suhoor_reminder', vf['suhoor_reminder'] as bool));
           }
           if (vf['date_logs'] is List) {
             await restoreOrMergeList('vfast_date_logs', vf['date_logs'] as List);
@@ -1128,8 +1145,14 @@ class BackupRestoreService {
 
       return true;
     } catch (e) {
+      // Drop values cached optimistically by a rejected platform write.
+      try { await recoveryPrefs?.reload(); } catch (_) {}
       debugPrint('Backup restore error: $e');
       return false;
     }
   }
+}
+
+class _BackupPreferenceWriteFailure implements Exception {
+  const _BackupPreferenceWriteFailure();
 }
