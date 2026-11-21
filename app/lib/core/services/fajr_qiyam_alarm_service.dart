@@ -159,8 +159,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     _qiyamEnabled = prefs.getBool('wake_qiyam_enabled') ?? true;
     _qiyamMode = prefs.getString('wake_qiyam_mode') ?? 'last_third';
     _qiyamMinutesBeforeFajr = prefs.getInt('wake_qiyam_minutes_before') ?? 60;
-    _qiyamFixedHour = prefs.getInt('wake_qiyam_fixed_hour') ?? 3;
-    _qiyamFixedMinute = prefs.getInt('wake_qiyam_fixed_minute') ?? 15;
+    _loadFixedTime(prefs);
     _qiyamToneId =
         prefs.getString('wake_qiyam_tone') ?? 'duaa_sharawi_post_prayer';
 
@@ -402,14 +401,30 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         () => _qiyamToneId = value);
   }
 
-  Future<void> setQiyamFixedTime(int hour, int minute) async {
-    _qiyamFixedHour = hour.clamp(0, 23);
-    _qiyamFixedMinute = minute.clamp(0, 59);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('wake_qiyam_fixed_hour', _qiyamFixedHour);
-    await prefs.setInt('wake_qiyam_fixed_minute', _qiyamFixedMinute);
-    await scheduleAlarms();
-    notifyListeners();
+  // One durable key prevents a new hour being paired with an old minute.
+  // Legacy keys remain untouched and are read only until a new time is saved.
+  void _loadFixedTime(SharedPreferences prefs) {
+    final packed = prefs.get('wake_qiyam_fixed_minutes_v1');
+    if (packed is int && packed >= 0 && packed < 24 * 60) {
+      _qiyamFixedHour = packed ~/ 60;
+      _qiyamFixedMinute = packed % 60;
+    } else {
+      _qiyamFixedHour = prefs.getInt('wake_qiyam_fixed_hour') ?? 3;
+      _qiyamFixedMinute = prefs.getInt('wake_qiyam_fixed_minute') ?? 15;
+    }
+  }
+
+  Future<bool> setQiyamFixedTime(int hour, int minute) {
+    final normalizedHour = hour.clamp(0, 23);
+    final normalizedMinute = minute.clamp(0, 59);
+    return _saveChoice(
+      (prefs) => prefs.setInt('wake_qiyam_fixed_minutes_v1',
+          normalizedHour * 60 + normalizedMinute),
+      () {
+        _qiyamFixedHour = normalizedHour;
+        _qiyamFixedMinute = normalizedMinute;
+      },
+    );
   }
 
   /// Previews the selected wake-up tone immediately using IslamicAudioService
@@ -469,8 +484,7 @@ class FajrQiyamAlarmService extends ChangeNotifier {
           _qiyamMode = prefs.getString('wake_qiyam_mode') ?? 'last_third';
           _qiyamMinutesBeforeFajr =
               prefs.getInt('wake_qiyam_minutes_before') ?? 60;
-          _qiyamFixedHour = prefs.getInt('wake_qiyam_fixed_hour') ?? 3;
-          _qiyamFixedMinute = prefs.getInt('wake_qiyam_fixed_minute') ?? 15;
+          _loadFixedTime(prefs);
           _qiyamToneId =
               prefs.getString('wake_qiyam_tone') ?? 'duaa_sharawi_post_prayer';
         }
@@ -667,10 +681,10 @@ class FajrQiyamAlarmService extends ChangeNotifier {
       if (!await setQiyamMinutesBeforeFajr(data['qiyam_minutes_before'] as int)) throw StateError('Alarm preference restore failed');
     }
     if (data['qiyam_fixed_hour'] is int && data['qiyam_fixed_minute'] is int) {
-      await setQiyamFixedTime(
+      if (!await setQiyamFixedTime(
         data['qiyam_fixed_hour'] as int,
         data['qiyam_fixed_minute'] as int,
-      );
+      )) throw StateError('Alarm fixed time restore failed');
     }
     if (data['qiyam_tone'] is String) {
       if (!await setQiyamTone(data['qiyam_tone'] as String)) throw StateError('Alarm preference restore failed');
