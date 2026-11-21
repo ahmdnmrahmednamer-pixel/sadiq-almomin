@@ -32,6 +32,7 @@ class QuranSearchScreen extends StatefulWidget {
 class _QuranSearchScreenState extends State<QuranSearchScreen> {
   final TextEditingController _controller = TextEditingController();
   Timer? _debounceTimer;
+  int _searchGeneration = 0;
 
   SearchScope _scope = SearchScope.all;
   int? _selectedSurahFilter;
@@ -62,6 +63,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _searchGeneration++;
     _controller.dispose();
     super.dispose();
   }
@@ -78,6 +80,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   void _onSearchChanged(String query) {
+    _searchGeneration++;
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 200), () {
       _executeSearch(query);
@@ -85,6 +88,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Future<void> _executeSearch(String query) async {
+    _debounceTimer?.cancel();
+    final generation = ++_searchGeneration;
+    if (!mounted) return;
+    final surahFilter = _selectedSurahFilter;
+    bool isCurrent() => mounted && generation == _searchGeneration;
     final cleanQuery = query.trim();
     if (cleanQuery.isEmpty) {
       setState(() {
@@ -127,20 +135,22 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
       // 3. Search Ayahs
       final ayahs = await QuranSearchService.instance.searchAyahs(
         cleanQuery,
-        surahFilter: _selectedSurahFilter,
+        surahFilter: surahFilter,
         limit: 100,
       );
+
+      if (!isCurrent()) return;
 
       // Save to history if search produced results
       if (cleanQuery.length >= 2 && (refMatch != null || surahs.isNotEmpty || ayahs.isNotEmpty)) {
         await QuranSearchService.instance.addToHistory(cleanQuery);
         final updatedHistory = await QuranSearchService.instance.getSearchHistory();
-        if (mounted) {
+        if (isCurrent()) {
           setState(() => _history = updatedHistory);
         }
       }
 
-      if (mounted) {
+      if (isCurrent()) {
         setState(() {
           _referenceMatch = refMatch;
           _referenceAyah = refAyah;
@@ -152,7 +162,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         });
       }
     } catch (_) {
-      if (mounted) {
+      if (isCurrent()) {
         setState(() {
           _referenceMatch = null;
           _referenceAyah = null;
