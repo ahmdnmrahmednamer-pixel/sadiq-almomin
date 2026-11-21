@@ -251,6 +251,14 @@ class SettingsSession {
           verify: (value) => _saved({'notif_prayer_voice_$prayer': value}));
     }
     for (final key in ['salawat', 'istighfar']) {
+      shortIntervals[key] = draft.add<ShortReminderInterval>(
+          key: 'shortInterval_$key',
+          read: () => n.shortInterval(key),
+          write: (value) => n.setShortReminderInterval(key, value),
+          verify: (value) async => await _saved({
+            'notif_short_${key}_frequency': PrayerNotificationService.encodeShortReminderInterval(value)
+          }) && n.shortReminderError(key) == null);
+
       shortFrequencies[key] = draft.add<ShortReminderFrequency>(
           key: 'short_$key',
           read: () => n.shortFrequency(key),
@@ -293,6 +301,7 @@ class SettingsSession {
   late final DraftSetting<bool> volume;
   late final DraftSetting<bool> slider;
   late final DraftSetting<bool> wifi;
+  final Map<String, DraftSetting<ShortReminderInterval>> shortIntervals = {};
   late final DraftSetting<String> mode;
   late final DraftSetting<String> layout;
   late final DraftSetting<String> numbering;
