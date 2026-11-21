@@ -134,7 +134,7 @@ void showSettingsAboutModal(BuildContext context) {
                       isLargeText: isLargeText,
                       icon: Icons.access_time_filled_rounded,
                       iconColor: const Color(0xFFD97706),
-                      title: 'مواقيت الصلاة واستوديو الأذان والإقامة',
+                      title: 'مواقيت الصلاة ومُشغِّل الأذان والإقامة',
                       description: 'مواقيت الصلاة والأذان والإقامة',
                     ),
 
