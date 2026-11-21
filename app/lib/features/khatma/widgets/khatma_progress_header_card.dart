@@ -34,35 +34,43 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.celebration_rounded, color: Colors.white, size: 36),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'هنيئاً لك ختم كتاب الله المبارك! 🎉',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'اضغط هنا لقراءة دعاء الختم المأثور وإهداء الثواب',
-                        style: TextStyle(color: Colors.white, fontSize: 12.5),
-                      ),
-                    ],
-                  ),
+                const Icon(Icons.celebration_rounded,
+                    color: Colors.white, size: 36),
+                const SizedBox(height: 12),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'هنيئاً لك ختم كتاب الله المبارك! 🎉',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'اضغط هنا لقراءة دعاء الختم المأثور وإهداء الثواب',
+                      style: TextStyle(color: Colors.white, fontSize: 12.5),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 12),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primaryGreen,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                   onPressed: () => showKhatmaCompletionDuaaSheet(context),
-                  child: const Text('دعاء الختم', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  child: const Text('دعاء الختم',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
               ],
             ),
@@ -89,26 +97,33 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
                 children: [
-                  Expanded(
-                    child: Text(
-                      plan.title,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    plan.title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17),
+                    softWrap: true,
                   ),
-                  const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.accentGold.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       'المدة: ${KhatmaFormatHelper.toArabicIndic(plan.targetDays)} يوماً',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -116,43 +131,55 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
               const SizedBox(height: 18),
 
               // Circular Progress Bar
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 130,
-                    height: 130,
-                    child: CircularProgressIndicator(
-                      value: plan.progressPercentage.clamp(0.0, 1.0),
-                      strokeWidth: 10,
-                      backgroundColor: Colors.white24,
-                      color: AppColors.accentGold,
+              LayoutBuilder(builder: (context, constraints) {
+                final diameter = MediaQuery.textScalerOf(context)
+                    .scale(130)
+                    .clamp(130.0, constraints.maxWidth);
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: diameter,
+                      height: diameter,
+                      child: CircularProgressIndicator(
+                        value: plan.progressPercentage.clamp(0.0, 1.0),
+                        strokeWidth: 10,
+                        backgroundColor: Colors.white24,
+                        color: AppColors.accentGold,
+                      ),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$percent%',
-                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'صفحة ${KhatmaFormatHelper.toArabicIndic(plan.currentPage)} / ٦٠٤',
-                        style: const TextStyle(color: AppColors.softGold, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$percent%',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'صفحة ${KhatmaFormatHelper.toArabicIndic(plan.currentPage)} / ٦٠٤',
+                          style: const TextStyle(
+                              color: AppColors.softGold, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 18),
 
               // Milestone Stats Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStatItem('المتبقي', '${KhatmaFormatHelper.toArabicIndic(plan.remainingPages)} صفحة'),
-                  _buildStatItem('ورد اليوم', '${KhatmaFormatHelper.toArabicIndic(plan.pagesPerDay)} صفحة'),
-                  _buildStatItem('الأيام المتبقية', '${KhatmaFormatHelper.toArabicIndic(plan.daysRemaining)} يوماً'),
+                  _buildStatItem('المتبقي',
+                      '${KhatmaFormatHelper.toArabicIndic(plan.remainingPages)} صفحة'),
+                  _buildStatItem('ورد اليوم',
+                      '${KhatmaFormatHelper.toArabicIndic(plan.pagesPerDay)} صفحة'),
+                  _buildStatItem('الأيام المتبقية',
+                      '${KhatmaFormatHelper.toArabicIndic(plan.daysRemaining)} يوماً'),
                 ],
               ),
             ],
@@ -167,30 +194,40 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.amber.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.amber.shade700.withValues(alpha: 0.4)),
+              border: Border.all(
+                  color: Colors.amber.shade700.withValues(alpha: 0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    Icon(Icons.auto_fix_high_rounded, color: Colors.amber.shade800, size: 22),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'الجدولة التعويضية',
-                        style: TextStyle(color: Colors.amber.shade900, fontWeight: FontWeight.bold, fontSize: 15),
-                      ),
+                    Icon(Icons.auto_fix_high_rounded,
+                        color: Colors.amber.shade800, size: 22),
+                    Text(
+                      'الجدولة التعويضية',
+                      style: TextStyle(
+                          color: Colors.amber.shade900,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'متأخر ${KhatmaFormatHelper.toArabicIndic(plan.pagesBehind)} صفحة',
-                        style: TextStyle(color: Colors.amber.shade900, fontSize: 11.5, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Colors.amber.shade900,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -198,24 +235,38 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   'لا تشعر بأي ضغط! يمكنك إعادة جدولة الصفحات المتبقية (${KhatmaFormatHelper.toArabicIndic(plan.remainingPages)} صفحة) على الأيام المتبقية ليكون وردك اليومي ${KhatmaFormatHelper.toArabicIndic(plan.adjustedPagesPerDay)} صفحة بسلاسة.',
-                  style: const TextStyle(fontSize: 12.5, height: 1.5, color: AppColors.mutedText),
+                  style: const TextStyle(
+                      fontSize: 12.5, height: 1.5, color: AppColors.mutedText),
                 ),
                 const SizedBox(height: 10),
-                ElevatedButton.icon(
+                ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber.shade800,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: const Text('تطبيق الجدولة التعويضية الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5)),
+                  child: const Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Icon(Icons.refresh_rounded, size: 18),
+                      Text('تطبيق الجدولة التعويضية الآن',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 13.5)),
+                    ],
+                  ),
                   onPressed: () async {
                     await KhatmaService.instance.applyCatchUpPace();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('تمت إعادة جدولة الورد بنجاح! وفقك الله لإتمام الختمة المباركة.'),
+                          content: Text(
+                              'تمت إعادة جدولة الورد بنجاح! وفقك الله لإتمام الختمة المباركة.'),
                           backgroundColor: AppColors.primaryGreen,
                         ),
                       );
@@ -232,12 +283,20 @@ class KhatmaProgressHeaderCard extends StatelessWidget {
   }
 
   Widget _buildStatItem(String label, String value) {
-    return Column(
+    return Expanded(
+        child: Column(
       children: [
-        Text(value, style: const TextStyle(color: AppColors.softGold, fontSize: 16, fontWeight: FontWeight.bold)),
+        Text(value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                color: AppColors.softGold,
+                fontSize: 16,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 11)),
       ],
-    );
+    ));
   }
 }
