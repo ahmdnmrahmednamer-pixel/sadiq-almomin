@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../text/arabic_normalizer.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -249,8 +250,7 @@ class DailyPrayerRecord {
       qiyam: json['qiyam'] as bool? ?? false,
       prayerStatuses:
           rawStatuses?.map((k, v) => MapEntry(k, v.toString())) ?? {},
-      missedReasons:
-          rawReasons?.map((k, v) => MapEntry(k, v.toString())) ?? {},
+      missedReasons: rawReasons?.map((k, v) => MapEntry(k, v.toString())) ?? {},
     );
   }
 }
@@ -280,28 +280,75 @@ class PrayerTrackerService extends ChangeNotifier {
 
   SharedPreferences? _prefs;
   final Map<String, DailyPrayerRecord> _records = {};
+  Map<String, dynamic> _storedData = {};
+  bool _initialized = false;
+  bool _historyReadable = true;
+  String? _storageError;
+  String? get storageError => _storageError;
+  final List<Future<void> Function()> _edits = [];
+  bool _editing = false;
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = Completer<T>();
+    _edits.add(() async {
+      try {
+        final value = await action();
+        _editing = false;
+        _runNext();
+        result.complete(value);
+      } catch (error, stack) {
+        _editing = false;
+        _runNext();
+        result.completeError(error, stack);
+      }
+    });
+    _runNext();
+    return result.future;
+  }
+
+  void _runNext() {
+    if (_editing || _edits.isEmpty) return;
+    _editing = true;
+    unawaited(_edits.removeAt(0)());
+  }
 
   static String formatDateKey(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> init({bool forceReload = false}) async {
-    _prefs = await SharedPreferences.getInstance();
+  Future<void> init({bool forceReload = false}) =>
+      _serialize(() => _load(forceReload: forceReload));
+
+  Future<void> _load({bool forceReload = false}) async {
+    if (_initialized && !forceReload) return;
     if (forceReload) {
       _records.clear();
+      _storedData = {};
     }
-    final rawJson = _prefs?.getString(_storageKey);
-    if (rawJson != null && rawJson.isNotEmpty) {
-      try {
-        final Map<String, dynamic> decoded = json.decode(rawJson);
-        _records.clear();
-        for (final entry in decoded.entries) {
-          if (entry.value is Map<String, dynamic>) {
-            _records[entry.key] = DailyPrayerRecord.fromJson(entry.value);
-          }
-        }
-      } catch (_) {}
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      if (forceReload) await _prefs!.reload();
+      final rawJson = _prefs!.getString(_storageKey);
+      final decoded =
+          rawJson == null ? <String, dynamic>{} : json.decode(rawJson);
+      if (decoded is! Map<String, dynamic>) throw const FormatException();
+      final parsed = <String, DailyPrayerRecord>{};
+      for (final entry in decoded.entries) {
+        if (entry.value is! Map<String, dynamic>) throw const FormatException();
+        parsed[entry.key] = DailyPrayerRecord.fromJson(entry.value);
+      }
+      _records
+        ..clear()
+        ..addAll(parsed);
+      _storedData = Map<String, dynamic>.from(decoded);
+      _historyReadable = true;
+      _storageError = null;
+    } catch (_) {
+      _historyReadable = false;
+      _storageError =
+          'تعذرت قراءة سجل الصلوات. لم نغيّر البيانات المحفوظة. أعد فتح التطبيق أو استعد نسخة احتياطية سليمة قبل التسجيل.';
     }
+    _initialized = true;
     notifyListeners();
   }
 
@@ -315,39 +362,64 @@ class PrayerTrackerService extends ChangeNotifier {
 
   DailyPrayerRecord get todayRecord => getRecordForDate(DateTime.now());
 
-  Future<void> _saveRecords() async {
-    _prefs ??= await SharedPreferences.getInstance();
-    final Map<String, dynamic> data = {};
-    for (final entry in _records.entries) {
-      data[entry.key] = entry.value.toJson();
+  Future<bool> _edit(
+      DateTime date, void Function(DailyPrayerRecord) edit) async {
+    if (!_initialized) await _load();
+    if (!_historyReadable) return false;
+    final key = formatDateKey(date);
+    final current = getRecordForDate(date);
+    final staged = DailyPrayerRecord.fromJson(
+      json.decode(json.encode(current.toJson())) as Map<String, dynamic>,
+    );
+    edit(staged);
+    // Keep unknown historical fields and untouched days byte-value equivalent.
+    final data = Map<String, dynamic>.from(_storedData);
+    data[key] = <String, dynamic>{
+      ...?(_storedData[key] as Map<String, dynamic>?),
+      ...staged.toJson(),
+    };
+    try {
+      if (!await _prefs!.setString(_storageKey, json.encode(data))) {
+        throw StateError('write rejected');
+      }
+      _storedData = data;
+      _records[key] = staged;
+      _storageError = null;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _storageError =
+          'لم يُحفظ التعديل. بقي سجل الصلوات كما كان. حاول التسجيل مرة أخرى.';
+      notifyListeners();
+      return false;
     }
-    await _prefs!.setString(_storageKey, json.encode(data));
   }
 
   /// Sets the detailed form status and optional missed/delayed reason for a specific prayer
-  Future<void> setPrayerFormStatus({
+  Future<bool> setPrayerFormStatus({
     required String prayerNameAr,
     required PrayerPerformanceStatus status,
     String? reasonText,
     DateTime? date,
-  }) async {
-    final record = getRecordForDate(date ?? DateTime.now());
-    record.prayerStatuses[prayerNameAr] = status.id;
+  }) {
+    final targetDate = date ?? DateTime.now();
+    return _serialize(() async {
+      return _edit(targetDate, (record) {
+        record.prayerStatuses[prayerNameAr] = status.id;
 
-    final isPrayed = status == PrayerPerformanceStatus.onTimeCongregation ||
-        status == PrayerPerformanceStatus.onTimeIndividual ||
-        status == PrayerPerformanceStatus.lateQada;
-    record.setBoolByName(prayerNameAr, isPrayed);
+        final isPrayed = status == PrayerPerformanceStatus.onTimeCongregation ||
+            status == PrayerPerformanceStatus.onTimeIndividual ||
+            status == PrayerPerformanceStatus.lateQada;
+        record.setBoolByName(prayerNameAr, isPrayed);
 
-    if (reasonText != null && reasonText.trim().isNotEmpty) {
-      record.missedReasons[prayerNameAr] = reasonText.trim();
-    } else if (status == PrayerPerformanceStatus.onTimeCongregation ||
-        status == PrayerPerformanceStatus.onTimeIndividual) {
-      record.missedReasons.remove(prayerNameAr);
-    }
-
-    await _saveRecords();
-    notifyListeners();
+        if (reasonText != null && reasonText.trim().isNotEmpty) {
+          record.missedReasons[prayerNameAr] = reasonText.trim();
+        } else if (status == PrayerPerformanceStatus.onTimeCongregation ||
+            status == PrayerPerformanceStatus.onTimeIndividual) {
+          record.missedReasons.remove(prayerNameAr);
+        }
+      });
+    });
   }
 
   Future<void> setPrayerPerformanceStatus(
@@ -363,67 +435,86 @@ class PrayerTrackerService extends ChangeNotifier {
         reasonText: reason,
       );
 
-  WeeklyPrayerDiagnosticReport getWeeklyAccountabilityReport({DateTime? endDate}) =>
+  WeeklyPrayerDiagnosticReport getWeeklyAccountabilityReport(
+          {DateTime? endDate}) =>
       getWeeklyDiagnosticReport(endDate);
 
-  Future<bool> toggleObligatory(String prayerNameAr, [DateTime? date]) async {
-    final record = getRecordForDate(date ?? DateTime.now());
-    final newVal = !record._getBoolByName(prayerNameAr);
-    record.setBoolByName(prayerNameAr, newVal);
-    record.prayerStatuses[prayerNameAr] = newVal
-        ? PrayerPerformanceStatus.onTimeCongregation.id
-        : PrayerPerformanceStatus.unrecorded.id;
-    if (newVal) {
-      record.missedReasons.remove(prayerNameAr);
-    }
-
-    await _saveRecords();
-    notifyListeners();
-    return newVal;
+  Future<bool> toggleObligatory(String prayerNameAr, [DateTime? date]) {
+    final targetDate = date ?? DateTime.now();
+    return _serialize(() async {
+      var newVal = false;
+      final saved = await _edit(targetDate, (record) {
+        newVal = !record._getBoolByName(prayerNameAr);
+        record.setBoolByName(prayerNameAr, newVal);
+        record.prayerStatuses[prayerNameAr] = newVal
+            ? PrayerPerformanceStatus.onTimeCongregation.id
+            : PrayerPerformanceStatus.unrecorded.id;
+        if (newVal) {
+          record.missedReasons.remove(prayerNameAr);
+        }
+      });
+      return saved
+          ? newVal
+          : getRecordForDate(targetDate)._getBoolByName(prayerNameAr);
+    });
   }
 
-  Future<bool> toggleSunnah(String sunnahKey, [DateTime? date]) async {
-    final record = getRecordForDate(date ?? DateTime.now());
-    bool state = false;
-
-    switch (sunnahKey) {
-      case 'fajr_sunnah':
-        record.fajrSunnah = !record.fajrSunnah;
-        state = record.fajrSunnah;
-        break;
-      case 'dhuhr_sunnah_before':
-        record.dhuhrSunnahBefore = !record.dhuhrSunnahBefore;
-        state = record.dhuhrSunnahBefore;
-        break;
-      case 'dhuhr_sunnah_after':
-        record.dhuhrSunnahAfter = !record.dhuhrSunnahAfter;
-        state = record.dhuhrSunnahAfter;
-        break;
-      case 'maghrib_sunnah':
-        record.maghribSunnah = !record.maghribSunnah;
-        state = record.maghribSunnah;
-        break;
-      case 'isha_sunnah':
-        record.ishaSunnah = !record.ishaSunnah;
-        state = record.ishaSunnah;
-        break;
-      case 'duha':
-        record.duha = !record.duha;
-        state = record.duha;
-        break;
-      case 'witr':
-        record.witr = !record.witr;
-        state = record.witr;
-        break;
-      case 'qiyam':
-        record.qiyam = !record.qiyam;
-        state = record.qiyam;
-        break;
-    }
-
-    await _saveRecords();
-    notifyListeners();
-    return state;
+  Future<bool> toggleSunnah(String sunnahKey, [DateTime? date]) {
+    final targetDate = date ?? DateTime.now();
+    return _serialize(() async {
+      bool state = false;
+      final saved = await _edit(targetDate, (record) {
+        switch (sunnahKey) {
+          case 'fajr_sunnah':
+            record.fajrSunnah = !record.fajrSunnah;
+            state = record.fajrSunnah;
+            break;
+          case 'dhuhr_sunnah_before':
+            record.dhuhrSunnahBefore = !record.dhuhrSunnahBefore;
+            state = record.dhuhrSunnahBefore;
+            break;
+          case 'dhuhr_sunnah_after':
+            record.dhuhrSunnahAfter = !record.dhuhrSunnahAfter;
+            state = record.dhuhrSunnahAfter;
+            break;
+          case 'maghrib_sunnah':
+            record.maghribSunnah = !record.maghribSunnah;
+            state = record.maghribSunnah;
+            break;
+          case 'isha_sunnah':
+            record.ishaSunnah = !record.ishaSunnah;
+            state = record.ishaSunnah;
+            break;
+          case 'duha':
+            record.duha = !record.duha;
+            state = record.duha;
+            break;
+          case 'witr':
+            record.witr = !record.witr;
+            state = record.witr;
+            break;
+          case 'qiyam':
+            record.qiyam = !record.qiyam;
+            state = record.qiyam;
+            break;
+        }
+      });
+      if (!saved) {
+        final record = getRecordForDate(targetDate);
+        state = switch (sunnahKey) {
+          'fajr_sunnah' => record.fajrSunnah,
+          'dhuhr_sunnah_before' => record.dhuhrSunnahBefore,
+          'dhuhr_sunnah_after' => record.dhuhrSunnahAfter,
+          'maghrib_sunnah' => record.maghribSunnah,
+          'isha_sunnah' => record.ishaSunnah,
+          'duha' => record.duha,
+          'witr' => record.witr,
+          'qiyam' => record.qiyam,
+          _ => false,
+        };
+      }
+      return state;
+    });
   }
 
   /// Returns records for the last 7 days (including today)
@@ -438,7 +529,8 @@ class PrayerTrackerService extends ChangeNotifier {
   }
 
   /// Generates a comprehensive 7-day weekly report and root-cause diagnostic analysis
-  WeeklyPrayerDiagnosticReport getWeeklyDiagnosticReport([DateTime? anchorDate]) {
+  WeeklyPrayerDiagnosticReport getWeeklyDiagnosticReport(
+      [DateTime? anchorDate]) {
     final days = getRecent7Days(anchorDate);
     int onTime = 0;
     int qada = 0;
@@ -495,7 +587,8 @@ class PrayerTrackerService extends ChangeNotifier {
 
     // Build personalized remedies based on recorded reasons
     final List<String> remedies = [];
-    final allReasonsText = ArabicNormalizer.normalize(reasonFreq.keys.join(' '), loose: true);
+    final allReasonsText =
+        ArabicNormalizer.normalize(reasonFreq.keys.join(' '), loose: true);
     if (allReasonsText.contains('النوم') ||
         allReasonsText.contains('السهر') ||
         (missedByPrayer['الفجر'] ?? 0) > 0) {
@@ -504,14 +597,16 @@ class PrayerTrackerService extends ChangeNotifier {
       );
     }
     if (allReasonsText.contains('العمل') ||
-        allReasonsText.contains(ArabicNormalizer.normalize('الدراسة', loose: true)) ||
+        allReasonsText
+            .contains(ArabicNormalizer.normalize('الدراسة', loose: true)) ||
         allReasonsText.contains('الانشغال')) {
       remedies.add(
         '⏳ علاج الانشغال بالعمل أو الدراسة: فعِّل تنبيه اقتراب الصلاة قبل ١٠ دقائق، واجعل وقت الصلاة موعداً ثابتاً لا يُؤجَّل (١٠ دقائق فقط تبارك في يومك كله).',
       );
     }
     if (allReasonsText.contains('التسويف') ||
-        allReasonsText.contains(ArabicNormalizer.normalize('تأجيل', loose: true))) {
+        allReasonsText
+            .contains(ArabicNormalizer.normalize('تأجيل', loose: true))) {
       remedies.add(
         '🕌 علاج التسويف والتأجيل: بادر بالوضوء فور سماع نداء «حي على الصلاة» قبل البدء بأي مهمة جديدة.',
       );

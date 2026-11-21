@@ -9,7 +9,7 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    await PrayerTrackerService.instance.init();
+    await PrayerTrackerService.instance.init(forceReload: true);
   });
 
   group('PrayerTrackerService Unit Tests (FR-PRY-009)', () {
@@ -89,18 +89,18 @@ void main() {
       expect(list.last.dateStr, equals(PrayerTrackerService.instance.todayRecord.dateStr));
     });
 
-    test('getGentleEncouragement provides positive non-punitive messaging', () {
+    test('getGentleEncouragement provides positive non-punitive messaging', () async {
       final msgEmpty = PrayerTrackerService.instance.getGentleEncouragement();
       expect(msgEmpty, isNotEmpty);
       expect(msgEmpty, contains('الصلاة'));
 
       // Complete 5
       final today = DateTime.now();
-      PrayerTrackerService.instance.toggleObligatory('الفجر', today);
-      PrayerTrackerService.instance.toggleObligatory('الظهر', today);
-      PrayerTrackerService.instance.toggleObligatory('العصر', today);
-      PrayerTrackerService.instance.toggleObligatory('المغرب', today);
-      PrayerTrackerService.instance.toggleObligatory('العشاء', today);
+      await PrayerTrackerService.instance.toggleObligatory('الفجر', today);
+      await PrayerTrackerService.instance.toggleObligatory('الظهر', today);
+      await PrayerTrackerService.instance.toggleObligatory('العصر', today);
+      await PrayerTrackerService.instance.toggleObligatory('المغرب', today);
+      await PrayerTrackerService.instance.toggleObligatory('العشاء', today);
 
       final msgComplete = PrayerTrackerService.instance.getGentleEncouragement();
       expect(msgComplete, contains('أتممت الصلوات الخمس'));

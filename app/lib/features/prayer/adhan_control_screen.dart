@@ -333,17 +333,25 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
 
   Future<void> _logPrayerPerformance(bool isCongregation) async {
     if (SettingsService.instance.hapticEnabled) HapticFeedback.heavyImpact();
-    await trackerService.toggleObligatory(widget.prayerName);
-    setState(() {
-      _isPrayerLogged = true;
-    });
-
+    final saved = await trackerService.setPrayerFormStatus(
+      prayerNameAr: widget.prayerName,
+      status: isCongregation
+          ? PrayerPerformanceStatus.onTimeCongregation
+          : PrayerPerformanceStatus.onTimeIndividual,
+    );
     if (!mounted) return;
+    if (!saved) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(trackerService.storageError ?? 'لم يُحفظ التعديل. حاول مرة أخرى.'),
+      ));
+      return;
+    }
+    setState(() => _isPrayerLogged = true);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           isCongregation
-              ? 'تقبل الله صلاتكم في جماعة! كُتبت لك ٢٧ درجة مضاعفة 🕌✨'
+              ? 'تم تسجيل أداء صلاة ${widget.prayerName} في جماعة. تقبل الله صلاتكم.'
               : 'هنيئاً لك! تم تسجيل أداء صلاة ${widget.prayerName} في سجل حسناتك 🤲',
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
