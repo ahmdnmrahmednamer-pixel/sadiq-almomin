@@ -126,6 +126,12 @@ class _AudioScreenState extends State<AudioScreen> {
 
   Future<void> _playSurah(Surah surah, {bool forceReload = false}) async {
     final reciter = _currentReciter ?? SettingsService.instance.currentReciter;
+    if (!SettingsService.availableReciters.any((r) => r.id == reciter.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ReciterRecordingUnavailable(reciter.id).message),
+      ));
+      return;
+    }
 
     // Only toggle play/pause if the EXACT same surah AND the EXACT same reciter are already loaded
     if (!forceReload &&
@@ -210,8 +216,8 @@ class _AudioScreenState extends State<AudioScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تعذر تشغيل التلاوة. يرجى التحقق من الملف أو الاتصال بالإنترنت.'),
+          SnackBar(
+            content: Text(e is ReciterRecordingUnavailable ? e.message : 'تعذر تشغيل التلاوة. يرجى التحقق من الملف أو الاتصال بالإنترنت.'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -237,6 +243,12 @@ class _AudioScreenState extends State<AudioScreen> {
   }
 
   Future<void> _downloadSurah(Surah surah, ReciterInfo reciter) async {
+    if (!SettingsService.availableReciters.any((r) => r.id == reciter.id)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(ReciterRecordingUnavailable(reciter.id).message),
+      ));
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('بدء تحميل سورة ${surah.nameAr} بصوت ${reciter.nameAr}...'),
       duration: const Duration(seconds: 2),
