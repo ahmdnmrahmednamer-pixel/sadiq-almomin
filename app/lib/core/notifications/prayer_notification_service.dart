@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'notification_destination.dart';
+import '../utils/serial_task_queue.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -46,6 +47,8 @@ class PrayerNotificationService extends ChangeNotifier {
 
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
+  bool _foregroundInitialized = false;
+  final SerialTaskQueue _initializationQueue = SerialTaskQueue();
   int _derivedScheduleGeneration = 0;
   Future<void>? _activeDerivedOp;
 
@@ -315,8 +318,12 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) => _initializationQueue.run(
+        () => _initializeForeground(forceReload: forceReload),
+      );
+
+  Future<void> _initializeForeground({required bool forceReload}) async {
+    if (_foregroundInitialized && !forceReload) return;
 
     _ensureTimeZonesInitialized();
     try {
@@ -370,7 +377,50 @@ class PrayerNotificationService extends ChangeNotifier {
       await _createNotificationChannels(androidPlugin);
     }
 
+    await _loadSavedSchedulingPreferences();
+
+    try {
+      await AdhanSensorGestureService.instance.init();
+    } catch (_) {}
+
+    _isInitialized = true;
+    _foregroundInitialized = true;
+    await scheduleShortReminders();
+    try {
+      scheduleAdhkarReminders();
+    } catch (_) {}
+    notifyListeners();
+  }
+
+  /// Prepares scheduling in a separate noninteractive engine. This does not
+  /// request permissions, navigate, initialize sensors, or mutate alarms.
+  /// Callers must own scheduling admission and inspect each scheduling result.
+  /// Foreground [init] still runs its full flow after this method.
+  Future<void> initializeForScheduling() =>
+      _initializationQueue.run(_initializeForScheduling);
+
+  Future<void> _initializeForScheduling() async {
+    if (_foregroundInitialized) {
+      throw StateError('Use the existing foreground scheduler in this engine');
+    }
+    _ensureTimeZonesInitialized();
+    final timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+    final initialized = await _localNotifications.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@drawable/ic_launcher'),
+      ),
+    );
+    if (initialized != true) {
+      throw StateError('Notification scheduling initialization failed');
+    }
+    await _loadSavedSchedulingPreferences(reload: true);
+    _isInitialized = true;
+  }
+
+  Future<void> _loadSavedSchedulingPreferences({bool reload = false}) async {
     final prefs = await SharedPreferences.getInstance();
+    if (reload) await prefs.reload();
     for (final key in shortReminderIds.keys) {
       final stored = prefs.getString('notif_short_${key}_frequency');
       _shortFrequencies[key] = ShortReminderFrequency.values.firstWhere(
@@ -435,17 +485,6 @@ class PrayerNotificationService extends ChangeNotifier {
     for (final p in _prayerToggles.keys) {
       _prayerToggles[p] = prefs.getBool('notif_prayer_$p') ?? (p != 'الشروق');
     }
-
-    try {
-      await AdhanSensorGestureService.instance.init();
-    } catch (_) {}
-
-    _isInitialized = true;
-    await scheduleShortReminders();
-    try {
-      scheduleAdhkarReminders();
-    } catch (_) {}
-    notifyListeners();
   }
 
   /// Stops current playing Adhan audio through the audio service
