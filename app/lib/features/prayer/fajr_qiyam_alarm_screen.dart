@@ -194,7 +194,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                               label: 'موعد أذان الفجر القادم',
                               timeStr: nextFajr != null
                                   ? _alarmService.formatTimeAr(nextFajr)
-                                  : 'يتطلب GPS',
+                                  : 'حدّث المواقيت',
                               icon: Icons.wb_twilight_rounded,
                             ),
                           ),
@@ -207,7 +207,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                                   : (nextPreFajrWake != null
                                       ? _alarmService
                                           .formatTimeAr(nextPreFajrWake)
-                                      : 'يتطلب GPS'),
+                                      : 'حدّث المواقيت'),
                               icon: Icons.notifications_active_rounded,
                               highlight: _alarmService.preFajrEnabled &&
                                   nextPreFajrWake != null,
@@ -222,7 +222,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                                   : (nextQiyamWake != null
                                       ? _alarmService
                                           .formatTimeAr(nextQiyamWake)
-                                      : 'يتطلب GPS'),
+                                      : 'حدّث المواقيت'),
                               icon: Icons.nights_stay_rounded,
                               highlight: _alarmService.qiyamEnabled &&
                                   nextQiyamWake != null,
@@ -333,7 +333,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                       Text(
                         nextPreFajrWake != null
                             ? 'يوقظك قبل الفجر بـ $mins دقيقة (${_alarmService.formatTimeAr(nextPreFajrWake)}) لتتوضأ وتدرك الصلاة في وقتها'
-                            : 'يوقظك قبل الفجر بـ $mins دقيقة فور تحديد موقعك عبر GPS',
+                            : 'موعد المنبّه غير متاح. حدّث موقع الصلاة ومواقيتها؛ لن يُجدول هذا المنبّه حتى تتوفر مواقيت قادمة.',
                         style:
                             const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
@@ -453,7 +453,7 @@ class _FajrQiyamAlarmScreenState extends State<FajrQiyamAlarmScreen> {
                             ? (lastThirdStart != null
                                 ? 'موعد التنبيه القادم: ${_alarmService.formatTimeAr(nextQiyamWake)} (بداية الثلث الأخير: ${_alarmService.formatTimeAr(lastThirdStart)})'
                                 : 'موعد التنبيه الثابت القادم: ${_alarmService.formatTimeAr(nextQiyamWake)}')
-                            : 'فعّل GPS لحساب الثلث الأخير من الليل، أو اختر وقتاً ثابتاً',
+                            : 'موعد المنبّه غير متاح. حدّث موقع الصلاة ومواقيتها، أو اختر وقتاً ثابتاً. لا يُجدول الموعد المحسوب دون مواقيت قادمة.',
                         style:
                             const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
