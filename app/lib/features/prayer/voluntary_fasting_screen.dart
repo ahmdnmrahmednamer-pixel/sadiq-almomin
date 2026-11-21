@@ -256,8 +256,9 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                 children: [
                                   IconButton(
                                     tooltip: 'إنقاص',
-                                    icon: const Icon(
-                                        Icons.remove_circle_outline_rounded),
+                                    icon: Icon(
+                                        Icons.remove_circle_outline_rounded,
+                                        semanticLabel: 'إنقاص ${fast.title}'),
                                     onPressed: count > 0
                                         ? () =>
                                             service.decrementFastCount(fast.id)
@@ -277,7 +278,9 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                     ),
                                     icon: const Icon(Icons.check_circle_rounded,
                                         size: 16),
-                                    label: const Text('صمتُ هذا اليوم'),
+                                    label: Text('صمتُ هذا اليوم',
+                                        semanticsLabel:
+                                            'صمتُ هذا اليوم، ${fast.title}'),
                                     onPressed: () =>
                                         service.logFastedDay(fast.id),
                                   ),
