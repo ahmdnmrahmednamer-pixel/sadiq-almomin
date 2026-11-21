@@ -100,14 +100,23 @@ class IslamicAudioService extends ChangeNotifier {
   };
   static bool isHeldLegacyAdhkar(IslamicAudioTrack track) =>
       heldLegacyAdhkarIds.contains(track.id);
+  /// A stored ID is retained while its recording is unavailable.
+  static String? unavailableRecordingReason(String id) =>
+      id == 'adhan_haza_albalushi'
+          ? 'التسجيل غير متاح حتى مراجعة الاسم والمصدر. اختر تسجيلا آخر بنفسك. مواعيد التذكير محفوظة.'
+          : null;
+
+  static bool isHeldRecording(IslamicAudioTrack track) =>
+      isHeldLegacyAdhkar(track) || unavailableRecordingReason(track.id) != null;
+
   IslamicAudioTrack? _heldLegacyTrack;
   IslamicAudioTrack? get heldLegacyTrack => _heldLegacyTrack;
   Future<void>? _legacyStopPending;
   bool _legacyStopFailed = false;
   bool get legacyStopFailed => _legacyStopFailed;
   bool get _needsLegacyContainment => _legacyStopPending != null ||
-      (_currentTrack != null && isHeldLegacyAdhkar(_currentTrack!)) ||
-      _queue.any(isHeldLegacyAdhkar);
+      (_currentTrack != null && isHeldRecording(_currentTrack!)) ||
+      _queue.any(isHeldRecording);
 
   /// Removes only held items from the ephemeral queue, never stored files.
   /// Stops a previously active held item before a later play can begin.
@@ -116,16 +125,16 @@ class IslamicAudioService extends ChangeNotifier {
         (_currentIndex >= 0 && _currentIndex < _queue.length
             ? _queue[_currentIndex].id : null);
     final priorIndex = _currentIndex;
-    final retained = _queue.where((t) => !isHeldLegacyAdhkar(t)).toList();
+    final retained = _queue.where((t) => !isHeldRecording(t)).toList();
     final removed = retained.length != _queue.length;
     if (removed) {
-      _heldLegacyTrack ??= _queue.firstWhere(isHeldLegacyAdhkar);
+      _heldLegacyTrack ??= _queue.firstWhere(isHeldRecording);
       _queue = retained;
       final index = _queue.indexWhere((t) => t.id == selectedId);
       _currentIndex = _queue.isEmpty ? -1 :
           (index >= 0 ? index : priorIndex.clamp(0, _queue.length - 1));
     }
-    final heldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    final heldCurrent = _currentTrack != null && isHeldRecording(_currentTrack!);
     if (heldCurrent) {
       _heldLegacyTrack = _currentTrack;
       _currentTrack = null;
@@ -214,6 +223,8 @@ class IslamicAudioService extends ChangeNotifier {
 
   final Map<String, String> _downloadedLocalPaths = {};
   final Map<String, int> _downloadedFileSizes = {};
+  final Map<String, String> _retiredRecordingPaths = {};
+  final Map<String, int> _retiredRecordingSizes = {};
   final Map<String, double> _activeProgress = {};
   final Map<String, CancelToken> _cancelTokens = {};
   int _downloadAttemptCounter = 0;
@@ -318,17 +329,17 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_hussary',
       title: 'أذان الشيخ محمود خليل الحصري',
-      subtitle: 'تلاوة وأداء متقن لنداء الحق بمقام البيات',
+      subtitle: 'أذان القاهرة، من أرشيف إسلام ويب',
       type: IslamicAudioType.adhan,
       assetPath: 'assets/audio/adhan_hussary.mp3',
       rawNotificationSound: 'adhan_hussary',
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/026.mp3',
-      fallbackUrls: ['https://server13.mp3quran.net/husr/001.mp3'],
-      durationFormatted: '02:15',
-      quality: 'عالي النقاء HD',
+      remoteUrl: 'https://dl2.islamweb.net/Audio3/Adan/1030.mp3',
+      fallbackUrls: [],
+      durationFormatted: '02:08',
+      quality: 'تسجيل تاريخي، MP3 16 كيلوبت/ث',
       categoryAr: 'أذان مصر',
       muezzinName: 'الشيخ محمود خليل الحصري',
-      fileSizeBytes: 892655,
+      fileSizeBytes: 256128,
     ),
     IslamicAudioTrack(
       id: 'adhan_abdulbasit',
@@ -337,7 +348,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/153-4.mp3',
-      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/025.mp3', 'https://server7.mp3quran.net/basit_mjwd/001.mp3'],
+      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/025.mp3'],
       durationFormatted: '03:21',
       quality: 'عالي النقاء HD 192kbps',
       categoryAr: 'أذان مصر',
@@ -351,7 +362,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/050-1.mp3',
-      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/052-1.mp3', 'https://server8.mp3quran.net/afs/001.mp3'],
+      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/052-1.mp3'],
       durationFormatted: '04:00',
       quality: 'استوديو نقي 192kbps',
       categoryAr: 'أذان الخليج والشام',
@@ -445,7 +456,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/027.mp3',
-      fallbackUrls: ['https://server8.mp3quran.net/bna/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '02:46',
       quality: 'تسجيل عريق نقي',
       categoryAr: 'أذان مصر',
@@ -507,16 +518,16 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_alqatami',
       title: 'أذان الشيخ ناصر القطامي',
-      subtitle: 'أداء حجازي خاشع وندي يبعث السكينة (الرياض)',
+      subtitle: 'أذان بصوت الشيخ ناصر القطامي، من مكتبة إسلام ويب',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/076-3.mp3',
-      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/120-4.mp3'],
-      durationFormatted: '03:45',
-      quality: 'استوديو نقي 192kbps',
+      remoteUrl: 'https://dl2.islamweb.net/Audio3/Adan/317311.mp3',
+      fallbackUrls: [],
+      durationFormatted: '02:16',
+      quality: 'MP3 128 كيلوبت/ث',
       categoryAr: 'أذان الخليج والشام',
       muezzinName: 'الشيخ ناصر القطامي',
-      fileSizeBytes: 3600000,
+      fileSizeBytes: 2241376,
     ),
     IslamicAudioTrack(
       id: 'adhan_aldosari',
@@ -525,7 +536,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/084-3.mp3',
-      fallbackUrls: ['https://server11.mp3quran.net/yasser/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:30',
       quality: 'عالي النقاء HD 192kbps',
       categoryAr: 'أذان الحرمين',
@@ -595,7 +606,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/MansoorAlsalmi/000%20-%201435H.mp3',
-      fallbackUrls: ['https://server16.mp3quran.net/mansor/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:12',
       quality: 'عالي النقاء 320kbps',
       categoryAr: 'أذان الخليج والشام',
@@ -651,7 +662,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/148.mp3',
-      fallbackUrls: ['https://server8.mp3quran.net/mustafa/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:44',
       quality: 'تسجيل تاريخي منقى',
       categoryAr: 'أذان مصر',
@@ -679,7 +690,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/A.S.I.S/Adhan_Sheikh-Islam-Sobhi.mp3',
-      fallbackUrls: ['https://server14.mp3quran.net/islam/Rewayat-Hafs-A-n-Assem/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '02:55',
       quality: 'استوديو نقي 320kbps',
       categoryAr: 'العالم الإسلامي',
@@ -687,18 +698,30 @@ class IslamicAudioService extends ChangeNotifier {
       fileSizeBytes: 2800000,
     ),
     IslamicAudioTrack(
+      id: 'adhan_amr_sobhi',
+      title: 'أذان الشيخ عمرو صبحي',
+      subtitle: 'تسجيل أذان من مكتبة إسلام ويب',
+      type: IslamicAudioType.adhan,
+      remoteUrl: 'https://dl2.islamweb.net/Audio3//Adan/428132.mp3',
+      durationFormatted: '03:27',
+      quality: 'MP3 128 كيلوبت/ث، أحادي',
+      categoryAr: 'العالم الإسلامي',
+      muezzinName: 'الشيخ عمرو صبحي',
+      fileSizeBytes: 3379378,
+    ),
+    IslamicAudioTrack(
       id: 'adhan_wadih_alyamani',
       title: 'أذان الشيخ وديع اليمني',
-      subtitle: 'أذان صنعاء واليمن — نبرة شجية عذبة تسكن الفؤاد',
+      subtitle: 'أذان وديع حمادي اليمني، من مكتبة إسلام ويب',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/036.mp3',
+      remoteUrl: 'https://dl2.islamweb.net/Audio3/Adan/425434.mp3',
       fallbackUrls: [],
-      durationFormatted: '03:15',
-      quality: 'استوديو نقي 192kbps',
+      durationFormatted: '03:20',
+      quality: 'MP3 128 كيلوبت/ث',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'الشيخ وديع اليمني',
-      fileSizeBytes: 3120000,
+      fileSizeBytes: 3270708,
     ),
     IslamicAudioTrack(
       id: 'adhan_idrees_abkar',
@@ -707,7 +730,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/034.mp3',
-      fallbackUrls: ['https://server6.mp3quran.net/abkr/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:35',
       quality: 'عالي النقاء HD',
       categoryAr: 'أذان الخليج والشام',
@@ -773,13 +796,13 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_haza_albalushi',
       title: 'أذان القارئ هزاع البلوشي',
-      subtitle: 'نبرة صوت عمانية رقيقة تأسر الأسماع بخشوعها وسكينتها',
+      subtitle: 'التسجيل غير متاح حتى مراجعة الاسم والمصدر',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://server11.mp3quran.net/hazza/001.mp3',
-      fallbackUrls: ['https://archive.org/download/Athan_Mawsoa_mp3/031.mp3'],
+      remoteUrl: null,
+      fallbackUrls: [],
       durationFormatted: '03:20',
-      quality: 'استوديو نقي 320kbps',
+      quality: 'غير متاح',
       categoryAr: 'العالم الإسلامي',
       muezzinName: 'القارئ هزاع البلوشي',
       fileSizeBytes: 3200000,
@@ -983,32 +1006,30 @@ class IslamicAudioService extends ChangeNotifier {
     IslamicAudioTrack(
       id: 'adhan_menshawi',
       title: 'أذان الشيخ محمد صديق المنشاوي',
-      subtitle: 'النداء الخاشع الباكي بمقام النهاوند العذب من كروان القرآن',
+      subtitle: 'تسجيل أذان من مكتبة السبيل، محمد صديق المنشاوي',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/020.mp3',
-      fallbackUrls: ['https://server10.mp3quran.net/minsh/001.mp3'],
-      durationFormatted: '03:41',
-      quality: 'استوديو نقي 320kbps HD',
+      remoteUrl: 'https://media.assabile.com/assabile/adhan_3435370/a2b25725149e.mp3',
+      fallbackUrls: [],
+      durationFormatted: '04:07',
+      quality: 'MP3 128 كيلوبت/ث، تسجيل تاريخي',
       categoryAr: 'أذان مصر',
       muezzinName: 'الشيخ محمد صديق المنشاوي',
-      fileSizeBytes: 3550000,
+      fileSizeBytes: 3955074,
     ),
     IslamicAudioTrack(
       id: 'adhan_naqshbandi',
       title: 'أذان الشيخ سيد النقشبندي',
-      subtitle: 'نداء الحق بنفحات الخشوع والابتهال الشجي من كروان الإنشاد',
+      subtitle: 'الأذان بصوت الشيخ سيد النقشبندي، مكتبة الهدى والنور',
       type: IslamicAudioType.adhan,
       assetPath: null,
-      remoteUrl: 'https://archive.org/download/Sama3almelouk_yahoo_20160525/%D8%A7%D9%84%D8%A7%D8%B0%D8%A7%D9%86.MP3',
-      fallbackUrls: [
-        'https://archive.org/download/Naqshbandi_Ibtihalat/Adhan_Naqshbandi.mp3',
-      ],
-      durationFormatted: '03:40',
-      quality: 'تسجيل تاريخي نقي HD',
+      remoteUrl: 'https://media.myhuda.com/download/files/media/11-Anasheed/2-Naqshab_Tawasheeh/11.mp3',
+      fallbackUrls: [],
+      durationFormatted: '02:38',
+      quality: 'MP3 128 كيلوبت/ث، تسجيل تاريخي',
       categoryAr: 'أذان مصر',
       muezzinName: 'الشيخ سيد النقشبندي',
-      fileSizeBytes: 2650000,
+      fileSizeBytes: 2528903,
     ),
     IslamicAudioTrack(
       id: 'adhan_fares_abbad',
@@ -1017,9 +1038,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/076-3.mp3',
-      fallbackUrls: [
-        'https://server8.mp3quran.net/frs_a/001.mp3',
-      ],
+      fallbackUrls: [],
       durationFormatted: '02:41',
       quality: 'استوديو نقي 192kbps HD',
       categoryAr: 'أذان الخليج والشام',
@@ -1033,7 +1052,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/030.mp3',
-      fallbackUrls: ['https://server11.mp3quran.net/a_jbr/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:25',
       quality: 'عالي النقاء 320kbps HD',
       categoryAr: 'أذان الحرمين',
@@ -1047,7 +1066,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/032.mp3',
-      fallbackUrls: ['https://server11.mp3quran.net/sds/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:15',
       quality: 'استوديو نقي 320kbps HD',
       categoryAr: 'أذان الحرمين',
@@ -1061,7 +1080,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/033.mp3',
-      fallbackUrls: ['https://server7.mp3quran.net/shur/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:30',
       quality: 'عالي النقاء 320kbps HD',
       categoryAr: 'أذان الحرمين',
@@ -1075,7 +1094,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/034.mp3',
-      fallbackUrls: ['https://server7.mp3quran.net/s_gmd/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:40',
       quality: 'استوديو نقي 320kbps HD',
       categoryAr: 'أذان الخليج والشام',
@@ -1089,7 +1108,7 @@ class IslamicAudioService extends ChangeNotifier {
       type: IslamicAudioType.adhan,
       assetPath: null,
       remoteUrl: 'https://archive.org/download/Athan_Mawsoa_mp3/035.mp3',
-      fallbackUrls: ['https://server12.mp3quran.net/maher/001.mp3'],
+      fallbackUrls: [],
       durationFormatted: '03:35',
       quality: 'استوديو نقي 320kbps HD',
       categoryAr: 'أذان الحرمين',
@@ -1525,7 +1544,7 @@ class IslamicAudioService extends ChangeNotifier {
       _isBuffering = state.processingState == ProcessingState.buffering ||
           state.processingState == ProcessingState.loading;
 
-      if (_currentTrack != null && isHeldLegacyAdhkar(_currentTrack!)) {
+      if (_currentTrack != null && isHeldRecording(_currentTrack!)) {
         unawaited(containLegacyAdhkarPlayback());
         return;
       }
@@ -1599,9 +1618,14 @@ class IslamicAudioService extends ChangeNotifier {
     return audioDir;
   }
 
+  @visibleForTesting
+  Future<void> scanDownloadsForTesting(Directory dir) => _scanStorageDirectory(dir);
+
   Future<void> _scanStorageDirectory(Directory dir) async {
     _downloadedLocalPaths.clear();
     _downloadedFileSizes.clear();
+    _retiredRecordingPaths.clear();
+    _retiredRecordingSizes.clear();
     if (!await dir.exists()) return;
 
     final entities = dir.listSync();
@@ -1616,8 +1640,17 @@ class IslamicAudioService extends ChangeNotifier {
         final nonEmptySegs = entity.uri.pathSegments.where((s) => s.isNotEmpty);
           if (nonEmptySegs.isEmpty) continue;
           final filename = nonEmptySegs.last;
-        final id = filename.replaceAll('.mp3', '');
-        if (allTracks.any((t) => t.id == id)) {
+        final matching = allTracks.where(
+            (track) => downloadFileNameForTrack(track.id) == filename);
+        if (matching.isEmpty) {
+          final legacyId = filename.substring(0, filename.length - 4);
+          if (reviewedAdhanRecordingRevision.containsKey(legacyId)) {
+            _retiredRecordingPaths[legacyId] = entity.path;
+            _retiredRecordingSizes[legacyId] = entity.lengthSync();
+          }
+        }
+        if (matching.isNotEmpty) {
+          final id = matching.first.id;
           final size = entity.lengthSync();
           if (size > 1000) {
             _downloadedLocalPaths[id] = entity.path;
@@ -1630,10 +1663,27 @@ class IslamicAudioService extends ChangeNotifier {
 
   // --- Offline & Download Management ---
 
+  /// A corrected recording must not reuse an old download under the same ID.
+  /// Old files remain on disk, but are not treated as the reviewed recording.
+  static const reviewedAdhanRecordingRevision = <String, String>{
+    'adhan_hussary': '20261121',
+    'adhan_menshawi': '20261121',
+    'adhan_naqshbandi': '20261121',
+    'adhan_alqatami': '20261121',
+    'adhan_wadih_alyamani': '20261121',
+  };
+
+  static String downloadFileNameForTrack(String id) {
+    final revision = reviewedAdhanRecordingRevision[id];
+    return revision == null ? '$id.mp3' : '$id.$revision.mp3';
+  }
+
   bool isDownloaded(String id) {
+    if (unavailableRecordingReason(id) != null) return false;
     final path = _downloadedLocalPaths[id];
     if (path == null) return false;
     final f = File(path);
+    if (f.uri.pathSegments.last != downloadFileNameForTrack(id)) return false;
     return f.existsSync() && f.lengthSync() > 1000;
   }
 
@@ -1663,14 +1713,14 @@ class IslamicAudioService extends ChangeNotifier {
 
   Future<bool> downloadTrack(String id) async {
     final track = allTracks.firstWhere((t) => t.id == id, orElse: () => allTracks.first);
-    if (track.remoteUrl == null || isDownloading(id)) return false;
+    if (isHeldRecording(track) || track.remoteUrl == null || isDownloading(id)) return false;
 
     await init();
     if (isDownloading(id)) return false;
     final dirPath = _storageDirPath;
     if (dirPath == null) return false;
 
-    final filePath = '$dirPath/$id.mp3';
+    final filePath = '$dirPath/${downloadFileNameForTrack(id)}';
     final attempt = ++_downloadAttemptCounter;
     final tempFilePath = '$filePath.$attempt.tmp';
 
@@ -1782,16 +1832,20 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<bool> deleteDownloadedTrack(String id) async {
-    final path = _downloadedLocalPaths[id];
-    if (path == null) return false;
-
+    final paths = [
+      if (_downloadedLocalPaths[id] != null) _downloadedLocalPaths[id]!,
+      if (_retiredRecordingPaths[id] != null) _retiredRecordingPaths[id]!,
+    ];
+    if (paths.isEmpty) return false;
     try {
-      final file = File(path);
-      if (file.existsSync()) {
-        file.deleteSync();
+      for (final path in paths) {
+        final file = File(path);
+        if (file.existsSync()) file.deleteSync();
       }
       _downloadedLocalPaths.remove(id);
       _downloadedFileSizes.remove(id);
+      _retiredRecordingPaths.remove(id);
+      _retiredRecordingSizes.remove(id);
       notifyListeners();
       return true;
     } catch (e) {
@@ -1801,7 +1855,7 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> deleteAllDownloadedTracks() async {
-    for (final path in _downloadedLocalPaths.values.toList()) {
+    for (final path in [..._downloadedLocalPaths.values, ..._retiredRecordingPaths.values]) {
       try {
         final file = File(path);
         if (file.existsSync()) {
@@ -1811,6 +1865,8 @@ class IslamicAudioService extends ChangeNotifier {
     }
     _downloadedLocalPaths.clear();
     _downloadedFileSizes.clear();
+    _retiredRecordingPaths.clear();
+    _retiredRecordingSizes.clear();
     notifyListeners();
   }
 
@@ -1820,7 +1876,7 @@ class IslamicAudioService extends ChangeNotifier {
 
   int get totalDownloadedBytes {
     int total = 0;
-    for (final size in _downloadedFileSizes.values) {
+    for (final size in [..._downloadedFileSizes.values, ..._retiredRecordingSizes.values]) {
       total += size;
     }
     return total;
@@ -1859,7 +1915,7 @@ class IslamicAudioService extends ChangeNotifier {
   Future<bool> playOnlinePreview(IslamicAudioTrack track) async {
     if (track.type != IslamicAudioType.adhan && track.type != IslamicAudioType.iqamah) return false;
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
-    if (_legacyStopFailed) return false;
+    if (_legacyStopFailed || isHeldRecording(track)) return false;
     final url = track.remoteUrl;
     if (url == null || url.isEmpty) return false;
     final session = ++_onlinePreviewSession;
@@ -1901,7 +1957,7 @@ class IslamicAudioService extends ChangeNotifier {
     _onlinePreviewSession++;
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (_legacyStopFailed) return;
-    if (isHeldLegacyAdhkar(track)) {
+    if (isHeldRecording(track)) {
       _heldLegacyTrack = track;
       notifyListeners();
       return;
@@ -2066,7 +2122,7 @@ class IslamicAudioService extends ChangeNotifier {
     _currentIndex = startIndex.clamp(0, _queue.length - 1);
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (_queue.isEmpty) return;
-    if (isHeldLegacyAdhkar(selected)) {
+    if (isHeldRecording(selected)) {
       _heldLegacyTrack = selected;
       notifyListeners();
       return;
@@ -2076,9 +2132,9 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playNext() async {
-    final hadHeldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    final hadHeldCurrent = _currentTrack != null && isHeldRecording(_currentTrack!);
     final remainingAfter = _currentIndex >= 0 && _currentIndex < _queue.length
-        ? _queue.skip(_currentIndex + 1).where((t) => !isHeldLegacyAdhkar(t)).toList() : <IslamicAudioTrack>[];
+        ? _queue.skip(_currentIndex + 1).where((t) => !isHeldRecording(t)).toList() : <IslamicAudioTrack>[];
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (hadHeldCurrent && remainingAfter.isNotEmpty) {
       await playTrack(remainingAfter.first);
@@ -2095,9 +2151,9 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playPrevious() async {
-    final hadHeldCurrent = _currentTrack != null && isHeldLegacyAdhkar(_currentTrack!);
+    final hadHeldCurrent = _currentTrack != null && isHeldRecording(_currentTrack!);
     final remainingBefore = _currentIndex > 0 && _currentIndex <= _queue.length
-        ? _queue.take(_currentIndex).where((t) => !isHeldLegacyAdhkar(t)).toList() : <IslamicAudioTrack>[];
+        ? _queue.take(_currentIndex).where((t) => !isHeldRecording(t)).toList() : <IslamicAudioTrack>[];
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (hadHeldCurrent && remainingBefore.isNotEmpty) {
       await playTrack(remainingBefore.last);

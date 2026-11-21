@@ -24,7 +24,7 @@ class LegacyAdhkarPlaybackNotice extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('تسجيل قديم يحتاج مراجعة', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(track.type == IslamicAudioType.adhan ? 'تسجيل الأذان غير متاح' : 'تسجيل قديم يحتاج مراجعة', style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           if (stopFailed)
             const Text('تعذر إيقاف الصوت الحالي. لن يبدأ تشغيل تسجيل آخر هنا حتى ينجح الإيقاف.'),
@@ -40,7 +40,7 @@ class LegacyAdhkarPlaybackNotice extends StatelessWidget {
             const Text('حُجب تشغيل هذا التسجيل حتى مراجعة اسمه ومصدره. ملفاتك المحفوظة لم تُحذف.'),
           ],
           const SizedBox(height: 8),
-          OutlinedButton.icon(
+          if (track.type != IslamicAudioType.adhan) OutlinedButton.icon(
             icon: const Icon(Icons.library_music_rounded),
             label: const Text('فتح الأذكار المسموعة'),
             onPressed: stopFailed || stopPending ? null : () => Navigator.push(context,
@@ -440,7 +440,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
   @override
   Widget build(BuildContext context) {
     final track = _audioService.currentTrack;
-    if (track == null || IslamicAudioService.isHeldLegacyAdhkar(track)) {
+    if (track == null || IslamicAudioService.isHeldRecording(track)) {
       final held = track ?? _audioService.heldLegacyTrack;
       if (held != null) return LegacyAdhkarPlaybackNotice(track: held, stopFailed: _audioService.legacyStopFailed, stopPending: _audioService.legacyStopPending, onRetryStop: _audioService.retryLegacyPlaybackStop);
       return const SizedBox.shrink();

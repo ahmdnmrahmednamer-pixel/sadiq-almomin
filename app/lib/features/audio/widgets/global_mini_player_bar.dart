@@ -79,7 +79,7 @@ class _GlobalMiniPlayerBarState extends State<GlobalMiniPlayerBar>
   @override
   Widget build(BuildContext context) {
     final track = _audioService.currentTrack;
-    if (track == null || IslamicAudioService.isHeldLegacyAdhkar(track)) {
+    if (track == null || IslamicAudioService.isHeldRecording(track)) {
       final held = track ?? _audioService.heldLegacyTrack;
       if (held != null) {
         return ConstrainedBox(

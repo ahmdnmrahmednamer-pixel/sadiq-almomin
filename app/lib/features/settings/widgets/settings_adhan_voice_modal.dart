@@ -275,6 +275,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
 
   Future<void> _playPreview(IslamicAudioTrack track) async {
     if (_closing) return;
+    if (IslamicAudioService.unavailableRecordingReason(track.id) != null) return;
     if (_previewTrackId == track.id && (_previewPlaying || _previewLoading || _previewStopFailed)) {
       try {
         await _stopPreview();
@@ -344,7 +345,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
   }
 
   Future<void> _assign(IslamicAudioTrack track) async {
-    if (_closing) return;
+    if (_closing || (!widget.isIqamah && PrayerNotificationService.adhanAssignmentUnavailableReason(track.id) != null) || IslamicAudioService.unavailableRecordingReason(track.id) != null) return;
     setState(() => _closing = true);
     try {
       await _stopPreview();
@@ -496,6 +497,8 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
                     return AdhanVoiceOption(
                       key: ValueKey('voice_${track.id}'),
                       name: adhanVoiceLabel(track),
+                      unavailableReason: IslamicAudioService.unavailableRecordingReason(track.id),
+                      assignmentUnavailableReason: widget.isIqamah ? null : PrayerNotificationService.adhanAssignmentUnavailableReason(track.id),
                       selected: selected == track.id ||
                           selected == track.rawNotificationSound,
                       playing:

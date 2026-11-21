@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 /// One voice with independent listening, assignment and download actions.
 class AdhanVoiceOption extends StatelessWidget {
   final String name;
+  final String? unavailableReason;
+  final String? assignmentUnavailableReason;
   final bool selected;
   final bool playing;
   final bool downloaded;
@@ -14,6 +16,8 @@ class AdhanVoiceOption extends StatelessWidget {
   const AdhanVoiceOption({
     super.key,
     required this.name,
+    this.unavailableReason,
+    this.assignmentUnavailableReason,
     required this.selected,
     required this.playing,
     required this.downloaded,
@@ -39,24 +43,28 @@ class AdhanVoiceOption extends StatelessWidget {
                 const Icon(Icons.check_circle_outline,
                     semanticLabel: 'المؤذن المعين'),
             ]),
+            if (unavailableReason != null)
+              Semantics(liveRegion: true, child: Text(unavailableReason!)),
+            if (unavailableReason == null && assignmentUnavailableReason != null)
+              Text(assignmentUnavailableReason!),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 4,
               children: [
                 OutlinedButton.icon(
-                  onPressed: onListen,
+                  onPressed: unavailableReason == null ? onListen : null,
                   icon: Icon(playing ? Icons.stop : Icons.play_arrow),
                   label: Text(playing ? 'إيقاف' : 'استماع'),
                 ),
                 FilledButton.icon(
-                  onPressed: onAssign,
+                  onPressed: unavailableReason == null && assignmentUnavailableReason == null ? onAssign : null,
                   icon: const Icon(Icons.check),
                   label: const Text('تعيين'),
                 ),
                 if (!downloaded)
                   TextButton.icon(
-                    onPressed: downloading ? null : onDownload,
+                    onPressed: downloading || unavailableReason != null ? null : onDownload,
                     icon:
                         Icon(downloading ? Icons.downloading : Icons.download),
                     label: Text(downloading ? 'جار التحميل' : 'تحميل'),
