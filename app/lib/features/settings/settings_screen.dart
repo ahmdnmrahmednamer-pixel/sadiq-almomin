@@ -574,13 +574,37 @@ class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObse
           AdhanSoundMode.vibrateOnly: tr('اهتزاز', 'Vibrate'),
           AdhanSoundMode.silent: tr('صامت', 'Silent')
         }),
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(tr(
+              'إعدادات كل صلاة مستقلة. يظل مفتاح التنبيهات العام مطلوباً، ويعمل التنبيه المسبق عند تفعيله عموماً ولهذه الصلاة وبالدقائق المحددة أدناه. إيقاف أذان الصلاة يوقف تنبيهها المسبق أيضاً. لا تُحفظ التغييرات إلا عند الضغط على تطبيق.',
+              'Each prayer has separate settings. The main notification switch still applies. Pre-reminders also require this prayer and the global pre-reminder switch, and use the minutes below. Disabling a prayer also disables its pre-reminder. Changes are saved only with Apply.')),
+        ),
         for (final prayer in SettingsSession.prayers)
-          ListTile(
-              title: Text(prayer),
-              subtitle: Text(getAdhanVoiceName(session.voices[prayer]!.value)),
-              onTap: () => showPrayerMuezzinDropdownPicker(context, prayer,
-                  selectedVoice: session.voices[prayer]!.value,
-                  onStage: session.voices[prayer]!.stage)),
+          ExpansionTile(
+              key: ValueKey('prayer_settings_$prayer'),
+              title: Text(tr('إعدادات صلاة $prayer', '$prayer settings')),
+              subtitle: Text(session.prayerEnabled[prayer]!.value
+                  ? tr('الأذان مفعّل لهذه الصلاة',
+                      'Adhan enabled for this prayer')
+                  : tr('الأذان متوقف لهذه الصلاة',
+                      'Adhan disabled for this prayer')),
+              children: [
+                toggle(tr('أذان صلاة $prayer', '$prayer adhan'),
+                    session.prayerEnabled[prayer]!),
+                ListTile(
+                    key: ValueKey('prayer_voice_$prayer'),
+                    title: Text(tr('مؤذن صلاة $prayer', '$prayer muezzin')),
+                    subtitle:
+                        Text(getAdhanVoiceName(session.voices[prayer]!.value)),
+                    onTap: () => showPrayerMuezzinDropdownPicker(
+                        context, prayer,
+                        selectedVoice: session.voices[prayer]!.value,
+                        onStage: session.voices[prayer]!.stage)),
+                toggle(
+                    tr('التنبيه قبل صلاة $prayer', 'Reminder before $prayer'),
+                    session.prePrayerEnabled[prayer]!),
+              ]),
         ListTile(
             title: Text(tr('مؤذن لجميع الصلوات', 'Voice for all prayers')),
             onTap: () => showPrayerMuezzinDropdownPicker(context, 'الكل',
