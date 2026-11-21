@@ -757,9 +757,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                 children: [
                                   Icon(Icons.volume_up_rounded, color: AppColors.accentGold, size: 18),
                                   SizedBox(width: 8),
-                                  Text(
-                                    'نمط صوت تنبيه الأذان',
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                  Expanded(
+                                    child: Text(
+                                      'نمط صوت تنبيه الأذان',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -914,9 +916,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   children: [
                                     Icon(Icons.sensors_rounded, color: Colors.greenAccent, size: 18),
                                     SizedBox(width: 8),
-                                    Text(
-                                      'خيارات الاهتزاز ومستشعرات الحركة',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                    Expanded(
+                                      child: Text(
+                                        'خيارات الاهتزاز ومستشعرات الحركة',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1012,9 +1016,11 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
                                   children: [
                                     Icon(Icons.mosque_rounded, color: AppColors.accentGold, size: 18),
                                     SizedBox(width: 8),
-                                    Text(
-                                      'تفعيل / إيقاف كل صلاة على حدة',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                    Expanded(
+                                      child: Text(
+                                        'تفعيل / إيقاف كل صلاة على حدة',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                                      ),
                                     ),
                                   ],
                                 ),
