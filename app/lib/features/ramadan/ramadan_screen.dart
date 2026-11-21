@@ -478,64 +478,76 @@ class _RamadanScreenState extends State<RamadanScreen> with SingleTickerProvider
                 // 30 Days rows
                 ..._imsakiyyahList.map((day) {
                   final isEven = day.dayNumber % 2 == 0;
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(10),
+                  return Semantics(
+                    key: ValueKey('ramadan_imsakiyyah_day_${day.dayNumber}'),
+                    container: true,
+                    excludeSemantics: true,
+                    button: true,
+                    label: 'اليوم ${day.dayNumber} من رمضان، ${day.dayName}، '
+                        '${day.gregorianDate.day}/${day.gregorianDate.month}، '
+                        'الإمساك ${day.imsakTime}، الفجر ${day.fajrTime}، '
+                        'الإفطار ${day.maghribTime}، العشاء ${day.ishaTime}',
+                    hint: 'عرض تفاصيل اليوم',
                     onTap: () => _showDayDetails(day),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 2),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isEven
-                            ? (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF7FBF8))
-                            : (isDark ? Colors.transparent : Colors.white),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
-                      ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 48 * tableScale,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${day.dayNumber}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 12),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
-                                Text('${day.gregorianDate.day}/${day.gregorianDate.month}', style: const TextStyle(fontSize: 10, color: AppColors.mutedText)),
-                              ],
-                            ),
-                          ),
-                          Expanded(child: Text(day.imsakTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                          Expanded(child: Text(day.fajrTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.accentGold.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                day.maghribTime,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF8B6508), fontSize: 11),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: () => _showDayDetails(day),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isEven
+                              ? (isDark ? Colors.white.withValues(alpha: 0.03) : const Color(0xFFF7FBF8))
+                              : (isDark ? Colors.transparent : Colors.white),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 48 * tableScale,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryGreen.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '${day.dayNumber}',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryGreen, fontSize: 12),
+                                ),
                               ),
                             ),
-                          ),
-                          Expanded(child: Text(day.ishaTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
-                        ],
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(day.dayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5)),
+                                  Text('${day.gregorianDate.day}/${day.gregorianDate.month}', style: const TextStyle(fontSize: 10, color: AppColors.mutedText)),
+                                ],
+                              ),
+                            ),
+                            Expanded(child: Text(day.imsakTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                            Expanded(child: Text(day.fajrTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGold.withValues(alpha: 0.16),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  day.maghribTime,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF8B6508), fontSize: 11),
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Text(day.ishaTime, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11))),
+                          ],
+                        ),
                       ),
                     ),
                   );
