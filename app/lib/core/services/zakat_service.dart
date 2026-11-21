@@ -28,79 +28,83 @@ class ZakatService extends ChangeNotifier {
 
   ZakatCalculation _calculation = const ZakatCalculation();
   bool _isInitialized = false;
+  Future<void> _operations = Future<void>.value();
+
+  Future<T> _serialize<T>(Future<T> Function() action) {
+    final result = _operations.then((_) => action());
+    _operations =
+        result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
 
   bool get isInitialized => _isInitialized;
   ZakatCalculation get calculation => _calculation;
 
   /// Initializes the service from persistent storage
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final jsonStr = prefs.getString(_storageKey);
-      if (jsonStr != null && jsonStr.isNotEmpty) {
-        final Map<String, dynamic> data = json.decode(jsonStr);
-        _calculation = ZakatCalculation.fromJson(data);
-      } else {
-        _calculation = const ZakatCalculation();
-      }
-      _isInitialized = true;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('ZakatService init error: $e');
-      _isInitialized = true;
-    }
-  }
+  Future<void> init({bool forceReload = false}) => _serialize(() async {
+        if (_isInitialized && !forceReload) return;
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          if (forceReload) await prefs.reload();
+          final jsonStr = prefs.getString(_storageKey);
+          final next = jsonStr != null && jsonStr.isNotEmpty
+              ? ZakatCalculation.fromJson(
+                  json.decode(jsonStr) as Map<String, dynamic>)
+              : const ZakatCalculation();
+          _calculation = next;
+          _isInitialized = true;
+          notifyListeners();
+        } catch (e) {
+          debugPrint('ZakatService init error: $e');
+          _isInitialized = true;
+        }
+      });
 
-  /// Updates and persists the current calculation draft
-  Future<void> updateCalculation(ZakatCalculation calculation) async {
-    _calculation = calculation;
-    await _persist();
-    notifyListeners();
-  }
+  /// Publishes the draft only after storage confirms the write.
+  Future<bool> updateCalculation(ZakatCalculation calculation) =>
+      _serialize(() => _persist(calculation));
 
-  /// Sets the Hawl reminder date
-  Future<void> setHawlDate(DateTime? date) async {
-    _calculation = _calculation.copyWith(hawlDate: date, clearHawlDate: date == null);
-    await _persist();
-    notifyListeners();
-  }
+  /// Derive date/reset changes when their turn in the write queue starts.
+  Future<bool> setHawlDate(DateTime? date) => _serialize(() => _persist(
+      _calculation.copyWith(hawlDate: date, clearHawlDate: date == null)));
 
-  /// Resets all calculation fields to zero
-  Future<void> reset() async {
-    _calculation = ZakatCalculation(
-      currency: _calculation.currency,
-      goldPricePerGram24: _calculation.goldPricePerGram24,
-      silverPricePerGram: _calculation.silverPricePerGram,
-      nisabBasis: _calculation.nisabBasis,
-    );
-    await _persist();
-    notifyListeners();
-  }
+  Future<bool> reset() => _serialize(() => _persist(ZakatCalculation(
+        currency: _calculation.currency,
+        goldPricePerGram24: _calculation.goldPricePerGram24,
+        silverPricePerGram: _calculation.silverPricePerGram,
+        nisabBasis: _calculation.nisabBasis,
+      )));
 
-  /// Exports current calculation state for backup
-  Map<String, dynamic> exportData() {
-    return _calculation.toJson();
-  }
+  Map<String, dynamic> exportData() => _calculation.toJson();
 
-  /// Restores calculation state from backup
+  /// Backup must not report success after a rejected delegated write.
   Future<void> importData(Map<String, dynamic> data) async {
     await init();
-    try {
-      _calculation = ZakatCalculation.fromJson(data);
-      await _persist();
-      notifyListeners();
-    } catch (e) {
-      debugPrint('ZakatService import error: $e');
+    final next = ZakatCalculation.fromJson(data);
+    if (!await updateCalculation(next)) {
+      throw StateError('Zakat calculation could not be saved');
     }
   }
 
-  Future<void> _persist() async {
+  Future<bool> _persist(ZakatCalculation next) async {
+    SharedPreferences? prefs;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_storageKey, json.encode(_calculation.toJson()));
+      prefs = await SharedPreferences.getInstance();
+      if (!await prefs.setString(_storageKey, json.encode(next.toJson()))) {
+        throw StateError('Zakat calculation write rejected');
+      }
+      _calculation = next;
+      notifyListeners();
+      return true;
     } catch (e) {
+      // SharedPreferences updates its cache before the platform confirms.
+      try {
+        await prefs?.reload();
+      } catch (reloadError) {
+        debugPrint('ZakatService cache reload error: $reloadError');
+      }
       debugPrint('ZakatService persist error: $e');
+      return false;
     }
   }
 }
