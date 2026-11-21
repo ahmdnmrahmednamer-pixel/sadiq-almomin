@@ -126,6 +126,22 @@ void main() {
         calls.where((c) => c.method == 'cancel').map((c) => c.arguments['id']),
         [880]);
   });
+  test('atomic fixed time reaches OS payload and survives reload', () async {
+    await configure(fixed: true);
+    expect(await service.setQiyamFixedTime(4, 35), true);
+    final write = calls.lastWhere((c) => c.method == 'zonedSchedule');
+    final scheduled =
+        DateTime.parse('${write.arguments['scheduledDateTime']}Z').toLocal();
+    expect(write.arguments['id'], 881);
+    expect(scheduled.hour, 4);
+    expect(scheduled.minute, 35);
+    calls.clear();
+    await service.init(forceReload: true);
+    final restored = calls.lastWhere((c) => c.method == 'zonedSchedule');
+    expect(restored.arguments['scheduledDateTime'],
+        write.arguments['scheduledDateTime']);
+    expect(restored.arguments['id'], 881);
+  });
   test('superseded operation cannot report applied or enqueue stale alarms',
       () async {
     gate = Completer<void>();
