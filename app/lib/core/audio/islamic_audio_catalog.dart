@@ -1,4 +1,5 @@
 import 'islamic_audio_models.dart';
+import 'kiwifu_adhan_catalog.dart';
 
 /// Source metadata only. This is not a recording identity or rights certificate.
 const List<IslamicAudioTrack> islamicAudioCatalog = [
@@ -1291,4 +1292,5 @@ const List<IslamicAudioTrack> islamicAudioCatalog = [
     muezzinName: 'الشيخ نصر الدين طوبار',
     fileSizeBytes: 4950000,
   ),
+  ...kiwifuAdhanCatalog,
 ];
