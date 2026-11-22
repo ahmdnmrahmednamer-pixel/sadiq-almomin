@@ -78,9 +78,9 @@ void main() {
       expect(history.contains('الرحمن الرحيم'), isFalse);
 
       await QuranSearchService.instance.clearHistory();
-      // Defaults to fallback list when empty
+      // Explicitly cleared history stays empty; first-use suggestions are separate.
       history = await QuranSearchService.instance.getSearchHistory();
-      expect(history.isNotEmpty, isTrue);
+      expect(history, isEmpty);
     });
 
     testWidgets('Renders QuranSearchScreen with search input, chips, and history', (WidgetTester tester) async {

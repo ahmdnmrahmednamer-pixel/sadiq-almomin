@@ -271,8 +271,15 @@ void main() {
   });
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    await QuranSearchService.instance.clearHistory();
+    SharedPreferences.setMockInitialValues({
+      'quran_search_history_v1': <String>[
+        'آية الكرسي',
+        'الرحمن الرحيم',
+        'سورة الكهف',
+        'خواتيم البقرة',
+        'الله نور السماوات',
+      ],
+    });
     VoiceSearchService.resetTestMode();
     VoiceSearchService.isTestMode = true;
     VoiceSearchService.testMockRecognizedWords = 'آية الدين';

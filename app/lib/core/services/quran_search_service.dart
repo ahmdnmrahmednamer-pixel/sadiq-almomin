@@ -286,6 +286,6 @@ class QuranSearchService {
   /// Clears full search history
   Future<void> clearHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_historyKey);
+    await prefs.setStringList(_historyKey, <String>[]);
   }
 }
