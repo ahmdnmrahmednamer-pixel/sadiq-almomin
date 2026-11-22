@@ -391,7 +391,10 @@ class TadabburJournalService extends ChangeNotifier {
       }
 
       final item = TadabburReflectionItem(
-        id: 'tadabbur_${DateTime.now().millisecondsSinceEpoch}',
+        id: JournalMergeUtil.allocateLocalEntryId(
+          'tadabbur_${DateTime.now().millisecondsSinceEpoch}',
+          _entries.map((entry) => entry.id),
+        ),
         surahId: surahId,
         surahName: surahName,
         ayahNumber: ayahNumber,
