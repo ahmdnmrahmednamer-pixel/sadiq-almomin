@@ -191,7 +191,7 @@ void main() {
         '/surah-reader',
         '/search',
         '/comparative-tafsir',
-        '/islamic-radio',
+        '/egypt-heritage',
         '/qiraat',
         '/approved-sources',
         '/audio',
@@ -205,7 +205,7 @@ void main() {
         expect(featurePaths.contains(path), isTrue, reason: 'Expected root-isolated route $path to exist');
       }
       // These independent entries were intentionally removed in the current library plan.
-      for (final path in ['/hadith', '/hadith-detail', '/riyad-alsalihin', '/islamic-mutoon']) {
+      for (final path in ['/hadith', '/hadith-detail', '/riyad-alsalihin', '/islamic-mutoon', '/islamic-radio', '/curated-radio']) {
         expect(featurePaths.contains(path), isFalse, reason: 'Retired library route $path must not return');
       }
     });
@@ -259,7 +259,7 @@ void main() {
         '/settings',
         '/search',
         '/qiraat',
-        '/islamic-radio',
+        '/egypt-heritage',
         '/approved-sources',
       ];
 
