@@ -845,16 +845,17 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
         // 3. Ayahs Results Section
         if ((_scope == SearchScope.all || _scope == SearchScope.ayahs) && _ayahResults.isNotEmpty) ...[
-          Row(
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Icon(Icons.format_quote, size: 18, color: colors.primary),
-              const SizedBox(width: 6),
               Text(
                 'نتائج الآيات (${_ayahResults.length})',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.primary),
               ),
               if (_selectedSurahFilter != null) ...[
-                const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
