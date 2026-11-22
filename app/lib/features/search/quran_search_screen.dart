@@ -757,46 +757,59 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.menu_book, size: 16),
-                        label: const Text('فتح في المصحف', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colors.primary,
-                          foregroundColor: colors.onPrimary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PageModeMushafScreen(initialPage: _referenceAyah!.page),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final halfWidth = (constraints.maxWidth - 8) / 2;
+                    final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
+                    final buttonConstraints = BoxConstraints(
+                      minWidth: halfWidth,
+                      maxWidth: (halfWidth * textScale).clamp(halfWidth, constraints.maxWidth),
+                    );
+                    return OverflowBar(
+                      spacing: 8,
+                      overflowSpacing: 8,
+                      children: [
+                        ConstrainedBox(
+                          constraints: buttonConstraints,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.menu_book, size: 16),
+                            label: const Text('فتح في المصحف', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.primary,
+                              foregroundColor: colors.onPrimary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        icon: Icon(Icons.chrome_reader_mode_outlined, size: 16, color: colors.primary),
-                        label: Text('التفسير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary)),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: colors.primary),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PageModeMushafScreen(initialPage: _referenceAyah!.page),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        onPressed: () {
-                          TafsirViewerSheet.show(
-                            context,
-                            surah: _referenceSurah!,
-                            ayah: _referenceAyah!,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                        ConstrainedBox(
+                          constraints: buttonConstraints,
+                          child: OutlinedButton.icon(
+                            icon: Icon(Icons.chrome_reader_mode_outlined, size: 16, color: colors.primary),
+                            label: Text('التفسير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary)),
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: colors.primary),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () {
+                              TafsirViewerSheet.show(
+                                context,
+                                surah: _referenceSurah!,
+                                ayah: _referenceAyah!,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
