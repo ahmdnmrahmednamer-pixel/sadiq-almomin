@@ -1,0 +1,15 @@
+name: downloaded_adhan_native
+description: Private read-only native sound handoff for pinned in-app downloads.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: org.almomin.app
+        pluginClass: DownloadedAdhanPlugin
