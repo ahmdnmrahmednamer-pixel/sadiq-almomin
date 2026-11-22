@@ -915,6 +915,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
                     // Ayah Text with Highlighted Query Words (FR-SRC-003)
                     RichText(
+                      textScaler: MediaQuery.textScalerOf(context),
                       text: TextSpan(
                         style: TextStyle(
                           fontFamily: 'Amiri',
