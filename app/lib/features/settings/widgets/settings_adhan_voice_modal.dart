@@ -31,6 +31,19 @@ String adhanVoiceLabel(IslamicAudioTrack track) {
   return track.id.contains('fajr') ? '$name (الفجر)' : name;
 }
 
+/// Optional source details stay separate from the plain voice name.
+String? adhanSourceDetails(IslamicAudioTrack track) {
+  if (track.sourceFileNames.isEmpty) return null;
+  final reason =
+      PrayerNotificationService.adhanAssignmentUnavailableReason(track.id);
+  return [
+    'الاسم كما ورد في المصدر، ولم تُتحقق نسبة الصوت إلى صاحبه.',
+    ...track.sourceFileNames,
+    if (reason != null) reason,
+    if (track.sourceUrl != null) track.sourceUrl!,
+  ].join('\n\n');
+}
+
 String getIqamahVoiceName(String key) {
   switch (key) {
     case 'iqamah_madinah':
@@ -517,6 +530,12 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
                     return AdhanVoiceOption(
                       key: ValueKey('voice_${track.id}'),
                       name: adhanVoiceLabel(track),
+                      semanticName: track.sourceFileNames.isEmpty
+                          ? null
+                          : '${adhanVoiceLabel(track)}، اسم حسب المصدر غير موثق',
+                      sourceDetails: adhanSourceDetails(track),
+                      assignmentUnavailableMessage: track.sourceFileNames.isEmpty
+                          ? null : 'للاستماع والتحميل فقط',
                       unavailableReason: IslamicAudioService.unavailableRecordingReason(track.id),
                       assignmentUnavailableReason: widget.isIqamah ? null : PrayerNotificationService.adhanAssignmentUnavailableReason(track.id),
                       selected: selected == track.id ||
