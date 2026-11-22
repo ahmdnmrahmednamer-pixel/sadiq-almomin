@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/services/settings_service.dart';
+import '../../core/text/arabic_normalizer.dart';
 import '../../core/theme/app_theme.dart';
 
 import 'widgets/reader_bookmarks_sheet.dart';
@@ -437,7 +438,7 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
 
   void _jumpToPageInput() {
     final text = _jumpController.text.trim();
-    final targetPage = int.tryParse(text);
+    final targetPage = ArabicNormalizer.tryParseInt(text);
     if (targetPage == null || targetPage < 1) {
       _announce('يرجى كتابة رقم صفحة صحيح أكبر من صفر');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -790,6 +791,7 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
   Widget _buildNavigationBottomBar(bool isDark) {
     final canGoPrevious = _currentPage > 1 && !_isLoading;
     final canGoNext = !_isLoading;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: EdgeInsets.only(
@@ -815,8 +817,42 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
+      child: LayoutBuilder(builder: (context, constraints) {
+        final scaler = MediaQuery.textScalerOf(context);
+        final baseStyle = Theme.of(context).textTheme.bodyLarge!;
+        double measure(String value, double size) {
+          final painter = TextPainter(
+            text: TextSpan(
+              text: value,
+              style: baseStyle.copyWith(
+                  fontSize: size, fontWeight: FontWeight.bold),
+            ),
+            textDirection: TextDirection.rtl,
+            textScaler: scaler,
+          )..layout();
+          final width = painter.width;
+          painter.dispose();
+          return width;
+        }
+
+        double buttonWidth(String label) {
+          final width = measure(label, 13) + 14 + 8 + 24;
+          return width < 64 ? 64 : width;
+        }
+
+        var numberWidth = 0.0;
+        for (final digit in '0123456789٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹'.split('')) {
+          final width = measure(List.filled(6, digit).join(), 14);
+          if (width > numberWidth) numberWidth = width;
+        }
+        final minimumInputWidth =
+            numberWidth + measure('ص:', 12) + 6 + 16 + 48 + 4;
+        final useTwoRows = constraints.maxWidth <
+            buttonWidth('السابق') +
+                buttonWidth('التالي') +
+                minimumInputWidth +
+                16;
+        final controls = <Widget>[
           OutlinedButton.icon(
             icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
             label: const Text(
@@ -825,9 +861,9 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
             ),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              foregroundColor: AppColors.primaryGreen,
+              foregroundColor: scheme.primary,
               side: BorderSide(
-                color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                color: scheme.primary.withValues(alpha: 0.35),
               ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -838,7 +874,7 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Container(
-              height: 44,
+              constraints: const BoxConstraints(minHeight: 48),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 color:
@@ -852,12 +888,12 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
               ),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'ص:',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryGreen,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -869,11 +905,14 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
                       textInputAction: TextInputAction.go,
                       textAlign: TextAlign.center,
                       inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[0-9٠-٩۰-۹]'),
+                        ),
                       ],
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
+                        color: scheme.onSurface,
                       ),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
@@ -885,15 +924,16 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.subdirectory_arrow_left_rounded,
-                      color: AppColors.primaryGreen,
+                      color: scheme.primary,
                       size: 20,
                     ),
                     tooltip: 'انتقال',
                     onPressed: _isLoading ? null : _jumpToPageInput,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                    constraints:
+                        const BoxConstraints(minWidth: 48, minHeight: 48),
                   ),
                 ],
               ),
@@ -907,8 +947,8 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-              foregroundColor: Colors.white,
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -917,8 +957,19 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
             ),
             onPressed: canGoNext ? () => _loadPage(_currentPage + 1) : null,
           ),
-        ],
-      ),
+        ];
+        if (useTwoRows) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              (controls[2] as Expanded).child,
+              const SizedBox(height: 8),
+              Row(children: [controls.first, const Spacer(), controls.last]),
+            ],
+          );
+        }
+        return Row(children: controls);
+      }),
     );
   }
 }
