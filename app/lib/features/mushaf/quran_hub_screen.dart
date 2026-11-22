@@ -6,15 +6,17 @@ import '../../core/theme/app_theme.dart';
 import '../../core/ui/portal_category_card.dart';
 
 /// بوابة «القرآن الكريم وعلومه» (QuranHubScreen)
-/// مقسمة إلى ٨ محاور قرآنية مستقلة:
+/// مقسمة إلى ١٠ محاور قرآنية مستقلة:
 /// 1. القرآن المكتوب
-/// 3. المحفّظ
-/// 4. التجويد
-/// 5. خواطري
-/// 6. البحث القرآني
-/// 7. التفاسير
-/// 8. الإعراب
-/// 9. أسباب النزول
+/// 2. القرآن المسموع
+/// 3. العلامات المرجعية
+/// 4. المحفّظ
+/// 5. التجويد
+/// 6. خواطري
+/// 7. البحث القرآني
+/// 8. التفاسير
+/// 9. الإعراب
+/// 10. أسباب النزول
 class QuranHubScreen extends StatelessWidget {
   final int initialTabIndex;
 
@@ -131,8 +133,19 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/mushaf-reader'),
             ),
 
+            // 2. القرآن المسموع
             PortalCategoryCard(
               numberText: '٢',
+              title: 'القرآن المسموع',
+              subtitle: 'الاستماع إلى السور كاملة بالقارئ المختار',
+              icon: Icons.record_voice_over_rounded,
+              color: const Color(0xFF1E8260),
+              onTap: () => context.push('/audio'),
+            ),
+
+            // 3. العلامات المرجعية
+            PortalCategoryCard(
+              numberText: '٣',
               title: 'العلامات المرجعية',
               subtitle: 'الآيات المحفوظة',
               icon: Icons.bookmark_rounded,
@@ -140,9 +153,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/mushaf-reader?tab=bookmarks'),
             ),
 
-            // 3. المحفّظ
+            // 4. المحفّظ
             PortalCategoryCard(
-              numberText: '٣',
+              numberText: '٤',
               title: 'المحفّظ',
               subtitle: 'تكرار الآيات ومتابعة الحفظ',
               icon: Icons.psychology_rounded,
@@ -150,9 +163,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/memorization'),
             ),
 
-            // 4. التجويد
+            // 5. التجويد
             PortalCategoryCard(
-              numberText: '٤',
+              numberText: '٥',
               title: 'التجويد',
               subtitle: 'أحكام التلاوة ودليل ألوان المصحف',
               icon: Icons.palette_rounded,
@@ -160,9 +173,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/tajweed'),
             ),
 
-            // 5. خواطري
+            // 6. خواطري
             PortalCategoryCard(
-              numberText: '٥',
+              numberText: '٦',
               title: 'خواطري',
               subtitle: 'تدوين وحفظ التدبرات على الآيات',
               icon: Icons.edit_note_rounded,
@@ -170,9 +183,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/notes'),
             ),
 
-            // 6. البحث القرآني
+            // 7. البحث القرآني
             PortalCategoryCard(
-              numberText: '٦',
+              numberText: '٧',
               title: 'البحث القرآني',
               subtitle: 'البحث في الآيات والسور محلياً',
               icon: Icons.search_rounded,
@@ -180,9 +193,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/search'),
             ),
 
-            // 7. التفاسير
+            // 8. التفاسير
             PortalCategoryCard(
-              numberText: '٧',
+              numberText: '٨',
               title: 'التفاسير',
               subtitle: 'عرض ومقارنة كتب التفسير للآيات',
               icon: Icons.auto_stories_rounded,
@@ -190,9 +203,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/comparative-tafsir'),
             ),
 
-            // 8. الإعراب
+            // 9. الإعراب
             PortalCategoryCard(
-              numberText: '٨',
+              numberText: '٩',
               title: 'الإعراب',
               subtitle: 'إعراب الآيات وبيان وجوه النحو',
               icon: Icons.text_format_rounded,
@@ -200,9 +213,9 @@ class QuranHubScreen extends StatelessWidget {
               onTap: () => context.push('/quran-irab'),
             ),
 
-            // 9. أسباب النزول
+            // 10. أسباب النزول
             PortalCategoryCard(
-              numberText: '٩',
+              numberText: '١٠',
               title: 'أسباب النزول',
               subtitle: 'عرض سياق تنزيل الآيات المتاحة',
               icon: Icons.history_edu_rounded,
@@ -217,4 +230,3 @@ class QuranHubScreen extends StatelessWidget {
     );
   }
 }
-
