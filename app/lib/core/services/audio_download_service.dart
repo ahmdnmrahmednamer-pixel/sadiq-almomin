@@ -370,9 +370,9 @@ class AudioDownloadService extends ChangeNotifier {
         if (file.existsSync()) {
           file.deleteSync();
         }
+        _downloadedSurahs.remove(_key(info.reciterId, info.surahId));
       } catch (_) {}
     }
-    _downloadedSurahs.clear();
     notifyListeners();
   }
 
