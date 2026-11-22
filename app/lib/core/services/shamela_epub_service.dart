@@ -777,9 +777,12 @@ class ShamelaEpubService {
       Uri.parse(discoverEpubUrl(html, bookId));
 
   // URL references encode file names; archive entry names remain decoded.
-  static String _decodeReferencePath(String reference) {
+  static String _decodeReferencePath(String reference) =>
+      _decodePath(reference.split('#').first);
+
+  static String _decodePath(String path) {
     try {
-      return Uri.decodeComponent(reference.split('#').first);
+      return Uri.decodeComponent(path);
     } on ArgumentError {
       throw const ShamelaEpubValidationException(
           'Invalid percent-encoded EPUB path');
@@ -841,9 +844,24 @@ class ShamelaEpubService {
       throw ShamelaEpubSecurityException('Invalid rootfile path: $rawOpfPath');
     }
 
-    final opfPath = p.posix.normalize(rawOpfPath);
+    var opfPath = p.posix.normalize(rawOpfPath);
     if (opfPath.startsWith('..')) {
       throw ShamelaEpubSecurityException('Rootfile path traversal: $opfPath');
+    }
+
+    // Preserve existing raw-entry selection before resolving an encoded path.
+    if (!archiveMap.containsKey(opfPath)) {
+      final decodedOpfPath = _decodePath(rawOpfPath);
+      if (decodedOpfPath.startsWith('/') ||
+          decodedOpfPath.contains('\\') ||
+          decodedOpfPath.contains('://')) {
+        throw ShamelaEpubSecurityException(
+            'Invalid rootfile path: $decodedOpfPath');
+      }
+      opfPath = p.posix.normalize(decodedOpfPath);
+      if (opfPath.startsWith('..')) {
+        throw ShamelaEpubSecurityException('Rootfile path traversal: $opfPath');
+      }
     }
 
     final opfFile = archiveMap[opfPath];
