@@ -437,22 +437,26 @@ class _TasbihScreenState extends State<TasbihScreen>
                               Expanded(
                                 child: AppDropdownField<int>(
                                   label: 'هدف دورة التسبيح',
-                                  value: [33, 100, 1000, 0].contains(target)
-                                      ? target
-                                      : 33,
+                                  value: target >= 0 ? target : 33,
                                   dense: true,
                                   prefixIcon: Icons.flag_rounded,
-                                  options: const [
-                                    AppDropdownOption(
+                                  options: [
+                                    if (target > 0 &&
+                                        ![33, 100, 1000, 0].contains(target))
+                                      AppDropdownOption(
+                                        value: target,
+                                        label: 'هدف مخصص: $target',
+                                      ),
+                                    const AppDropdownOption(
                                         value: 33,
                                         label: '٣٣ تسبيحة (دبر الصلاة)'),
-                                    AppDropdownOption(
+                                    const AppDropdownOption(
                                         value: 100,
                                         label: '١٠٠ تسبيحة (الورد اليومي)'),
-                                    AppDropdownOption(
+                                    const AppDropdownOption(
                                         value: 1000,
                                         label: '١٠٠٠ تسبيحة (الورد الموسع)'),
-                                    AppDropdownOption(
+                                    const AppDropdownOption(
                                         value: 0,
                                         label: 'عداد مفتوح (بدون حد)'),
                                   ],
