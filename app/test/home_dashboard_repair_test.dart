@@ -139,6 +139,17 @@ Future<void> _performSemanticTapByLabel(
   }
 }
 
+// Test-only boundary: drain the singleton queue while its widget-test clock
+// is still available, then leave its final future in the real async zone.
+Future<void> _returnSunanQueueToRealZone(WidgetTester tester) async {
+  Future<void>? finishing;
+  await tester.runAsync(() async {
+    finishing = SunanRawatibService.instance.init();
+  });
+  await tester.pump();
+  await tester.runAsync(() => finishing!);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -225,6 +236,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       PrayerService.instance.stopLiveTicker();
+      await _returnSunanQueueToRealZone(tester);
     });
 
     testWidgets('Truthful daily obligatory, Sunan Rawatib, and Daily Wird counts update live, navigate + return cleanly, and reset truthfully', (tester) async {
@@ -306,6 +318,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       PrayerService.instance.stopLiveTicker();
+      await _returnSunanQueueToRealZone(tester);
     });
 
     testWidgets('Day rollover resets Home daily obligatory, Sunan, and Wird counts truthfully without erasing prior day history', (tester) async {
@@ -365,6 +378,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       PrayerService.instance.stopLiveTicker();
+      await _returnSunanQueueToRealZone(tester);
     });
 
     testWidgets('SemanticsAction.tap activates every changed clickable Home card and action at both 1.0x and 2.0x (real appRouter at 1.0x + narrow 360x800 GoRouter verification at 1.0x and 2.0x)', (tester) async {
@@ -625,6 +639,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       PrayerService.instance.stopLiveTicker();
+      await _returnSunanQueueToRealZone(tester);
       semantics.dispose();
     });
 
@@ -726,6 +741,7 @@ void main() {
       }
 
       PrayerService.instance.stopLiveTicker();
+      await _returnSunanQueueToRealZone(tester);
       semantics.dispose();
     });
   });
