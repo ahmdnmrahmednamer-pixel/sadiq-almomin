@@ -249,6 +249,7 @@ class _AudioScreenState extends State<AudioScreen> {
                     localPath != null
                         ? 'استماع بدون إنترنت (تخزين محلي) — سورة ${surah.nameAr} بصوت ${reciter.nameAr}'
                         : 'بدء تشغيل سورة ${surah.nameAr} — بصوت ${reciter.nameAr}',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
@@ -326,7 +327,8 @@ class _AudioScreenState extends State<AudioScreen> {
     if (!mounted) return;
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓'),
+        content: Text('تم اكتمال تحميل سورة ${surah.nameAr} بنجاح ✓',
+            style: const TextStyle(color: Colors.white)),
         backgroundColor: AppColors.primaryGreen,
       ));
     }
@@ -563,6 +565,10 @@ class _AudioScreenState extends State<AudioScreen> {
   Widget build(BuildContext context) {
     final reciter = _currentReciter ?? SettingsService.instance.currentReciter;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    final primary = isDark ? scheme.primary : AppColors.primaryGreen;
+    final secondary = isDark ? scheme.primary : AppColors.secondaryGreen;
+    final muted = isDark ? scheme.onSurfaceVariant : AppColors.mutedText;
 
     return Scaffold(
       appBar: AppBar(
@@ -668,8 +674,8 @@ class _AudioScreenState extends State<AudioScreen> {
                       decoration: InputDecoration(
                         hintText:
                             'ابحث باسم السورة (مثل: الكهف، يس، البقرة)...',
-                        prefixIcon: const Icon(Icons.search,
-                            color: AppColors.primaryGreen),
+                        prefixIcon: Icon(Icons.search,
+                            color: primary),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
                                 tooltip: 'إغلاق أو مسح',
@@ -748,7 +754,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                   ? FontWeight.bold
                                   : FontWeight.w600,
                               color: isPlayingThis
-                                  ? AppColors.secondaryGreen
+                                  ? secondary
                                   : null,
                             ),
                           ),
@@ -758,8 +764,8 @@ class _AudioScreenState extends State<AudioScreen> {
                             children: [
                               Text(
                                 '${surah.isMakki ? "مكية" : "مدنية"} — آياتها ${surah.ayahCount} — ص ${surah.pageStart}',
-                                style: const TextStyle(
-                                    fontSize: 12, color: AppColors.mutedText),
+                                style: TextStyle(
+                                    fontSize: 12, color: muted),
                               ),
                               if (isDownloaded) ...[
                                 Container(
@@ -804,7 +810,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                             ? downloadProgress.clamp(0.0, 1.0)
                                             : null,
                                         strokeWidth: 2.5,
-                                        color: AppColors.primaryGreen,
+                                        color: primary,
                                       ),
                                       IconButton(
                                         padding: EdgeInsets.zero,
@@ -829,9 +835,9 @@ class _AudioScreenState extends State<AudioScreen> {
                                 )
                               else
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                       Icons.download_for_offline_outlined,
-                                      color: AppColors.mutedText,
+                                      color: muted,
                                       size: 22),
                                   tooltip: 'تحميل للاستماع بدون إنترنت',
                                   onPressed: () => _downloadSurah(surah, reciter),
@@ -845,7 +851,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                       : Icons.play_circle_fill,
                                   color: isPlayingThis
                                       ? AppColors.accentGold
-                                      : AppColors.primaryGreen,
+                                      : primary,
                                   size: 34,
                                 ),
                                 onPressed: () => _playSurah(surah),
@@ -899,7 +905,7 @@ class _AudioScreenState extends State<AudioScreen> {
                           children: [
                             Text(
                               _formatDuration(_currentPosition),
-                              style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
+                              style: TextStyle(fontSize: 11, color: muted),
                             ),
                             Expanded(
                               child: Slider(
@@ -923,7 +929,7 @@ class _AudioScreenState extends State<AudioScreen> {
                             ),
                             Text(
                               _formatDuration(_totalDuration),
-                              style: const TextStyle(fontSize: 11, color: AppColors.mutedText),
+                              style: TextStyle(fontSize: 11, color: muted),
                             ),
                           ],
                         ),
@@ -942,7 +948,7 @@ class _AudioScreenState extends State<AudioScreen> {
                                   ),
                                   Text(
                                     SettingsService.resolveReciter(_playingReciterId ?? reciter.id).nameAr,
-                                    style: const TextStyle(color: AppColors.secondaryGreen, fontSize: 12),
+                                    style: TextStyle(color: secondary, fontSize: 12),
                                     softWrap: true,
                                   ),
                                 ],
@@ -958,14 +964,14 @@ class _AudioScreenState extends State<AudioScreen> {
                                     minimumSize: Size.zero,
                                   ),
                                   onPressed: _showSpeedDialog,
-                                  child: Text('${_playbackSpeed}x', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.secondaryGreen)),
+                                  child: Text('${_playbackSpeed}x', style: TextStyle(fontWeight: FontWeight.bold, color: secondary)),
                                 ),
                                 // Repeat toggle
                                 IconButton(
                                   icon: Icon(
                                     _repeatSingle ? Icons.repeat_one : Icons.repeat,
                                     size: 20,
-                                    color: _repeatSingle ? AppColors.accentGold : AppColors.mutedText,
+                                    color: _repeatSingle ? AppColors.accentGold : muted,
                                   ),
                                   tooltip: _repeatSingle ? 'تكرار السورة مفعل' : 'تكرار السورة معطل',
                                   onPressed: () {
@@ -982,15 +988,15 @@ class _AudioScreenState extends State<AudioScreen> {
                                 IconButton(
                                   tooltip: 'تشغيل أو إيقاف الصوت',
                                   icon: _isBuffering
-                                      ? const SizedBox(
+                                      ? SizedBox(
                                           width: 24,
                                           height: 24,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryGreen),
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: primary),
                                         )
                                       : Icon(
                                           _audioPlayer.playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
                                           size: 40,
-                                          color: AppColors.primaryGreen,
+                                          color: primary,
                                         ),
                                   onPressed: _isBuffering ? null : _toggleLoadedSurah,
                                 ),
