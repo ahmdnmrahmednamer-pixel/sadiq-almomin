@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/prophet_story.dart';
 import '../../core/services/audio_download_service.dart';
 import '../../core/services/islamic_audio_service.dart';
+import '../../core/services/downloaded_adhan_assignments.dart';
 import '../../core/services/settings_service.dart';
 import '../../core/services/stories_service.dart';
 import '../../core/theme/app_theme.dart';
@@ -43,9 +44,16 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
       builder: (ctx) => Directionality(
         textDirection: SettingsService.instance.textDirection,
         child: AlertDialog(
-          title: const Text('حذف الذكر المحمل'),
+          scrollable: true,
+          title: Text(
+            track.type == IslamicAudioType.adhan
+                ? 'حذف تسجيل الأذان المحمّل'
+                : 'حذف الذكر المحمل',
+          ),
           content: Text(
-            'هل تريد حذف ملف "${track.title}" من ذاكرة الهاتف للرجوع إلى البث عبر الإنترنت؟',
+            DownloadedAdhanAssignments.isPinnedId(track.id)
+                ? 'هل تريد حذف ملف "${track.title}" من ذاكرة الهاتف؟ سنحتفظ به إذا كان معيّناً أو قد تستخدمه جدولة أذان سابقة. غيّر الصوت وطبّق إعدادات التنبيهات أولاً.'
+                : 'هل تريد حذف ملف "${track.title}" من ذاكرة الهاتف للرجوع إلى البث عبر الإنترنت؟',
           ),
           actions: [
             TextButton(
@@ -66,12 +74,26 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      final deleted = await IslamicAudioService.instance.deleteDownloadedTrack(track.id);
+      final deleted = await IslamicAudioService.instance.deleteDownloadedTrack(
+        track.id,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(deleted ? 'تم حذف ${track.title} بنجاح' : 'تعذر حذف الملف. حاول مرة أخرى.', textAlign: TextAlign.right),
-          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
+          content: Text(
+            deleted
+                ? 'تم حذف ${track.title} بنجاح'
+                : (IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                      ? IslamicAudioService.instance.lastDeletionError!
+                      : 'تعذر حذف الملف. حاول مرة أخرى.'),
+            textAlign: TextAlign.right,
+            style: IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                ? TextStyle(color: Theme.of(context).colorScheme.onInverseSurface)
+                : null,
+          ),
+          backgroundColor: deleted ? AppColors.primaryGreen :
+              IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                  ? Theme.of(context).colorScheme.inverseSurface : Colors.redAccent,
         ),
       );
     }
@@ -169,7 +191,13 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
           scrollable: true,
           title: const Text('حذف جميع الملفات الصوتية المحملة'),
           content: Text(
-            'هل أنت متأكد من حذف كافة السور والقصص والأذكار${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' وملفات التسجيل القديمة' : ''}${IslamicAudioService.instance.unavailableRecordingCount > 0 ? ' وملفات التسجيل غير المتاحة للتشغيل' : ''}${IslamicAudioService.instance.unverifiedRecordingCount > 0 ? ' وملفات الصوت التي لم تجتز فحص المطابقة' : ''} المحملة وتحرير كامل المساحة على الهاتف؟\n${IslamicAudioService.instance.unavailableRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل غير المتاحة${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' أو القديمة' : ''} بعد حذفها.)' : IslamicAudioService.instance.retiredRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل القديمة بعد حذفها.)' : IslamicAudioService.instance.unverifiedRecordingCount > 0 ? '(يمكنك محاولة إعادة تحميل الملفات المتاحة من مكتبة الصوتيات.)' : '(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).'}',
+            'هل أنت متأكد من حذف كافة السور والقصص والأذكار${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' وملفات التسجيل القديمة' : ''}${IslamicAudioService.instance.unavailableRecordingCount > 0 ? ' وملفات التسجيل غير المتاحة للتشغيل' : ''}${IslamicAudioService.instance.unverifiedRecordingCount > 0 ? ' وملفات الصوت التي لم تجتز فحص المطابقة' : ''} المحملة وتحرير المساحة المتاحة على الهاتف؟\nسيبقى تسجيل الأذان المعيّن أو الذي قد تستخدمه جدولة سابقة. لحذفه، اختر صوتاً آخر وطبّق إعدادات التنبيهات أولاً.\n${IslamicAudioService.instance.unavailableRecordingCount > 0
+                ? '(قد لا تتمكن من استعادة ملفات التسجيل غير المتاحة${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' أو القديمة' : ''} بعد حذفها.)'
+                : IslamicAudioService.instance.retiredRecordingCount > 0
+                ? '(قد لا تتمكن من استعادة ملفات التسجيل القديمة بعد حذفها.)'
+                : IslamicAudioService.instance.unverifiedRecordingCount > 0
+                ? '(يمكنك محاولة إعادة تحميل الملفات المتاحة من مكتبة الصوتيات.)'
+                : '(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).'}',
           ),
           actions: [
             TextButton(
@@ -190,15 +218,30 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      final quranDeleted = await AudioDownloadService.instance.deleteAllDownloads();
-      final storiesDeleted = await StoriesService.instance.deleteAllDownloadedStories();
-      final adhkarDeleted = await IslamicAudioService.instance.deleteAllDownloadedTracks();
+      final quranDeleted = await AudioDownloadService.instance
+          .deleteAllDownloads();
+      final storiesDeleted = await StoriesService.instance
+          .deleteAllDownloadedStories();
+      final adhkarDeleted = await IslamicAudioService.instance
+          .deleteAllDownloadedTracks();
       final deleted = quranDeleted && storiesDeleted && adhkarDeleted;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(deleted ? 'تم حذف جميع التنزيلات بنجاح' : 'تعذر حذف بعض الملفات. حاول مرة أخرى.', textAlign: TextAlign.right),
-          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
+          content: Text(
+            deleted
+                ? 'تم حذف جميع التنزيلات بنجاح'
+                : (IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                      ? 'لم تُحذف كل الملفات. ${IslamicAudioService.instance.lastDeletionError!}'
+                      : 'تعذر حذف بعض الملفات. حاول مرة أخرى.'),
+            textAlign: TextAlign.right,
+            style: IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                ? TextStyle(color: Theme.of(context).colorScheme.onInverseSurface)
+                : null,
+          ),
+          backgroundColor: deleted ? AppColors.primaryGreen :
+              IslamicAudioService.instance.deletionBlockedByAdhanProtection
+                  ? Theme.of(context).colorScheme.inverseSurface : Colors.redAccent,
         ),
       );
     }
