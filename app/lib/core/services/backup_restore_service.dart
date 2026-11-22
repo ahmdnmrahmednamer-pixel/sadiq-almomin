@@ -280,11 +280,7 @@ class BackupRestoreService {
       'voluntary_fasting': {
         'suhoor_reminder':
             prefs.getBool('voluntary_fast_suhoor_reminder') ?? true,
-        'date_logs': prefs.getStringList('vfast_date_logs') ?? const <String>[],
-        'counts': {
-          for (final ft in VoluntaryFastingService.fastTypes)
-            ft.id: prefs.getInt('vfast_count_${ft.id}') ?? 0,
-        },
+        ...await VoluntaryFastingService.instance.exportProgress(),
       },
       'ramadan_tracker': {
         'fasted_days': prefs.getStringList('ramadan_fasted_days') ?? const <String>[],
@@ -1073,16 +1069,9 @@ class BackupRestoreService {
           if (vf['suhoor_reminder'] is bool) {
             await _confirmPreferenceWrite(() => prefs.setBool('voluntary_fast_suhoor_reminder', vf['suhoor_reminder'] as bool));
           }
-          if (vf['date_logs'] is List) {
-            await restoreOrMergeList('vfast_date_logs', vf['date_logs'] as List);
-          }
-          if (vf['counts'] is Map) {
-            final countsMap = vf['counts'] as Map;
-            for (final entry in countsMap.entries) {
-              if (entry.value is int) {
-                await restoreOrMaxInt('vfast_count_${entry.key}', entry.value as int);
-              }
-            }
+          if (!await VoluntaryFastingService.instance
+              .restoreProgress(vf, replaceMode: replaceMode)) {
+            throw const _BackupPreferenceWriteFailure();
           }
         }
         if (extData['ramadan_tracker'] is Map) {
