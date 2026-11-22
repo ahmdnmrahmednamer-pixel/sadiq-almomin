@@ -80,6 +80,13 @@ void main() {
 
       final r1 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'waseet');
       final r2 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'al_durrah');
+      expect(ids.contains('shaarawi'), isFalse);
+      expect(ids.contains('almukhtasar_audio'), isFalse);
+      final r3 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'ibn_kathir');
+      expect(r3.editionId, 'ibn_kathir');
+      expect(r3.editionName, contains('ابن كثير'));
+      expect(r3.hasSourceText, isTrue);
+      expect(r3.tafsirText, isNot('تعذر قراءة حزمة التفسير المضمّنة. لا يُعرض نص بديل.'));
       for (final result in [r1, r2]) {
         expect(result.hasSourceText, isFalse);
         expect(result.tafsirText, 'تعذر قراءة حزمة التفسير المضمّنة. لا يُعرض نص بديل.');

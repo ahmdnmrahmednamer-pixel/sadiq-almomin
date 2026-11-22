@@ -47,6 +47,13 @@ void main(){
   final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
   expect(result.tafsirText,'VERBATIM_REMOTE_TEXT');expect(result.hasSourceText,isTrue);expect(result.sourceUrl,endsWith('/ayah/1:1/ar.qurtubi'));
  });
+ test('remote tafsir client keeps exact source identity and URL on the fallback path',()async{
+  // getTafsir is bundled-first by reviewed design; the live client remains the
+  // fallback for unbundled sources, so its identity is tested directly.
+  final client=AlQuranCloudTafsirClient(dio:Dio(BaseOptions(baseUrl:'https://api.alquran.cloud/v1'))..httpClientAdapter=FixtureAdapter({'surah':{'number':1},'numberInSurah':1,'edition':{'identifier':'ar.qurtubi','type':'tafsir'},'text':'VERBATIM_REMOTE_TEXT'}));
+  final source=await client.fetch(editionId:'ar.qurtubi',surah:1,ayah:1);
+  expect(source.text,'VERBATIM_REMOTE_TEXT');expect(source.sourceUrl,endsWith('/ayah/1:1/ar.qurtubi'));
+ });
  test('source failure never falls back to another book',()async{
   TafsirService.setBundledSourceForTesting(FakeBundled({}));
   final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
@@ -69,7 +76,7 @@ void main(){
    for(final family in ['ArabicTest','Amiri','UthmanicHafs','NotoNaskhArabic'])await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(await File(font).readAsBytes())))).load();
    final icons=Platform.environment['READING_TEST_ICON_FONT'];if(icons!=null)await (FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(await File(icons).readAsBytes())))).load();
   });
-  await t.pumpWidget(RepaintBoundary(key:key,child:MaterialApp(debugShowCheckedModeBanner:false,theme:ThemeData(fontFamily:'ArabicTest'),home:Scaffold(body:TafsirViewerSheet(surah:surah,initialAyah:ayah)))));for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}expect(t.widget<AppDropdownField<String>>(find.byType(AppDropdownField<String>).first).value,'qurtubi');expect(find.text('VERBATIM_LOCAL_TEXT'),findsNothing);expect(t.takeException(),isNull);
+  await t.pumpWidget(RepaintBoundary(key:key,child:MaterialApp(debugShowCheckedModeBanner:false,theme:ThemeData(fontFamily:'ArabicTest'),home:Scaffold(body:TafsirViewerSheet(surah:surah,initialAyah:ayah)))));for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}expect(t.widget<AppDropdownField<String>>(find.byType(AppDropdownField<String>).first).value,'qurtubi');expect(find.bySemanticsLabel(RegExp('الجامع لأحكام القرآن \\(القرطبي\\)')),findsWidgets);expect(find.text('VERBATIM_LOCAL_TEXT'),findsNothing);expect(t.takeException(),isNull);
   if(font!=null)await t.runAsync(()async{final image=await (key.currentContext!.findRenderObject() as RenderRepaintBoundary).toImage();final bytes=await image.toByteData(format:ui.ImageByteFormat.png);await File('/tmp/tafsir-preferred-source-safe.png').writeAsBytes(bytes!.buffer.asUint8List());});
  });
 }
