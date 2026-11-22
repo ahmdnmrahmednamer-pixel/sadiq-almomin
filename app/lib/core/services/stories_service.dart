@@ -257,16 +257,16 @@ class StoriesService extends ChangeNotifier {
   }
 
   Future<void> deleteAllDownloadedStories() async {
-    for (final path in _downloadedLocalPaths.values.toList()) {
+    for (final entry in _downloadedLocalPaths.entries.toList()) {
       try {
-        final file = File(path);
+        final file = File(entry.value);
         if (file.existsSync()) {
           file.deleteSync();
         }
+        _downloadedLocalPaths.remove(entry.key);
+        _downloadedFileSizes.remove(entry.key);
       } catch (_) {}
     }
-    _downloadedLocalPaths.clear();
-    _downloadedFileSizes.clear();
     notifyListeners();
   }
 
