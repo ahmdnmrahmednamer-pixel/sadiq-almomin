@@ -19,6 +19,7 @@ import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/services/sunan_rawatib_service.dart';
 import 'package:almomin/core/services/tajweed_service.dart';
 import 'package:almomin/core/ui/portal_category_card.dart';
+import 'package:almomin/features/audio/audio_screen.dart';
 import 'package:almomin/features/khatma/khatma_screen.dart';
 import 'package:almomin/features/mushaf/memorization_screen.dart';
 import 'package:almomin/features/mushaf/mushaf_screen.dart';
@@ -418,7 +419,7 @@ void main() {
 
   group('Repair 10: Quran Hub Separation & Copy Discipline', () {
     testWidgets(
-      'QuranHubScreen exposes exact 9 independent cards with audio title التلاوات, no Uthmani claim, no count marketing, and all 3 new cards reachable inside viewport at 360x800 (1.0x and 2.0x)',
+      'QuranHubScreen exposes exact 10 independent cards including Quran listening, no Uthmani claim, no count marketing, and all cards reachable at 360x800 (1.0x and 2.0x)',
       (tester) async {
         final semantics = tester.ensureSemantics();
         tester.view.physicalSize = const Size(360, 800);
@@ -428,6 +429,7 @@ void main() {
 
         const expectedTitles = <String>[
           'القرآن المكتوب',
+          'القرآن المسموع',
           'العلامات المرجعية',
           'المحفّظ',
           'التجويد',
@@ -479,7 +481,8 @@ void main() {
             }
           }
 
-          expect(seenCards.length, equals(9));
+          expect(seenCards.length, equals(10));
+          expect(seenCards.containsKey('القرآن المسموع'), isTrue);
           expect(seenCards.containsKey('التلاوات'), isFalse);
           expect(seenCards.containsKey('المحفّظ'), isTrue);
           expect(seenCards.containsKey('التجويد'), isTrue);
@@ -494,7 +497,7 @@ void main() {
     );
 
     testWidgets(
-      'Actual appRouter destination isolation and Back return for all 3 new independent entries (/memorization, /tajweed, /notes) via BOTH tap and SemanticsAction.tap',
+      'Actual appRouter destination isolation and Back return for listening and 3 existing independent entries (/audio, /memorization, /tajweed, /notes) via BOTH tap and SemanticsAction.tap',
       (tester) async {
         final semantics = tester.ensureSemantics();
         tester.view.physicalSize = const Size(360, 800);
@@ -507,6 +510,7 @@ void main() {
         await tester.pumpAndSettle();
 
         const newEntries = <(String, Type)>[
+          ('القرآن المسموع', AudioScreen),
           ('المحفّظ', MemorizationScreen),
           ('التجويد', TajweedScreen),
           ('خواطري', QuranNotesScreen),
@@ -557,7 +561,7 @@ void main() {
     );
 
     testWidgets(
-      'Dispatch-only probeRouter: remaining 6 QuranHubScreen entries dispatch exact routes via BOTH tap and SemanticsAction.tap at 360x800 (1.0x and 2.0x)',
+      'Dispatch-only probeRouter: remaining 7 QuranHubScreen entries dispatch exact routes via BOTH tap and SemanticsAction.tap at 360x800 (1.0x and 2.0x)',
       (tester) async {
         final semantics = tester.ensureSemantics();
         tester.view.physicalSize = const Size(360, 800);
@@ -567,6 +571,7 @@ void main() {
 
         const remainingRouteChecks = <(String, String)>[
           ('القرآن المكتوب', '/mushaf-reader'),
+          ('القرآن المسموع', '/audio'),
           ('العلامات المرجعية', '/mushaf-reader?tab=bookmarks'),
           ('البحث القرآني', '/search'),
           ('التفاسير', '/comparative-tafsir'),
