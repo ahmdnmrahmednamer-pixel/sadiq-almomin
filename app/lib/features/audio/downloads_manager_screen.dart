@@ -65,12 +65,12 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      await IslamicAudioService.instance.deleteDownloadedTrack(track.id);
+      final deleted = await IslamicAudioService.instance.deleteDownloadedTrack(track.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حذف ${track.title} بنجاح', textAlign: TextAlign.right),
-          backgroundColor: AppColors.primaryGreen,
+          content: Text(deleted ? 'تم حذف ${track.title} بنجاح' : 'تعذر حذف الملف. حاول مرة أخرى.', textAlign: TextAlign.right),
+          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
         ),
       );
     }
@@ -105,15 +105,15 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      await AudioDownloadService.instance.deleteDownloadedSurah(
+      final deleted = await AudioDownloadService.instance.deleteDownloadedSurah(
         info.reciterId,
         info.surahId,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حذف ${info.surahName} وتحرير المساحة بنجاح', textAlign: TextAlign.right),
-          backgroundColor: AppColors.primaryGreen,
+          content: Text(deleted ? 'تم حذف ${info.surahName} وتحرير المساحة بنجاح' : 'تعذر حذف الملف. حاول مرة أخرى.', textAlign: TextAlign.right),
+          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
         ),
       );
     }
@@ -148,12 +148,12 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      await StoriesService.instance.deleteDownloadedStory(story.id);
+      final deleted = await StoriesService.instance.deleteDownloadedStory(story.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم حذف ${story.characterName} بنجاح', textAlign: TextAlign.right),
-          backgroundColor: AppColors.primaryGreen,
+          content: Text(deleted ? 'تم حذف ${story.characterName} بنجاح' : 'تعذر حذف الملف. حاول مرة أخرى.', textAlign: TextAlign.right),
+          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
         ),
       );
     }
