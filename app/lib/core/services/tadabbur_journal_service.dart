@@ -58,6 +58,7 @@ enum JournalOperationStatus {
   persisted,
   refusedUnreadable,
   writeUnconfirmed,
+  refusedAmbiguousId,
 }
 
 @immutable
@@ -454,6 +455,14 @@ class TadabburJournalService extends ChangeNotifier {
       if (!_isReadable) {
         return const JournalOperationResult(
           status: JournalOperationStatus.refusedUnreadable,
+          livePublished: false,
+        );
+      }
+
+      // Legacy duplicate IDs cannot identify one note. Keep all notes intact.
+      if (_entries.where((entry) => entry.id == id).take(2).length > 1) {
+        return const JournalOperationResult(
+          status: JournalOperationStatus.refusedAmbiguousId,
           livePublished: false,
         );
       }
