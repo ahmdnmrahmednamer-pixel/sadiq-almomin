@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
@@ -34,7 +33,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
   String _fatwaQuery = '';
   bool _favoritesOnly = false;
   String? _playingId;
-  bool _isBuffering = false;
   ScreenStructureMode _layoutMode = ScreenStructureMode.classic;
   bool _showHubOverview = false;
   final Set<String> _savingFavorites = {};
@@ -92,9 +90,9 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 4,
+      length: 3,
       vsync: this,
-      initialIndex: widget.initialTabIndex.clamp(0, 3),
+      initialIndex: widget.initialTabIndex.clamp(0, 2),
     );
     _service.init();
     _layoutMode = ScreenStructureMode.fromId(SettingsService.instance.screenLayoutMode);
@@ -111,14 +109,12 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
     required String title,
     required String primaryUrl,
     List<String> fallbackUrls = const [],
-    bool isLiveStream = false,
   }) async {
     if (_playingId == id && _audioService.player.playing) {
       await _audioService.stop();
       if (mounted) {
         setState(() {
           _playingId = null;
-          _isBuffering = false;
         });
       }
       return;
@@ -126,18 +122,15 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
 
     setState(() {
       _playingId = id;
-      _isBuffering = true;
     });
 
     final ok = await _audioService.playResilient(
       primaryUrl,
       fallbackUrls: fallbackUrls,
-      isLiveStream: isLiveStream,
     );
 
     if (!mounted) return;
     setState(() {
-      _isBuffering = false;
       if (!ok) {
         _playingId = null;
       }
@@ -174,11 +167,12 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
               Text('🇪🇬 ', style: TextStyle(fontSize: 20)),
               Expanded(
                 child: Text(
-                  'واحة التراث المصري وإذاعة القاهرة',
+                  'التراث المصري',
                   style: TextStyle(
                     fontFamily: 'Amiri',
                     fontWeight: FontWeight.bold,
                     fontSize: 19,
+                    color: Colors.white,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -227,10 +221,6 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
             ),
             tabs: const [
               Tab(
-                icon: Icon(Icons.radio_rounded, size: 20),
-                text: 'إذاعة القرآن الكريم',
-              ),
-              Tab(
                 icon: Icon(Icons.music_note_rounded, size: 20),
                 text: 'الابتهالات والشعراوي',
               ),
@@ -276,232 +266,12 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
             return TabBarView(
               controller: _tabController,
               children: [
-                _buildRadioTab(isDark),
                 _buildIbtihalatAndShaarawiTab(isDark),
                 _buildHistoricMosquesTab(isDark),
                 _buildDarAlIftaTab(isDark),
               ],
             );
           },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRadioTab(bool isDark) {
-    final stations = _favoritesOnly
-        ? _service.radioStations
-            .where((s) => _service.isFavorite(s.id))
-            .toList()
-        : _service.radioStations;
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        if (_failedFavorite != null) _favoriteFailure(),
-        _buildHeroBanner(
-          title: 'إذاعة القرآن الكريم من القاهرة',
-          subtitle:
-              'منذ ٢٥ مارس ١٩٦٤م — صوت مدرسة التلاوة المصرية الأصيلة وبرامج كبار العلماء والمبتهلين على مدار الساعة',
-          icon: Icons.radio_rounded,
-        ),
-        const SizedBox(height: 16),
-        if (stations.isEmpty)
-          _buildEmptyState('لا توجد إذاعات مفضلة حالياً')
-        else
-          ...stations.map((station) => _buildRadioStationCard(station, isDark)),
-      ],
-    );
-  }
-
-  Widget _buildRadioStationCard(EgyptianRadioStation station, bool isDark) {
-    final isPlaying = _playingId == station.id;
-    final isCairoUnsupported = station.id == 'eqr_cairo_main' &&
-        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isPlaying
-              ? AppColors.accentGold
-              : AppColors.primaryGreen.withValues(alpha: 0.2),
-          width: isPlaying ? 2 : 1,
-        ),
-      ),
-      color: isDark ? AppTheme.darkCard : Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: station.accentColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    station.icon,
-                    color: station.accentColor,
-                    size: 26,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        station.name,
-                        style: const TextStyle(
-                          fontFamily: 'Amiri',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${station.frequencyLabel} • ${station.broadcaster}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _favoriteButton(station.id, station.name),
-                Semantics(
-                  label: isCairoUnsupported
-                      ? '${station.name} غير متاح على أجهزة أندرويد لعدم التشفير'
-                      : (isPlaying ? 'إيقاف ${station.name}' : 'استماع ${station.name}'),
-                  button: !isCairoUnsupported,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isCairoUnsupported
-                          ? Colors.grey.shade400
-                          : (isPlaying ? AppColors.accentGold : AppColors.primaryGreen),
-                      foregroundColor: isCairoUnsupported
-                          ? Colors.grey.shade800
-                          : (isPlaying ? Colors.black87 : Colors.white),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: isCairoUnsupported
-                        ? null
-                        : () => _toggleAudioPlay(
-                              id: station.id,
-                              title: station.name,
-                              primaryUrl: station.streamUrl,
-                              fallbackUrls: station.fallbackStreamUrls,
-                              isLiveStream: true,
-                            ),
-                    icon: isCairoUnsupported
-                        ? const Icon(Icons.block_rounded, size: 16)
-                        : (_isBuffering && isPlaying
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.black87,
-                                ),
-                              )
-                            : Icon(
-                                isPlaying
-                                    ? Icons.stop_rounded
-                                    : Icons.play_arrow_rounded,
-                              )),
-                    label: Text(
-                      isCairoUnsupported
-                          ? 'غير مدعوم على أندرويد'
-                          : (isPlaying ? 'إيقاف' : 'استماع'),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              station.description,
-              style: TextStyle(
-                fontSize: 13.5,
-                height: 1.5,
-                color: isDark ? Colors.white70 : Colors.black87,
-              ),
-            ),
-            if (station.dailySchedule.any((s) => s.trim().isNotEmpty)) ...[
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 10),
-              const Text(
-                'محتويات البث والتسجيلات:',
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: AppColors.accentGold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ...station.dailySchedule
-                  .where((s) => s.trim().isNotEmpty)
-                  .map(
-                (slot) {
-                  final parts = slot.split(' — ');
-                  final timeText = parts.isNotEmpty ? parts.first : '';
-                  final progText =
-                      parts.length > 1 ? parts.sublist(1).join(' — ') : slot;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (parts.length > 1) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.primaryGreen.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              timeText,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
-                          child: Text(
-                            progText,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: isDark ? Colors.white70 : Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ],
         ),
       ),
     );
