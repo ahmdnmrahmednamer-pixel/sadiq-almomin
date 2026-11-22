@@ -363,7 +363,7 @@ class AudioDownloadService extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteAllDownloads() async {
+  Future<bool> deleteAllDownloads() async {
     for (final info in _downloadedSurahs.values.toList()) {
       try {
         final file = File(info.localPath);
@@ -374,6 +374,7 @@ class AudioDownloadService extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
+    return _downloadedSurahs.isEmpty;
   }
 
   int get totalStorageUsedBytes {
