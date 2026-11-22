@@ -27,7 +27,7 @@ void main() {
       expect(find.text('رياض العلم'), findsOneWidget);
 
       // Check Portal Category Cards
-      for (final title in ['المكتبة الشاملة', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'الإذاعة والتراث']) {
+      for (final title in ['المكتبة الشاملة', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'التراث المصري']) {
         expect(find.text(title), findsOneWidget);
       }
       expect(find.text('رياض الصالحين وصحيح الحديث'), findsNothing);
@@ -51,7 +51,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check Egyptian heritage banner
-      expect(find.textContaining('نسائم القاهرة'), findsOneWidget);
+      expect(find.textContaining('التراث المصري'), findsOneWidget);
 
       // Check key spiritual door tiles
       expect(find.textContaining('مجالس العلماء'), findsNothing);
@@ -68,7 +68,7 @@ void main() {
       expect(find.text('قبس من قصص الوحي اليوم'), findsOneWidget);
     });
 
-    testWidgets('Home radio banner has scoped button semantics with truthful concise labels and excluded decorative icons', (tester) async {
+    testWidgets('Home exposes heritage semantics but no live-radio banner', (tester) async {
       await tester.binding.setSurfaceSize(const Size(800, 1400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -84,37 +84,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Scoped radio banner Semantics assertion using dedicated Key
-      final radioSemanticsFinder = find.byKey(const Key('home_islamic_radio_banner_semantics'));
-      expect(radioSemanticsFinder, findsOneWidget);
-
-      final radioSemanticsWidget = tester.widget<Semantics>(radioSemanticsFinder);
-      expect(radioSemanticsWidget.properties.button, isTrue);
-      expect(radioSemanticsWidget.properties.label,
-          equals('إذاعات القرآن الكريم، بث مباشر وتلاوات كبار القراء'));
-      expect(radioSemanticsWidget.properties.hint, isNull,
-          reason: 'Farag simplified secondary spoken hints, not the destination label');
-
-      // Verify radio icon is explicitly excluded from semantics tree within the banner
-      final bannerRadioIconFinder = find.descendant(
-        of: radioSemanticsFinder,
-        matching: find.byIcon(Icons.radio_rounded),
-      );
-      expect(bannerRadioIconFinder, findsOneWidget);
-      final excludedRadioIcon = tester.widget<ExcludeSemantics>(
-        find.ancestor(of: bannerRadioIconFinder, matching: find.byType(ExcludeSemantics)).first,
-      );
-      expect(excludedRadioIcon.excluding, isTrue);
+      expect(find.byKey(const Key('home_islamic_radio_banner_semantics')), findsNothing);
+      expect(find.text('إذاعات القرآن الكريم'), findsNothing);
 
       // Verify heritage banner semantics
       final egyptSemantics = tester.widget<Semantics>(
         find.ancestor(
-          of: find.textContaining('نسائم القاهرة'),
+          of: find.textContaining('التراث المصري'),
           matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.button == true),
         ),
       );
       expect(egyptSemantics.properties.button, isTrue);
-      expect(egyptSemantics.properties.label, contains('نسائم القاهرة'));
+      expect(egyptSemantics.properties.label, contains('التراث المصري'));
       expect(egyptSemantics.properties.hint, isNull);
 
       // Verify decorative flag emoji is wrapped in ExcludeSemantics
@@ -126,7 +107,7 @@ void main() {
       expect(excludeEmoji.excluding, isTrue);
     });
 
-    testWidgets('All 3 entry surfaces (home banner, drawer, directory) tap route to /islamic-radio', (tester) async {
+    testWidgets('All 3 retained heritage entry surfaces navigate without radio', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -145,9 +126,9 @@ void main() {
             ),
           ),
           GoRoute(
-            path: '/islamic-radio',
+            path: '/egypt-heritage',
             builder: (context, state) => const Scaffold(
-              body: Text('Target Islamic Radio Screen'),
+              body: Text('Target Heritage Screen'),
             ),
           ),
         ],
@@ -155,9 +136,9 @@ void main() {
       await tester.pumpWidget(MaterialApp.router(routerConfig: bannerRouter));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('إذاعات القرآن الكريم'));
+      await tester.tap(find.text('التراث المصري'));
       await tester.pumpAndSettle();
-      expect(find.text('Target Islamic Radio Screen'), findsOneWidget);
+      expect(find.text('Target Heritage Screen'), findsOneWidget);
 
       // 2. Navigation Drawer item tap test
       final drawerRouter = GoRouter(
@@ -171,9 +152,9 @@ void main() {
             ),
           ),
           GoRoute(
-            path: '/islamic-radio',
+            path: '/egypt-heritage',
             builder: (context, state) => const Scaffold(
-              body: Text('Target Islamic Radio Screen'),
+              body: Text('Target Heritage Screen'),
             ),
           ),
         ],
@@ -185,7 +166,7 @@ void main() {
       scaffoldState.openDrawer();
       await tester.pumpAndSettle();
 
-      final drawerItemFinder = find.text('الإذاعة');
+      final drawerItemFinder = find.text('التراث المصري');
       await tester.scrollUntilVisible(
         drawerItemFinder,
         200,
@@ -193,7 +174,7 @@ void main() {
       );
       await tester.tap(drawerItemFinder);
       await tester.pumpAndSettle();
-      expect(find.text('Target Islamic Radio Screen'), findsOneWidget);
+      expect(find.text('Target Heritage Screen'), findsOneWidget);
 
       // 3. Screen Directory item tap test (filtered by search to guarantee top position)
       final directoryRouter = GoRouter(
@@ -206,9 +187,9 @@ void main() {
             ),
           ),
           GoRoute(
-            path: '/islamic-radio',
+            path: '/egypt-heritage',
             builder: (context, state) => const Scaffold(
-              body: Text('Target Islamic Radio Screen'),
+              body: Text('Target Heritage Screen'),
             ),
           ),
         ],
@@ -216,14 +197,14 @@ void main() {
       await tester.pumpWidget(MaterialApp.router(routerConfig: directoryRouter));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextField), 'إذاعات');
+      await tester.enterText(find.byType(TextField), 'التراث');
       await tester.pumpAndSettle();
 
-      final dirItemFinder = find.text('إذاعات القرآن الكريم (MP3Quran)');
+      final dirItemFinder = find.text('التراث المصري');
       expect(dirItemFinder, findsOneWidget);
       await tester.tap(dirItemFinder);
       await tester.pumpAndSettle();
-      expect(find.text('Target Islamic Radio Screen'), findsOneWidget);
+      expect(find.text('Target Heritage Screen'), findsOneWidget);
     });
   });
 }
