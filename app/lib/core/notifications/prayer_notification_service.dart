@@ -10,6 +10,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../../app/router.dart';
 import '../services/islamic_audio_service.dart';
+import '../services/downloaded_adhan_sound_store.dart';
+import '../services/downloaded_adhan_assignments.dart';
 import '../services/prayer_service.dart';
 import '../services/adhan_sensor_gesture_service.dart';
 
@@ -996,6 +998,11 @@ class PrayerNotificationService extends ChangeNotifier {
   static String? adhanAssignmentUnavailableReason(String voiceKey) {
     final unavailable = IslamicAudioService.unavailableRecordingReason(voiceKey);
     if (unavailable != null) return unavailable;
+    if (DownloadedAdhanSoundStore.isPinnedAdhanId(voiceKey)) {
+      if (!DownloadedAdhanSoundStore.platformSupported) return 'تعيين التسجيل المحمّل لأذان التنبيه متاح على أندرويد فقط.';
+      return IslamicAudioService.instance.isDownloaded(voiceKey) ? null :
+          'حمّل التسجيل داخل التطبيق أولاً قبل تعيينه لأذان التنبيه.';
+    }
     const supported = {
       'adhan_makkah', 'adhan_madinah', 'adhan_fajr_madinah',
       'adhan_cairo', 'adhan_cairo_refaat', 'adhan_aqsa',
@@ -1006,6 +1013,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   void _requireAssignableAdhanRecording(String voiceKey) {
+    if (DownloadedAdhanSoundStore.isPinnedAdhanId(voiceKey)) return;
     final reason = adhanAssignmentUnavailableReason(voiceKey);
     if (reason != null) throw StateError(reason);
   }
@@ -1014,6 +1022,44 @@ class PrayerNotificationService extends ChangeNotifier {
     final reason = IslamicAudioService.unavailableRecordingReason(voiceKey);
     if (reason != null) throw StateError(reason);
   }
+
+  final Map<String, PreparedDownloadedAdhan> _preparedDownloadedSounds = {};
+  @visibleForTesting
+  Future<PreparedDownloadedAdhan> Function(String)?
+  downloadedAdhanPreparerForTesting;
+
+  Future<void> _prepareDownloadedAdhan(String id) async {
+    if (!DownloadedAdhanSoundStore.isPinnedAdhanId(id)) return;
+    final sound =
+        await (downloadedAdhanPreparerForTesting ??
+            DownloadedAdhanSoundStore.instance.prepare)(id);
+    final track = IslamicAudioService.allTracks.singleWhere(
+      (track) => track.id == id,
+    );
+    final expected = Uri(
+      scheme: 'content',
+      host: DownloadedAdhanSoundStore.authority,
+      pathSegments: [
+        'v1',
+        track.remoteGitBlobSha1!,
+        track.fileSizeBytes.toString(),
+      ],
+    );
+    if (sound.blobSha1 != track.remoteGitBlobSha1 ||
+        sound.sizeBytes != track.fileSizeBytes ||
+        sound.uri != expected.toString()) {
+      throw StateError(
+        'Native sound identity did not match canonical metadata',
+      );
+    }
+    _preparedDownloadedSounds[id] = sound;
+  }
+
+  PreparedDownloadedAdhan _downloadedSound(String id) =>
+      _preparedDownloadedSounds[id] ??
+      (throw StateError(
+        'Downloaded adhan was not prepared for native scheduling',
+      ));
 
   final SerialTaskQueue _adhanVoiceQueue = SerialTaskQueue();
   final Map<String, String> _confirmedPrayerVoices = {};
@@ -1027,53 +1073,77 @@ class PrayerNotificationService extends ChangeNotifier {
        _confirmedPrayerVoices[prayer] == voice);
 
   Future<void> _saveAdhanVoiceChoices(
-      Map<String, String> values, void Function() publish) =>
-      _adhanVoiceQueue.run(() async {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.reload();
-        final before = {for (final key in values.keys) key: prefs.getString(key)};
-        final changed = <String>[];
-        try {
-          for (final entry in values.entries) {
-            // Include a possibly failing write in rollback: a provider can
-            // write successfully before throwing or returning false.
-            changed.add(entry.key);
-            if (!await prefs.setString(entry.key, entry.value)) {
-              throw StateError('Adhan voice preference was not saved');
+    Map<String, String> values,
+    void Function() publish,
+  ) => DownloadedAdhanAssignments.protect(
+    values.values,
+    () => _adhanVoiceQueue.run(() async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      final before = {for (final key in values.keys) key: prefs.getString(key)};
+      return DownloadedAdhanAssignments.protect(
+        before.values.whereType<String>(),
+        () async {
+          for (final voice in values.values.toSet()) {
+            await _prepareDownloadedAdhan(voice);
+          }
+          await DownloadedAdhanAssignments.retain([
+            ...values.values,
+            ...before.values.whereType<String>(),
+          ]);
+          final changed = <String>[];
+          try {
+            for (final entry in values.entries) {
+              // Include a possibly failing write in rollback: a provider can
+              // write successfully before throwing or returning false.
+              changed.add(entry.key);
+              if (!await prefs.setString(entry.key, entry.value)) {
+                throw StateError('Adhan voice preference was not saved');
+              }
+            }
+            await prefs.reload();
+            if (values.entries.any(
+              (entry) => prefs.getString(entry.key) != entry.value,
+            )) {
+              throw StateError('Adhan voice preference readback did not match');
+            }
+          } catch (_) {
+            var restored = true;
+            for (final key in changed.reversed) {
+              try {
+                final old = before[key];
+                final ok = old == null
+                    ? await prefs.remove(key)
+                    : await prefs.setString(key, old);
+                if (!ok) restored = false;
+              } catch (_) {
+                restored = false;
+              }
+            }
+            await prefs.reload();
+            if (!restored) {
+              // A failed rollback must not leave a fabricated in-memory choice.
+              _readAdhanVoiceChoices(prefs);
+              _confirmedPrayerVoices.clear();
+              notifyListeners();
+            }
+            rethrow;
+          }
+          publish();
+          notifyListeners();
+          final data = PrayerService.instance.currentData;
+          if (_masterEnabled && data != null) {
+            final result = await schedulePrayerNotifications(data);
+            if (result != PrayerScheduleOutcome.applied) {
+              throw StateError(
+                'Adhan voice was saved but native scheduling was not confirmed',
+              );
             }
           }
-          await prefs.reload();
-          if (values.entries.any((entry) => prefs.getString(entry.key) != entry.value)) {
-            throw StateError('Adhan voice preference readback did not match');
-          }
-        } catch (_) {
-          var restored = true;
-          for (final key in changed.reversed) {
-            try {
-              final old = before[key];
-              final ok = old == null ? await prefs.remove(key) : await prefs.setString(key, old);
-              if (!ok) restored = false;
-            } catch (_) { restored = false; }
-          }
-          await prefs.reload();
-          if (!restored) {
-            // A failed rollback must not leave a fabricated in-memory choice.
-            _readAdhanVoiceChoices(prefs);
-            _confirmedPrayerVoices.clear();
-            notifyListeners();
-          }
-          rethrow;
-        }
-        publish();
-        notifyListeners();
-        final data = PrayerService.instance.currentData;
-        if (_masterEnabled && data != null) {
-          final result = await schedulePrayerNotifications(data);
-          if (result != PrayerScheduleOutcome.applied) {
-            throw StateError('Adhan voice was saved but native scheduling was not confirmed');
-          }
-        }
-      });
+        },
+      );
+    }),
+  );
 
   void _readAdhanVoiceChoices(SharedPreferences prefs) {
     _selectedAdhanVoice = prefs.getString('notif_selected_adhan') ?? 'adhan_makkah';
@@ -1450,47 +1520,58 @@ class PrayerNotificationService extends ChangeNotifier {
   /// Sends an immediate test notification to verify audio & notification display
   Future<void> sendTestNotification({String? customVoice}) async {
     final voice = customVoice ?? _selectedAdhanVoice;
-    final channelId = _resolveChannelIdForVoice(voice, isFajr: false);
+    final mode = _soundMode;
+    return DownloadedAdhanAssignments.protect([voice], () async {
+      if (mode == AdhanSoundMode.fullAdhan) {
+        await _prepareDownloadedAdhan(voice);
+      }
+      if (mode != _soundMode) {
+        throw StateError('Sound mode changed during preparation');
+      }
+      final channelId = _resolveChannelIdForVoice(voice, isFajr: false);
 
-    final androidDetails = AndroidNotificationDetails(
-      channelId,
-      'تجربة تنبيه الأذان',
-      channelDescription: 'فحص فوري لصوت التنبيه وقناة الأذان',
-      importance: Importance.max,
-      priority: Priority.high,
-      playSound: _soundMode != AdhanSoundMode.silent && _soundMode != AdhanSoundMode.vibrateOnly,
-      sound: _resolveSoundForVoice(voice, isFajr: false),
-      enableVibration: _soundMode != AdhanSoundMode.silent,
-      fullScreenIntent: true,
-      category: AndroidNotificationCategory.alarm,
-      actions: const [
-        AndroidNotificationAction(
-          'stop_adhan',
-          'إيقاف الأذان ⏹️',
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
-        AndroidNotificationAction(
-          'snooze_5',
-          'غفوة ٥ دقائق ⏰',
-          showsUserInterface: false,
-          cancelNotification: true,
-        ),
-        AndroidNotificationAction(
-          'open_interactive',
-          'فتح الشاشة التفاعلية 🕌',
-          showsUserInterface: true,
-        ),
-      ],
-    );
+      final androidDetails = AndroidNotificationDetails(
+        channelId,
+        'تجربة تنبيه الأذان',
+        channelDescription: 'فحص فوري لصوت التنبيه وقناة الأذان',
+        importance: Importance.max,
+        priority: Priority.high,
+        playSound:
+            _soundMode != AdhanSoundMode.silent &&
+            _soundMode != AdhanSoundMode.vibrateOnly,
+        sound: _resolveSoundForVoice(voice, isFajr: false),
+        enableVibration: _soundMode != AdhanSoundMode.silent,
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.alarm,
+        actions: const [
+          AndroidNotificationAction(
+            'stop_adhan',
+            'إيقاف الأذان ⏹️',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            'snooze_5',
+            'غفوة ٥ دقائق ⏰',
+            showsUserInterface: false,
+            cancelNotification: true,
+          ),
+          AndroidNotificationAction(
+            'open_interactive',
+            'فتح الشاشة التفاعلية 🕌',
+            showsUserInterface: true,
+          ),
+        ],
+      );
 
-    await _localNotifications.show(
-      999,
-      'تجربة نداء الأذان 🕌 — تطبيق صديق المؤمن',
-      'الله أكبر، الله أكبر.. خدمة الأذان والتنبيهات تعمل بأعلى كفاءة وجاهزية',
-      NotificationDetails(android: androidDetails),
-      payload: 'type=adhan&prayer=الظهر',
-    );
+      await _localNotifications.show(
+        999,
+        'تجربة نداء الأذان 🕌 — تطبيق صديق المؤمن',
+        'هذا طلب تجربة فوري. تحقق من الصوت على جهازك؛ لا يؤكد نجاح التنبيهات المجدولة أو عملها بعد إعادة التشغيل.',
+        NotificationDetails(android: androidDetails),
+        payload: 'type=adhan&prayer=الظهر',
+      );
+    });
   }
 
   /// Sends an immediate test Iqamah notification to verify alert sound
@@ -1558,6 +1639,10 @@ class PrayerNotificationService extends ChangeNotifier {
       return 'prayer_takbeerat_channel';
     }
 
+    if (DownloadedAdhanSoundStore.isPinnedAdhanId(voiceKey)) {
+      return _downloadedSound(voiceKey).channelId;
+    }
+
     switch (voiceKey) {
       case 'adhan_madinah':
       case 'adhan_fajr_madinah':
@@ -1589,6 +1674,10 @@ class PrayerNotificationService extends ChangeNotifier {
     }
     if (_soundMode == AdhanSoundMode.takbeerat) {
       return const RawResourceAndroidNotificationSound('takbeerat');
+    }
+
+    if (DownloadedAdhanSoundStore.isPinnedAdhanId(voiceKey)) {
+      return UriAndroidNotificationSound(_downloadedSound(voiceKey).uri);
     }
 
     switch (voiceKey) {
@@ -1688,6 +1777,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
   Future<PrayerScheduleOutcome> schedulePrayerNotifications(PrayerData data) async {
     final int generation = ++_derivedScheduleGeneration;
+    final soundModeSnapshot = _soundMode;
     _confirmedPrayerVoices.clear();
     final voiceSnapshot = Map<String, String>.of(_prayerAdhanVoices);
     if (!_masterEnabled || !_isInitialized) return PrayerScheduleOutcome.skipped;
@@ -1695,6 +1785,7 @@ class PrayerNotificationService extends ChangeNotifier {
     return _serializeDerivedOp<PrayerScheduleOutcome>(() async {
       bool isStale() =>
           generation != _derivedScheduleGeneration ||
+          soundModeSnapshot != _soundMode ||
           !_masterEnabled ||
           !_isInitialized;
 
@@ -1714,6 +1805,35 @@ class PrayerNotificationService extends ChangeNotifier {
             notifyListeners();
             return PrayerScheduleOutcome.failed;
           }
+        }
+        final nativeVoices = <String>{};
+        if (_soundMode == AdhanSoundMode.fullAdhan) {
+          final checkTime = DateTime.now();
+          for (final prayer in data.notificationPrayers ?? data.prayers) {
+            if (!prayer.name.contains('الشروق') &&
+                isPrayerEnabled(prayer.name) &&
+                prayer.time.isAfter(checkTime) &&
+                !(isTemporarilyMuted && prayer.time.isBefore(_muteUntil!))) {
+              final voice =
+                  voiceSnapshot[prayer.name] ?? getPrayerVoice(prayer.name);
+              if (DownloadedAdhanSoundStore.isPinnedAdhanId(voice)) {
+                nativeVoices.add(voice);
+              }
+            }
+          }
+        }
+        try {
+          for (final voice in nativeVoices) {
+            await _prepareDownloadedAdhan(voice);
+            if (isStale()) return PrayerScheduleOutcome.superseded;
+          }
+          await DownloadedAdhanAssignments.retain(nativeVoices);
+          if (isStale()) return PrayerScheduleOutcome.superseded;
+        } catch (_) {
+          if (isStale()) return PrayerScheduleOutcome.superseded;
+          _prayerSchedulingError = 'تعذر تجهيز تسجيل الأذان المحمّل. لم نحذف الجدولة السابقة ولم نستبدله بصوت آخر. أعد تحميل التسجيل أو اختر صوتاً مرفقاً ثم أعد المحاولة.';
+          notifyListeners();
+          return PrayerScheduleOutcome.failed;
         }
         final cleared = await _cancelLocationDerivedRange(generation);
         if (isStale()) return PrayerScheduleOutcome.superseded;
@@ -1760,7 +1880,7 @@ class PrayerNotificationService extends ChangeNotifier {
             if (isStale()) return PrayerScheduleOutcome.superseded;
             final scheduledTz = tz.TZDateTime.from(prayer.time, tz.local);
             final isFajr = prayer.name.contains('الفجر');
-            final prayerVoice = getPrayerVoice(prayer.name);
+            final prayerVoice = voiceSnapshot[prayer.name] ?? getPrayerVoice(prayer.name);
             final channelId = _resolveChannelIdForVoice(prayerVoice, isFajr: isFajr);
             final sound = _resolveSoundForVoice(prayerVoice, isFajr: isFajr);
 
@@ -2004,6 +2124,7 @@ class PrayerNotificationService extends ChangeNotifier {
         // Schedule Morning, Evening, and Sleep Adhkar Reminders on dedicated IDs (801..803)
         final adhkarApplied = await scheduleAdhkarReminders();
         if (!cleared || !fridayApplied || !adhkarApplied) throw StateError('Fixed reminder schedule failed');
+        await DownloadedAdhanAssignments.confirmedPlan(nativeVoices);
         if (!isStale()) {
           _confirmedPrayerVoices.addAll(voiceSnapshot);
           _prayerSchedulingError = null;
