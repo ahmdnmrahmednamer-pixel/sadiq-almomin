@@ -25,6 +25,7 @@ class StoriesService extends ChangeNotifier {
   final Map<String, int> _downloadedFileSizes = {};
   final Map<String, double> _activeProgress = {};
   final Map<String, CancelToken> _cancelTokens = {};
+  final Set<String> _activeTempPaths = {};
   int _downloadAttemptCounter = 0;
   String? _lastReadStoryId;
   String? _storageDirPath;
@@ -77,6 +78,7 @@ class StoriesService extends ChangeNotifier {
     final entities = dir.listSync();
     for (final entity in entities) {
       if (entity is File && (entity.path.endsWith('.tmp') || entity.path.endsWith('.part'))) {
+        if (_activeTempPaths.contains(entity.path)) continue;
         try {
           entity.deleteSync();
         } catch (_) {}
@@ -134,6 +136,7 @@ class StoriesService extends ChangeNotifier {
 
     final cancelToken = CancelToken();
     _cancelTokens[id] = cancelToken;
+    _activeTempPaths.add(tempFilePath);
     _activeProgress[id] = 0.01;
     notifyListeners();
 
@@ -230,6 +233,8 @@ class StoriesService extends ChangeNotifier {
         }
       }
       return false;
+    } finally {
+      _activeTempPaths.remove(tempFilePath);
     }
   }
 
