@@ -8,6 +8,8 @@ environment:
   flutter: ">=3.19.0"
 
 dependencies:
+  downloaded_adhan_native:
+    path: packages/downloaded_adhan_native
   flutter:
     sdk: flutter
   flutter_localizations:
