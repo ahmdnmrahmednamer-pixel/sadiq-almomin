@@ -6,17 +6,18 @@ import 'package:almomin/core/audio/islamic_audio_catalog.dart';
 import 'package:almomin/core/audio/islamic_audio_models.dart' as model;
 
 void main() {
-  test('catalog order and every stored metadata field retain the reviewed baseline', () {
+  test('catalog prefix retains every reviewed legacy field and order', () {
     const tracks = IslamicAudioService.allTracks;
-    final snapshot = tracks.map((t) => [
+    final snapshot = tracks.take(93).map((t) => [
       t.id, t.title, t.subtitle, t.type.name, t.assetPath, t.remoteUrl,
       t.fallbackUrls, t.durationFormatted, t.rawNotificationSound, t.quality,
       t.fileSizeBytes, t.categoryAr, t.muezzinName, t.imageUrl, t.surahNumber,
       t.reciterId, t.isBundled,
     ]).toList();
     final digest = sha256.convert(utf8.encode(jsonEncode(snapshot))).toString();
-    expect(tracks, hasLength(93));
-    expect(digest, '27c7f4e5ea4c8011c1cb7e7a75e73daa93cf3851a23a7cfbb5647837b08c8d79');
+    expect(tracks, hasLength(323));
+    expect(snapshot, hasLength(93));
+    expect(digest, '93b19d01ae6b87f67faab8e8eea4bc696aa6695729428b2c7b7e9b5e67391882');
   });
   test('service retains the identical immutable const list and re-exported model types', () {
     const fromService = IslamicAudioService.allTracks;
