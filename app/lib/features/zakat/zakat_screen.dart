@@ -737,11 +737,12 @@ class _ZakatScreenState extends State<ZakatScreen> {
     required String label,
     required String hint,
   }) {
-    return TextField(
+    final useWrappingLabel = MediaQuery.textScalerOf(context).scale(12) > 15.6;
+    final field = TextField(
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(
-        labelText: label,
+        labelText: useWrappingLabel ? null : label,
         labelStyle: const TextStyle(fontSize: 12),
         hintText: hint,
         filled: true,
@@ -761,6 +762,17 @@ class _ZakatScreenState extends State<ZakatScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
       onChanged: (_) => _onValuesChanged(),
+    );
+    if (!useWrappingLabel) return field;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ExcludeSemantics(
+          child: Text(label, style: const TextStyle(fontSize: 12)),
+        ),
+        const SizedBox(height: 6),
+        Semantics(label: label, child: field),
+      ],
     );
   }
 
