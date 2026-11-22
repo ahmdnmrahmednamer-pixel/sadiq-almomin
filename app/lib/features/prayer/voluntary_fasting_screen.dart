@@ -44,6 +44,22 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (service.progressLoadFailed)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('تعذر تحميل سجل الصيام المحفوظ. لم نؤكد الأعداد المعروضة.'),
+                          TextButton(
+                            onPressed: () => service.init(forceReload: true),
+                            child: const Text('إعادة تحميل سجل الصيام'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 // Summary Banner
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -259,9 +275,16 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                     icon: Icon(
                                         Icons.remove_circle_outline_rounded,
                                         semanticLabel: 'إنقاص ${fast.title}'),
-                                    onPressed: count > 0
-                                        ? () =>
-                                            service.decrementFastCount(fast.id)
+                                    onPressed: count > 0 && !service.progressLoadFailed
+                                        ? () async {
+                                            final saved = await service
+                                                .decrementFastCount(fast.id);
+                                            if (!saved && context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text(
+                                                  'تعذر تأكيد حفظ تعديل الصيام. حاول مرة أخرى.')));
+                                            }
+                                          }
                                         : null,
                                   ),
                                   ElevatedButton.icon(
@@ -281,8 +304,14 @@ class _VoluntaryFastingScreenState extends State<VoluntaryFastingScreen> {
                                     label: Text('صمتُ هذا اليوم',
                                         semanticsLabel:
                                             'صمتُ هذا اليوم، ${fast.title}'),
-                                    onPressed: () =>
-                                        service.logFastedDay(fast.id),
+                                    onPressed: service.progressLoadFailed ? null : () async {
+                                      final saved = await service.logFastedDay(fast.id);
+                                      if (!saved && context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text(
+                                            'تعذر تأكيد حفظ تسجيل الصيام. حاول مرة أخرى.')));
+                                      }
+                                    },
                                   ),
                                 ],
                               ),
