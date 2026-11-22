@@ -230,3 +230,4 @@ class QuranHubScreen extends StatelessWidget {
     );
   }
 }
+
