@@ -462,7 +462,8 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -482,33 +483,36 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    style: const TextStyle(
-                      fontFamily: 'Amiri',
-                      fontSize: 17.5,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 6),
+                Text(
+                  item.title,
+                  style: const TextStyle(
+                    fontFamily: 'Amiri',
+                    fontSize: 17.5,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                _favoriteButton(item.id, item.title),
-                IconButton(
-                  tooltip: 'تشغيل أو إيقاف الصوت',
-                  icon: Icon(
-                    isPlaying
-                        ? Icons.stop_circle_rounded
-                        : Icons.play_circle_fill_rounded,
-                    color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
-                    size: 30,
-                  ),
-                  onPressed: () => _toggleAudioPlay(
-                    id: item.id,
-                    title: item.title,
-                    primaryUrl: item.audioUrl,
-                    fallbackUrls: item.fallbackAudioUrls,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _favoriteButton(item.id, item.title),
+                    IconButton(
+                      tooltip: 'تشغيل أو إيقاف الصوت',
+                      icon: Icon(
+                        isPlaying
+                            ? Icons.stop_circle_rounded
+                            : Icons.play_circle_fill_rounded,
+                        color: isPlaying ? AppColors.accentGold : AppColors.primaryGreen,
+                        size: 30,
+                      ),
+                      onPressed: () => _toggleAudioPlay(
+                        id: item.id,
+                        title: item.title,
+                        primaryUrl: item.audioUrl,
+                        fallbackUrls: item.fallbackAudioUrls,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
