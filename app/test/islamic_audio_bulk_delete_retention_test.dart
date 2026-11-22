@@ -35,7 +35,7 @@ void main() {
             : retained == 'current'
                 ? 4096
                 : 2048;
-        await service.deleteAllDownloadedTracks();
+        await expectBulkResult(service.deleteAllDownloadedTracks(), false);
         expect(service.totalDownloadedBytes, expected,
             reason: 'Failed current/retired deletion must retain its own size');
         expect(current.existsSync(), retained != 'retired');
@@ -46,13 +46,13 @@ void main() {
         expect(service.isDownloaded('adhkar_morning'), isFalse);
         expect(snapshots, [expected]);
         expect(Process.runSync('chmod', ['0755', dir.path]).exitCode, 0);
-        await service.deleteAllDownloadedTracks();
+        await expectBulkResult(service.deleteAllDownloadedTracks(), true);
         expect(current.existsSync(), isFalse);
         expect(retired.existsSync(), isFalse);
         expect(service.totalDownloadedBytes, 0);
         expect(service.getDownloadedTracks(), isEmpty);
         expect(snapshots, [expected, 0]);
-        await service.deleteAllDownloadedTracks();
+        await expectBulkResult(service.deleteAllDownloadedTracks(), true);
         expect(service.totalDownloadedBytes, 0);
       } finally {
         service.removeListener(listener);
@@ -62,4 +62,31 @@ void main() {
       }
     }
   });
+  test('zero-byte retired failure returns false despite zero retained bytes',
+      () async {
+    final service = IslamicAudioService.instance;
+    final dir = Directory.systemTemp.createTempSync('retired-zero-retention-');
+    final file = File('${dir.path}/adhan_hussary.mp3')..writeAsBytesSync([]);
+    try {
+      await service.scanDownloadsForTesting(dir);
+      expect(service.totalDownloadedBytes, 0);
+      expect(service.getDownloadedTracks(), isEmpty);
+      expect(Process.runSync('chmod', ['0555', dir.path]).exitCode, 0);
+      await expectBulkResult(service.deleteAllDownloadedTracks(), false);
+      expect(file.existsSync(), isTrue);
+      expect(service.totalDownloadedBytes, 0);
+      expect(Process.runSync('chmod', ['0755', dir.path]).exitCode, 0);
+      await expectBulkResult(service.deleteAllDownloadedTracks(), true);
+      expect(file.existsSync(), isFalse);
+      await expectBulkResult(service.deleteAllDownloadedTracks(), true);
+    } finally {
+      Process.runSync('chmod', ['0755', dir.path]);
+      await service.deleteAllDownloadedTracks();
+      dir.deleteSync(recursive: true);
+    }
+  });
+}
+
+Future<void> expectBulkResult(Future<bool> result, bool expected) async {
+  expect(await result, expected);
 }
