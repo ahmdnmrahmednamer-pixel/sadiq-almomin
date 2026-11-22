@@ -14,7 +14,6 @@ import 'package:almomin/core/services/prayer_tracker_service.dart';
 import 'package:almomin/core/services/settings_service.dart';
 import 'package:almomin/core/services/sunan_rawatib_service.dart';
 import 'package:almomin/core/ui/portal_category_card.dart';
-import 'package:almomin/features/audio/audio_screen.dart';
 import 'package:almomin/features/mushaf/comparative_tafsir_screen.dart';
 import 'package:almomin/features/mushaf/memorization_screen.dart';
 import 'package:almomin/features/mushaf/mushaf_screen.dart';
@@ -204,7 +203,7 @@ void main() {
 
       const quranTitles = [
         'القرآن المكتوب',
-        'التلاوات',
+        'العلامات المرجعية',
         'المحفّظ',
         'التجويد',
         'خواطري',
@@ -266,7 +265,7 @@ void main() {
 
       final realChecks = <(String, Type)>[
         ('القرآن المكتوب', MushafScreen),
-        ('التلاوات', AudioScreen),
+        ('العلامات المرجعية', MushafScreen),
         ('المحفّظ', MemorizationScreen),
         ('التجويد', TajweedScreen),
         ('خواطري', QuranNotesScreen),
@@ -281,9 +280,12 @@ void main() {
         final node = _findSingleCardSemanticNode(tester, title);
         expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
         tester.binding.pipelineOwner.semanticsOwner!.performAction(node.id, SemanticsAction.tap);
-        if (expectedScreen == QuranIrabScreen) {
-          // This test owns real-router dispatch, not live Jadwal transport.
-          // A pending source legitimately animates its loading indicator.
+        if (expectedScreen == QuranIrabScreen ||
+            title == 'العلامات المرجعية' ||
+            title == 'التفاسير') {
+          // This test owns real-router dispatch, not live Jadwal transport
+          // (Irab) or async bookmark/tafsir loading: a pending source
+          // legitimately animates its loading indicator.
           await tester.pump();
           await tester.pump(const Duration(seconds: 1));
         } else {
@@ -341,7 +343,7 @@ void main() {
 
         const routeChecks = <(String, String)>[
           ('القرآن المكتوب', '/mushaf-reader'),
-          ('التلاوات', '/audio'),
+          ('العلامات المرجعية', '/mushaf-reader?tab=bookmarks'),
           ('المحفّظ', '/memorization'),
           ('التجويد', '/tajweed'),
           ('خواطري', '/notes'),

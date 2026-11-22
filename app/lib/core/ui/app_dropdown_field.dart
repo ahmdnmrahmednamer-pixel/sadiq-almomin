@@ -59,9 +59,14 @@ class AppDropdownField<T> extends StatelessWidget {
     final selectedOption =
         uniqueOptions.where((o) => o.value == effectiveValue).firstOrNull;
 
+    // Single announcement owner: the native field semantics merge into one
+    // [tap,button] node. At normal scale the field's labelText carries the
+    // name; at large text the visible label lives above the field (excluded
+    // from semantics) and this container carries the name instead, so the
+    // name/value/action are announced exactly once at every scale.
     return Semantics(
       container: true,
-      label: '$label، الاختيار الحالي: ${selectedOption?.label ?? ""}',
+      label: largeText ? label : null,
       hint: 'قائمة منسدلة، انقر لاختيار عنصر آخر',
       child: Directionality(
         textDirection: SettingsService.instance.textDirection,
@@ -69,7 +74,9 @@ class AppDropdownField<T> extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (largeText) ...[
-              Text(label, style: Theme.of(context).textTheme.labelLarge),
+              ExcludeSemantics(
+                child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+              ),
               const SizedBox(height: 8),
             ],
             DropdownButtonFormField<T>(
