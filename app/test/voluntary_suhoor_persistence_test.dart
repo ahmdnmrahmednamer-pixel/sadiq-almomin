@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,7 +84,10 @@ void main() {
     await Future.wait([write, reload]);
     expect(service.getCountForType('white_days'), 1);
     expect(service.fastedDateLogs, ['2026-11-20|white_days']);
-    expect(store.values['flutter.vfast_date_logs'], ['2026-11-20|white_days']);
+    expect(
+        jsonDecode(store.values['flutter.voluntary_fast_progress_v1']
+            as String)['date_logs'],
+        ['2026-11-20|white_days']);
   });
   test('reload waits for an admitted undo', () async {
     await service.logFastedDay('white_days', date: DateTime(2026, 11, 20));
@@ -97,7 +101,10 @@ void main() {
     await Future.wait([undo, reload]);
     expect(service.getCountForType('white_days'), 0);
     expect(service.fastedDateLogs, isEmpty);
-    expect(store.values['flutter.vfast_date_logs'], isEmpty);
+    expect(
+        jsonDecode(store.values['flutter.voluntary_fast_progress_v1']
+            as String)['date_logs'],
+        isEmpty);
   });
   test('queued mixed types dates and undo preserve admitted order', () async {
     final gate = Completer<void>();
@@ -122,11 +129,11 @@ void main() {
   test('throwing count operation does not poison later preference work',
       () async {
     store.throwWrite = true;
-    final Future<void> failed =
+    final Future<bool> failed =
         service.logFastedDay('white_days', date: DateTime(2026, 11, 20));
-    await expectLater(failed, throwsStateError);
+    expect(await failed, isFalse);
     store.throwWrite = false;
-    // Count/log atomic durability is not asserted by this ordering test.
+    // A failed count write returns false without poisoning later work.
     final dynamic saved = await service.toggleSuhoorReminder(false);
     expect(saved, isTrue);
     expect(store.values['flutter.voluntary_fast_suhoor_reminder'], isFalse);
