@@ -776,6 +776,19 @@ class ShamelaEpubService {
   static Uri discoverEpubUri(String html, int bookId) =>
       Uri.parse(discoverEpubUrl(html, bookId));
 
+  // URL references encode file names; archive entry names remain decoded.
+  static String _decodeReferencePath(String reference) {
+    try {
+      return Uri.decodeComponent(reference.split('#').first);
+    } on ArgumentError {
+      throw const ShamelaEpubValidationException(
+          'Invalid percent-encoded EPUB path');
+    } on FormatException {
+      throw const ShamelaEpubValidationException(
+          'Invalid percent-encoded EPUB path');
+    }
+  }
+
   // ==============================================================================
   // EPUB Parser (Pure Static Method)
   // ==============================================================================
@@ -891,7 +904,14 @@ class ShamelaEpubService {
             'Illegal external href in manifest item: $href');
       }
 
-      final cleanHref = href.split('#').first;
+      final cleanHref = _decodeReferencePath(href);
+      if (cleanHref.startsWith('/') ||
+          cleanHref.contains('://') ||
+          cleanHref.startsWith('data:') ||
+          cleanHref.contains('\\')) {
+        throw ShamelaEpubSecurityException(
+            'Illegal archive href in manifest item: $href');
+      }
       final resolvedPath = p.posix.normalize(
         opfDir == '.' ? cleanHref : p.posix.join(opfDir, cleanHref),
       );
@@ -975,7 +995,13 @@ class ShamelaEpubService {
                     ?.getAttribute('src')
                     ?.trim() ??
                 '';
-            final cleanSrc = contentSrc.split('#').first;
+            String cleanSrc;
+            try {
+              cleanSrc = _decodeReferencePath(contentSrc);
+            } on ShamelaEpubValidationException {
+              // Optional malformed navigation must not discard readable pages.
+              cleanSrc = contentSrc.split('#').first;
+            }
             final resolvedSrc = p.posix.normalize(
               ncxDir == '.' ? cleanSrc : p.posix.join(ncxDir, cleanSrc),
             );
