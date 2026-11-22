@@ -78,14 +78,19 @@ class AudioDownloadService extends ChangeNotifier {
   String? _storageDirPath;
   int _downloadAttemptCounter = 0;
   bool _isInitialized = false;
+  Future<void>? _initializing;
 
   bool get isInitialized => _isInitialized;
   Map<String, DownloadedSurahInfo> get downloadedSurahs => Map.unmodifiable(_downloadedSurahs);
 
   static String _key(String reciterId, int surahId) => '${reciterId}_$surahId';
 
-  Future<void> init() async {
-    if (_isInitialized) return;
+  Future<void> init() {
+    if (_isInitialized) return Future<void>.value();
+    return _initializing ??= _initialize().whenComplete(() => _initializing = null);
+  }
+
+  Future<void> _initialize() async {
     try {
       final dir = await _getAudioDirectory();
       _storageDirPath = dir.path;
