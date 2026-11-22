@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 /// One voice with independent listening, assignment and download actions.
 class AdhanVoiceOption extends StatelessWidget {
   final String name;
+  final String? semanticName;
+  final String? sourceDetails;
+  final String? assignmentUnavailableMessage;
   final String? unavailableReason;
   final String? assignmentUnavailableReason;
   final bool selected;
@@ -16,6 +19,9 @@ class AdhanVoiceOption extends StatelessWidget {
   const AdhanVoiceOption({
     super.key,
     required this.name,
+    this.semanticName,
+    this.sourceDetails,
+    this.assignmentUnavailableMessage,
     this.unavailableReason,
     this.assignmentUnavailableReason,
     required this.selected,
@@ -37,16 +43,41 @@ class AdhanVoiceOption extends StatelessWidget {
           children: [
             Row(children: [
               Expanded(
-                  child: Text(name,
-                      style: const TextStyle(fontWeight: FontWeight.bold))),
+                  child: Semantics(
+                      label: semanticName,
+                    container: semanticName != null,
+                      excludeSemantics: semanticName != null,
+                      child: Text(name,
+                          style:
+                              const TextStyle(fontWeight: FontWeight.bold)))),
+              if (sourceDetails != null)
+                IconButton(
+                  tooltip: 'معلومات المصدر',
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('معلومات التسجيل'),
+                      content: SingleChildScrollView(
+                          child: SelectableText(sourceDetails!)),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('إغلاق'))
+                      ],
+                    ),
+                  ),
+                ),
               if (selected)
                 const Icon(Icons.check_circle_outline,
                     semanticLabel: 'المؤذن المعين'),
             ]),
             if (unavailableReason != null)
               Semantics(liveRegion: true, child: Text(unavailableReason!)),
-            if (unavailableReason == null && assignmentUnavailableReason != null)
-              Text(assignmentUnavailableReason!),
+            if (unavailableReason == null &&
+                assignmentUnavailableReason != null)
+              Text(
+                  assignmentUnavailableMessage ?? assignmentUnavailableReason!),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -58,13 +89,18 @@ class AdhanVoiceOption extends StatelessWidget {
                   label: Text(playing ? 'إيقاف' : 'استماع'),
                 ),
                 FilledButton.icon(
-                  onPressed: unavailableReason == null && assignmentUnavailableReason == null ? onAssign : null,
+                  onPressed: unavailableReason == null &&
+                          assignmentUnavailableReason == null
+                      ? onAssign
+                      : null,
                   icon: const Icon(Icons.check),
                   label: const Text('تعيين'),
                 ),
                 if (!downloaded)
                   TextButton.icon(
-                    onPressed: downloading || unavailableReason != null ? null : onDownload,
+                    onPressed: downloading || unavailableReason != null
+                        ? null
+                        : onDownload,
                     icon:
                         Icon(downloading ? Icons.downloading : Icons.download),
                     label: Text(downloading ? 'جار التحميل' : 'تحميل'),

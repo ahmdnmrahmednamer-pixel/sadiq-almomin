@@ -51,6 +51,12 @@ class IslamicAudioTrack {
   final String? imageUrl;
   final int? surahNumber;
   final String? reciterId;
+  /// Source metadata, not certification of recording identity or reuse rights.
+  final String? sourceUrl;
+  final String? sourceRevision;
+  final List<String> sourceFileNames;
+  /// Git blob digest of the pinned remote bytes, when supplied by the source.
+  final String? remoteGitBlobSha1;
 
   const IslamicAudioTrack({
     required this.id,
@@ -69,6 +75,10 @@ class IslamicAudioTrack {
     this.imageUrl,
     this.surahNumber,
     this.reciterId,
+    this.sourceUrl,
+    this.sourceRevision,
+    this.sourceFileNames = const [],
+    this.remoteGitBlobSha1,
   });
 
   bool get isBundled => assetPath != null;
