@@ -237,7 +237,7 @@ class _ShamelaOfflineReaderScreenState
                                           ? FontWeight.bold
                                           : FontWeight.normal,
                                       color: isCurrent
-                                          ? AppColors.primaryGreen
+                                          ? Theme.of(ctx).colorScheme.primary
                                           : null,
                                     ),
                                   ),
@@ -391,6 +391,7 @@ class _ShamelaOfflineReaderScreenState
   }
 
   Widget _buildPositionHeader(OfflineShamelaPage? page, bool isDark) {
+    final primary = Theme.of(context).colorScheme.primary;
     final buffer =
         StringBuffer('الصفحة ${_currentIndex + 1} من ${widget.book.pageCount}');
     if (page != null && page.volume != null && page.volume!.trim().isNotEmpty) {
@@ -411,16 +412,16 @@ class _ShamelaOfflineReaderScreenState
         color: isDark ? const Color(0xFF1E2822) : const Color(0xFFF1F6F2),
         border: Border(
           bottom: BorderSide(
-            color: AppColors.primaryGreen.withValues(alpha: 0.15),
+            color: primary.withValues(alpha: 0.15),
           ),
         ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.menu_book_rounded,
             size: 18,
-            color: AppColors.primaryGreen,
+            color: primary,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -429,10 +430,10 @@ class _ShamelaOfflineReaderScreenState
               label: positionLabel,
               child: Text(
                 positionLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primaryGreen,
+                  color: primary,
                 ),
               ),
             ),
@@ -443,12 +444,12 @@ class _ShamelaOfflineReaderScreenState
               color: Colors.green.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Text(
+            child: Text(
               'أوفلاين',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: AppColors.primaryGreen,
+                color: primary,
               ),
             ),
           ),
@@ -458,9 +459,10 @@ class _ShamelaOfflineReaderScreenState
   }
 
   Widget _buildPageBody(OfflineShamelaPage? page, bool isDark) {
+    final theme = Theme.of(context);
     if (_isRestoringPosition) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryGreen),
+      return Center(
+        child: CircularProgressIndicator(color: theme.colorScheme.primary),
       );
     }
 
@@ -492,11 +494,12 @@ class _ShamelaOfflineReaderScreenState
               Text(
                 page.title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Amiri',
-                  color: AppColors.accentGold,
+                  color: theme.extension<AlMominTokens>()?.goldText ??
+                      theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 14),
@@ -521,6 +524,7 @@ class _ShamelaOfflineReaderScreenState
   }
 
   Widget _buildBottomNav(bool isDark) {
+    final scheme = Theme.of(context).colorScheme;
     final canGoPrev = _currentIndex > 0;
     final canGoNext = _currentIndex < widget.book.pageCount - 1;
 
@@ -557,9 +561,9 @@ class _ShamelaOfflineReaderScreenState
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                foregroundColor: AppColors.primaryGreen,
+                foregroundColor: scheme.primary,
                 side: BorderSide(
-                  color: AppColors.primaryGreen.withValues(alpha: 0.35),
+                  color: scheme.primary.withValues(alpha: 0.35),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -585,12 +589,12 @@ class _ShamelaOfflineReaderScreenState
               ),
               child: Row(
                 children: [
-                  const Text(
+                  Text(
                     'ص:',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primaryGreen,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(width: 2),
@@ -621,9 +625,9 @@ class _ShamelaOfflineReaderScreenState
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.subdirectory_arrow_left_rounded,
-                      color: AppColors.primaryGreen,
+                      color: scheme.primary,
                       size: 18,
                     ),
                     tooltip: 'انتقال',
@@ -649,8 +653,8 @@ class _ShamelaOfflineReaderScreenState
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
-                foregroundColor: Colors.white,
+                backgroundColor: scheme.primary,
+                foregroundColor: scheme.onPrimary,
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
