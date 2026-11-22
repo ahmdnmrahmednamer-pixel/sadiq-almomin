@@ -659,6 +659,13 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> playTrack(IslamicAudioTrack track) async {
+    if (isHeldRecording(track)) {
+      if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
+      if (_legacyStopFailed) return;
+      _heldLegacyTrack = track;
+      notifyListeners();
+      return;
+    }
     final priorTrack = _currentTrack;
     _isOnlinePreview = false;
     final session = ++_onlinePreviewSession;
@@ -669,11 +676,6 @@ class IslamicAudioService extends ChangeNotifier {
         (focusToken == null || focusToken == focus.activePlaybackToken);
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (!isCurrent() || _legacyStopFailed) return;
-    if (isHeldRecording(track)) {
-      _heldLegacyTrack = track;
-      notifyListeners();
-      return;
-    }
     _heldLegacyTrack = null;
     if (_currentTrack?.id == track.id && _isPlaying) {
       await pause();
