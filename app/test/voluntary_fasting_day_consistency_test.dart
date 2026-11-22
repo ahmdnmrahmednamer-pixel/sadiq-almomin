@@ -17,8 +17,9 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(service.getCountForType('monday_thursday'), 1);
     expect(service.fastedDateLogs, hasLength(1));
-    expect(prefs.getInt('vfast_count_monday_thursday'), 1);
-    expect(prefs.getStringList('vfast_date_logs'), hasLength(1));
+    final saved = jsonDecode(prefs.getString('voluntary_fast_progress_v1')!);
+    expect(saved['counts']['monday_thursday'], 1);
+    expect(saved['date_logs'], hasLength(1));
   });
   test('one undo after repeated confirmation leaves no phantom days', () async {
     await service.logFastedDay('monday_thursday', date: date);
