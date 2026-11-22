@@ -189,14 +189,15 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
     );
 
     if (confirm == true) {
-      await AudioDownloadService.instance.deleteAllDownloads();
-      await StoriesService.instance.deleteAllDownloadedStories();
-      await IslamicAudioService.instance.deleteAllDownloadedTracks();
+      final quranDeleted = await AudioDownloadService.instance.deleteAllDownloads();
+      final storiesDeleted = await StoriesService.instance.deleteAllDownloadedStories();
+      final adhkarDeleted = await IslamicAudioService.instance.deleteAllDownloadedTracks();
+      final deleted = quranDeleted && storiesDeleted && adhkarDeleted;
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم حذف جميع التنزيلات بنجاح', textAlign: TextAlign.right),
-          backgroundColor: AppColors.primaryGreen,
+        SnackBar(
+          content: Text(deleted ? 'تم حذف جميع التنزيلات بنجاح' : 'تعذر حذف بعض الملفات. حاول مرة أخرى.', textAlign: TextAlign.right),
+          backgroundColor: deleted ? AppColors.primaryGreen : Colors.redAccent,
         ),
       );
     }
