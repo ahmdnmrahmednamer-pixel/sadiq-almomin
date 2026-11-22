@@ -569,6 +569,8 @@ class IslamicAudioService extends ChangeNotifier {
     return allTracks.where((t) => isDownloaded(t.id)).toList();
   }
 
+  int get retiredRecordingCount => _retiredRecordingPaths.length;
+
   int get totalDownloadedBytes {
     int total = 0;
     for (final size in [..._downloadedFileSizes.values, ..._retiredRecordingSizes.values]) {
