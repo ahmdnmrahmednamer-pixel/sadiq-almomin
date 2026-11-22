@@ -287,9 +287,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                 // Result Counter Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                  child: _buildStoryRow(context, [
                       Text(
                         'قائمة القصص الصوتية (${stories.length})',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14.5),
@@ -336,6 +334,21 @@ class _StoriesScreenState extends State<StoriesScreen> {
     );
   }
 
+  Widget _buildStoryRow(BuildContext context, List<Widget> children) {
+    if (MediaQuery.textScalerOf(context).scale(16) > 20) {
+      return Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: children,
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: children,
+    );
+  }
+
   Widget _buildDailyStoryCard(BuildContext context, ProphetAudioStory story, bool isDark) {
     return Container(
       decoration: BoxDecoration(
@@ -365,9 +378,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                _buildStoryRow(context, [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -408,9 +419,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                _buildStoryRow(context, [
                     Text(
                       'صوت: ${story.narrator}',
                       style: const TextStyle(fontSize: 11.5, color: AppColors.mutedText),
@@ -589,9 +598,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                 const Divider(height: 18),
 
                 // Action buttons: Play & Download
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                _buildStoryRow(context, [
                     ElevatedButton.icon(
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
                       label: const Text('استماع للقصة', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
