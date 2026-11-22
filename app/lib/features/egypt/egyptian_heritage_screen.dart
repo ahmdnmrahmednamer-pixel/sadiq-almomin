@@ -732,6 +732,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                   label: Text(cat),
                   selected: selected,
                   selectedColor: AppColors.primaryGreen,
+                  checkmarkColor: Colors.white,
                   labelStyle: TextStyle(
                     color: selected
                         ? Colors.white
@@ -781,10 +782,12 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                               ),
                               child: Text(
                                 fatwa.category,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryGreen,
+                                  color: isDark
+                                      ? Theme.of(context).colorScheme.primary
+                                      : AppColors.primaryGreen,
                                 ),
                               ),
                             ),
