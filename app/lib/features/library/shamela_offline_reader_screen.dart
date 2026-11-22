@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/services/settings_service.dart';
 import '../../core/services/shamela_epub_service.dart';
+import '../../core/text/arabic_normalizer.dart';
 import '../../core/theme/app_theme.dart';
 
 import 'widgets/reader_bookmarks_sheet.dart';
@@ -151,7 +152,7 @@ class _ShamelaOfflineReaderScreenState
 
   void _jumpToInput() {
     final text = _jumpController.text.trim();
-    final pageNum = int.tryParse(text);
+    final pageNum = ArabicNormalizer.tryParseInt(text);
     if (pageNum == null || pageNum < 1 || pageNum > widget.book.pageCount) {
       _announce('يرجى إدخال رقم صفحة بين 1 و ${widget.book.pageCount}');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -609,7 +610,9 @@ class _ShamelaOfflineReaderScreenState
                         textInputAction: TextInputAction.go,
                         textAlign: TextAlign.center,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9٠-٩۰-۹]'),
+                          ),
                         ],
                         style: const TextStyle(
                           fontSize: 13,
