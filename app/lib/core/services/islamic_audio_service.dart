@@ -283,11 +283,10 @@ class IslamicAudioService extends ChangeNotifier {
       final dir = await _getAudioDirectory();
       _storageDirPath = dir.path;
       await _scanStorageDirectory(dir);
+      _isInitialized = true;
     } catch (e) {
       debugPrint('IslamicAudioService init directory error: $e');
     }
-
-    _isInitialized = true;
   }
 
   Future<Directory> _getAudioDirectory() async {
