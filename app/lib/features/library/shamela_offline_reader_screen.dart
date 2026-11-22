@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -36,6 +38,8 @@ class _ShamelaOfflineReaderScreenState
   int _currentIndex = 0;
   double _fontSize = 19.0;
   bool _isRestoringPosition = true;
+  bool _positionSaveFailed = false;
+  int _positionSaveRequest = 0;
 
   @override
   void initState() {
@@ -118,7 +122,7 @@ class _ShamelaOfflineReaderScreenState
       _jumpController.text = (clamped + 1).toString();
     });
 
-    _epubService.saveLastPosition(widget.book.id, clamped);
+    unawaited(_saveLastPosition(clamped));
     _announcePage(clamped);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,6 +131,22 @@ class _ShamelaOfflineReaderScreenState
         _scrollController.jumpTo(previousOffset);
       }
     });
+  }
+
+  Future<void> _saveLastPosition(int index) async {
+    final request = ++_positionSaveRequest;
+    try {
+      await _epubService.saveLastPosition(widget.book.id, index);
+      if (!mounted || request != _positionSaveRequest) return;
+      if (_positionSaveFailed) {
+        setState(() => _positionSaveFailed = false);
+      }
+    } catch (_) {
+      if (!mounted || request != _positionSaveRequest) return;
+      if (!_positionSaveFailed) {
+        setState(() => _positionSaveFailed = true);
+      }
+    }
   }
 
   void _jumpToInput() {
@@ -347,6 +367,19 @@ class _ShamelaOfflineReaderScreenState
         body: Column(
           children: [
             _buildPositionHeader(page, isDark),
+            if (_positionSaveFailed)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    'تعذر حفظ موضع القراءة',
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: theme.colorScheme.error),
+                  ),
+                ),
+              ),
             Expanded(
               child: _buildPageBody(page, isDark),
             ),
