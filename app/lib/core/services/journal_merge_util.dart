@@ -3,6 +3,20 @@ import 'dart:convert';
 /// Pure utility for canonical encoding, checksum calculation, safe decoding,
 /// and deterministic merge of Tadabbur Journal entries (relocated from PR 21).
 class JournalMergeUtil {
+  /// Avoid new local ID collisions without rewriting existing entry IDs.
+  static String allocateLocalEntryId(
+    String baseId,
+    Iterable<String> occupiedIds,
+  ) {
+    final occupied = occupiedIds.toSet();
+    var candidate = baseId;
+    var suffix = 2;
+    while (occupied.contains(candidate)) {
+      candidate = '$baseId-${suffix++}';
+    }
+    return candidate;
+  }
+
   /// 64-bit FNV-1a checksum calculation
   static String calculateChecksum(String data) {
     BigInt hash = BigInt.parse('cbf29ce484222325', radix: 16);
