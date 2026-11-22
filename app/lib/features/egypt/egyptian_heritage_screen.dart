@@ -312,6 +312,7 @@ class _EgyptianHeritageScreenState extends State<EgyptianHeritageScreen>
                   label: Text(name),
                   selected: selected,
                   selectedColor: AppColors.primaryGreen,
+                  checkmarkColor: Colors.white,
                   labelStyle: TextStyle(
                     color: selected
                         ? Colors.white
