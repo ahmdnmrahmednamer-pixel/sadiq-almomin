@@ -1,10 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../core/services/egyptian_heritage_service.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/ui/adaptive_screen_layouts.dart';
 
-/// عارض مهيكلي متكيف لأقسام التراث المصري الأربعة (يتيح التبديل بين التبويبات، الشبكة، المجلة، والقائمة المدمجة)
+/// عارض مهيكلي متكيف لأقسام التراث المصري الثلاثة (يتيح التبديل بين التبويبات، الشبكة، المجلة، والقائمة المدمجة)
 class EgyptAdaptiveHubView extends StatelessWidget {
   final ScreenStructureMode mode;
   final ValueChanged<int> onSelectTab;
@@ -18,25 +16,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final service = EgyptianHeritageService.instance;
-    final isAndroid =
-        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
-    final liveStationsCount = isAndroid
-        ? service.radioStations.where((s) => s.id != 'eqr_cairo_main').length
-        : service.radioStations.length;
-
     final items = [
-      StructuredScreenItem(
-        id: 'eg_hub_radio',
-        title: 'إذاعة القرآن الكريم من القاهرة',
-        subtitle: isAndroid
-            ? '$liveStationsCount محطات، إذاعة القاهرة غير متاحة على أندرويد'
-            : '$liveStationsCount محطات',
-        badgeText: isAndroid ? 'تراث القراء' : 'تراث القاهرة',
-        category: 'البث الإذاعي الحي',
-        icon: Icons.radio_rounded,
-        accentColor: AppColors.primaryGreen,
-        onTap: () => onSelectTab(0),
-      ),
       StructuredScreenItem(
         id: 'eg_hub_ibtihalat',
         title: 'مدرسة الابتهالات وخواطر الشيخ الشعراوي',
@@ -46,7 +26,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
         category: 'التراث الروحي',
         icon: Icons.music_note_rounded,
         accentColor: const Color(0xFFB88917),
-        onTap: () => onSelectTab(1),
+        onTap: () => onSelectTab(0),
       ),
       StructuredScreenItem(
         id: 'eg_hub_mosques',
@@ -56,7 +36,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
         category: 'المعالم الإسلامية',
         icon: Icons.mosque_rounded,
         accentColor: const Color(0xFF0D5C46),
-        onTap: () => onSelectTab(2),
+        onTap: () => onSelectTab(1),
       ),
       StructuredScreenItem(
         id: 'eg_hub_fatwas',
@@ -66,7 +46,7 @@ class EgyptAdaptiveHubView extends StatelessWidget {
         category: 'الفتاوى المعتمدة',
         icon: Icons.gavel_rounded,
         accentColor: const Color(0xFF1F6E58),
-        onTap: () => onSelectTab(3),
+        onTap: () => onSelectTab(2),
       ),
     ];
 
