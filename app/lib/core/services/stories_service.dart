@@ -19,6 +19,7 @@ class StoriesService extends ChangeNotifier {
   ));
 
   bool _isInitialized = false;
+  Future<void>? _initializing;
   final Set<String> _favoriteIds = {};
   final Map<String, String> _downloadedLocalPaths = {};
   final Map<String, int> _downloadedFileSizes = {};
@@ -33,8 +34,13 @@ class StoriesService extends ChangeNotifier {
   String? get lastReadStoryId => _lastReadStoryId;
   int get totalStoriesCount => _storiesData.length;
 
-  Future<void> init({bool forceReload = false}) async {
-    if (_isInitialized && !forceReload) return;
+  Future<void> init({bool forceReload = false}) {
+    if (forceReload) return _initialize();
+    if (_isInitialized) return Future<void>.value();
+    return _initializing ??= _initialize().whenComplete(() => _initializing = null);
+  }
+
+  Future<void> _initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favList = prefs.getStringList('stories_favorites') ?? [];
