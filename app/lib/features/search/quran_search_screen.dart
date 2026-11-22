@@ -644,6 +644,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Widget _buildNoResultsState() {
+    final colors = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -658,7 +659,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.search_off, size: 64, color: AppColors.mutedText),
+                  Icon(Icons.search_off, size: 64, color: colors.onSurfaceVariant),
                   const SizedBox(height: 16),
                   Text(
                     'لم يتم العثور على نتائج لـ "$_currentQuery"',
@@ -666,9 +667,9 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'تأكد من كتابة الكلمة بصورة صحيحة أو جرب البحث بكلمة واحدة أو بدون (ال) التعريف.',
-                    style: TextStyle(color: AppColors.lightText, fontSize: 13),
+                    style: TextStyle(color: colors.onSurfaceVariant, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ],
