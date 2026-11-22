@@ -46,8 +46,11 @@ void main() {
     expect(r.editionId, 'ibn_kathir');
     expect(r.editionName, contains('ابن كثير'));
     expect(r.hasSourceText, isTrue);
+    // Service output wraps the source page with labels/page numbers, so verbatim
+    // here means the source text is contained unchanged, not output equality.
     expect(r.tafsirText, contains(assetText));
-    final m = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'muyassar');
-    expect(r.tafsirText, isNot(m.tafsirText));
+    // Fragment-level no-leak: the other book's page text must not appear at all.
+    final mAssetText = pageTextFor(decodeChapter('muyassar_witness', 1), 1);
+    expect(r.tafsirText, isNot(contains(mAssetText)));
   });
 }

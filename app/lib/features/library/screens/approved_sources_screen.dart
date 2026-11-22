@@ -22,8 +22,6 @@ class ApprovedSourcesScreen extends StatelessWidget {
         _card(context,'الإعراب','الجدول في إعراب القرآن الكريم، محمود صافي',
           'قراءة مباشرة من المصدر مع صفحات الكتاب وسياقها. استُرجع موضعا فاطر ٣–٤ وغافر ١٠، وأي اختلاف موضح في موضعه.',
           'https://api.quranpedia.net/v1/book/1772',action:'فتح الإعراب',route:'/quran-irab'),
-        _card(context,'التفسير الصوتي','المختصر في تفسير القرآن الكريم',
-          'روابط الاستماع المتاحة في قسم التفسير الصوتي.','',action:'فتح التفسير الصوتي',route:'/audio-tafsir'),
       ])));
   Widget _card(BuildContext context,String title,String source,String state,String url,{String? action,String? route})=>Card(
     child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[

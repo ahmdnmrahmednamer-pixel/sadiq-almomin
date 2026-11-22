@@ -191,7 +191,7 @@ void main() {
         '/surah-reader',
         '/search',
         '/comparative-tafsir',
-        '/audio-tafsir',
+        '/islamic-radio',
         '/qiraat',
         '/approved-sources',
         '/audio',
@@ -259,7 +259,7 @@ void main() {
         '/settings',
         '/search',
         '/qiraat',
-        '/audio-tafsir',
+        '/islamic-radio',
         '/approved-sources',
       ];
 
@@ -369,8 +369,8 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // 1. Screens with their own IsolatedBackButton: /settings, /qiraat, /audio-tafsir, /approved-sources
-      const ownBackRoutes = ['/settings', '/qiraat', '/audio-tafsir', '/approved-sources'];
+      // 1. Screens with their own IsolatedBackButton: /settings, /qiraat, /approved-sources
+      const ownBackRoutes = ['/settings', '/qiraat', '/approved-sources'];
       for (final path in ownBackRoutes) {
         appRouter.go(path);
         await tester.pumpWidget(_buildRouterApp());

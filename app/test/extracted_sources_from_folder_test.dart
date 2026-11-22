@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:almomin/core/services/budur_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:almomin/core/services/audio_tafsir_service.dart';
 import 'package:almomin/core/services/qiraat_service.dart';
 import 'package:almomin/core/services/tafsir_service.dart';
 import 'package:almomin/features/library/screens/approved_sources_screen.dart';
-import 'package:almomin/features/mushaf/screens/audio_tafsir_screen.dart';
 import 'package:almomin/features/mushaf/screens/qiraat_mushaf_screen.dart';
 
 class UnavailableBudur extends BudurSource {
@@ -26,30 +24,6 @@ void main() {
   });
 
   group('Extracted Sources from Folder Unit & Widget Tests', () {
-    test('AudioTafsirService contains all 3 scholars with 5 platform links from PDF', () {
-      const scholars = AudioTafsirService.scholars;
-      expect(scholars.length, 3);
-
-      final asmari = AudioTafsirService.instance.getScholarById('asmari');
-      expect(asmari, isNotNull);
-      expect(asmari!.name, contains('عبد الله الأسمري'));
-      expect(asmari.youtubePlaylistUrl, contains('youtube.com/playlist'));
-      expect(asmari.applePodcastsUrl, contains('podcasts.apple.com'));
-      expect(asmari.soundCloudUrl, contains('soundcloud.com'));
-      expect(asmari.podbeanUrl, contains('podbean.com'));
-      expect(asmari.telegramUrl, contains('t.me/MokhSound'));
-
-      final ghamdi = AudioTafsirService.instance.getScholarById('ghamdi');
-      expect(ghamdi, isNotNull);
-      expect(ghamdi!.name, contains('ساعد الغامدي'));
-      expect(ghamdi.youtubePlaylistUrl, contains('youtube.com/playlist'));
-
-      final shaya = AudioTafsirService.instance.getScholarById('shaya');
-      expect(shaya, isNotNull);
-      expect(shaya!.name, contains('عبد الرحمن الشايع'));
-      expect(shaya.youtubePlaylistUrl, contains('youtube.com/playlist'));
-    });
-
     test('QiraatService contains 10 canonical reciters, 20 narrators, symbols and usul from مصحف القراءات', () {
       expect(QiraatService.reciters.length, 10);
       expect(QiraatService.reciters.first.name, contains('نافع المدني'));
@@ -90,10 +64,10 @@ void main() {
       expect(find.textContaining('وأي اختلاف موضح في موضعه'), findsOneWidget);
       expect(find.textContaining('بقية الاختيارات لم تُربط بعد'), findsOneWidget);
       expect(find.textContaining('المواضع غير المحسومة لا تُنسب تلقائيًا'), findsOneWidget);
-      expect(find.text('المختصر في تفسير القرآن الكريم'), findsOneWidget);
+      expect(find.text('المختصر في تفسير القرآن الكريم'), findsNothing);
       expect(find.text('فتح القراءات'), findsOneWidget);
       expect(find.text('فتح الإعراب'), findsOneWidget);
-      expect(find.text('فتح التفسير الصوتي'), findsOneWidget);
+      expect(find.text('فتح التفسير الصوتي'), findsNothing);
     });
 
     testWidgets('Qiraat source failure exposes retry without invented reciter tabs', (tester) async {
@@ -119,27 +93,5 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('AudioTafsirScreen renders 3 scholars and platform links', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.5;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(const MaterialApp(home: AudioTafsirScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('المختصر الصوتي في التفسير'), findsAtLeastNWidgets(1));
-      expect(find.textContaining('عبد الله الأسمري'), findsAtLeastNWidgets(1));
-      expect(find.textContaining('ساعد الغامدي'), findsAtLeastNWidgets(1));
-      expect(find.textContaining('عبد الرحمن الشايع'), findsAtLeastNWidgets(1));
-
-      // Scroll to reveal platform links
-      await tester.drag(find.byType(ListView), const Offset(0, -400));
-      await tester.pumpAndSettle();
-
-      expect(find.text('يوتيوب (YouTube)'), findsOneWidget);
-      expect(find.text('أبل بودكاست (Apple Podcasts)'), findsOneWidget);
-      expect(find.text('ساوند كلاود (SoundCloud)'), findsOneWidget);
-    });
   });
 }

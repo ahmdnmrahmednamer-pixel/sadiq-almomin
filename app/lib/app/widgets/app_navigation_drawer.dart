@@ -118,19 +118,6 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
           context.push('/qiraat');
         },
       ),
-      _DrawerItemData(
-        title: 'المختصر الصوتي في تفسير القرآن',
-        subtitle: 'مركز تفسير للدراسات القرآنية (الأسمري، الغامدي، الشايع)',
-        semanticLabel: 'المختصر الصوتي في تفسير القرآن',
-        icon: Icons.record_voice_over_rounded,
-        color: const Color(0xFF6D28D9),
-        categoryKey: 'quran',
-        keywords: ['تفسير', 'صوتي', 'مختصر', 'معاني'],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/audio-tafsir');
-        },
-      ),
 
       // ================= 2. قسم الصلاة والأذان والمؤذنون =================
       _DrawerItemData(
@@ -341,7 +328,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       ),
       _DrawerItemData(
         title: 'المصادر والمراجع القرآنية المعتمدة',
-        subtitle: 'مصحف القراءات، تفسير وإعراب الدرة، والمختصر الصوتي',
+        subtitle: 'مصحف القراءات، تفسير وإعراب الدرة',
         semanticLabel: 'المصادر والمراجع القرآنية المعتمدة',
         icon: Icons.library_books_rounded,
         color: const Color(0xFFB45309),

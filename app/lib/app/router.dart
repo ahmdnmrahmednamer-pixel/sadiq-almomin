@@ -29,7 +29,6 @@ import '../features/audio/downloads_manager_screen.dart';
 import '../features/audio/widgets/global_mini_player_bar.dart';
 import '../features/mushaf/screens/quran_asbab_nuzul_screen.dart';
 import '../features/mushaf/screens/quran_irab_screen.dart';
-import '../features/mushaf/screens/audio_tafsir_screen.dart';
 import '../features/mushaf/screens/qiraat_mushaf_screen.dart';
 import '../features/library/screens/approved_sources_screen.dart';
 import '../features/prayer/prayer_times_detail_screen.dart';
@@ -613,11 +612,6 @@ final GoRouter appRouter = GoRouter(
       path: '/qiraat',
       hasOwnDirectBackAction: true,
       builder: (context, state) => const QiraatMushafScreen(),
-    ),
-    _isolatedFeatureRoute(
-      path: '/audio-tafsir',
-      hasOwnDirectBackAction: true,
-      builder: (context, state) => const AudioTafsirScreen(),
     ),
     _isolatedFeatureRoute(
       path: '/approved-sources',

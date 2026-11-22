@@ -205,17 +205,6 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         color: const Color(0xFF8E6C18),
         keywords: ['تفسير', 'مقارنة', 'ابن كثير', 'الطبري', 'السعدي', 'إعراب'],
       ),
-      const AppDirectoryItem(
-        id: 'audio_tafsir',
-        title: 'المختصر الصوتي في تفسير القرآن',
-        subtitle: 'تفسير الآيات صوتياً بنخبة من المشايخ عبر مركز تفسير',
-        category: 'رحاب القرآن',
-        categoryKey: 'quran',
-        route: '/audio-tafsir',
-        icon: Icons.headphones_rounded,
-        color: Color(0xFF6D28D9),
-        keywords: ['تفسير صوتي', 'صوتيات', 'مركز تفسير', 'استماع', 'معاني'],
-      ),
       AppDirectoryItem(
         id: 'gharib_quran',
         title: context.tr('gharib_quran_dict'),
