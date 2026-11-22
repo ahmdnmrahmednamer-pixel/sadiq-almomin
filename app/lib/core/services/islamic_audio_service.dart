@@ -546,18 +546,21 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<void> deleteAllDownloadedTracks() async {
-    for (final path in [..._downloadedLocalPaths.values, ..._retiredRecordingPaths.values]) {
-      try {
-        final file = File(path);
-        if (file.existsSync()) {
-          file.deleteSync();
-        }
-      } catch (_) {}
+    void deleteEntries(Map<String, String> paths, Map<String, int> sizes) {
+      for (final entry in paths.entries.toList()) {
+        try {
+          final file = File(entry.value);
+          if (file.existsSync()) {
+            file.deleteSync();
+          }
+          paths.remove(entry.key);
+          sizes.remove(entry.key);
+        } catch (_) {}
+      }
     }
-    _downloadedLocalPaths.clear();
-    _downloadedFileSizes.clear();
-    _retiredRecordingPaths.clear();
-    _retiredRecordingSizes.clear();
+
+    deleteEntries(_downloadedLocalPaths, _downloadedFileSizes);
+    deleteEntries(_retiredRecordingPaths, _retiredRecordingSizes);
     notifyListeners();
   }
 
