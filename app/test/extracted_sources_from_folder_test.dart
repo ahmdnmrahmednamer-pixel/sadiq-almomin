@@ -68,9 +68,9 @@ void main() {
       expect(durrah.nameAr, contains('تفسير القرآن الكريم وإعرابه وبيانه'));
       expect(durrah.authorAr, contains('محمد علي طه الدرة'));
 
-      final audio = TafsirService.getEdition('almukhtasar_audio');
-      expect(audio.id, 'almukhtasar_audio');
-      expect(audio.nameAr, contains('المختصر الصوتي'));
+      final ids = TafsirService.availableEditions.map((e) => e.id).toSet();
+      expect(ids.contains('almukhtasar_audio'), isFalse);
+      expect(ids.contains('shaarawi'), isFalse);
     });
 
     testWidgets('Sources screen attributes connected grammar and keeps source limitations', (tester) async {
@@ -86,7 +86,8 @@ void main() {
       expect(find.text('لباب النقول، جلال الدين السيوطي'), findsOneWidget);
       expect(find.text('الجدول في إعراب القرآن الكريم، محمود صافي'), findsOneWidget);
       expect(find.text('https://api.quranpedia.net/v1/book/1772'), findsOneWidget);
-      expect(find.textContaining('نقص فاطر واختلاف تفريغ غافر'), findsOneWidget);
+      expect(find.textContaining('فاطر ٣–٤ وغافر ١٠'), findsOneWidget);
+      expect(find.textContaining('وأي اختلاف موضح في موضعه'), findsOneWidget);
       expect(find.textContaining('بقية الاختيارات لم تُربط بعد'), findsOneWidget);
       expect(find.textContaining('المواضع غير المحسومة لا تُنسب تلقائيًا'), findsOneWidget);
       expect(find.text('المختصر في تفسير القرآن الكريم'), findsOneWidget);
@@ -108,7 +109,7 @@ void main() {
       expect(find.text('البدور الزاهرة'), findsOneWidget);
       expect(find.text('عبد الفتاح القاضي · الشاطبية والدرة'), findsOneWidget);
       expect(find.text(BudurSource.bookUrl), findsOneWidget);
-      expect(find.text('تعذر تحميل نص البدور الزاهرة. تحقق من الاتصال وأعد المحاولة.'), findsOneWidget);
+      expect(find.text('تعذر قراءة نص البدور الزاهرة المدمج. أعد المحاولة.'), findsOneWidget);
       expect(find.text('القراء العشرة ورواتهم'), findsNothing);
       expect(find.text('الإمام نافع المدني'), findsNothing);
       await tester.tap(find.text('إعادة المحاولة'));

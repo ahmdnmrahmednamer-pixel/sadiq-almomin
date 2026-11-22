@@ -73,22 +73,22 @@ void main() {
           'tabari',
           'baghawi',
           'waseet',
-          'shaarawi',
+          'al_durrah',
         ]),
         isTrue,
       );
 
-      final r1 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'ibn_kathir');
-      final r2 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'shaarawi');
+      final r1 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'waseet');
+      final r2 = await TafsirService.getTafsir(surahId: 1, ayahNumber: 1, editionId: 'al_durrah');
       for (final result in [r1, r2]) {
         expect(result.hasSourceText, isFalse);
-        expect(result.tafsirText, 'لم يُربط نص هذا التفسير بهذه الآية بعد.');
+        expect(result.tafsirText, 'تعذر قراءة حزمة التفسير المضمّنة. لا يُعرض نص بديل.');
         expect(result.sourceUrl, isNull);
       }
-      expect(r1.editionId, 'ibn_kathir');
-      expect(r2.editionId, 'shaarawi');
-      expect(r1.editionName, contains('ابن كثير'));
-      expect(r2.editionName, contains('الشعراوي'));
+      expect(r1.editionId, 'waseet');
+      expect(r2.editionId, 'al_durrah');
+      expect(r1.editionName, contains('الوسيط'));
+      expect(r2.editionName, 'تفسير القرآن الكريم وإعرابه وبيانه');
     });
 
     test('New Feature 3: IslamicMutoonService provides 4 foundational Matn books and persists memorization', () async {

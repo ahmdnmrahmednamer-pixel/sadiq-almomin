@@ -12,12 +12,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../lib/core/services/quran_repository.dart';
 import '../lib/core/services/tafsir_service.dart';
+import '../lib/core/services/bundled_tafsir_source.dart';
+import '../lib/core/ui/app_dropdown_field.dart';
 import '../lib/core/services/quran_linguistics_service.dart';
 import '../lib/core/services/settings_service.dart';
 import '../lib/core/models/ayah.dart';
 import '../lib/features/mushaf/widgets/tafsir_viewer_sheet.dart';
 import 'reader_accessibility_integration_test.dart' show surah;
 class FixedLubab extends LubabSource { final List<LubabEntry> entries; FixedLubab(this.entries); @override Future<List<LubabEntry>> fetch(int s,int a)async=>entries; }
+class FakeBundled extends BundledTafsirSource { final Map<String,BundledTafsirEntry> entries; FakeBundled(this.entries):super(readAsset:(_)async=>''); @override Future<BundledTafsirEntry?> fetch(String edition,int surah,int ayah)async=>entries[edition]; }
 void main(){
  TestWidgetsFlutterBinding.ensureInitialized();
  setUp(()async{
@@ -31,24 +34,26 @@ void main(){
    return value==null?null:ByteData.sublistView(utf8.encode(jsonEncode(value)));
   });
  });
- tearDown((){QuranLinguisticsService.setSourceForTesting(null);TafsirService.setClientForTesting(null);QuranRepository.resetCachesForTesting();TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',null);});
+ tearDown((){QuranLinguisticsService.setSourceForTesting(null);TafsirService.setClientForTesting(null);TafsirService.setBundledSourceForTesting(null);QuranRepository.resetCachesForTesting();TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler('flutter/assets',null);});
  test('bundled Muyassar is returned verbatim only as Muyassar',()async{
-  final a=await TafsirService.getTafsir(surahId:1,ayahNumber:1);expect(a.tafsirText,'VERBATIM_LOCAL_TEXT');
+  TafsirService.setBundledSourceForTesting(FakeBundled({'muyassar_witness':BundledTafsirEntry(1,[BundledTafsirPage('VERBATIM_LOCAL_TEXT','',null,'1:1')])}));
+  final a=await TafsirService.getTafsir(surahId:1,ayahNumber:1);expect(a.tafsirText,'VERBATIM_LOCAL_TEXT');expect(a.hasSourceText,isTrue);
   for(final e in TafsirService.availableEditions.where((e)=>e.id!='muyassar')){
    final b=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:e.id);expect(b.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));expect(b.hasSourceText,isFalse);
   }
  });
- test('live selected book passes through exact source and source URL',()async{
-  TafsirService.setClientForTesting(AlQuranCloudTafsirClient(dio:Dio(BaseOptions(baseUrl:'https://api.alquran.cloud/v1'))..httpClientAdapter=FixtureAdapter({'surah':{'number':1},'numberInSurah':1,'edition':{'identifier':'ar.qurtubi','type':'tafsir'},'text':'VERBATIM_REMOTE_TEXT'})));
+ test('selected book passes through exact source and source URL',()async{
+  TafsirService.setBundledSourceForTesting(FakeBundled({'qurtubi_printed':BundledTafsirEntry(2,[BundledTafsirPage('VERBATIM_REMOTE_TEXT','',null,'1:1')],sourceUrl:'https://quranpedia.net/ayah/1:1/ar.qurtubi')}));
   final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
   expect(result.tafsirText,'VERBATIM_REMOTE_TEXT');expect(result.hasSourceText,isTrue);expect(result.sourceUrl,endsWith('/ayah/1:1/ar.qurtubi'));
  });
  test('source failure never falls back to another book',()async{
+  TafsirService.setBundledSourceForTesting(FakeBundled({}));
   final result=await TafsirService.getTafsir(surahId:1,ayahNumber:1,editionId:'qurtubi');
   expect(result.hasSourceText,isFalse);expect(result.tafsirText,isNot(contains('VERBATIM_LOCAL_TEXT')));
  });
  test('removed linguistics never supplies guessed grammar or another verse cause',()async{
-  final d=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);expect(d.grammar.words,isEmpty);expect(d.wordMeanings,isEmpty);expect(d.grammar.rhetoricSummary,isEmpty);expect(d.asbabNuzul.hasSourceText,isFalse);expect(d.asbabNuzul.narration,contains('لا يعني'));
+  final d=await QuranLinguisticsService.getDetails(surahId:1,ayahNumber:1);expect(d.grammar.words,isEmpty);expect(d.wordMeanings,isEmpty);expect(d.grammar.rhetoricSummary,isEmpty);expect(d.asbabNuzul.hasSourceText,isFalse);expect(d.asbabNuzul.narration,'لا يوجد حاليا نص مرتبط بهذه الآية من لباب النقول.');
  });
  test('source entry stays verbatim and is never labelled a confirmed incident',()async{
   QuranLinguisticsService.setSourceForTesting(FixedLubab([const LubabEntry('VERBATIM_SOURCE_ENTRY\nNOTE',[7,8])]));
@@ -64,7 +69,7 @@ void main(){
    for(final family in ['ArabicTest','Amiri','UthmanicHafs','NotoNaskhArabic'])await (FontLoader(family)..addFont(Future.value(ByteData.sublistView(await File(font).readAsBytes())))).load();
    final icons=Platform.environment['READING_TEST_ICON_FONT'];if(icons!=null)await (FontLoader('MaterialIcons')..addFont(Future.value(ByteData.sublistView(await File(icons).readAsBytes())))).load();
   });
-  await t.pumpWidget(RepaintBoundary(key:key,child:MaterialApp(debugShowCheckedModeBanner:false,theme:ThemeData(fontFamily:'ArabicTest'),home:Scaffold(body:TafsirViewerSheet(surah:surah,initialAyah:ayah)))));for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}await t.pumpAndSettle();expect(find.text('الجامع لأحكام القرآن (القرطبي)'),findsWidgets);expect(find.text('VERBATIM_LOCAL_TEXT'),findsNothing);expect(t.takeException(),isNull);
+  await t.pumpWidget(RepaintBoundary(key:key,child:MaterialApp(debugShowCheckedModeBanner:false,theme:ThemeData(fontFamily:'ArabicTest'),home:Scaffold(body:TafsirViewerSheet(surah:surah,initialAyah:ayah)))));for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}for(var i=0;i<10;i++){await t.pump(const Duration(milliseconds:50));await t.runAsync(()=>Future<void>.delayed(const Duration(milliseconds:10)));}expect(t.widget<AppDropdownField<String>>(find.byType(AppDropdownField<String>).first).value,'qurtubi');expect(find.text('VERBATIM_LOCAL_TEXT'),findsNothing);expect(t.takeException(),isNull);
   if(font!=null)await t.runAsync(()async{final image=await (key.currentContext!.findRenderObject() as RenderRepaintBoundary).toImage();final bytes=await image.toByteData(format:ui.ImageByteFormat.png);await File('/tmp/tafsir-preferred-source-safe.png').writeAsBytes(bytes!.buffer.asUint8List());});
  });
 }
