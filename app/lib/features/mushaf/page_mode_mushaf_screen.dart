@@ -501,24 +501,24 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                     _showControls = !_showControls;
                   });
                 },
-                child: Stack(
+                child: Column(
                   children: [
-                    PageView.builder(
-                      controller: _pageController,
-                      itemCount: 604,
-                      onPageChanged: _onPageChanged,
-                      itemBuilder: (context, index) {
-                        final pageNum = index + 1;
-                        return _buildMushafPage(pageNum, pageBg, frameColor, textColor, isDark, isSepia);
-                      },
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: 604,
+                        onPageChanged: _onPageChanged,
+                        itemBuilder: (context, index) {
+                          final pageNum = index + 1;
+                          return _buildMushafPage(pageNum, pageBg, frameColor, textColor, isDark, isSepia);
+                        },
+                      ),
                     ),
 
-                    // Bottom Overlay Navigation Bar
+                    // Navigation reserves space below the readable page.
                     if (_showControls)
-                      Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: 16,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
@@ -647,7 +647,6 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
                   // Page Content
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.only(bottom: _showControls ? 112 : 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: _renderPageContent(ayahs, playingKey, textColor, isDark, isSepia),
