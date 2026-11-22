@@ -35,7 +35,7 @@ void main() {
           service.getDownloadedSurahsList().map((x) => x.surahId).toList());
       service.addListener(listener);
       try {
-        await service.deleteAllDownloads();
+        await expectBulkResult(service.deleteAllDownloads(), false);
         expect(retained.existsSync(), isTrue);
         expect(service.isDownloaded('minshawi_murattal', 1), isTrue,
             reason: 'Failed deletion must remain visible as downloaded');
@@ -47,12 +47,12 @@ void main() {
         ]);
         expect(service.isDownloaded('minshawi_murattal', 2), isFalse);
         expect(Process.runSync('chmod', ['0755', audio.path]).exitCode, 0);
-        await service.deleteAllDownloads();
+        await expectBulkResult(service.deleteAllDownloads(), true);
         expect(retained.existsSync(), isFalse);
         expect(service.getDownloadedSurahsList(), isEmpty);
         expect(service.totalStorageUsedBytes, 0);
         expect(snapshots.last, isEmpty);
-        await service.deleteAllDownloads();
+        await expectBulkResult(service.deleteAllDownloads(), true);
         expect(service.getDownloadedSurahsList(), isEmpty);
       } finally {
         service.removeListener(listener);
@@ -65,4 +65,8 @@ void main() {
       temp.deleteSync(recursive: true);
     }
   });
+}
+
+Future<void> expectBulkResult(Future<bool> result, bool expected) async {
+  expect(await result, expected);
 }
