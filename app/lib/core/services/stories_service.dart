@@ -44,10 +44,10 @@ class StoriesService extends ChangeNotifier {
       final dir = await _getStoriesDirectory();
       _storageDirPath = dir.path;
       await _scanStorageDirectory(dir);
+      _isInitialized = true;
     } catch (e) {
       debugPrint('StoriesService init error: $e');
     }
-    _isInitialized = true;
     notifyListeners();
   }
 
