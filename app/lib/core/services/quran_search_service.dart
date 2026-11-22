@@ -4,6 +4,7 @@ import '../models/surah.dart';
 import '../models/ayah.dart';
 import '../text/arabic_normalizer.dart';
 import 'quran_repository.dart';
+import '../utils/serial_task_queue.dart';
 
 class QuranSearchDataException implements Exception {
   final String message;
@@ -245,47 +246,62 @@ class QuranSearchService {
     return results;
   }
 
-  /// Loads search history from SharedPreferences (FR-SRC-004)
-  Future<List<String>> getSearchHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_historyKey) ?? [
-      'آية الكرسي',
-      'الرحمن الرحيم',
-      'سورة الكهف',
-      'خواتيم البقرة',
-      'الله نور السماوات',
-    ];
-  }
+  final SerialTaskQueue _historyQueue = SerialTaskQueue();
 
-  /// Adds a query to search history
-  Future<void> addToHistory(String query) async {
+  /// Loads confirmed history. Missing storage retains the first-use defaults;
+  /// an explicitly saved empty list stays empty.
+  Future<List<String>> getSearchHistory() => _historyQueue.run(() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        return List<String>.of(prefs.getStringList(_historyKey) ?? const [
+          'آية الكرسي',
+          'الرحمن الرحيم',
+          'سورة الكهف',
+          'خواتيم البقرة',
+          'الله نور السماوات',
+        ]);
+      });
+
+  Future<bool> _mutateHistory(void Function(List<String>) mutate,
+          {bool clearAll = false}) =>
+      _historyQueue.run(() async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          // Absolute clear needs no prior list, including a damaged one.
+          if (!clearAll) await prefs.reload();
+          final next = clearAll
+              ? <String>[]
+              : List<String>.of(
+                  prefs.getStringList(_historyKey) ?? const <String>[]);
+          mutate(next);
+          try {
+            if (await prefs.setStringList(_historyKey, next)) return true;
+          } catch (_) {}
+          // The plugin cache changes even on failure. Only provider readback
+          // can confirm a write whose acknowledgement was lost.
+          await prefs.reload();
+          return listEquals(prefs.getStringList(_historyKey), next);
+        } catch (_) {
+          return false;
+        }
+      });
+
+  /// Adds a query without treating history persistence as Quran-search failure.
+  Future<bool> addToHistory(String query) {
     final trimmed = query.trim();
-    if (trimmed.isEmpty || trimmed.length < 2) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_historyKey) ?? [];
-
-    list.remove(trimmed);
-    list.insert(0, trimmed);
-
-    if (list.length > 20) {
-      list.removeRange(20, list.length);
-    }
-
-    await prefs.setStringList(_historyKey, list);
+    if (trimmed.isEmpty || trimmed.length < 2) return Future.value(true);
+    return _mutateHistory((next) {
+      next.remove(trimmed);
+      next.insert(0, trimmed);
+      if (next.length > 20) next.removeRange(20, next.length);
+    });
   }
 
-  /// Removes single item from search history
-  Future<void> removeFromHistory(String query) async {
-    final prefs = await SharedPreferences.getInstance();
-    final list = prefs.getStringList(_historyKey) ?? [];
-    list.remove(query);
-    await prefs.setStringList(_historyKey, list);
-  }
+  /// Removes one stored history item, preserving the remaining order.
+  Future<bool> removeFromHistory(String query) =>
+      _mutateHistory((next) => next.remove(query));
 
-  /// Clears full search history
-  Future<void> clearHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_historyKey, <String>[]);
-  }
+  /// A confirmed explicit empty list suppresses first-use history defaults.
+  Future<bool> clearHistory() =>
+      _mutateHistory((next) => next.clear(), clearAll: true);
 }
