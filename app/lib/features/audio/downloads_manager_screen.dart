@@ -6,6 +6,7 @@ import '../../core/services/settings_service.dart';
 import '../../core/services/stories_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../stories/widgets/prophet_story_player_sheet.dart';
+import '../stories/stories_screen.dart';
 import 'widgets/islamic_audio_player_sheet.dart';
 import 'audio_screen.dart';
 
@@ -667,7 +668,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
               OutlinedButton.icon(
                 icon: const Icon(Icons.auto_stories_rounded, size: 17),
                 label: const Text('تصفح قصص الأنبياء'),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StoriesScreen())),
               ),
             ],
           ),
