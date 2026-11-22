@@ -49,15 +49,10 @@ void main() {
       expect(find.text('أصوات الأذان والمؤذنون الـ 7'), findsOneWidget);
       expect(find.text('دعاء الشيخ الشعراوي بعد الأذان'), findsOneWidget);
 
-      // Retired scholars library must not be advertised; radio stays.
+      // Retired features must not be advertised.
       expect(find.text('مكتبة كبار العلماء والدروس الإسلامية 🎙️'), findsNothing);
 
-      await tester.scrollUntilVisible(
-        find.text('الإذاعة'),
-        200,
-        scrollable: find.byType(Scrollable).last,
-      );
-      expect(find.text('الإذاعة'), findsOneWidget);
+      expect(find.text('الإذاعة'), findsNothing);
 
       // Verify Adhkar & Tasbih
       await tester.scrollUntilVisible(
