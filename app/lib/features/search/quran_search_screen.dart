@@ -68,15 +68,32 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     super.dispose();
   }
 
+  void _showHistoryError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> _loadHistory({bool Function()? isCurrent}) async {
+    try {
+      final history = await QuranSearchService.instance.getSearchHistory();
+      if (mounted && (isCurrent?.call() ?? true)) {
+        setState(() => _history = history);
+      }
+    } catch (_) {
+      if (mounted && (isCurrent?.call() ?? true)) {
+        _showHistoryError(
+            'تعذر تحميل سجل البحث المحفوظ. يمكنك متابعة البحث.');
+      }
+    }
+  }
+
   Future<void> _loadInitial() async {
     final surahs = await QuranRepository.loadSurahs();
-    final hist = await QuranSearchService.instance.getSearchHistory();
-    if (mounted) {
-      setState(() {
-        _allSurahs = surahs;
-        _history = hist;
-      });
-    }
+    if (!mounted) return;
+    setState(() => _allSurahs = surahs);
+    await _loadHistory();
   }
 
   void _onSearchChanged(String query) {
@@ -141,25 +158,28 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
 
       if (!isCurrent()) return;
 
+      // Search results do not wait for the optional history write or its queue.
+      setState(() {
+        _referenceMatch = refMatch;
+        _referenceAyah = refAyah;
+        _referenceSurah = refSurah;
+        _surahResults = surahs;
+        _ayahResults = ayahs;
+        _isLoading = false;
+        _loadError = null;
+      });
+
       // Save to history if search produced results
       if (cleanQuery.length >= 2 && (refMatch != null || surahs.isNotEmpty || ayahs.isNotEmpty)) {
-        await QuranSearchService.instance.addToHistory(cleanQuery);
-        final updatedHistory = await QuranSearchService.instance.getSearchHistory();
-        if (isCurrent()) {
-          setState(() => _history = updatedHistory);
+        final saved =
+            await QuranSearchService.instance.addToHistory(cleanQuery);
+        if (!isCurrent()) return;
+        if (saved) {
+          await _loadHistory(isCurrent: isCurrent);
+        } else {
+          _showHistoryError(
+              'تعذر تأكيد حفظ سجل البحث. يمكنك متابعة البحث.');
         }
-      }
-
-      if (isCurrent()) {
-        setState(() {
-          _referenceMatch = refMatch;
-          _referenceAyah = refAyah;
-          _referenceSurah = refSurah;
-          _surahResults = surahs;
-          _ayahResults = ayahs;
-          _isLoading = false;
-          _loadError = null;
-        });
       }
     } catch (_) {
       if (isCurrent()) {
@@ -465,8 +485,14 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
               const SizedBox(width: 8),
               TextButton(
                 onPressed: () async {
-                  await QuranSearchService.instance.clearHistory();
+                  final saved =
+                      await QuranSearchService.instance.clearHistory();
                   if (!mounted) return;
+                  if (!saved) {
+                    _showHistoryError(
+                        'تعذر تأكيد حفظ مسح سجل البحث. حاول مرة أخرى.');
+                    return;
+                  }
                   setState(() => _history = []);
                 },
                 child: Text(
@@ -491,11 +517,15 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                 backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.06),
                 onPressed: () => _selectHistoryItem(item),
                 onDeleted: () async {
-                  await QuranSearchService.instance.removeFromHistory(item);
+                  final saved = await QuranSearchService.instance
+                      .removeFromHistory(item);
                   if (!mounted) return;
-                  final updated = await QuranSearchService.instance.getSearchHistory();
-                  if (!mounted) return;
-                  setState(() => _history = updated);
+                  if (!saved) {
+                    _showHistoryError(
+                        'تعذر تأكيد حفظ حذف البحث من السجل. حاول مرة أخرى.');
+                    return;
+                  }
+                  await _loadHistory();
                 },
               );
             }).toList(),
