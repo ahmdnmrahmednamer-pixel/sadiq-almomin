@@ -167,6 +167,16 @@ class AdhkarHubScreen extends StatelessWidget {
             ),
 
             PortalCategoryCard(
+              numberText: 'نص',
+              title: 'مكتبة حصن المسلم',
+              subtitle: '',
+              icon: Icons.menu_book_rounded,
+              color: AppColors.primaryGreen,
+              badgeText: '١٣٢ فئة',
+              onTap: () => context.push('/adhkar-library'),
+            ),
+
+            PortalCategoryCard(
               numberText: 'صوت',
               title: 'الأذكار المسموعة',
               subtitle: 'تسجيلات الأذكار والأدعية وحالة مراجعة مصادرها',

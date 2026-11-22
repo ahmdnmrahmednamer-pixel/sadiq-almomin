@@ -483,7 +483,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         keywords: ['بطارية', 'أذان لا يعمل', 'تنبيهات', 'خلفية'],
       ),
 
-      // ================= المقام الرابع: أُنس الذاكرين وسكينة القلوب (٤ أبواب) =================
+      // ================= المقام الرابع: أُنس الذاكرين وسكينة القلوب (٥ أبواب) =================
       AppDirectoryItem(
         id: 'adhkar_hub',
         title: context.tr('adhkar_hub'),
@@ -506,6 +506,17 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
         icon: Icons.menu_book_rounded,
         color: Color(0xFF135A43),
         keywords: ['حصن المسلم', 'صباح ومساء', 'أذكار النوم'],
+      ),
+      const AppDirectoryItem(
+        id: 'adhkar_source_library',
+        title: 'مكتبة حصن المسلم',
+        subtitle: '',
+        category: 'أُنس الذاكرين',
+        categoryKey: 'adhkar',
+        route: '/adhkar-library',
+        icon: Icons.menu_book_rounded,
+        color: Color(0xFF135A43),
+        keywords: ['Adhkar-json', 'rn0x', 'حصن المسلم', 'أذكار وأدعية'],
       ),
       AppDirectoryItem(
         id: 'tasbih',

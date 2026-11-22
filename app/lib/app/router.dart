@@ -1,3 +1,4 @@
+import '../features/adhkar/adhkar_library_screen.dart';
 import '../features/adhkar/adhkar_audio_screen.dart';
 import '../features/prayer/sunan_rawatib_screen.dart';
 import '../features/zakat/mawarith_calculator_screen.dart';
@@ -540,6 +541,7 @@ final GoRouter appRouter = GoRouter(
         return const AdhkarHubScreen();
       },
     ),
+    _isolatedFeatureRoute(path: '/adhkar-library', builder: (context, state) => const AdhkarLibraryScreen()),
     _isolatedFeatureRoute(path: '/adhkar-audio', builder: (context, state) => const AdhkarAudioScreen()),
     _isolatedFeatureRoute(path: '/tasbih', builder: (context, state) => const TasbihScreen()),
     _isolatedFeatureRoute(path: '/qibla', builder: (context, state) => const QiblaCompassScreen()),
