@@ -7,11 +7,18 @@ import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import '../../../core/notifications/prayer_notification_service.dart';
 import '../../../core/services/islamic_audio_service.dart';
+import '../../../core/services/downloaded_adhan_sound_store.dart';
 
 /// Old saved choices are retained, but must not imply their recording is used.
 String? savedAdhanFallbackNotice(String key) {
   if (PrayerNotificationService.adhanAssignmentUnavailableReason(key) == null) {
     return null;
+  }
+  if (DownloadedAdhanSoundStore.isPinnedAdhanId(key)) {
+    if (!DownloadedAdhanSoundStore.platformSupported) {
+      return 'تعيين هذا التسجيل المحمّل للتنبيه متاح على أندرويد فقط. اختيارك المحفوظ لم يتغير.';
+    }
+    return 'التسجيل المحفوظ يحتاج إعادة تحميل وفحص. حمّله ثم طبّق الاختيار. عند فشل التجهيز لا نستبدله بصوت آخر ولا نحذف الجدولة السابقة. جرّب التنبيه على جهازك.';
   }
   return 'التسجيل المحفوظ غير مدعوم لأذان التنبيه. في وضع الأذان يُستخدم صوت مكة الموجود مؤقتًا، وليس التسجيل المحفوظ. مواعيد التذكير واختيارك المحفوظ لم يتغيرا، مع احترام وضع الصامت والاهتزاز وباقي أوضاع التنبيه. اختر صوتًا مدعومًا من القائمة لتغييره.';
 }
@@ -20,8 +27,13 @@ String getAdhanVoiceName(String key) {
   final tracks = IslamicAudioService.allTracks.where(
     (t) => t.id == key || t.rawNotificationSound == key,
   );
-  final name = tracks.isEmpty ? 'اختيار صوت قديم غير معروف' : adhanVoiceLabel(tracks.first);
+  final name = tracks.isEmpty
+      ? 'اختيار صوت قديم غير معروف'
+      : adhanVoiceLabel(tracks.first);
   if (savedAdhanFallbackNotice(key) == null) return name;
+  if (DownloadedAdhanSoundStore.isPinnedAdhanId(key)) {
+    return '$name. يحتاج إعادة تحميل وفحص على أندرويد. اضغط لاختيار الصوت.';
+  }
   return '$name. غير مدعوم للتنبيه؛ البديل في وضع الأذان: صوت مكة مؤقتًا. مواعيد التذكير وأوضاع التنبيه لم تتغير. اضغط لاختيار صوت مدعوم.';
 }
 
@@ -34,11 +46,13 @@ String adhanVoiceLabel(IslamicAudioTrack track) {
 /// Optional source details stay separate from the plain voice name.
 String? adhanSourceDetails(IslamicAudioTrack track) {
   if (track.sourceFileNames.isEmpty) return null;
-  final reason =
-      PrayerNotificationService.adhanAssignmentUnavailableReason(track.id);
+  final reason = PrayerNotificationService.adhanAssignmentUnavailableReason(
+    track.id,
+  );
   return [
     'الاسم كما ورد في المصدر، ولم تُتحقق نسبة الصوت إلى صاحبه.',
     ...track.sourceFileNames,
+    if (DownloadedAdhanSoundStore.isPinnedAdhanTrack(track)) 'حمّل التسجيل داخل التطبيق أولاً، ثم عيّنه لأذان التنبيه على أندرويد. يبقى متاحاً دون إنترنت. لن يحذفه تنظيف التنزيلات ما دام معيّناً أو قد تستخدمه جدولة سابقة. تغيير الصوت يحتاج تطبيق الإعدادات وتجربة التنبيه على جهازك؛ التأجيل يستخدم تنبيه الجهاز المعتاد.',
     if (reason != null) reason,
     if (track.sourceUrl != null) track.sourceUrl!,
   ].join('\n\n');
@@ -534,7 +548,7 @@ class _PrayerMuezzinPickerSheetState extends State<_PrayerMuezzinPickerSheet>
                           ? null
                           : '${adhanVoiceLabel(track)}، اسم حسب المصدر غير موثق',
                       sourceDetails: adhanSourceDetails(track),
-                      assignmentUnavailableMessage: track.sourceFileNames.isEmpty
+                      assignmentUnavailableMessage: track.sourceFileNames.isEmpty || DownloadedAdhanSoundStore.isPinnedAdhanTrack(track)
                           ? null : 'للاستماع والتحميل فقط',
                       unavailableReason: IslamicAudioService.unavailableRecordingReason(track.id),
                       assignmentUnavailableReason: widget.isIqamah ? null : PrayerNotificationService.adhanAssignmentUnavailableReason(track.id),
