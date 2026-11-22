@@ -11,6 +11,7 @@ import '../audio/islamic_audio_models.dart';
 export '../audio/islamic_audio_models.dart';
 import 'settings_service.dart';
 import 'islamic_audio_file_integrity.dart';
+import 'downloaded_adhan_assignments.dart';
 
 class IslamicAudioService extends ChangeNotifier {
   static final IslamicAudioService instance = IslamicAudioService._internal();
@@ -605,7 +606,40 @@ class IslamicAudioService extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _deletionBlockedByAdhanProtection = false;
+  bool get deletionBlockedByAdhanProtection =>
+      _deletionBlockedByAdhanProtection;
+  String? _lastDeletionError;
+  String? get lastDeletionError => _lastDeletionError;
+  static const _assignedDownloadMessage =
+      'احتفظنا بتسجيل أذان معيّن أو قد تستخدمه جدولة سابقة. اختر تسجيلاً آخر وطبّق إعدادات التنبيهات أولاً، ثم أعد الحذف.';
+  static const _unverifiedProtectionMessage =
+      'تعذر التأكد من تسجيلات الأذان المستخدمة في التنبيهات. احتفظنا بها لتجنب فقد صوت الأذان.';
+
   Future<bool> deleteDownloadedTrack(String id) async {
+    _lastDeletionError = null;
+    _deletionBlockedByAdhanProtection = false;
+    if (DownloadedAdhanAssignments.isPinnedId(id)) {
+      try {
+        final protected = await DownloadedAdhanAssignments.protectedIds();
+        if (protected.contains(id) ||
+            DownloadedAdhanAssignments.isPending(id)) {
+          _deletionBlockedByAdhanProtection = true;
+          _lastDeletionError = _assignedDownloadMessage;
+          return false;
+        }
+      } catch (_) {
+        _deletionBlockedByAdhanProtection = true;
+        _lastDeletionError = _unverifiedProtectionMessage;
+        return false;
+      }
+    }
+    // No await between this final pending check, cancellation and deletion.
+    if (DownloadedAdhanAssignments.isPending(id)) {
+      _deletionBlockedByAdhanProtection = true;
+      _lastDeletionError = _assignedDownloadMessage;
+      return false;
+    }
     ++_storageGeneration;
     if (isDownloading(id)) cancelDownload(id);
     final paths = [
@@ -626,18 +660,41 @@ class IslamicAudioService extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _lastDeletionError = 'تعذر حذف الملف من مساحة التخزين.';
       debugPrint('Delete track error: $e');
       return false;
     }
   }
 
   Future<bool> deleteAllDownloadedTracks() async {
+    _lastDeletionError = null;
+    _deletionBlockedByAdhanProtection = false;
+    var protected = <String>{};
+    final pinned = {
+      ..._downloadedLocalPaths.keys,
+      ..._retiredRecordingPaths.keys,
+    }.where(DownloadedAdhanAssignments.isPinnedId).toSet();
+    if (pinned.isNotEmpty) {
+      try {
+        protected = await DownloadedAdhanAssignments.protectedIds();
+      } catch (_) {
+        protected = pinned;
+        _deletionBlockedByAdhanProtection = true;
+        _lastDeletionError = _unverifiedProtectionMessage;
+      }
+    }
     ++_storageGeneration;
     for (final id in _cancelTokens.keys.toList()) {
       cancelDownload(id);
     }
     void deleteEntries(Map<String, String> paths, Map<String, int> sizes) {
       for (final entry in paths.entries.toList()) {
+        if (protected.contains(entry.key) ||
+            DownloadedAdhanAssignments.isPending(entry.key)) {
+          _deletionBlockedByAdhanProtection = true;
+          _lastDeletionError ??= _assignedDownloadMessage;
+          continue;
+        }
         try {
           final file = File(entry.value);
           if (file.existsSync()) {
@@ -646,7 +703,9 @@ class IslamicAudioService extends ChangeNotifier {
           _validatedFileStats.remove(entry.key);
           paths.remove(entry.key);
           sizes.remove(entry.key);
-        } catch (_) {}
+        } catch (_) {
+          _lastDeletionError ??= 'تعذر حذف بعض الملفات من مساحة التخزين.';
+        }
       }
     }
 
