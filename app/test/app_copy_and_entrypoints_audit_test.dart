@@ -210,7 +210,7 @@ void main() {
     await player.playAyah(context, 1, 1);
     await tester.pump();
     await tester.pumpAndSettle();
-    expect(find.textContaining('التحقق من الاتصال بالإنترنت'), findsOneWidget);
+    expect(find.textContaining('تحقق من الاتصال'), findsOneWidget);
     expect(player.isPlaying.value, isFalse);
     player.resetForTesting();
   });
