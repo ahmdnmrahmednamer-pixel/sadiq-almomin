@@ -35,7 +35,7 @@ void main() {
       missing.deleteSync();
       expect(Process.runSync('chmod', ['0555', dir.path]).exitCode, 0);
       service.addListener(listener);
-      await service.deleteAllDownloadedStories();
+      await expectBulkResult(service.deleteAllDownloadedStories(), false);
       expect(retained.existsSync(), isTrue);
       expect(service.totalDownloadedStoriesBytes, 4096,
           reason: 'Failed file deletion must retain the story storage count');
@@ -44,12 +44,12 @@ void main() {
       expect(service.isDownloaded('nuh'), isFalse);
       expect(snapshots, [4096]);
       expect(Process.runSync('chmod', ['0755', dir.path]).exitCode, 0);
-      await service.deleteAllDownloadedStories();
+      await expectBulkResult(service.deleteAllDownloadedStories(), true);
       expect(retained.existsSync(), isFalse);
       expect(service.getDownloadedStories(), isEmpty);
       expect(service.totalDownloadedStoriesBytes, 0);
       expect(snapshots, [4096, 0]);
-      await service.deleteAllDownloadedStories();
+      await expectBulkResult(service.deleteAllDownloadedStories(), true);
       expect(service.totalDownloadedStoriesBytes, 0);
       expect(service.favoriteIds, {'adam'});
       expect(service.lastReadStoryId, 'nuh');
@@ -65,4 +65,8 @@ void main() {
       temp.deleteSync(recursive: true);
     }
   });
+}
+
+Future<void> expectBulkResult(Future<bool> result, bool expected) async {
+  expect(await result, expected);
 }
