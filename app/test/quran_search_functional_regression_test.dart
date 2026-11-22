@@ -332,13 +332,15 @@ void main() {
       }
 
       // 2. Preserved legacy Uthmani-stripped queries (must STILL match via dual-key index!)
+      // Counts use displayed ayah text, excluding decorative basmala prefixes.
+      // FR-MSH-008 and the existing display getter retain Fatiha1:1 and Naml27:30.
       const legacyPreservedQueries = <(String, int, int, int)>[
         ('ملك يوم الدين', 1, 1, 4),
         ('الكتب', 100, 2, 2),
         ('الصبر', 19, 2, 45),
         ('العلمين', 6, 1, 2),
-        ('الرحمن الرحيم', 100, 1, 1),
-        ('الرحمن', 100, 1, 1),
+        ('الرحمن الرحيم', 6, 1, 1),
+        ('الرحمن', 48, 1, 1),
         ('موسى', 100, 2, 51),
       ];
       for (final lq in legacyPreservedQueries) {
@@ -539,7 +541,7 @@ void main() {
           // 3. Scope filter: 'الرحمن الرحيم' -> switch to 'السور' -> NO blank screen (shows No Results!)
           await tester.enterText(find.byType(TextField), 'الرحمن الرحيم');
           await _settleSearch(tester);
-          expect(find.text('نتائج الآيات (100)'), findsOneWidget);
+          expect(find.text('نتائج الآيات (6)'), findsOneWidget);
           final surahScopeNode = _findTappableNode(tester, 'السور');
           tester.binding.pipelineOwner.semanticsOwner!.performAction(
             surahScopeNode.id,
@@ -556,7 +558,7 @@ void main() {
             SemanticsAction.tap,
           );
           await tester.pump();
-          expect(find.text('نتائج الآيات (100)'), findsOneWidget);
+          expect(find.text('نتائج الآيات (6)'), findsOneWidget);
 
           await tester.pumpWidget(const SizedBox.shrink());
           await tester.pump(const Duration(milliseconds: 250));
