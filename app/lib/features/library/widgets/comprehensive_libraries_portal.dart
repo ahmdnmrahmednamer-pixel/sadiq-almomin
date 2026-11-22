@@ -66,10 +66,10 @@ class _ComprehensiveLibrariesPortalState
         id: 'lib_egypt_heritage',
         title: context.tr('egypt_heritage'),
         subtitle:
-            'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
-        badgeText: 'إذاعة القاهرة',
+            'ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
+        badgeText: 'التراث المصري',
         category: gScholars,
-        icon: Icons.radio_rounded,
+        icon: Icons.account_balance_rounded,
         accentColor: const Color(0xFF0A4D3C),
         onTap: () => push(const EgyptianHeritageScreen(), '/egypt-heritage'),
       ),

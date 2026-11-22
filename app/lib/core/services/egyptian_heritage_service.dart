@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/egyptian_heritage.dart';
 import '../text/arabic_normalizer.dart';
 
-/// Comprehensive Service for Egyptian Islamic Heritage, Cairo Quran Radio,
+/// Egyptian Islamic heritage,
 /// Ibtihalat, Sheikh Al-Sha'rawi Reflections, Historic Mosques, and Dar Al-Ifta Rulings.
 class EgyptianHeritageService extends ChangeNotifier {
   static final EgyptianHeritageService instance = EgyptianHeritageService._internal();
@@ -25,15 +25,6 @@ class EgyptianHeritageService extends ChangeNotifier {
   Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
   String get selectedGoldKarat => _selectedGoldKarat;
 
-  List<EgyptianRadioStation>? _radioStationsOverride;
-  List<EgyptianRadioStation> get radioStations =>
-      _radioStationsOverride ?? defaultRadioStations;
-
-  @visibleForTesting
-  set radioStationsOverride(List<EgyptianRadioStation>? override) {
-    _radioStationsOverride = override;
-    notifyListeners();
-  }
   List<ShaarawiReflectionItem> get shaarawiReflections => defaultShaarawiReflections;
   List<EgyptianHistoricMosque> get historicMosques => defaultHistoricMosques;
   List<String> get mubtahileenList => ['الكل', ...ibtihalatCatalog.map((e) => e.mubtahilName).toSet()];
@@ -174,89 +165,6 @@ class EgyptianHeritageService extends ChangeNotifier {
       return hay.contains(normQuery);
     }).toList();
   }
-
-  // ---------------------------------------------------------------------------
-  // 1. إذاعة القرآن الكريم من القاهرة والإذاعات المصرية الأصيلة
-  // ---------------------------------------------------------------------------
-  static const List<EgyptianRadioStation> defaultRadioStations = [
-    // هوية البث: ترحيل مجتمعي غير رسمي عبر الإنترنت (يعيد التوجيه لبروتوكول غير مشفر HTTP، غير متاح على أندرويد)
-    EgyptianRadioStation(
-      id: 'eqr_cairo_main',
-      name: 'إذاعة القرآن الكريم من القاهرة',
-      subtitle: 'بث ترحيلي مجتمعي غير رسمي عبر الإنترنت (غير متاح على أجهزة أندرويد لعدم التشفير)',
-      frequencyOrBadge: 'ترحيل إنترنت غير رسمي',
-      streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv',
-      fallbackUrls: [
-        'https://n0c.radiojar.com/8s5u5tpdtwzuv',
-      ],
-      icon: Icons.radio_rounded,
-      accentColor: Color(0xFF0F5B45),
-      dailyScheduleHighlights: [
-        'تسجيلات التراث الإذاعي وتلاوات كبار القراء والتواشيح الدينية',
-      ],
-    ),
-    EgyptianRadioStation(
-      id: 'radio_egypt_minshawi',
-      name: 'أثير الشيخ محمد صديق المنشاوي',
-      subtitle: 'الصوت الباكي الخاشع — تسجيلات المصحف المرتل والمجود',
-      frequencyOrBadge: 'تراث الإذاعة',
-      streamUrl: 'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi',
-      fallbackUrls: [
-        'https://qurango.net/radio/mohammed_siddiq_alminshawi',
-      ],
-      icon: Icons.podcasts_rounded,
-      accentColor: Color(0xFFB8893A),
-      dailyScheduleHighlights: [
-        'تلاوات المصحف المرتل كاملًا برواية حفص عن عاصم',
-        'روائع التلاوات المجودة من مساجد القاهرة وسوهاج والمسجد الأقصى',
-      ],
-    ),
-    EgyptianRadioStation(
-      id: 'radio_egypt_husary',
-      name: 'أثير الشيخ محمود خليل الحصري',
-      subtitle: 'شيخ عموم المقارئ المصرية — تسجيلات المصحف المرتل والمجود',
-      frequencyOrBadge: 'المصحف المعلم',
-      streamUrl: 'https://qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
-      fallbackUrls: [
-        'https://backup.qurango.net/radio/mahmoud_khalil_alhussary_mojawwad',
-      ],
-      icon: Icons.menu_book_rounded,
-      accentColor: Color(0xFF1E6F5C),
-      dailyScheduleHighlights: [
-        'الضبط التجويدي الدقيق والوقف والابتداء المعتمد بالأزهر الشريف',
-      ],
-    ),
-    EgyptianRadioStation(
-      id: 'radio_egypt_abdulbasit',
-      name: 'أثير الشيخ عبد الباسط عبد الصمد',
-      subtitle: 'الحنجرة الذهبية وسفير القرآن — تسجيلات المصحف المرتل والمجود',
-      frequencyOrBadge: 'الحنجرة الذهبية',
-      streamUrl: 'https://backup.qurango.net/radio/abdulbasit_abdulsamad',
-      fallbackUrls: [
-        'https://qurango.net/radio/abdulbasit_abdulsamad',
-      ],
-      icon: Icons.mic_external_on_rounded,
-      accentColor: Color(0xFF8B6508),
-      dailyScheduleHighlights: [
-        'روائع التلاوات المجودة والمحافل القرآنية الخالدة',
-      ],
-    ),
-    EgyptianRadioStation(
-      id: 'radio_egypt_mustafa_ismail',
-      name: 'أثير الشيخ مصطفى إسماعيل',
-      subtitle: 'عبقري الأداء القرآني وقارئ الجامع الأزهر — تسجيلات المصحف المرتل والمجود',
-      frequencyOrBadge: 'مدرسة المقامات',
-      streamUrl: 'https://qurango.net/radio/mustafa_ismail',
-      fallbackUrls: [
-        'https://backup.qurango.net/radio/mustafa_ismail',
-      ],
-      icon: Icons.graphic_eq_rounded,
-      accentColor: Color(0xFF2C5E43),
-      dailyScheduleHighlights: [
-        'تلاوات خالدة تجمع بين جلال المعنى وإعجاز التصوير الصوتي للآيات',
-      ],
-    ),
-  ];
 
   // ---------------------------------------------------------------------------
   // 2. ديوان الابتهالات والتواشيح المصرية الأصيلة (النقشبندي، طوبار، عمران، الفشني)

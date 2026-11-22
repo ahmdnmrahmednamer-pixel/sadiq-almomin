@@ -469,23 +469,6 @@ class FastAudioService {
     return false;
   }
 
-  /// Specialized zero-latency player for 24/7 Islamic Live Radios & Maspero broadcasts
-  /// Strictly guarantees no disk caching, no lock freezing, and resilient multi-mirror switching.
-  Future<bool> playLiveRadio({
-    required String primaryUrl,
-    List<String> fallbackUrls = const [],
-    String? cacheKey,
-    Future<void> Function()? onStopCallback,
-  }) async {
-    return playResilient(
-      primaryUrl,
-      fallbackUrls: fallbackUrls,
-      cacheKey: cacheKey,
-      isLiveStream: true,
-      onStopCallback: onStopCallback,
-    );
-  }
-
   /// Pre-warms/prefetches an audio track in background
   Future<void> prefetchAudio(String url, String cacheKey) async {
     if (kIsWeb || url.startsWith('assets/')) return;

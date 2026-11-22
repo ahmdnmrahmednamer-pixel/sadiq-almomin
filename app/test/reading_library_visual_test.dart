@@ -41,7 +41,7 @@ void main() {
     final list = tester.widget<ListView>(find.byType(ListView).first);
     final children = (list.childrenDelegate as SliverChildListDelegate).children;
     expect(children.whereType<PortalCategoryCard>().map((card) => card.title),
-        equals(['المكتبة الشاملة', 'قارئ الكتب', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'الإذاعة والتراث']));
+        equals(['المكتبة الشاملة', 'قارئ الكتب', 'قصص الأنبياء', 'المواريث', 'الحج والعمرة', 'التراث المصري']));
     expect(tester.takeException(), isNull);
     if (fontPath != null) {
       await tester.runAsync(() async {

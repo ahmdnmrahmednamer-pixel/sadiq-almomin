@@ -7,12 +7,12 @@ import '../../core/ui/portal_category_card.dart';
 import 'shamela_library_screen.dart';
 
 /// بوابة «المكتبة الإسلامية ورياض العلم» (IslamicLibraryScreen)
-/// المكتبة الشاملة وأدوات مستقلة: القصص والمواريث والحج والإذاعة.
+/// المكتبة الشاملة وأدوات مستقلة: القصص والمواريث والحج والتراث.
 /// - المكتبة الشاملة (مستقلة)
 /// 1. قصص الأنبياء
 /// 2. حاسبة المواريث والتركات الشرعية
 /// 3. الحج والعمرة
-/// 4. الإذاعة والتراث
+/// 4. التراث المصري
 class IslamicLibraryScreen extends StatelessWidget {
   final int initialTabIndex;
 
@@ -164,12 +164,12 @@ class IslamicLibraryScreen extends StatelessWidget {
               onTap: () => context.push('/hajj-umrah'),
             ),
 
-            // 4. الإذاعة والتراث
+            // 4. التراث المصري
             PortalCategoryCard(
               numberText: '٤',
-              title: 'الإذاعة والتراث',
+              title: 'التراث المصري',
               subtitle: '',
-              icon: Icons.radio_rounded,
+              icon: Icons.account_balance_rounded,
               color: const Color(0xFF25739B),
               onTap: () => context.push('/egypt-heritage'),
             ),

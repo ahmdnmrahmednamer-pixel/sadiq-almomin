@@ -21,11 +21,7 @@ class HomeShortcutsList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 0. Live Islamic Radios Banner
-        _buildIslamicRadioBanner(context, isDark),
-        const SizedBox(height: 10),
-
-        // 1. Featured Egyptian Heritage & Cairo Radio Banner
+        // 1. Egyptian heritage recordings and knowledge
         _buildEgyptianHeritageBanner(context, isDark),
         const SizedBox(height: 12),
 
@@ -159,122 +155,11 @@ class HomeShortcutsList extends StatelessWidget {
     );
   }
 
-  Widget _buildIslamicRadioBanner(BuildContext context, bool isDark) {
-    return Semantics(
-      key: const Key('home_islamic_radio_banner_semantics'),
-      button: true,
-      label: 'إذاعات القرآن الكريم، بث مباشر وتلاوات كبار القراء',
-      child: InkWell(
-        onTap: () => context.push('/islamic-radio'),
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDark
-                  ? [const Color(0xFF1E3A2F), const Color(0xFF132720)]
-                  : [const Color(0xFF0F5B45), const Color(0xFF197157)],
-              begin: Alignment.topRight,
-              end: Alignment.bottomLeft,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.15),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              ExcludeSemantics(
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                  child: const Icon(
-                    Icons.radio_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'إذاعات القرآن الكريم',
-                          style: TextStyle(
-                            fontFamily: 'Amiri',
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            'بث متواصل',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'بث القرآن الكريم • تلاوات كبار القراء',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white70,
-                        height: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const ExcludeSemantics(
-                child: Icon(
-                  Icons.play_circle_fill_rounded,
-                  size: 28,
-                  color: Colors.amberAccent,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildEgyptianHeritageBanner(BuildContext context, bool isDark) {
     return Semantics(
       button: true,
       label:
-          '${context.tr('egypt_heritage')}، إذاعة القرآن الكريم، ابتهالات النقشبندي وطوبار، خواطر الشعراوي',
+          '${context.tr('egypt_heritage')}، ابتهالات النقشبندي وطوبار، خواطر الشعراوي',
       child: InkWell(
         onTap: () => context.push('/egypt-heritage'),
         borderRadius: BorderRadius.circular(18),
@@ -325,7 +210,7 @@ class HomeShortcutsList extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     const Text(
-                      'إذاعة القرآن الكريم • ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
+                      'ابتهالات النقشبندي وطوبار • خواطر الشعراوي',
                       style: TextStyle(
                         fontSize: 11.5,
                         color: Colors.white70,

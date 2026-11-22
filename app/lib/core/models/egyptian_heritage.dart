@@ -1,36 +1,3 @@
-import 'package:flutter/material.dart';
-
-/// Represents a live radio stream or curated Egyptian recitation broadcast.
-class EgyptianRadioStation {
-  final String id;
-  final String name;
-  final String subtitle;
-  final String frequencyOrBadge;
-  final String streamUrl;
-  final List<String> fallbackUrls;
-  final IconData icon;
-  final Color accentColor;
-  final List<String> dailyScheduleHighlights;
-
-  const EgyptianRadioStation({
-    required this.id,
-    required this.name,
-    required this.subtitle,
-    required this.frequencyOrBadge,
-    required this.streamUrl,
-    this.fallbackUrls = const [],
-    required this.icon,
-    required this.accentColor,
-    this.dailyScheduleHighlights = const [],
-  });
-
-  String get frequencyLabel => frequencyOrBadge;
-  String get broadcaster => name;
-  List<String> get fallbackStreamUrls => fallbackUrls;
-  String get description => subtitle;
-  List<String> get dailySchedule => dailyScheduleHighlights;
-}
-
 /// Represents a classic Egyptian Ibtihal or Tawshih track.
 class EgyptianIbtihalItem {
   final String id;

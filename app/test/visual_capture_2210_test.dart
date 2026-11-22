@@ -12,7 +12,6 @@ import 'package:almomin/features/mushaf/widgets/ayah_interaction.dart';
 import 'package:almomin/features/mushaf/widgets/ayah_linguistics_sheet.dart';
 import 'package:almomin/core/services/jadwal_source.dart';
 import 'package:almomin/features/mushaf/screens/quran_irab_screen.dart';
-import 'package:almomin/features/radio/curated_radio_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -37,17 +36,6 @@ class _NoIrab extends JadwalSource {
   Future<JadwalEntry?> fetch(int surah, int ayah) async => null;
   @override
   Future<DateTime?> offlineSavedAt() async => null;
-}
-
-class _P implements CuratedRadioPlayer {
-  @override
-  Future<void> play(String url) async {}
-  @override
-  Future<void> stop() async {}
-  @override
-  Stream<Object> get errors => const Stream<Object>.empty();
-  @override
-  void dispose() {}
 }
 
 Future<void> _shot(WidgetTester t, GlobalKey key, String name) async {
@@ -109,25 +97,6 @@ void main() {
 
   testWidgets('capture: ayah with no spoken hint', (t) async {
     await shoot(t, Scaffold(body: Center(child: AyahInteraction(label: 'آية ١', onTap: () {}, onLongPress: () {}, child: const Text('قُلْ هُوَ اللَّهُ أَحَدٌ')))), 'v2210-ayah-focus', size: const Size(420, 300));
-  });
-
-  testWidgets('capture: curated radio screen', (t) async {
-    await fonts(t);
-    t.view.physicalSize = const Size(420, 900);
-    t.view.devicePixelRatio = 1;
-    addTearDown(t.view.resetPhysicalSize);
-    addTearDown(t.view.resetDevicePixelRatio);
-    final key = GlobalKey();
-    await t.pumpWidget(RepaintBoundary(key: key, child: MaterialApp(debugShowCheckedModeBanner: false, theme: ThemeData(fontFamily: 'Amiri'), home: CuratedRadioScreen(playerFactory: () => _P()))));
-    for (var i = 0; i < 100 && find.text('القراءات العشر').evaluate().isEmpty; i++) {
-      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
-      await t.pump(const Duration(milliseconds: 50));
-    }
-    expect(find.text('القراءات العشر'), findsOneWidget);
-    await _shot(t, key, 'v2344-radio-categories');
-    await t.tap(find.text('القراءات العشر'));
-    await t.pumpAndSettle();
-    await _shot(t, key, 'v2344-radio-stations');
   });
 
   testWidgets('reach: options sheet bottom actions at 360x640, text scale 2.0', (t) async {

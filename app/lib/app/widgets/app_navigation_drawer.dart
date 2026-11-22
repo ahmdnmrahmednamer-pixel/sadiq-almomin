@@ -199,36 +199,13 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
 
       // ================= 3. قسم مكتبة العلماء والدروس =================
       _DrawerItemData(
-        title: 'الإذاعة',
-        subtitle: '',
-        semanticLabel: 'الإذاعة',
-        icon: Icons.podcasts_rounded,
-        color: const Color(0xFF0F5B45),
-        categoryKey: 'scholars',
-        keywords: [
-          'إذاعات',
-          'راديو',
-          'بث',
-          'قرآن',
-          'قراء',
-          'القاهرة',
-          'المنشاوي',
-          'الحصري',
-          'عبد الباسط'
-        ],
-        onTap: () {
-          Navigator.pop(context);
-          context.push('/islamic-radio');
-        },
-      ),
-      _DrawerItemData(
-        title: 'إذاعة وتراث القرآن الكريم بمصر',
+        title: 'التراث المصري',
         subtitle: 'تسجيلات نادرة وعبق التلاوة المصرية الخالدة',
-        semanticLabel: 'إذاعة وتراث القرآن الكريم',
-        icon: Icons.radio_rounded,
+        semanticLabel: 'التراث المصري',
+        icon: Icons.account_balance_rounded,
         color: const Color(0xFF8B5CF6),
         categoryKey: 'scholars',
-        keywords: ['تراث', 'إذاعة', 'مصر', 'تسجيلات', 'نادرة'],
+        keywords: ['تراث', 'مصر', 'تسجيلات', 'نادرة'],
         onTap: () {
           Navigator.pop(context);
           context.push('/egypt-heritage');

@@ -188,7 +188,7 @@ void main() {
                     data: MediaQuery.of(c)
                         .copyWith(textScaler: TextScaler.linear(scale)),
                     child: child!),
-                home: const EgyptianHeritageScreen(initialTabIndex: 2))));
+                home: const EgyptianHeritageScreen(initialTabIndex: 1))));
         await t.pumpAndSettle();
         final favorite = find.byTooltip('حفظ في المفضلة').first;
         await t.scrollUntilVisible(favorite, 200,
@@ -291,7 +291,7 @@ void main() {
   testWidgets('pending favorite disables repeat tap until durable completion',
       (t) async {
     await t.pumpWidget(
-        const MaterialApp(home: EgyptianHeritageScreen(initialTabIndex: 2)));
+        const MaterialApp(home: EgyptianHeritageScreen(initialTabIndex: 1)));
     await t.pumpAndSettle();
     final favorite = find.byTooltip('حفظ في المفضلة').first;
     await t.scrollUntilVisible(favorite, 200,
@@ -331,32 +331,27 @@ void main() {
     await t.pumpWidget(const SizedBox());
   });
 
-  for (final kind in ['radio', 'ibtihal', 'shaarawi', 'mosque', 'fatwa']) {
+  for (final kind in ['ibtihal', 'shaarawi', 'mosque', 'fatwa']) {
     testWidgets('actual $kind favorite saves and removes durably', (t) async {
       final heritage = EgyptianHeritageService.instance;
       final data = switch (kind) {
-        'radio' => (
-            0,
-            heritage.radioStations.first.id,
-            heritage.radioStations.first.name
-          ),
         'ibtihal' => (
-            1,
+            0,
             heritage.ibtihalat.first.id,
             heritage.ibtihalat.first.title
           ),
         'shaarawi' => (
-            1,
+            0,
             heritage.shaarawiReflections.first.id,
             heritage.shaarawiReflections.first.title
           ),
         'mosque' => (
-            2,
+            1,
             heritage.historicMosques.first.id,
             heritage.historicMosques.first.name
           ),
         _ => (
-            3,
+            2,
             heritage.darAlIftaRulings.first.id,
             'س: ${heritage.darAlIftaRulings.first.question}'
           ),
