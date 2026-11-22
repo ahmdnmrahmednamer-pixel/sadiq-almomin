@@ -781,6 +781,10 @@ class AdhkarService extends ChangeNotifier {
   }
 
   void toggleHaptic(bool enabled) {
+    if (!enabled) {
+      _hapticTimer1?.cancel();
+      _hapticTimer2?.cancel();
+    }
     _hapticEnabled = enabled;
     _prefs?.setBool('tasbih_haptic', enabled);
     notifyListeners();
