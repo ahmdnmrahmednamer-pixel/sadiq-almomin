@@ -86,9 +86,10 @@ class QuranSearchService {
     return _normalizedAliasesCache!;
   }
 
-  /// Cached dual-key normalized Ayah index per Surah ID:
+  /// Cached dual-key normalized Ayah index per Surah ID.
+  /// Decorative prefixes follow the existing display getter; raw Ayahs stay unchanged.
   /// - imlaeiKey: search-only Uthmani-to-Imlaei canonical form (fixes U+200A/U+2060, dagger alif, etc.)
-  /// - legacyKey: legacy Uthmani-stripped form (preserves 100% of existing legacy matches)
+  /// - legacyKey: legacy Uthmani-stripped matching over the same displayed text.
   static Map<int, List<({Ayah ayah, String imlaeiKey, String legacyKey})>>?
       _normalizedSurahAyahsCache;
 
@@ -109,8 +110,9 @@ class QuranSearchService {
       final ayahs = pagesMap[page] ?? [];
       for (final ayah in ayahs) {
         if (!seenAyahIds.add(ayah.id)) continue;
-        final imlaeiKey = ArabicNormalizer.normalizeForQuranSearch(ayah.textUthmani);
-        final legacyKey = ArabicNormalizer.normalize(ayah.textUthmani, loose: true);
+        final displayedText = ayah.cleanTextUthmani;
+        final imlaeiKey = ArabicNormalizer.normalizeForQuranSearch(displayedText);
+        final legacyKey = ArabicNormalizer.normalize(displayedText, loose: true);
         index.putIfAbsent(ayah.surahId, () => []).add((
           ayah: ayah,
           imlaeiKey: imlaeiKey,
