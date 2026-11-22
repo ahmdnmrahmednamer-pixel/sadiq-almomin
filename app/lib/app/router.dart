@@ -507,7 +507,7 @@ final GoRouter appRouter = GoRouter(
     // Preserve old links without keeping the retired library reachable.
     GoRoute(path: '/scholars-audio', redirect: (context, state) => '/library'),
     _isolatedFeatureRoute(path: '/egypt-heritage', builder: (context, state) => const EgyptianHeritageScreen()),
-    GoRoute(path: '/islamic-radio', redirect: (context, state) => '/curated-radio'),
+    _isolatedFeatureRoute(path: '/islamic-radio', builder: (context, state) => const CuratedRadioScreen()),
     if (kCuratedRadioEnabled)
       _isolatedFeatureRoute(path: '/curated-radio', builder: (context, state) => const CuratedRadioScreen()),
     _isolatedFeatureRoute(path: '/downloaded-books', builder: (context, state) => const DownloadedBooksScreen()),
