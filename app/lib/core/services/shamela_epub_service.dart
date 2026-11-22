@@ -1354,10 +1354,14 @@ class ShamelaEpubService {
     return await jsonFile.exists();
   }
 
-  /// Persists the reader's last read stable spine index via SharedPreferences.
+  /// Requests position storage and requires the provider's acknowledgement.
+  /// Acknowledgement does not guarantee physical storage durability.
   Future<void> saveLastPosition(int bookId, int spineIndex) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('$_prefPrefix$bookId', spineIndex);
+    final confirmed = await prefs.setInt('$_prefPrefix$bookId', spineIndex);
+    if (!confirmed) {
+      throw StateError('Reader position write was not confirmed');
+    }
   }
 
   /// Retrieves the reader's last read stable spine index, or null if unset.
