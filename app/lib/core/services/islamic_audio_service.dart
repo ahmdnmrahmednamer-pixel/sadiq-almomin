@@ -148,6 +148,7 @@ class IslamicAudioService extends ChangeNotifier {
   Duration _bufferedPosition = Duration.zero;
   double _playbackSpeed = 1.0;
   bool _isInitialized = false;
+  Future<void>? _initializing;
   bool _isOnlinePreview = false;
   int _onlinePreviewSession = 0;
   Future<void>? _pendingNativeStop;
@@ -218,7 +219,10 @@ class IslamicAudioService extends ChangeNotifier {
   Future<void> init() async {
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (_isInitialized) return;
+    return _initializing ??= _initialize().whenComplete(() => _initializing = null);
+  }
 
+  Future<void> _initialize() async {
     await _playerStateSub?.cancel();
     await _positionSub?.cancel();
     await _durationSub?.cancel();
