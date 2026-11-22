@@ -10,12 +10,24 @@ import '../audio/islamic_audio_models.dart';
 
 export '../audio/islamic_audio_models.dart';
 import 'settings_service.dart';
+import 'islamic_audio_file_integrity.dart';
 
 class IslamicAudioService extends ChangeNotifier {
   static final IslamicAudioService instance = IslamicAudioService._internal();
-  IslamicAudioService._internal() : _player = AudioPlayer();
+  IslamicAudioService._internal()
+      : _player = AudioPlayer(),
+        _catalog = allTracks,
+        _validateFile = validatedAudioFileStat;
   @visibleForTesting
-  IslamicAudioService.forTesting(AudioPlayer player) : _player = player;
+  IslamicAudioService.forTesting(AudioPlayer player, {
+    List<IslamicAudioTrack>? catalog,
+    Future<FileStat?> Function(IslamicAudioTrack, File)? fileValidator,
+  }) : _player = player,
+       _catalog = List.unmodifiable(catalog ?? allTracks),
+       _validateFile = fileValidator ?? validatedAudioFileStat;
+
+  final List<IslamicAudioTrack> _catalog;
+  final Future<FileStat?> Function(IslamicAudioTrack, File) _validateFile;
 
   /// Exact old catalog recordings held pending source/name review.
   /// The namespaced asset-only section is separate. Sharawi's alarm ID is
@@ -177,6 +189,8 @@ class IslamicAudioService extends ChangeNotifier {
   final Map<String, double> _activeProgress = {};
   final Map<String, CancelToken> _cancelTokens = {};
   int _downloadAttemptCounter = 0;
+  int _storageGeneration = 0;
+  final Map<String, FileStat> _validatedFileStats = {};
   String? _storageDirPath;
 
   StreamSubscription? _playerStateSub;
@@ -309,43 +323,59 @@ class IslamicAudioService extends ChangeNotifier {
   Future<void> scanDownloadsForTesting(Directory dir) => _scanStorageDirectory(dir);
 
   Future<void> _scanStorageDirectory(Directory dir) async {
-    _downloadedLocalPaths.clear();
-    _downloadedFileSizes.clear();
-    _retiredRecordingPaths.clear();
-    _retiredRecordingSizes.clear();
-    if (!await dir.exists()) return;
-
-    final entities = dir.listSync();
-    for (final entity in entities) {
-      if (entity is File && (entity.path.endsWith('.tmp') || entity.path.endsWith('.part'))) {
-        try {
-          entity.deleteSync();
-        } catch (_) {}
-        continue;
-      }
-      if (entity is File && entity.path.endsWith('.mp3')) {
-        final nonEmptySegs = entity.uri.pathSegments.where((s) => s.isNotEmpty);
-          if (nonEmptySegs.isEmpty) continue;
-          final filename = nonEmptySegs.last;
-        final matching = allTracks.where(
-            (track) => downloadFileNameForTrack(track.id) == filename);
-        if (matching.isEmpty) {
-          final legacyId = filename.substring(0, filename.length - 4);
-          if (reviewedAdhanRecordingRevision.containsKey(legacyId)) {
-            _retiredRecordingPaths[legacyId] = entity.path;
-            _retiredRecordingSizes[legacyId] = entity.lengthSync();
+    final generation = ++_storageGeneration;
+    final paths = <String, String>{};
+    final sizes = <String, int>{};
+    final retiredPaths = <String, String>{};
+    final retiredSizes = <String, int>{};
+    final verified = <String, FileStat>{};
+    if (await dir.exists()) {
+      for (final entity in dir.listSync()) {
+        if (entity is! File) continue;
+        if (entity.path.endsWith('.tmp') || entity.path.endsWith('.part')) {
+          // A scan must never delete a download that is still in flight.
+          if (_cancelTokens.isEmpty) {
+            try { entity.deleteSync(); } catch (_) {}
           }
+          continue;
         }
-        if (matching.isNotEmpty) {
-          final id = matching.first.id;
-          final size = entity.lengthSync();
-          if (size > 1000) {
-            _downloadedLocalPaths[id] = entity.path;
-            _downloadedFileSizes[id] = size;
+        if (!entity.path.endsWith('.mp3')) continue;
+        final filename = entity.uri.pathSegments.last;
+        final matching = _catalog.where(
+            (track) => downloadFileNameForTrack(track.id) == filename);
+        try {
+          if (matching.isEmpty) {
+            final id = filename.substring(0, filename.length - 4);
+            if (reviewedAdhanRecordingRevision.containsKey(id)) {
+              retiredPaths[id] = entity.path;
+              retiredSizes[id] = entity.lengthSync();
+            }
+          } else {
+            final track = matching.first;
+            final stat = entity.statSync();
+            if (stat.type != FileSystemEntityType.file) continue;
+            // Keep invalid pinned files visible to storage accounting and
+            // explicit deletion, but never grant offline eligibility.
+            if (track.remoteGitBlobSha1 != null || stat.size > 1000) {
+              paths[track.id] = entity.path;
+              sizes[track.id] = stat.size;
+              final checked = await _validateFile(track, entity);
+              if (checked != null) verified[track.id] = checked;
+            }
           }
+        } on FileSystemException {
+          // Files can disappear while the directory is being scanned.
         }
       }
     }
+    // A concurrent download/deletion or newer scan owns the current state.
+    if (generation != _storageGeneration) return;
+    _downloadedLocalPaths..clear()..addAll(paths);
+    _downloadedFileSizes..clear()..addAll(sizes);
+    _retiredRecordingPaths..clear()..addAll(retiredPaths);
+    _retiredRecordingSizes..clear()..addAll(retiredSizes);
+    _validatedFileStats..clear()..addAll(verified);
+    notifyListeners();
   }
 
   // --- Offline & Download Management ---
@@ -367,19 +397,63 @@ class IslamicAudioService extends ChangeNotifier {
 
   bool isDownloaded(String id) {
     if (unavailableRecordingReason(id) != null) return false;
+    final matches = _catalog.where((track) => track.id == id);
+    if (matches.isEmpty) return false;
+    final track = matches.first;
     final path = _downloadedLocalPaths[id];
     if (path == null) return false;
-    final f = File(path);
-    if (f.uri.pathSegments.last != downloadFileNameForTrack(id)) return false;
-    return f.existsSync() && f.lengthSync() > 1000;
+    final file = File(path);
+    if (file.uri.pathSegments.last != downloadFileNameForTrack(id)) return false;
+    try {
+      final current = file.statSync();
+      _downloadedFileSizes[id] =
+          current.type == FileSystemEntityType.file ? current.size : 0;
+      if (current.type != FileSystemEntityType.file || current.size <= 1000) {
+        _validatedFileStats.remove(id);
+        return false;
+      }
+      if (track.remoteGitBlobSha1 == null) return true;
+      final checked = _validatedFileStats[id];
+      if (checked != null && sameAudioFileSnapshot(checked, current)) return true;
+    } on FileSystemException {
+      _downloadedFileSizes[id] = 0;
+    }
+    _validatedFileStats.remove(id);
+    return false;
   }
 
-  String? getLocalAudioPath(String id) {
-    if (isDownloaded(id)) {
-      return _downloadedLocalPaths[id];
+  String? getLocalAudioPath(String id) =>
+      isDownloaded(id) ? _downloadedLocalPaths[id] : null;
+
+  Future<String?> _validatedLocalAudioPath(String id) async {
+    final path = getLocalAudioPath(id);
+    if (path == null) return null;
+    final track = _catalog.firstWhere((track) => track.id == id);
+    if (track.remoteGitBlobSha1 == null) return path;
+    // Re-hash canonical catalog bytes at playback, not only during the scan.
+    final generation = _storageGeneration;
+    final checked = await _validateFile(track, File(path));
+    if (generation != _storageGeneration) return null;
+    var current = false;
+    if (checked != null && _downloadedLocalPaths[id] == path) {
+      try {
+        current = sameAudioFileSnapshot(checked, File(path).statSync());
+      } on FileSystemException {
+        current = false;
+      }
     }
-    return null;
+    if (!current) {
+      _validatedFileStats.remove(id);
+      notifyListeners();
+      return null;
+    }
+    _validatedFileStats[id] = checked!;
+    return path;
   }
+
+  @visibleForTesting
+  Future<String?> validateLocalAudioPathForTesting(String id) =>
+      _validatedLocalAudioPath(id);
 
   bool isDownloading(String id) => _activeProgress.containsKey(id);
 
@@ -387,7 +461,7 @@ class IslamicAudioService extends ChangeNotifier {
 
   /// Downloads all remote Adhan tracks for 100% offline playback
   Future<void> downloadAllAdhanTracks({void Function(int completed, int total)? onProgress}) async {
-    final adhanList = allTracks
+    final adhanList = _catalog
         .where((t) => t.type == IslamicAudioType.adhan && t.assetPath == null && !isDownloaded(t.id))
         .toList();
     int count = 0;
@@ -399,7 +473,7 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<bool> downloadTrack(String id) async {
-    final matching = allTracks.where((track) => track.id == id);
+    final matching = _catalog.where((track) => track.id == id);
     if (matching.isEmpty) return false;
     final track = matching.first;
     if (isHeldRecording(track) || track.remoteUrl == null || isDownloading(id)) return false;
@@ -411,6 +485,7 @@ class IslamicAudioService extends ChangeNotifier {
 
     final filePath = '$dirPath/${downloadFileNameForTrack(id)}';
     final attempt = ++_downloadAttemptCounter;
+    ++_storageGeneration;
     final tempFilePath = '$filePath.$attempt.tmp';
 
     final cancelToken = CancelToken();
@@ -449,15 +524,20 @@ class IslamicAudioService extends ChangeNotifier {
         final tempFile = File(tempFilePath);
         if (tempFile.existsSync()) {
           try {
-            final fileSize = tempFile.lengthSync();
-            // Match isDownloaded/storage-scan eligibility before replacing any
-            // previous copy. A successful HTTP response is not a usable file.
-            if (fileSize <= 1000) {
-              throw const FormatException('Downloaded audio is too small');
+            final checked = await _validateFile(track, tempFile);
+            if (_cancelTokens[id] != cancelToken || cancelToken.isCancelled) {
+              if (tempFile.existsSync()) tempFile.deleteSync();
+              return false;
+            }
+            if (checked == null ||
+                !sameAudioFileSnapshot(checked, tempFile.statSync())) {
+              throw const FormatException('Downloaded audio failed source validation');
             }
             tempFile.renameSync(filePath);
             _downloadedLocalPaths[id] = filePath;
-            _downloadedFileSizes[id] = fileSize;
+            _downloadedFileSizes[id] = checked.size;
+            _validatedFileStats[id] = File(filePath).statSync();
+            ++_storageGeneration;
             _activeProgress.remove(id);
             _cancelTokens.remove(id);
             notifyListeners();
@@ -526,6 +606,8 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<bool> deleteDownloadedTrack(String id) async {
+    ++_storageGeneration;
+    if (isDownloading(id)) cancelDownload(id);
     final paths = [
       if (_downloadedLocalPaths[id] != null) _downloadedLocalPaths[id]!,
       if (_retiredRecordingPaths[id] != null) _retiredRecordingPaths[id]!,
@@ -536,6 +618,7 @@ class IslamicAudioService extends ChangeNotifier {
         final file = File(path);
         if (file.existsSync()) file.deleteSync();
       }
+      _validatedFileStats.remove(id);
       _downloadedLocalPaths.remove(id);
       _downloadedFileSizes.remove(id);
       _retiredRecordingPaths.remove(id);
@@ -549,6 +632,10 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   Future<bool> deleteAllDownloadedTracks() async {
+    ++_storageGeneration;
+    for (final id in _cancelTokens.keys.toList()) {
+      cancelDownload(id);
+    }
     void deleteEntries(Map<String, String> paths, Map<String, int> sizes) {
       for (final entry in paths.entries.toList()) {
         try {
@@ -556,6 +643,7 @@ class IslamicAudioService extends ChangeNotifier {
           if (file.existsSync()) {
             file.deleteSync();
           }
+          _validatedFileStats.remove(entry.key);
           paths.remove(entry.key);
           sizes.remove(entry.key);
         } catch (_) {}
@@ -569,8 +657,15 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   List<IslamicAudioTrack> getDownloadedTracks() {
-    return allTracks.where((t) => isDownloaded(t.id)).toList();
+    return _catalog.where((t) => isDownloaded(t.id)).toList();
   }
+
+  int get unverifiedRecordingCount => _catalog.where((track) =>
+      track.remoteGitBlobSha1 != null &&
+      unavailableRecordingReason(track.id) == null &&
+      _downloadedLocalPaths.containsKey(track.id) &&
+      File(_downloadedLocalPaths[track.id]!).existsSync() &&
+      !isDownloaded(track.id)).length;
 
   int get retiredRecordingCount => _retiredRecordingPaths.length;
 
@@ -607,9 +702,9 @@ class IslamicAudioService extends ChangeNotifier {
     final normalizedId = trackId == 'adhan_cairo'
         ? 'adhan_cairo_refaat'
         : (trackId == 'iqamah_makkah' ? 'iqamah_full' : trackId);
-    final track = allTracks.firstWhere(
+    final track = _catalog.firstWhere(
       (t) => t.id == normalizedId || t.rawNotificationSound == trackId,
-      orElse: () => allTracks.first,
+      orElse: () => _catalog.first,
     );
     await playTrack(track);
   }
@@ -711,7 +806,8 @@ class IslamicAudioService extends ChangeNotifier {
       await _player.setVolume(1.0);
       if (!isCurrent()) return;
       // 1. Check if user explicitly downloaded the HD file (offline HD playback)
-      final localPath = getLocalAudioPath(track.id);
+      final localPath = await _validatedLocalAudioPath(track.id);
+      if (!isCurrent()) return;
       if (localPath != null) {
         await _player.setFilePath(localPath);
         if (!isCurrent()) return;
@@ -1109,12 +1205,18 @@ class IslamicAudioService extends ChangeNotifier {
   }
 
   List<IslamicAudioTrack> getTracksByType(IslamicAudioType type) {
-    return allTracks.where((t) => t.type == type).toList();
+    return _catalog.where((t) => t.type == type).toList();
   }
 
   @override
   void dispose() {
     _onlinePreviewSession++;
+    ++_storageGeneration;
+    for (final token in _cancelTokens.values) {
+      token.cancel('Audio service disposed');
+    }
+    _cancelTokens.clear();
+    _activeProgress.clear();
     FastAudioService.instance.releaseAudioFocusFor(_player);
     _playerStateSub?.cancel();
     _positionSub?.cancel();
