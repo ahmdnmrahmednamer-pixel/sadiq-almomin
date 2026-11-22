@@ -176,8 +176,12 @@ class AyahCardService {
       if (boundary == null) return null;
       
       final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      return byteData?.buffer.asUint8List();
+      try {
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        return byteData?.buffer.asUint8List();
+      } finally {
+        image.dispose();
+      }
     } catch (e) {
       debugPrint('AyahCardService.captureWidgetToBytes error: $e');
       return null;
