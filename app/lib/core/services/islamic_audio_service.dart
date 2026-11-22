@@ -1114,6 +1114,8 @@ class IslamicAudioService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _onlinePreviewSession++;
+    FastAudioService.instance.releaseAudioFocusFor(_player);
     _playerStateSub?.cancel();
     _positionSub?.cancel();
     _durationSub?.cancel();
