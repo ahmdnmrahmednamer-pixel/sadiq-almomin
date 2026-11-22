@@ -217,6 +217,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
     } catch (_) {}
   }
 
+  AlMominTokens get _resultTokens =>
+      Theme.of(context).extension<AlMominTokens>() ??
+      (Theme.of(context).brightness == Brightness.dark
+          ? AppColors.darkTokens
+          : AppColors.lightTokens);
+
   List<TextSpan> _buildHighlightedSpans(String text, String query) {
     if (query.trim().isEmpty) {
       return [TextSpan(text: text)];
@@ -235,10 +241,10 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         spans.add(
           TextSpan(
             text: '$word ',
-            style: const TextStyle(
-              color: Color(0xFFB78103),
+            style: TextStyle(
+              color: _resultTokens.goldText,
               fontWeight: FontWeight.bold,
-              backgroundColor: Color(0x33FFD700),
+              backgroundColor: _resultTokens.ayahSelected,
             ),
           ),
         );
@@ -675,6 +681,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
   }
 
   Widget _buildResultsList() {
+    final colors = Theme.of(context).colorScheme;
+    final tokens = _resultTokens;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
@@ -686,7 +694,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.primaryGreen.withValues(alpha: 0.08),
+                  colors.primary.withValues(alpha: 0.08),
                   AppColors.accentGold.withValues(alpha: 0.12),
                 ],
                 begin: Alignment.topRight,
@@ -715,12 +723,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                         children: [
                           Text(
                             _referenceMatch!.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.primaryGreen),
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: colors.primary),
                           ),
                           if (_referenceMatch!.aliasNote != null)
                             Text(
                               _referenceMatch!.aliasNote!,
-                              style: const TextStyle(fontSize: 11, color: AppColors.lightText),
+                              style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
                             ),
                         ],
                       ),
@@ -728,12 +736,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGreen,
+                        color: colors.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'صفحة ${_referenceAyah!.page}',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: colors.onPrimary, fontSize: 11, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -745,7 +753,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     fontFamily: 'Amiri',
                     fontSize: 18,
                     height: 1.6,
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                    color: colors.onSurface,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -756,8 +764,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                         icon: const Icon(Icons.menu_book, size: 16),
                         label: const Text('فتح في المصحف', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryGreen,
-                          foregroundColor: Colors.white,
+                          backgroundColor: colors.primary,
+                          foregroundColor: colors.onPrimary,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         onPressed: () {
@@ -773,10 +781,10 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton.icon(
-                        icon: const Icon(Icons.chrome_reader_mode_outlined, size: 16, color: AppColors.primaryGreen),
-                        label: const Text('التفسير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                        icon: Icon(Icons.chrome_reader_mode_outlined, size: 16, color: colors.primary),
+                        label: Text('التفسير', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colors.primary)),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.primaryGreen),
+                          side: BorderSide(color: colors.primary),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),
                         onPressed: () {
@@ -799,11 +807,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         if ((_scope == SearchScope.all || _scope == SearchScope.surahs) && _surahResults.isNotEmpty) ...[
           Row(
             children: [
-              const Icon(Icons.bookmark_outline, size: 18, color: AppColors.primaryGreen),
+              Icon(Icons.bookmark_outline, size: 18, color: colors.primary),
               const SizedBox(width: 6),
               Text(
                 'نتائج السور (${_surahResults.length})',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryGreen),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.primary),
               ),
             ],
           ),
@@ -815,8 +823,8 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primaryGreen.withValues(alpha: 0.1),
-                  child: Text('${surah.id}', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.bold)),
+                  backgroundColor: colors.primary.withValues(alpha: 0.1),
+                  child: Text('${surah.id}', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold)),
                 ),
                 title: Text('سورة ${surah.nameAr}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('${surah.isMakki ? "مكية" : "مدنية"} · آياتها: ${surah.ayahCount} · صفحة ${surah.pageStart}'),
@@ -839,11 +847,11 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
         if ((_scope == SearchScope.all || _scope == SearchScope.ayahs) && _ayahResults.isNotEmpty) ...[
           Row(
             children: [
-              const Icon(Icons.format_quote, size: 18, color: AppColors.primaryGreen),
+              Icon(Icons.format_quote, size: 18, color: colors.primary),
               const SizedBox(width: 6),
               Text(
                 'نتائج الآيات (${_ayahResults.length})',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.primaryGreen),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colors.primary),
               ),
               if (_selectedSurahFilter != null) ...[
                 const SizedBox(width: 6),
@@ -853,7 +861,7 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                     color: AppColors.accentGold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text('مصفى حسب السورة', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                  child: Text('مصفى حسب السورة', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colors.primary)),
                 ),
               ],
             ],
@@ -884,21 +892,21 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryGreen.withValues(alpha: 0.1),
+                              color: colors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               'سورة ${surah.nameAr} : آية ${ayah.ayahNumber}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12.5,
-                                color: AppColors.primaryGreen,
+                                color: colors.primary,
                               ),
                             ),
                           ),
                           Text(
                             'صفحة ${ayah.page} · جزء ${ayah.juz}',
-                            style: const TextStyle(fontSize: 11, color: AppColors.lightText),
+                            style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -912,13 +920,13 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                           fontFamily: 'Amiri',
                           fontSize: 17,
                           height: 1.6,
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                          color: colors.onSurface,
                         ),
                         children: [
                           ..._buildHighlightedSpans(ayah.cleanTextUthmani, result.query),
                           TextSpan(
                             text: ' ﴿${ayah.ayahNumber}﴾',
-                            style: const TextStyle(color: AppColors.accentGold, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: tokens.goldText, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -935,13 +943,13 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                         runSpacing: 4,
                         children: [
                           TextButton.icon(
-                            icon: const Icon(Icons.chrome_reader_mode_outlined, size: 16, color: AppColors.primaryGreen),
-                            label: const Text('التفسير', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
+                            icon: Icon(Icons.chrome_reader_mode_outlined, size: 16, color: colors.primary),
+                            label: Text('التفسير', style: TextStyle(fontSize: 11.5, color: colors.primary)),
                             onPressed: () => TafsirViewerSheet.show(context, surah: surah, ayah: ayah),
                           ),
                           TextButton.icon(
-                            icon: const Icon(Icons.auto_stories_rounded, size: 16, color: AppColors.primaryGreen),
-                            label: const Text('المصحف', style: TextStyle(fontSize: 11.5, color: AppColors.primaryGreen)),
+                            icon: Icon(Icons.auto_stories_rounded, size: 16, color: colors.primary),
+                            label: Text('المصحف', style: TextStyle(fontSize: 11.5, color: colors.primary)),
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -952,12 +960,12 @@ class _QuranSearchScreenState extends State<QuranSearchScreen> {
                             },
                           ),
                           IconButton(
-                            icon: const Icon(Icons.copy, size: 16, color: AppColors.primaryGreen),
+                            icon: Icon(Icons.copy, size: 16, color: colors.primary),
                             tooltip: 'نسخ الآية',
                             onPressed: () => _copyAyah(ayah, surah),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.share, size: 16, color: AppColors.primaryGreen),
+                            icon: Icon(Icons.share, size: 16, color: colors.primary),
                             tooltip: 'مشاركة الآية',
                             onPressed: () => _shareAyah(ayah, surah),
                           ),
