@@ -256,7 +256,7 @@ class StoriesService extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteAllDownloadedStories() async {
+  Future<bool> deleteAllDownloadedStories() async {
     for (final entry in _downloadedLocalPaths.entries.toList()) {
       try {
         final file = File(entry.value);
@@ -268,6 +268,7 @@ class StoriesService extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
+    return _downloadedLocalPaths.isEmpty;
   }
 
   List<ProphetAudioStory> getDownloadedStories() {

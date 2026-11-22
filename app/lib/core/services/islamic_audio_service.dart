@@ -545,7 +545,7 @@ class IslamicAudioService extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteAllDownloadedTracks() async {
+  Future<bool> deleteAllDownloadedTracks() async {
     void deleteEntries(Map<String, String> paths, Map<String, int> sizes) {
       for (final entry in paths.entries.toList()) {
         try {
@@ -562,6 +562,7 @@ class IslamicAudioService extends ChangeNotifier {
     deleteEntries(_downloadedLocalPaths, _downloadedFileSizes);
     deleteEntries(_retiredRecordingPaths, _retiredRecordingSizes);
     notifyListeners();
+    return _downloadedLocalPaths.isEmpty && _retiredRecordingPaths.isEmpty;
   }
 
   List<IslamicAudioTrack> getDownloadedTracks() {
