@@ -168,7 +168,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
         child: AlertDialog(
           title: const Text('حذف جميع الملفات الصوتية المحملة'),
           content: Text(
-            'هل أنت متأكد من حذف كافة السور والقصص والأذكار${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' وملفات التسجيل القديمة' : ''} المحملة وتحرير كامل المساحة على الهاتف؟\n${IslamicAudioService.instance.retiredRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل القديمة بعد حذفها.)' : '(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).'}',
+            'هل أنت متأكد من حذف كافة السور والقصص والأذكار${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' وملفات التسجيل القديمة' : ''}${IslamicAudioService.instance.unavailableRecordingCount > 0 ? ' وملفات التسجيل غير المتاحة للتشغيل' : ''} المحملة وتحرير كامل المساحة على الهاتف؟\n${IslamicAudioService.instance.unavailableRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل غير المتاحة${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' أو القديمة' : ''} بعد حذفها.)' : IslamicAudioService.instance.retiredRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل القديمة بعد حذفها.)' : '(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).'}',
           ),
           actions: [
             TextButton(
@@ -247,8 +247,9 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
             final combinedBytes = totalQuranBytes + totalStoryBytes + totalAdhkarBytes;
             final formattedCombined = _formatTotalBytes(combinedBytes);
             final retiredRecordingCount = IslamicAudioService.instance.retiredRecordingCount;
+            final unavailableRecordingCount = IslamicAudioService.instance.unavailableRecordingCount;
             final totalCustomDownloadedCount =
-                quranDownloads.length + storyDownloads.length + adhkarDownloads.length + retiredRecordingCount;
+                quranDownloads.length + storyDownloads.length + adhkarDownloads.length + retiredRecordingCount + unavailableRecordingCount;
 
             return ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -330,7 +331,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                           alignment: WrapAlignment.spaceBetween,
                           children: [
                             Text(
-                              'إجمالي المحمل: $totalCustomDownloadedCount ملفات (${quranDownloads.length} سور • ${storyDownloads.length} قصص • ${adhkarDownloads.length} أذكار)${retiredRecordingCount > 0 ? ' • $retiredRecordingCount ملفات تسجيل قديمة' : ''}',
+                              'إجمالي المحمل: $totalCustomDownloadedCount ملفات (${quranDownloads.length} سور • ${storyDownloads.length} قصص • ${adhkarDownloads.length} أذكار)${retiredRecordingCount > 0 ? ' • $retiredRecordingCount ملفات تسجيل قديمة' : ''}${unavailableRecordingCount > 0 ? ' • $unavailableRecordingCount ملفات تسجيل غير متاحة للتشغيل' : ''}',
                               style: TextStyle(fontSize: 12.5, color: isDark ? Colors.white60 : Colors.grey.shade700),
                             ),
                             if (totalCustomDownloadedCount > 0)
@@ -386,6 +387,18 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         'ملفات تسجيل قديمة محفوظة: $retiredRecordingCount. لا تُشغّل من هنا. يمكنك حذفها باستخدام «حذف الكل» أعلاه، ثم إعادة المحاولة إذا تعذر الحذف.',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (unavailableRecordingCount > 0) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'ملفات تسجيل غير متاحة للتشغيل محفوظة: $unavailableRecordingCount. يظل تشغيلها محجوبا حتى مراجعة الاسم والمصدر. يمكنك حذفها باستخدام "حذف الكل" أعلاه، ثم إعادة المحاولة إذا تعذر الحذف.',
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
