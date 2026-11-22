@@ -167,8 +167,8 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
         textDirection: SettingsService.instance.textDirection,
         child: AlertDialog(
           title: const Text('حذف جميع الملفات الصوتية المحملة'),
-          content: const Text(
-            'هل أنت متأكد من حذف كافة السور والقصص والأذكار المحملة وتحرير كامل المساحة على الهاتف؟\n(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).',
+          content: Text(
+            'هل أنت متأكد من حذف كافة السور والقصص والأذكار${IslamicAudioService.instance.retiredRecordingCount > 0 ? ' وملفات التسجيل القديمة' : ''} المحملة وتحرير كامل المساحة على الهاتف؟\n${IslamicAudioService.instance.retiredRecordingCount > 0 ? '(قد لا تتمكن من استعادة ملفات التسجيل القديمة بعد حذفها.)' : '(يمكنك إعادة تحميلها أو الاستماع إليها مباشرة عبر الإنترنت في أي وقت).'}',
           ),
           actions: [
             TextButton(
@@ -246,8 +246,9 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
             final totalAdhkarBytes = IslamicAudioService.instance.totalDownloadedBytes;
             final combinedBytes = totalQuranBytes + totalStoryBytes + totalAdhkarBytes;
             final formattedCombined = _formatTotalBytes(combinedBytes);
+            final retiredRecordingCount = IslamicAudioService.instance.retiredRecordingCount;
             final totalCustomDownloadedCount =
-                quranDownloads.length + storyDownloads.length + adhkarDownloads.length;
+                quranDownloads.length + storyDownloads.length + adhkarDownloads.length + retiredRecordingCount;
 
             return ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -329,7 +330,7 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                           alignment: WrapAlignment.spaceBetween,
                           children: [
                             Text(
-                              'إجمالي المحمل: $totalCustomDownloadedCount ملفات (${quranDownloads.length} سور • ${storyDownloads.length} قصص • ${adhkarDownloads.length} أذكار)',
+                              'إجمالي المحمل: $totalCustomDownloadedCount ملفات (${quranDownloads.length} سور • ${storyDownloads.length} قصص • ${adhkarDownloads.length} أذكار)${retiredRecordingCount > 0 ? ' • $retiredRecordingCount ملفات تسجيل قديمة' : ''}',
                               style: TextStyle(fontSize: 12.5, color: isDark ? Colors.white60 : Colors.grey.shade700),
                             ),
                             if (totalCustomDownloadedCount > 0)
@@ -379,6 +380,18 @@ class _DownloadsManagerScreenState extends State<DownloadsManagerScreen> {
                 ),
                 const SizedBox(height: 14),
 
+                if (retiredRecordingCount > 0) ...[
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'ملفات تسجيل قديمة محفوظة: $retiredRecordingCount. لا تُشغّل من هنا. يمكنك حذفها باستخدام «حذف الكل» أعلاه، ثم إعادة المحاولة إذا تعذر الحذف.',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 // CONTENT LIST
                 if (totalCustomDownloadedCount == 0) ...[
                   _buildEmptyState(context, isDark),
