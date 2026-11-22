@@ -202,7 +202,11 @@ class SunanRawatibService extends ChangeNotifier {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> init({bool forceReload = false}) async {
+  Future<void> init({bool forceReload = false}) {
+    return _enqueue(() => _initInternal(forceReload: forceReload));
+  }
+
+  Future<void> _initInternal({bool forceReload = false}) async {
     if (_isInitialized && !forceReload) return;
     final prefs = await SharedPreferences.getInstance();
     if (forceReload) {
