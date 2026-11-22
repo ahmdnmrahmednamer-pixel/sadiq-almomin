@@ -49,9 +49,11 @@ void showTasbihCustomTargetDialog(BuildContext context, {required TextEditingCon
   controller.text = AdhkarService.instance.tasbihTarget > 0
       ? '${AdhkarService.instance.tasbihTarget}'
       : '33';
+  String? validationError;
   showDialog(
     context: context,
-    builder: (ctx) => Directionality(
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => Directionality(
       textDirection: SettingsService.instance.textDirection,
       child: AlertDialog(
       title: const Text('تحديد عدد التسبيحات المستهدف'),
@@ -59,7 +61,13 @@ void showTasbihCustomTargetDialog(BuildContext context, {required TextEditingCon
         controller: controller,
         keyboardType: TextInputType.number,
         autofocus: true,
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
+          error: validationError == null
+              ? null
+              : Semantics(
+                  liveRegion: true,
+                  child: Text(validationError!, maxLines: 3),
+                ),
           hintText: 'مثال: 33، 100، 1000',
           border: OutlineInputBorder(),
         ),
@@ -74,15 +82,20 @@ void showTasbihCustomTargetDialog(BuildContext context, {required TextEditingCon
           style: FilledButton.styleFrom(backgroundColor: AppColors.primaryGreen),
           onPressed: () {
             final val = ArabicNormalizer.tryParseInt(controller.text);
-            if (val != null && val > 0) {
-              AdhkarService.instance.setTasbihTarget(val);
+            if (val == null || val <= 0) {
+              setState(() {
+                validationError = 'أدخل عددًا صحيحًا أكبر من صفر';
+              });
+              return;
             }
+            AdhkarService.instance.setTasbihTarget(val);
             Navigator.pop(ctx);
           },
           child: const Text('حفظ'),
         ),
       ],
       ),
+    ),
     ),
   );
 }
