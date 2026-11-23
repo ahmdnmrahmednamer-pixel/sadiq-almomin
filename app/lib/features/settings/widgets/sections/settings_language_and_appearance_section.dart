@@ -99,7 +99,8 @@ class SettingsLanguageAndAppearanceSection extends StatelessWidget {
                   value: s.quranTranslationEdition,
                   dense: true,
                   prefixIcon: Icons.menu_book_rounded,
-                  options: QuranTranslationEdition.availableTranslations
+                  options: QuranTranslationEdition.choicesWithSaved(
+                          s.quranTranslationEdition)
                       .map((t) => AppDropdownOption<String>(
                             value: t.id,
                             label: isAr ? t.nameAr : t.nameNative,

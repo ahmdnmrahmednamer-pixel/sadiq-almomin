@@ -1,4 +1,10 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:almomin/core/localization/app_localizations.dart';
+import 'package:almomin/core/ui/app_dropdown_field.dart';
 import 'package:almomin/core/notifications/prayer_notification_service.dart';
 // Test-only preference backend fault injection.
 // ignore: depend_on_referenced_packages
@@ -60,15 +66,103 @@ void main() {
     session.stageLanguage('en');
     expect(session.language.value.bilingual, isTrue);
     session.language
-        .stage((language: 'en', translation: 'en_saheeh', bilingual: false));
+        .stage((language: 'en', translation: 'en_rwwad', bilingual: false));
     final result = await session.draft.apply();
     expect(result.success, isTrue);
     expect(SettingsService.instance.languageCode, 'en');
     expect(SettingsService.instance.bilingualDisplayEnabled, isFalse);
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('quran_translation_edition'), 'en_saheeh');
+    expect(prefs.getString('quran_translation_edition'), 'en_rwwad');
     expect(prefs.getBool('bilingual_display_enabled'), isFalse);
     expect(prefs.getStringList('bookmarks'), ['2:255']);
+  });
+
+  test('unavailable explicit translation fails before any grouped write',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final before = {for (final key in prefs.getKeys()) key: prefs.get(key)};
+    final session = SettingsSession();
+    session.language
+        .stage((language: 'en', translation: 'en_saheeh', bilingual: true));
+    final result = await session.draft.apply();
+    expect(result.success, isFalse);
+    expect(result.failedKey, 'language');
+    expect(session.draft.dirty, isTrue);
+    expect(SettingsService.instance.languageCode, 'ar');
+    expect(SettingsService.instance.quranTranslationEdition, 'en_saheeh');
+    expect(SettingsService.instance.bilingualDisplayEnabled, isFalse);
+    expect({for (final key in prefs.getKeys()) key: prefs.get(key)}, before);
+    session.language
+        .stage((language: 'en', translation: 'en_rwwad', bilingual: true));
+    expect((await session.draft.apply()).success, isTrue);
+    expect(prefs.getString('quran_translation_edition'), 'en_rwwad');
+  });
+
+  testWidgets(
+      'stale translation is visibly and semantically unavailable, never Rowwad',
+      (tester) async {
+    final settings = SettingsService.instance;
+    final options = QuranTranslationEdition.choicesWithSaved(
+        settings.quranTranslationEdition);
+    expect(options.first.id, 'en_saheeh');
+    expect(
+        QuranTranslationEdition.availableTranslations
+            .any((e) => e.id == 'en_saheeh'),
+        isFalse);
+    final font = Platform.environment['ENGLISH_SELECTION_FONT'];
+    if (font != null) {
+      await tester.runAsync(() async {
+        await (FontLoader('Amiri')
+              ..addFont(Future.value(
+                  ByteData.sublistView(await File(font).readAsBytes()))))
+            .load();
+      });
+    }
+    final key = GlobalKey();
+    final semantics = tester.ensureSemantics();
+
+    await tester.pumpWidget(MaterialApp(
+        theme: ThemeData(fontFamily: font == null ? null : 'Amiri'),
+        home: Scaffold(
+            body: RepaintBoundary(
+                key: key,
+                child: Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(24),
+                    child: AppDropdownField<String>(
+                      label: 'Quran translation',
+                      value: settings.quranTranslationEdition,
+                      options: options
+                          .map((e) => AppDropdownOption(
+                              value: e.id, label: e.nameNative))
+                          .toList(),
+                      onChanged: (_) {},
+                    ))))));
+    await tester.pumpAndSettle();
+    expect(
+        find.text(
+            'Saved translation unavailable (en_saheeh). Choose another translation'),
+        findsOneWidget);
+    expect(
+        find.bySemanticsLabel(RegExp(
+            'Saved translation unavailable.*Choose another translation')),
+        findsWidgets);
+    expect(settings.quranTranslationEdition, 'en_saheeh');
+    expect(
+        (await SharedPreferences.getInstance())
+            .getString('quran_translation_edition'),
+        'en_saheeh');
+    if (Platform.environment['ENGLISH_SELECTION_PREVIEW'] != null) {
+      await tester.runAsync(() async {
+        final image = await (key.currentContext!.findRenderObject()
+                as RenderRepaintBoundary)
+            .toImage();
+        final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+        await File(Platform.environment['ENGLISH_SELECTION_PREVIEW']!)
+            .writeAsBytes(bytes!.buffer.asUint8List());
+      });
+    }
+    semantics.dispose();
   });
 
   test('custom values survive Apply of a different setting', () async {

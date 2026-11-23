@@ -24,6 +24,12 @@ class SettingsSession {
         bilingual: s.bilingualDisplayEnabled
       ),
       write: (value) async {
+        // Reject unavailable explicit choices before setLanguage can auto-match
+        // another edition. A stale saved ID is not an alias for new text.
+        if (!QuranTranslationEdition.availableTranslations
+            .any((edition) => edition.id == value.translation)) {
+          throw StateError('Selected Quran translation is unavailable');
+        }
         await s.setLanguage(value.language);
         await s.setQuranTranslationEdition(value.translation);
         await s.toggleBilingualDisplay(value.bilingual);

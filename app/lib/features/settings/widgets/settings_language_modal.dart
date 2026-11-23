@@ -139,7 +139,7 @@ void showSettingsLanguageModal(BuildContext context) {
                             value: settings.quranTranslationEdition,
                             prefixIcon: Icons.translate_rounded,
                             options: QuranTranslationEdition
-                                .availableTranslations
+                                .choicesWithSaved(settings.quranTranslationEdition)
                                 .map((t) => AppDropdownOption<String>(
                                       value: t.id,
                                       label: settings.isArabic
