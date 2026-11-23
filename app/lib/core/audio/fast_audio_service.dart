@@ -319,6 +319,14 @@ class FastAudioService {
   }
 
   /// Resilient playback that ONLY plays the requested Sheikh/track candidates and NEVER substitutes a different Sheikh.
+  // play resolves when playback ends, not when it starts. Observe rejection
+  // without changing admission/fallback policy or a newer focus owner's state.
+  void _observePlayback(Future<void> playback) {
+    unawaited(playback.catchError((Object error, StackTrace stack) {
+      debugPrint('Audio playback error: $error');
+    }));
+  }
+
   Future<bool> playResilient(
     String? positionalPrimaryUrl, {
     AudioPlayer? player,
@@ -380,7 +388,7 @@ class FastAudioService {
           if (sessionToken != _activePlaybackToken) {
             return false;
           }
-          unawaited(targetPlayer.play());
+          _observePlayback(targetPlayer.play());
           return true;
         } catch (e) {
           debugPrint('Asset playback failed for $targetUrl: $e');
@@ -425,7 +433,7 @@ class FastAudioService {
           return false;
         }
 
-        unawaited(targetPlayer.play());
+        _observePlayback(targetPlayer.play());
         // Prefetch in background for offline reuse (NEVER for live streams)
         if (!isLiveStream) {
           unawaited(prefetchAudio(targetUrl, urlBoundKey));
@@ -454,7 +462,7 @@ class FastAudioService {
           if (sessionToken != _activePlaybackToken) {
             return false;
           }
-          unawaited(targetPlayer.play());
+          _observePlayback(targetPlayer.play());
           return true;
         } catch (e) {
           debugPrint('Tier 2 LockCaching failed for URL $i ($targetUrl): $e');
@@ -527,7 +535,7 @@ class FastAudioService {
       await player.setSpeed(speed);
     }
     if (token != _activePlaybackToken) return false;
-    unawaited(player.play());
+    _observePlayback(player.play());
     return true;
   }
 }
