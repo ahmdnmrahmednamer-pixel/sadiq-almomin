@@ -264,7 +264,9 @@ class IslamicAudioService extends ChangeNotifier {
           stop();
         } else if (_loopMode == PlaybackLoopMode.single && _currentTrack != null) {
           seek(Duration.zero);
-          _player.play();
+          unawaited(_player.play().catchError((Object error, StackTrace stack) {
+            debugPrint('Audio loop replay error: $error');
+          }));
         } else if (_queue.isNotEmpty && hasNext) {
           playNext();
         } else if (_loopMode == PlaybackLoopMode.all && _queue.isNotEmpty) {
@@ -828,6 +830,23 @@ class IslamicAudioService extends ChangeNotifier {
     bool isCurrent() =>
         session == _onlinePreviewSession &&
         (focusToken == null || focusToken == focus.activePlaybackToken);
+    void reportPlayFailure(Object error) {
+      debugPrint('Error playing ${track.id}: $error');
+      _isBuffering = false;
+      _isPlaying = _player.playing;
+      _currentTrack = _isPlaying ? priorTrack : null;
+      notifyListeners();
+    }
+
+    // just_audio play completes at playback end, so observe rejection without
+    // waiting for completion. An old request cannot alter a newer session/owner.
+    void startPlayback() {
+      unawaited(_player.play().catchError((Object error, StackTrace stack) {
+        if (!isCurrent()) return;
+        reportPlayFailure(error);
+      }));
+    }
+
     if (_needsLegacyContainment) await containLegacyAdhkarPlayback();
     if (!isCurrent() || _legacyStopFailed) return;
     _heldLegacyTrack = null;
@@ -872,7 +891,7 @@ class IslamicAudioService extends ChangeNotifier {
         if (!isCurrent()) return;
         await _player.setSpeed(_playbackSpeed);
         if (!isCurrent()) return;
-        unawaited(_player.play());
+        startPlayback();
       }
       // 2. If a Studio HD remote stream exists, try resilient HD streaming & disk caching first,
       //    and fall back to the remastered 44.1kHz Stereo bundled asset if offline!
@@ -907,7 +926,7 @@ class IslamicAudioService extends ChangeNotifier {
           if (!isCurrent()) return;
           await _player.setSpeed(_playbackSpeed);
           if (!isCurrent()) return;
-          unawaited(_player.play());
+          startPlayback();
         } else {
           throw Exception('Failed to stream audio track ${track.id}');
         }
@@ -922,17 +941,13 @@ class IslamicAudioService extends ChangeNotifier {
         if (!isCurrent()) return;
         await _player.setSpeed(_playbackSpeed);
         if (!isCurrent()) return;
-        unawaited(_player.play());
+        startPlayback();
       } else {
         throw Exception('No playable audio source found for ${track.id}');
       }
     } catch (e) {
       if (session != _onlinePreviewSession) return;
-      debugPrint('Error playing ${track.id}: $e');
-      _isBuffering = false;
-      _isPlaying = _player.playing;
-      _currentTrack = _isPlaying ? priorTrack : null;
-      notifyListeners();
+      reportPlayFailure(e);
     } finally {
       if (session == _onlinePreviewSession && !isCurrent()) {
         _isBuffering = false;
@@ -975,7 +990,9 @@ class IslamicAudioService extends ChangeNotifier {
       if (session != _onlinePreviewSession ||
           track != _currentTrack ||
           token != focus.activePlaybackToken) return;
-      unawaited(_player.play());
+      unawaited(_player.play().catchError((Object error, StackTrace stack) {
+        debugPrint('Audio resume error: $error');
+      }));
     } catch (error) {
       debugPrint('Audio resume error: $error');
     }
