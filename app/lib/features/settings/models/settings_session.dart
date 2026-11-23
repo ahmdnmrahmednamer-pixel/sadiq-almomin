@@ -52,7 +52,9 @@ class SettingsSession {
             'adhan_alerts': value.settings,
             'notif_master_enabled': value.notifications
           }) &&
-          (value.notifications || n.masterOffTransitionCompleted),
+          (value.notifications
+              ? n.masterOnTransitionCompleted
+              : n.masterOffTransitionCompleted),
     );
     font = draft.add<double>(
         key: 'font',
