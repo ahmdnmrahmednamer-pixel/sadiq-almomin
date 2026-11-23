@@ -505,6 +505,10 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> _loadSavedSchedulingPreferences({bool reload = false}) async {
+    // A load is not evidence that an OFF transition completed. Unchanged
+    // draft entries are not dirty, so this does not itself trigger cancellation.
+    ++_masterTransitionEpoch;
+    _completedOffTransitionEpoch = null;
     _invalidateShortConfirmations();
     _adhkarRegistrations.clear();
     _confirmedPrayerVoices.clear();
@@ -917,8 +921,19 @@ class PrayerNotificationService extends ChangeNotifier {
     }
   }
 
+  int _masterTransitionEpoch = 0;
+  int? _completedOffTransitionEpoch;
+
+  /// This OFF transition's global plugin cancellation completed.
+  /// Not continuing alarm absence, Android durability, or other services' state.
+  bool get masterOffTransitionCompleted =>
+      !_masterEnabled &&
+      _completedOffTransitionEpoch == _masterTransitionEpoch;
+
   Future<void>? _masterOperation;
   Future<void> toggleMaster(bool enabled) async {
+    final transition = ++_masterTransitionEpoch;
+    _completedOffTransitionEpoch = null;
     final prior = _masterOperation;
     final gate = Completer<void>();
     _masterOperation = gate.future;
@@ -934,7 +949,10 @@ class PrayerNotificationService extends ChangeNotifier {
       }
       _masterEnabled = enabled;
       if (!enabled) {
-        await cancelAll();
+        final completed = await cancelAll();
+        if (completed && transition == _masterTransitionEpoch && !_masterEnabled) {
+          _completedOffTransitionEpoch = transition;
+        }
       } else {
         rescheduleCurrentPrayers();
       }
@@ -2384,7 +2402,8 @@ class PrayerNotificationService extends ChangeNotifier {
     return applied;
   }
 
-  Future<void> cancelAll() async {
+  /// Reports this plugin call's completion, not durable absence of alarms.
+  Future<bool> cancelAll() async {
     _invalidateShortConfirmations();
     _confirmedPrayerVoices.clear();
     _adhkarRegistrations.clear();
@@ -2396,13 +2415,15 @@ class PrayerNotificationService extends ChangeNotifier {
     if (shortPending != null) await shortPending;
     _invalidateShortConfirmations();
     final int generation = ++_derivedScheduleGeneration;
-    await _serializeDerivedOp<void>(() async {
+    return _serializeDerivedOp<bool>(() async {
       _confirmedPrayerVoices.clear();
-      if (generation != _derivedScheduleGeneration) return;
+      if (generation != _derivedScheduleGeneration) return false;
       try {
         _invalidateShortConfirmations();
         await _localNotifications.cancelAll();
+        return generation == _derivedScheduleGeneration;
       } catch (_) {
+        return false;
       } finally {
         _invalidateShortConfirmations();
       }

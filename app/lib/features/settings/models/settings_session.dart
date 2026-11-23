@@ -47,10 +47,12 @@ class SettingsSession {
       write: (value) async {
         await s.toggleAdhanAlerts(value.settings);
       },
-      verify: (value) => _saved({
-        'adhan_alerts': value.settings,
-        'notif_master_enabled': value.notifications
-      }),
+      verify: (value) async =>
+          await _saved({
+            'adhan_alerts': value.settings,
+            'notif_master_enabled': value.notifications
+          }) &&
+          (value.notifications || n.masterOffTransitionCompleted),
     );
     font = draft.add<double>(
         key: 'font',
