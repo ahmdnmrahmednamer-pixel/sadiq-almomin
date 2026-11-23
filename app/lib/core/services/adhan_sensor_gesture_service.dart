@@ -76,13 +76,32 @@ class AdhanSensorGestureService extends ChangeNotifier {
           if (!await prefs.setBool(key, enabled)) {
             throw StateError('Sensor choice was not saved');
           }
+          await prefs.reload();
+          if (prefs.get(key) != enabled)
+            throw StateError('Sensor readback changed');
         } catch (_) {
           // A rejected write may still update the plugin's optimistic cache.
           try {
-            await prefs?.reload();
-          } catch (_) {}
+            if (prefs != null) {
+              await prefs.reload();
+              final actual = prefs.getBool(key) ?? true;
+              switch (key) {
+                case 'notif_shake_to_stop':
+                  _shakeToStopEnabled = actual;
+                  break;
+                case 'notif_flip_to_mute':
+                  _flipToMuteEnabled = actual;
+                  break;
+                case 'notif_overlay_window':
+                  _overlayWindowEnabled = actual;
+                  break;
+              }
+            }
+          } catch (_) {
+            // A failed read cannot certify optimistic SharedPreferences cache.
+          }
           _preferenceError =
-              'تعذر حفظ إعداد التحكم بالأذان. لم يُطبّق الاختيار الجديد. أعد الاختيار للمحاولة مرة أخرى.';
+              'تعذر حفظ إعداد التحكم بالأذان بشكل مؤكد. قد يكون الاختيار حُفظ. تحقق من الإعداد ثم أعد المحاولة.';
           notifyListeners();
           return false;
         }
