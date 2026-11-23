@@ -66,6 +66,9 @@ app/build/
 *.dex
 *.keystore
 *.jks
+app/symbols/
+**/symbols/
+*.symbols
 
 # Environment & Key properties
 .env

@@ -1,5 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
-  <rect width="1080" height="1080" fill="#0F5B45"/>
-  <rect x="40" y="40" width="1000" height="1000" fill="none" stroke="#B8893A" stroke-width="2" opacity="0.4"/>
-  <rect x="52" y="52" width="976" height="976" fill="none" stroke="#B8893A" stroke-width="1" opacity="0.2"/>
+  <defs>
+    <linearGradient id="oceanSunriseGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#091E2E"/>
+      <stop offset="45%" stop-color="#13354C"/>
+      <stop offset="75%" stop-color="#5E3E47"/>
+      <stop offset="100%" stop-color="#A85C42"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#oceanSunriseGrad)"/>
+  <rect x="40" y="40" width="1000" height="1000" fill="none" stroke="#F0B168" stroke-width="2" opacity="0.45"/>
+  <rect x="52" y="52" width="976" height="976" fill="none" stroke="#FDE2B5" stroke-width="1" opacity="0.25"/>
 </svg>

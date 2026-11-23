@@ -926,7 +926,7 @@ class _FullScreenStudioPlayerState extends State<FullScreenStudioPlayer>
                                     ? null
                                     : () async {
                                         final ok = await _audioService.downloadTrack(track.id);
-                                        if (!mounted) return;
+                                        if (!mounted || !context.mounted) return;
                                         if (ok) {
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('تم اكتمال التحميل للاستخدام أوفلاين ✓')),

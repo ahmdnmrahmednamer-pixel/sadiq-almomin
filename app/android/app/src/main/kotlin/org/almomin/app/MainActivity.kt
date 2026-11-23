@@ -21,6 +21,8 @@ class MainActivity: FlutterActivity() {
     override fun onDestroy() {
         PrayerRenewalCoordinator.job?.interruptForForeground()
         PrayerRenewalCoordinator.detach()
+        volumeChannel?.setMethodCallHandler(null)
+        volumeChannel = null
         super.onDestroy()
     }
 

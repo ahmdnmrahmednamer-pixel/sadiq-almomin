@@ -123,7 +123,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
       });
     } catch (e) {
       debugPrint('MemorizationScreen load error: $e');
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -148,6 +148,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
   Future<void> _onSurahChanged(int newSurahId) async {
     _autoscrollToken++;
     await _stopPlayback();
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
@@ -164,7 +165,7 @@ class _MemorizationScreenState extends State<MemorizationScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

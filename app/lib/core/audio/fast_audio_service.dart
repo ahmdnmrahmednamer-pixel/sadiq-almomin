@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import '../logging/app_logger.dart';
 import '../utils/serial_task_queue.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -237,7 +238,9 @@ class FastAudioService {
         if (await legacyFolder.exists()) {
           try {
             await legacyFolder.delete(recursive: true);
-          } catch (_) {}
+          } catch (e, stack) {
+            AppLogger.warn('FastAudioService.init.deleteLegacyFolder', e, stack);
+          }
         }
 
         final cacheFolder =
@@ -289,7 +292,9 @@ class FastAudioService {
           if (staleFile.existsSync()) {
             staleFile.deleteSync();
           }
-        } catch (_) {}
+        } catch (e, stack) {
+          AppLogger.warn('FastAudioService.deleteStaleFile', e, stack);
+        }
       }
       return AudioSource.uri(Uri.parse(url), headers: fastStreamingHeaders);
     }

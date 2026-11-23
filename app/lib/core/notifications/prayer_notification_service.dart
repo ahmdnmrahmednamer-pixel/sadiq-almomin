@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'notification_destination.dart';
+import '../logging/app_logger.dart';
 import '../utils/serial_task_queue.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -27,7 +28,9 @@ Future<void> notificationTapBackground(NotificationResponse notificationResponse
       try {
         final uri = Uri.parse('app://adhan?$payload');
         prayer = uri.queryParameters['prayer'] ?? 'الصلاة';
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('notificationTapBackground.parsePayload', e, stack);
+      }
     }
     try {
       // The action callback runs in its own engine. Never use its default
@@ -254,7 +257,8 @@ class PrayerNotificationService extends ChangeNotifier {
           );
           if (generation != _shortGeneration) return;
           confirm();
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('PrayerNotificationService.scheduleShortReminders', e, stack);
           _shortErrors[key] =
               'تعذر تحديث التذكير. قد يبقى الإعداد السابق فعالاً. أعد المحاولة.';
         }
@@ -467,14 +471,18 @@ class PrayerNotificationService extends ChangeNotifier {
 
     try {
       await AdhanSensorGestureService.instance.init();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('PrayerNotificationService.init.sensorInit', e, stack);
+    }
 
     _isInitialized = true;
     _foregroundInitialized = true;
     await scheduleShortReminders();
     try {
       await scheduleAdhkarReminders();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('PrayerNotificationService.init.scheduleAdhkarReminders', e, stack);
+    }
     notifyListeners();
   }
 
@@ -580,7 +588,9 @@ class PrayerNotificationService extends ChangeNotifier {
   void stopAdhanAudio() {
     try {
       IslamicAudioService.instance.stop();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('PrayerNotificationService.stopAdhanAudio', e, stack);
+    }
   }
 
   /// Snoozes Adhan alert for specified minutes and schedules follow-up reminder
@@ -649,7 +659,9 @@ class PrayerNotificationService extends ChangeNotifier {
         try {
           final uri = Uri.parse('app://adhan?$payload');
           prayer = uri.queryParameters['prayer'] ?? 'الصلاة';
-        } catch (_) {}
+        } catch (e, stack) {
+          AppLogger.warn('PrayerNotificationService.onDidReceiveNotificationResponse.parsePayload', e, stack);
+        }
       }
       snoozeAdhan(5, prayer);
       return;
@@ -675,7 +687,8 @@ class PrayerNotificationService extends ChangeNotifier {
     try {
       final status = await Permission.ignoreBatteryOptimizations.status;
       return status.isGranted;
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('PrayerNotificationService.isBatteryOptimizationIgnored', e, stack);
       return false;
     }
   }
@@ -685,7 +698,8 @@ class PrayerNotificationService extends ChangeNotifier {
     try {
       final status = await Permission.ignoreBatteryOptimizations.request();
       return status.isGranted;
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('PrayerNotificationService.requestIgnoreBatteryOptimizations', e, stack);
       return false;
     }
   }
@@ -1012,8 +1026,13 @@ class PrayerNotificationService extends ChangeNotifier {
         _preferenceError = null;
         saved = true;
         rescheduleCurrentPrayers();
-      } catch (_) {
-        try { await prefs?.reload(); } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('PrayerNotificationService._queuePreferenceWrite', e, stack);
+        try {
+          await prefs?.reload();
+        } catch (reloadErr, reloadStack) {
+          AppLogger.warn('PrayerNotificationService._queuePreferenceWrite.reload', reloadErr, reloadStack);
+        }
         _preferenceError = 'لم يُحفظ تعديل التنبيه. بقي الإعداد السابق كما كان. حاول مرة أخرى.';
       }
       _preferenceRevision++;
@@ -1178,7 +1197,8 @@ class PrayerNotificationService extends ChangeNotifier {
             )) {
               throw StateError('Adhan voice preference readback did not match');
             }
-          } catch (_) {
+          } catch (e, stack) {
+            AppLogger.warn('PrayerNotificationService.setAdhanAudioChoice', e, stack);
             var restored = true;
             for (final key in changed.reversed) {
               try {
@@ -1187,7 +1207,8 @@ class PrayerNotificationService extends ChangeNotifier {
                     ? await prefs.remove(key)
                     : await prefs.setString(key, old);
                 if (!ok) restored = false;
-              } catch (_) {
+              } catch (restoreErr, restoreStack) {
+                AppLogger.warn('PrayerNotificationService.setAdhanAudioChoice.restoreKey', restoreErr, restoreStack);
                 restored = false;
               }
             }
@@ -1479,7 +1500,9 @@ class PrayerNotificationService extends ChangeNotifier {
     if (previous != null) {
       try {
         await previous;
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('PrayerNotificationService._serializeDerivedOp', e, stack);
+      }
     }
     try {
       return await action();
@@ -1501,7 +1524,10 @@ class PrayerNotificationService extends ChangeNotifier {
       if (generation != _derivedScheduleGeneration) return false;
       try {
         await _localNotifications.cancel(id);
-      } catch (_) { applied = false; }
+      } catch (e, stack) {
+        AppLogger.warn('PrayerNotificationService._cancelLocationDerivedRange', e, stack);
+        applied = false;
+      }
     }
     return applied;
   }
@@ -1524,7 +1550,10 @@ class PrayerNotificationService extends ChangeNotifier {
       if (cancelStaleAdhanSnooze) {
         try {
           await _localNotifications.cancel(adhanSnoozeNotificationId);
-        } catch (_) { applied = false; }
+        } catch (e, stack) {
+          AppLogger.warn('PrayerNotificationService.cancelLocationDerivedNotifications.snooze', e, stack);
+          applied = false;
+        }
       }
       if (generation != _derivedScheduleGeneration) return false;
       final friday = await scheduleFridayReminder();
@@ -1540,7 +1569,10 @@ class PrayerNotificationService extends ChangeNotifier {
       try {
         await _localNotifications.cancel(fridayReminderNotificationId);
         return true;
-      } catch (_) { return false; }
+      } catch (e, stack) {
+        AppLogger.warn('PrayerNotificationService.scheduleFridayReminder.cancel', e, stack);
+        return false;
+      }
     }
     _ensureTimeZonesInitialized();
     try {
@@ -1901,7 +1933,8 @@ class PrayerNotificationService extends ChangeNotifier {
           }
           await DownloadedAdhanAssignments.retain(nativeVoices);
           if (isStale()) return PrayerScheduleOutcome.superseded;
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('PrayerNotificationService.scheduleNextPrayers.prepareAdhan', e, stack);
           if (isStale()) return PrayerScheduleOutcome.superseded;
           _prayerSchedulingError = 'تعذر تجهيز تسجيل الأذان المحمّل. لم نحذف الجدولة السابقة ولم نستبدله بصوت آخر. أعد تحميل التسجيل أو اختر صوتاً مرفقاً ثم أعد المحاولة.';
           notifyListeners();
@@ -2466,7 +2499,8 @@ class PrayerNotificationService extends ChangeNotifier {
           _invalidateShortConfirmations();
           await _localNotifications.cancelAll();
           return generation == _derivedScheduleGeneration;
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('PrayerNotificationService.cancelAll', e, stack);
           return false;
         } finally {
           _invalidateShortConfirmations();

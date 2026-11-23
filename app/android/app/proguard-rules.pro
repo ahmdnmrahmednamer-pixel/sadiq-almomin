@@ -34,3 +34,8 @@
 -keepattributes InnerClasses
 -keepattributes Signature
 -keepattributes SourceFile,LineNumberTable
+
+# Audio Service & Native App Classes
+-keep class com.ryanheise.audioservice.** { *; }
+-keep class org.almomin.app.** { *; }
+

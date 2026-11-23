@@ -56,8 +56,6 @@ class AppDropdownField<T> extends StatelessWidget {
         : (uniqueOptions.any((o) => o.value == value)
             ? value
             : uniqueOptions.first.value);
-    final selectedOption =
-        uniqueOptions.where((o) => o.value == effectiveValue).firstOrNull;
 
     // Single announcement owner: the native field semantics merge into one
     // [tap,button] node. At normal scale the field's labelText carries the

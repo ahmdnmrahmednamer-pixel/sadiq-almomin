@@ -326,13 +326,13 @@ class _ReciterSelectionSheetState extends State<_ReciterSelectionSheet> {
                 }
                 setState(() => _selectionPending = true);
                 await SettingsService.instance.setSelectedReciter(r.id);
-                if (!mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
+                if (!mounted || !context.mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
                 final audio = AyahAudioPlayer.instance;
                 final pending = audio.playReciterPreview(r);
                 final requestId = audio.activeRequestId;
                 _previewRequestId = requestId;
                 final playing = await pending;
-                if (!mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
+                if (!mounted || !context.mounted || _dismissed || ModalRoute.of(context)?.isCurrent != true) return;
                 _previewRequestId = null;
                 if (audio.activeRequestId != requestId) {
                   setState(() => _selectionPending = false);

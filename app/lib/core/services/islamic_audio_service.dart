@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
+import '../logging/app_logger.dart';
 import '../audio/fast_audio_service.dart';
 import '../audio/islamic_audio_catalog.dart';
 import '../audio/islamic_audio_models.dart';
@@ -108,7 +109,8 @@ class IslamicAudioService extends ChangeNotifier {
       try {
         await pending;
         if (identical(_legacyStopPending, pending)) _legacyStopPending = null;
-      } catch (_) {
+      } catch (e, stack) {
+        AppLogger.warn('IslamicAudioService.containLegacyAdhkarPlayback', e, stack);
         _legacyStopFailed = true;
         notifyListeners();
       }
@@ -338,7 +340,11 @@ class IslamicAudioService extends ChangeNotifier {
         if (entity.path.endsWith('.tmp') || entity.path.endsWith('.part')) {
           // A scan must never delete a download that is still in flight.
           if (_cancelTokens.isEmpty) {
-            try { entity.deleteSync(); } catch (_) {}
+            try {
+              entity.deleteSync();
+            } catch (e, stack) {
+              AppLogger.warn('IslamicAudioService.scan.deleteTemp', e, stack);
+            }
           }
           continue;
         }
@@ -501,7 +507,9 @@ class IslamicAudioService extends ChangeNotifier {
       if (tempFile.existsSync()) {
         try {
           tempFile.deleteSync();
-        } catch (_) {}
+        } catch (e, stack) {
+          AppLogger.warn('IslamicAudioService.download.deletePreexistingTemp', e, stack);
+        }
       }
 
       int lastEmitMs = 0;
@@ -549,7 +557,9 @@ class IslamicAudioService extends ChangeNotifier {
             debugPrint('Failed to publish downloaded file for $id: $e');
             try {
               tempFile.deleteSync();
-            } catch (_) {}
+            } catch (e, stack) {
+              AppLogger.warn('IslamicAudioService.download.cleanupTempOnError', e, stack);
+            }
           }
         }
         if (_cancelTokens[id] == cancelToken) {
@@ -565,9 +575,11 @@ class IslamicAudioService extends ChangeNotifier {
             try {
               tempFile.deleteSync();
               break;
-            } catch (_) {
+            } catch (e, stack) {
               if (i < 4) {
                 await Future<void>.delayed(const Duration(milliseconds: 50));
+              } else {
+                AppLogger.warn('IslamicAudioService.download.deleteCancelledTemp', e, stack);
               }
             }
           }
@@ -587,9 +599,11 @@ class IslamicAudioService extends ChangeNotifier {
           try {
             tempFile.deleteSync();
             break;
-          } catch (_) {
+          } catch (e, stack) {
             if (i < 4) {
               await Future<void>.delayed(const Duration(milliseconds: 50));
+            } else {
+              AppLogger.warn('IslamicAudioService.download.deleteFailedTemp', e, stack);
             }
           }
         }
@@ -630,7 +644,8 @@ class IslamicAudioService extends ChangeNotifier {
           _lastDeletionError = _assignedDownloadMessage;
           return false;
         }
-      } catch (_) {
+      } catch (e, stack) {
+        AppLogger.warn('IslamicAudioService.deleteDownloadedTrack.protectedIds', e, stack);
         _deletionBlockedByAdhanProtection = true;
         _lastDeletionError = _unverifiedProtectionMessage;
         return false;
@@ -679,7 +694,8 @@ class IslamicAudioService extends ChangeNotifier {
     if (pinned.isNotEmpty) {
       try {
         protected = await DownloadedAdhanAssignments.protectedIds();
-      } catch (_) {
+      } catch (e, stack) {
+        AppLogger.warn('IslamicAudioService.deleteAllDownloadedTracks.protectedIds', e, stack);
         protected = pinned;
         _deletionBlockedByAdhanProtection = true;
         _lastDeletionError = _unverifiedProtectionMessage;
@@ -705,7 +721,8 @@ class IslamicAudioService extends ChangeNotifier {
           _validatedFileStats.remove(entry.key);
           paths.remove(entry.key);
           sizes.remove(entry.key);
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('IslamicAudioService.deleteAllDownloadedTracks.deleteFile', e, stack);
           _lastDeletionError ??= 'تعذر حذف بعض الملفات من مساحة التخزين.';
         }
       }
@@ -802,7 +819,8 @@ class IslamicAudioService extends ChangeNotifier {
       if (!ok) { _currentTrack = null; _isOnlinePreview = false; }
       notifyListeners();
       return ok;
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.playOnlinePreview', e, stack);
       if (session == _onlinePreviewSession) {
         _isBuffering = false;
         _isPlaying = false;
@@ -1231,14 +1249,18 @@ class IslamicAudioService extends ChangeNotifier {
     try {
       await _sfxPlayer.setAsset('assets/audio/tasbih_click.mp3');
       await _sfxPlayer.play();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.playTasbihClick', e, stack);
+    }
   }
 
   Future<void> playTakbeeratShort() async {
     try {
       await _sfxPlayer.setAsset('assets/audio/takbeerat.mp3');
       await _sfxPlayer.play();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.playTakbeeratShort', e, stack);
+    }
   }
 
   /// Plays authentic approaching prayer voice alert ("اقتربت صلاة كذا.. يرجى الاستعداد والتطهر")
@@ -1258,7 +1280,9 @@ class IslamicAudioService extends ChangeNotifier {
       await _sfxPlayer.stop();
       await _sfxPlayer.setAsset('assets/audio/$assetName.mp3');
       await _sfxPlayer.play();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.playApproachingPrayerAudio', e, stack);
+    }
   }
 
   /// Plays authentic reminder audio (qiyam, duha, sunrise, salawat, istighfar, iqamah)
@@ -1271,13 +1295,17 @@ class IslamicAudioService extends ChangeNotifier {
       await _sfxPlayer.stop();
       await _sfxPlayer.setAsset('assets/audio/$assetName.mp3');
       await _sfxPlayer.play();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.playReminderAudio', e, stack);
+    }
   }
 
   Future<void> stopSfx() async {
     try {
       await _sfxPlayer.stop();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('IslamicAudioService.stopSfx', e, stack);
+    }
   }
 
   List<IslamicAudioTrack> getTracksByType(IslamicAudioType type) {

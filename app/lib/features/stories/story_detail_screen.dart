@@ -258,7 +258,7 @@ ${story.propheticDuaa != null ? '🤲 دعاء نبوي مأثور:\n«${story.p
                                     ),
                                     onPressed: () async {
                                       final ok = await service.downloadStory(story.id);
-                                      if (!mounted) return;
+                                      if (!mounted || !context.mounted) return;
                                       if (ok) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           const SnackBar(content: Text('تم تنزيل القصة بنجاح للاستماع دون إنترنت')),

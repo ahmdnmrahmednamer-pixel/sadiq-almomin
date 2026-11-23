@@ -59,6 +59,8 @@ class SupportService {
       if (launchedWeb) return true;
     } catch (_) {}
 
+    if (!context.mounted) return false;
+
     await copyWithFeedback(
       context: context, text: developerPlayStoreUrl,
       successMessage: 'تم نسخ رابط برامج المطور على متجر Google Play إلى الحافظة بنجاح',
@@ -74,6 +76,8 @@ class SupportService {
       final launched = await urlLauncher(webUri);
       if (launched) return true;
     } catch (_) {}
+
+    if (!context.mounted) return false;
 
     await copyWithFeedback(
       context: context, text: developerFacebookUrl,

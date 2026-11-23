@@ -622,6 +622,7 @@ class _HijriCalendarScreenState extends State<HijriCalendarScreen> {
             lastDate: DateTime(2050),
             locale: const Locale('ar'),
           );
+    if (!mounted) return;
     if (picked != null) {
       setState(() {
         _selectedDate = picked;

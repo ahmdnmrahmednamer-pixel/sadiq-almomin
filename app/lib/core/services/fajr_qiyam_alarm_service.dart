@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz_data;
+import '../logging/app_logger.dart';
 import 'islamic_audio_service.dart';
 import 'prayer_service.dart';
 import '../utils/serial_task_queue.dart';
@@ -357,11 +358,13 @@ class FajrQiyamAlarmService extends ChangeNotifier {
       if (!await write(prefs)) throw StateError('Alarm choice was not saved');
       await prefs.reload();
       if (prefs.get(key) != expected) throw StateError('Alarm choice readback changed');
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('FajrQiyamAlarmService._saveChoice', e, stack);
       // The plugin cache is optimistic even when the durable write fails.
       try {
         if (prefs != null) { await prefs.reload(); recover(prefs); }
-      } catch (_) {
+      } catch (reloadErr, reloadStack) {
+        AppLogger.warn('FajrQiyamAlarmService._saveChoice.reload', reloadErr, reloadStack);
         // Do not publish optimistic cache after a failed reload.
       }
       _preferenceError = 'تعذر تأكيد حفظ إعداد المنبّه. قد يكون الاختيار حُفظ دون تحديث التنبيهات. تحقق من الإعداد ثم أعد المحاولة.';
@@ -481,7 +484,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     if (previous != null) {
       try {
         await previous;
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('FajrQiyamAlarmService._serializeAlarmOp', e, stack);
+      }
     }
     try {
       return await action();
@@ -561,7 +566,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
     try {
       tz_data.initializeTimeZones();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('FajrQiyamAlarmService._scheduleQiyamAlarmLocked.initTimeZones', e, stack);
+    }
     final qiyamTime = _qiyamEnabled ? getNextQiyamWakeTime(data) : null;
     if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
     if (qiyamTime == null) return AlarmScheduleOutcome.applied;
@@ -606,7 +613,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
     try {
       try {
         tz_data.initializeTimeZones();
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('FajrQiyamAlarmService._scheduleAlarmsLocked.initTimeZones', e, stack);
+      }
       // Cancel previous ID 880 (Pre-Fajr) and ID 881 (Qiyam) before rescheduling
       await _notifications.cancel(preFajrAlarmNotificationId);
       if (generation != _alarmScheduleGeneration) return AlarmScheduleOutcome.superseded;
@@ -679,7 +688,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         'النغمة المختارة: ${tone.title}',
         NotificationDetails(android: androidDetails),
       );
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('FajrQiyamAlarmService.previewTone', e, stack);
+    }
   }
 
   Map<String, dynamic> exportData() => {

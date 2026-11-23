@@ -1,13 +1,15 @@
-name: tests-manual
+name: CI
 
-# فحص الاختبارات يعمل بالتشغيل اليدوي فقط.
-# لا يعمل تلقائيًا مع أي رفع أو طلب سحب.
-# لا تشغله قبل التأكد من إعدادات فوترة GitHub Actions.
 on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   unittest:
+    name: Python Content Builder Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,3 +20,21 @@ jobs:
         run: |
           cd tools/content_builder
           python -m unittest discover -p "test_*.py" -v
+
+  flutter-ci:
+    name: Flutter Analyze & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.7"
+          channel: "stable"
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze code
+        run: flutter analyze

@@ -87,6 +87,7 @@ class SettingsQuranAndAudioSection extends StatelessWidget {
                     .toList()],
                 onChanged: (val) async {
                   await s.setSelectedReciter(val);
+                  if (!context.mounted) return;
                   if (AyahAudioPlayer.instance.isPlaying.value) {
                     await AyahAudioPlayer.instance
                         .previewReciterWithFeedback(context, s.currentReciter);

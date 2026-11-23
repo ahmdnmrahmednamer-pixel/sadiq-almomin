@@ -635,6 +635,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                                 color: AppColors.primaryGreen, size: 20),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
+                                    tooltip: 'مسح البحث',
                                     icon: const Icon(Icons.clear, size: 18),
                                     onPressed: () {
                                       _searchController.clear();

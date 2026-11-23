@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../logging/app_logger.dart';
 import '../localization/app_localizations.dart';
 import '../notifications/prayer_notification_service.dart';
 import 'adhkar_service.dart';
@@ -877,12 +878,14 @@ class SettingsService extends ChangeNotifier {
       if (prefs.getBool('adhan_alerts') != enabled) {
         throw StateError('Adhan alert setting readback changed');
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService._toggleAdhanAlerts.save', e, stack);
       // Re-read actual persistence. Never begin native effects on uncertain intent.
       try {
         await prefs.reload();
         _adhanAlertsEnabled = prefs.getBool('adhan_alerts') ?? _adhanAlertsEnabled;
-      } catch (_) {
+      } catch (reloadErr, reloadStack) {
+        AppLogger.warn('SettingsService._toggleAdhanAlerts.reload', reloadErr, reloadStack);
         // A failed reload leaves SharedPreferences' optimistic write cache.
         // It is not persistence evidence. Keep the last confirmed live value.
       }
@@ -892,7 +895,8 @@ class SettingsService extends ChangeNotifier {
     _adhanAlertsEnabled = enabled;
     try {
       await PrayerNotificationService.instance.toggleMaster(enabled);
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService._toggleAdhanAlerts.toggleMaster', e, stack);
       // Preserve the existing native-failure contract for current callers.
     }
     notifyListeners();
@@ -951,7 +955,9 @@ class SettingsService extends ChangeNotifier {
     await _prefs?.setBool('pre_adhan_alert', enabled);
     try {
       await PrayerNotificationService.instance.togglePreReminder(enabled);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService.togglePreAdhanAlert', e, stack);
+    }
     notifyListeners();
   }
 
@@ -960,7 +966,9 @@ class SettingsService extends ChangeNotifier {
     await _prefs?.setBool('iqamah_alert', enabled);
     try {
       await PrayerNotificationService.instance.toggleIqamahReminder(enabled);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService.toggleIqamahAlert', e, stack);
+    }
     notifyListeners();
   }
 
@@ -975,7 +983,9 @@ class SettingsService extends ChangeNotifier {
     await _prefs?.setBool('tasbih_vibration', enabled);
     try {
       AdhkarService.instance.toggleHaptic(enabled);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService.toggleTasbihVibration', e, stack);
+    }
     notifyListeners();
   }
 
@@ -990,7 +1000,9 @@ class SettingsService extends ChangeNotifier {
     await _prefs?.setBool('tasbih_volume_button_enabled', enabled);
     try {
       AdhkarService.instance.toggleVolumeButtonTasbih(enabled);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService.toggleTasbihVolumeButton', e, stack);
+    }
     notifyListeners();
   }
 
@@ -999,7 +1011,9 @@ class SettingsService extends ChangeNotifier {
     await _prefs?.setBool('tasbih_slider_enabled', enabled);
     try {
       AdhkarService.instance.toggleTasbihSlider(enabled);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('SettingsService.toggleTasbihSlider', e, stack);
+    }
     notifyListeners();
   }
 

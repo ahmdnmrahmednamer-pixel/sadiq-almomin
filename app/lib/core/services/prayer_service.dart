@@ -3,6 +3,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../logging/app_logger.dart';
 import '../models/arab_countries.dart';
 import '../models/prayer_data.dart';
 import '../notifications/prayer_notification_service.dart';
@@ -304,7 +305,8 @@ class PrayerService extends ChangeNotifier {
   Future<bool> openLocationSettings() async {
     try {
       return await _locationProvider.openLocationSettings();
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService.openLocationSettings', e, stack);
       return false;
     }
   }
@@ -312,7 +314,8 @@ class PrayerService extends ChangeNotifier {
   Future<bool> openAppSettings() async {
     try {
       return await _locationProvider.openAppSettings();
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService.openAppSettings', e, stack);
       return false;
     }
   }
@@ -327,7 +330,9 @@ class PrayerService extends ChangeNotifier {
     if (previous != null) {
       try {
         await previous;
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('PrayerService._serializeLocationMutation', e, stack);
+      }
     }
     try {
       return await action();
@@ -388,10 +393,14 @@ class PrayerService extends ChangeNotifier {
     try {
       await PrayerNotificationService.instance
           .cancelLocationDerivedNotifications(cancelStaleAdhanSnooze: true);
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService._cancelDerivedNotificationsForUnknown.notif', e, stack);
+    }
     try {
       await FajrQiyamAlarmService.instance.syncWithLocationAvailability();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService._cancelDerivedNotificationsForUnknown.alarm', e, stack);
+    }
   }
 
   ({String locationName, String? calculationMethod}) _resolveCityMatch(
@@ -743,7 +752,8 @@ class PrayerService extends ChangeNotifier {
           } else {
             rethrow;
           }
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('PrayerService.determinePosition.getCurrentPosition', e, stack);
           if (!isUserTriggered &&
               cachedPosition != null &&
               cachedFixTime != null) {
@@ -859,7 +869,8 @@ class PrayerService extends ChangeNotifier {
         );
       }
       return false;
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService.determinePosition', e, stack);
       if (!isStaleRequest()) {
         _setLocationError(
           LocationErrorType.unavailable,
@@ -964,8 +975,12 @@ class PrayerService extends ChangeNotifier {
             notifyListeners();
           }
         }));
-      }, onError: (_) {});
-    } catch (_) {}
+      }, onError: (Object err, StackTrace stack) {
+        AppLogger.warn('PrayerService.initGeolocatorStream.onError', err, stack);
+      });
+    } catch (e, stack) {
+      AppLogger.warn('PrayerService.initGeolocatorStream', e, stack);
+    }
   }
 
   Future<bool> requestGpsLocation({bool isAutoInit = false}) async {
@@ -996,10 +1011,14 @@ class PrayerService extends ChangeNotifier {
     if (updateSchedules) {
       try {
         PrayerNotificationService.instance.schedulePrayerNotifications(_currentData!);
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('PrayerService._calculatePrayers.notifications', e, stack);
+      }
       try {
         FajrQiyamAlarmService.instance.syncWithLocationAvailability(_currentData!);
-      } catch (_) {}
+      } catch (e, stack) {
+        AppLogger.warn('PrayerService._calculatePrayers.alarm', e, stack);
+      }
     }
     notifyListeners();
   }

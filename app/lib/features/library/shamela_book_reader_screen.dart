@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -146,7 +147,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
     if (message.isEmpty) return;
     try {
       SemanticsService.announce(message, TextDirection.rtl);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[shamela_book_reader_screen] $e');
+      }
+    }
   }
 
   Future<void> _initAndLoadInitialPage() async {
@@ -164,7 +169,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
         _announce(
             'استعادة موضع القراءة السابق لكتاب ${widget.bookTitle}: صفحة $savedPage');
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[shamela_book_reader_screen] $e');
+      }
+    }
 
     _loadPage(_currentPage);
   }
@@ -173,7 +182,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('$_prefsPrefix${widget.bookId}', page);
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[shamela_book_reader_screen] $e');
+      }
+    }
   }
 
   Future<File> _getCacheFile(int page) async {
@@ -229,7 +242,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
 
       try {
         await cacheFile.writeAsString(jsonEncode(parsed.toJson()));
-      } catch (_) {}
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[shamela_book_reader_screen] $e');
+        }
+      }
 
       if (!mounted) return;
       setState(() {
@@ -253,7 +270,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
               parsed.paragraphs.isEmpty) {
             try {
               await cacheFile.delete();
-            } catch (_) {}
+            } catch (e) {
+              if (kDebugMode) {
+                debugPrint('[shamela_book_reader_screen] $e');
+              }
+            }
             throw const FormatException('Cached page corrupted or mismatched');
           }
 
@@ -268,7 +289,11 @@ class _ShamelaBookReaderScreenState extends State<ShamelaBookReaderScreen> {
           _announcePageContent(parsed, fromCache: true);
           _scrollToTop();
           return;
-        } catch (_) {}
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[shamela_book_reader_screen] $e');
+          }
+        }
       }
 
       if (!mounted) return;

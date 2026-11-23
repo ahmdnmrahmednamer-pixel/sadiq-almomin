@@ -49,9 +49,12 @@ class OutputSafetyTest(unittest.TestCase):
 
     def test_success_replaces_output_with_complete_database(self):
         builder.init_database(self.output)
-        with sqlite3.connect(self.output) as conn:
+        conn = sqlite3.connect(self.output)
+        try:
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM ayah").fetchone()[0], 6236)
             self.assertEqual(conn.execute("PRAGMA integrity_check").fetchone()[0], "ok")
+        finally:
+            conn.close()
         self.assertEqual(list(self.output.parent.glob(".quran-build-*")), [])
 
     def test_relative_filename_is_supported(self):
@@ -61,8 +64,11 @@ class OutputSafetyTest(unittest.TestCase):
             builder.init_database("quran.db")
         finally:
             os.chdir(previous)
-        with sqlite3.connect(self.output) as conn:
+        conn = sqlite3.connect(self.output)
+        try:
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM ayah").fetchone()[0], 6236)
+        finally:
+            conn.close()
 
 
 if __name__ == "__main__":

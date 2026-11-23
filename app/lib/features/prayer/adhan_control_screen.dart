@@ -1572,6 +1572,7 @@ class _AdhanControlScreenState extends State<AdhanControlScreen>
               } else {
                 await audioService.playTrackById('duaa_sharawi_post_prayer');
               }
+              if (!mounted) return;
               setState(() {});
             },
           ),

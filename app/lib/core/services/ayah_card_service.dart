@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../logging/app_logger.dart';
 import '../models/surah.dart';
 import '../models/ayah.dart';
 
@@ -182,8 +183,8 @@ class AyahCardService {
       } finally {
         image.dispose();
       }
-    } catch (e) {
-      debugPrint('AyahCardService.captureWidgetToBytes error: $e');
+    } catch (e, stack) {
+      AppLogger.warn('AyahCardService.captureWidgetToBytes', e, stack);
       return null;
     }
   }
@@ -197,13 +198,19 @@ class AyahCardService {
     Directory dir;
     try {
       dir = await getTemporaryDirectory();
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('AyahCardService.saveCardImageFile.tempDir', e, stack);
       dir = Directory.systemTemp;
     }
     
     final filename = 'ayah_card_${surahId}_${ayahNumber}_${DateTime.now().millisecondsSinceEpoch}.png';
     final file = File('${dir.path}/$filename');
-    await file.writeAsBytes(bytes, flush: true);
+    try {
+      await file.writeAsBytes(bytes, flush: true);
+    } catch (e, stack) {
+      AppLogger.warn('AyahCardService.saveCardImageFile.writeBytes', e, stack);
+      rethrow;
+    }
     return file;
   }
 
@@ -247,14 +254,16 @@ class AyahCardService {
           subject: 'آية كريمة من سورة ${surah.nameAr}',
         );
         return;
-      } catch (e) {
-        debugPrint('Share file failed, falling back to text: $e');
+      } catch (e, stack) {
+        AppLogger.warn('AyahCardService.shareCard.shareFile', e, stack);
       }
     }
 
     // Fallback if image capture fails
     try {
-        await Share.share(caption, subject: 'آية كريمة من سورة ${surah.nameAr}');
-      } catch (_) {}
+      await Share.share(caption, subject: 'آية كريمة من سورة ${surah.nameAr}');
+    } catch (e, stack) {
+      AppLogger.warn('AyahCardService.shareCard.fallbackShareText', e, stack);
+    }
   }
 }

@@ -1,3 +1,4 @@
+import '../../core/logging/app_logger.dart';
 import '../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -98,7 +99,10 @@ ${_quoteController.text.trim()}
               tooltip: 'نسخ النص المصمم',
               icon: const Icon(Icons.copy_rounded),
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: _composeCardText())).catchError((_) {});
+                Clipboard.setData(ClipboardData(text: _composeCardText()))
+                    .catchError((Object err, StackTrace stack) {
+                  AppLogger.warn('DaawahCardStudioScreen.copyText', err, stack);
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('تم نسخ البطاقة الدعوية إلى الحافظة')),
                 );
@@ -107,11 +111,20 @@ ${_quoteController.text.trim()}
             IconButton(
               tooltip: 'مشاركة البطاقة',
               icon: const Icon(Icons.share_rounded),
-              onPressed: () {
-              try {
-                Share.share(_composeCardText());
-              } catch (_) {}
-            },
+              onPressed: () async {
+                try {
+                  await Share.share(_composeCardText());
+                } catch (e, stack) {
+                  AppLogger.warn('DaawahCardStudioScreen.shareCard', e, stack);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تعذر فتح نافذة المشاركة، يرجى المحاولة مرة أخرى'),
+                      ),
+                    );
+                  }
+                }
+              },
             ),
           ],
         ),

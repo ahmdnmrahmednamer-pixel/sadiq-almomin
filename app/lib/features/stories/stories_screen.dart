@@ -668,7 +668,7 @@ class _StoriesScreenState extends State<StoriesScreen> {
                             tooltip: 'تحميل القصة للاستماع دون إنترنت',
                             onPressed: () async {
                               final ok = await service.downloadStory(story.id);
-                              if (!mounted) return;
+                              if (!mounted || !context.mounted) return;
                               if (ok) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text('تم تنزيل ${story.characterName} بنجاح للاستماع دون إنترنت')),

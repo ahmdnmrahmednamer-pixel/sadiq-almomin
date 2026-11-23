@@ -777,7 +777,8 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
               },
               onLongPress: () async {
                 final surah = await QuranRepository.getSurahById(ayah.surahId);
-                if (surah != null && context.mounted) {
+                if (!mounted) return;
+                if (surah != null) {
                   AyahActionSheet.show(context, surah: surah, ayah: ayah);
                 }
               },
@@ -831,7 +832,8 @@ class _PageModeMushafScreenState extends State<PageModeMushafScreen> {
           onOpen: (i) async {
             final a = surahAyahs[i];
             final surah = await QuranRepository.getSurahById(a.surahId);
-            if (surah != null && context.mounted) {
+            if (!mounted) return;
+            if (surah != null) {
               AyahActionSheet.show(context, surah: surah, ayah: a);
             }
           },

@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../logging/app_logger.dart';
 import '../utils/serial_task_queue.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -79,7 +80,8 @@ class AdhanSensorGestureService extends ChangeNotifier {
           await prefs.reload();
           if (prefs.get(key) != enabled)
             throw StateError('Sensor readback changed');
-        } catch (_) {
+        } catch (e, stack) {
+          AppLogger.warn('AdhanSensorGestureService._saveChoice', e, stack);
           // A rejected write may still update the plugin's optimistic cache.
           try {
             if (prefs != null) {
@@ -97,7 +99,8 @@ class AdhanSensorGestureService extends ChangeNotifier {
                   break;
               }
             }
-          } catch (_) {
+          } catch (reloadErr, reloadStack) {
+            AppLogger.warn('AdhanSensorGestureService._saveChoice.reload', reloadErr, reloadStack);
             // A failed read cannot certify optimistic SharedPreferences cache.
           }
           _preferenceError =
@@ -218,7 +221,9 @@ class AdhanSensorGestureService extends ChangeNotifier {
           _shakeSpikes.clear();
           try {
             HapticFeedback.heavyImpact();
-          } catch (_) {}
+          } catch (e, stack) {
+            AppLogger.warn('AdhanSensorGestureService.shake.haptic', e, stack);
+          }
           _onShakeCallback?.call();
         }
       }
@@ -245,7 +250,9 @@ class AdhanSensorGestureService extends ChangeNotifier {
           _faceDownStartTime = null;
           try {
             HapticFeedback.mediumImpact();
-          } catch (_) {}
+          } catch (e, stack) {
+            AppLogger.warn('AdhanSensorGestureService.flip.haptic', e, stack);
+          }
           _onFlipCallback?.call();
         }
       }
@@ -263,7 +270,9 @@ class AdhanSensorGestureService extends ChangeNotifier {
   void triggerSimulatedShake() {
     try {
       HapticFeedback.heavyImpact();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('AdhanSensorGestureService.simulateShake.haptic', e, stack);
+    }
     _onShakeCallback?.call();
   }
 
@@ -271,7 +280,9 @@ class AdhanSensorGestureService extends ChangeNotifier {
   void triggerSimulatedFlip() {
     try {
       HapticFeedback.mediumImpact();
-    } catch (_) {}
+    } catch (e, stack) {
+      AppLogger.warn('AdhanSensorGestureService.simulateFlip.haptic', e, stack);
+    }
     _onFlipCallback?.call();
   }
 }

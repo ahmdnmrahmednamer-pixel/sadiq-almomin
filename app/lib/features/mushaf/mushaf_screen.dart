@@ -549,7 +549,8 @@ class _MushafScreenState extends State<MushafScreen> with SingleTickerProviderSt
                               ),
                               onTap: () async {
                                 final surah = await QuranRepository.getSurahById(juz.startSurah);
-                                if (mounted && surah != null) {
+                                if (!mounted || !context.mounted) return;
+                                if (surah != null) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(

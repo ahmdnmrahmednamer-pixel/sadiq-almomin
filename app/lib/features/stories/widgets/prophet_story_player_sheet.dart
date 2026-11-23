@@ -366,7 +366,7 @@ class _ProphetStoryPlayerSheetState extends State<ProphetStoryPlayerSheet> {
                                     onPressed: () async {
                                       final ok = await StoriesService.instance
                                           .downloadStory(story.id);
-                                      if (!mounted) return;
+                                      if (!mounted || !context.mounted) return;
                                       if (ok) {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(

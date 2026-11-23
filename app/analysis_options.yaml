@@ -8,7 +8,7 @@ analyzer:
   errors:
     experimental_member_use: ignore
     deprecated_member_use: ignore
-    use_build_context_synchronously: ignore
+    use_build_context_synchronously: warning
     unused_import: warning
     unused_local_variable: warning
     invalid_null_aware_operator: warning

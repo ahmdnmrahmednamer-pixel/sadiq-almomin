@@ -422,9 +422,8 @@ class _QuranNotesScreenState extends State<QuranNotesScreen> {
                                       textImlaei: note.ayahText,
                                       textSearch: note.ayahText,
                                     );
-                                    if (mounted) {
-                                      AyahNoteEditDialog.show(context, surah: surah, ayah: ayah);
-                                    }
+                                    if (!mounted || !context.mounted) return;
+                                    AyahNoteEditDialog.show(context, surah: surah, ayah: ayah);
                                   },
                                 ),
                                 IconButton(

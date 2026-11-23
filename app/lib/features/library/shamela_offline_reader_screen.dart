@@ -201,6 +201,7 @@ class _ShamelaOfflineReaderScreenState
                           ),
                         ),
                         IconButton(
+                          tooltip: 'إغلاق فهرس الكتاب',
                           icon: const Icon(Icons.close_rounded),
                           onPressed: () => Navigator.of(ctx).pop(),
                         ),

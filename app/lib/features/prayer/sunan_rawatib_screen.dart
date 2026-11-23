@@ -280,7 +280,7 @@ class _SunanRawatibScreenState extends State<SunanRawatibScreen> {
                         onChanged: (_) async {
                           final result = await s.toggleSunnah(item.id,
                               date: _selectedDate);
-                          if (!mounted) return;
+                          if (!mounted || !context.mounted) return;
                           if (result.status ==
                               SunanRawatibOperationStatus
                                   .writeRefusedUnreadable) {

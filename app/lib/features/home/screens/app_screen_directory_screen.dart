@@ -867,6 +867,7 @@ class _AppScreenDirectoryScreenState extends State<AppScreenDirectoryScreen> {
                               size: 20, color: AppColors.primaryGreen),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
+                                  tooltip: 'مسح البحث',
                                   icon:
                                       const Icon(Icons.clear_rounded, size: 18),
                                   onPressed: () {

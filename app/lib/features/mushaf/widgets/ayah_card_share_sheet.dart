@@ -1,3 +1,4 @@
+import '../../../core/logging/app_logger.dart';
 import '../../../core/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,7 +64,8 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
           _isLoadingTafsir = false;
         });
       }
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.warn('AyahCardShareSheet._fetchTafsir', e, stack);
       if (mounted) {
         setState(() => _isLoadingTafsir = false);
       }
@@ -95,7 +97,9 @@ class _AyahCardShareSheetState extends State<AyahCardShareSheet> {
       ayah: widget.ayah,
       tafsirText: _includeTafsir ? _tafsirText : null,
     );
-    Clipboard.setData(ClipboardData(text: text)).catchError((_) {});
+    Clipboard.setData(ClipboardData(text: text)).catchError((Object err, StackTrace stack) {
+      AppLogger.warn('AyahCardShareSheet._copyAyahText', err, stack);
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('تم نسخ نص الآية الكريمة والتفسير بنجاح'),

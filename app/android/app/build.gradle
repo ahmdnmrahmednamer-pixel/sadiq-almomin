@@ -81,6 +81,7 @@ android {
             if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             } else {
+                logger.warn("WARNING: android/key.properties not found; falling back to debug signing for release build.")
                 signingConfig signingConfigs.debug
             }
             minifyEnabled true
