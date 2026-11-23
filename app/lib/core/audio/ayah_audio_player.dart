@@ -116,11 +116,16 @@ class AyahAudioPlayer {
     _setupPlayerStateListener();
   }
 
-  AyahAudioPlayer._internal() {
+  @visibleForTesting
+  AyahAudioPlayer.forTesting(AudioPlayer player) : _player = player {
     _setupPlayerStateListener();
   }
 
-  final AudioPlayer _player = AudioPlayer();
+  AyahAudioPlayer._internal() : _player = AudioPlayer() {
+    _setupPlayerStateListener();
+  }
+
+  final AudioPlayer _player;
   final ValueNotifier<String?> currentPlayingKey = ValueNotifier<String?>(null);
   final ValueNotifier<bool> isPlaying = ValueNotifier<bool>(false);
   String? _lastSurahName;
@@ -229,8 +234,29 @@ class AyahAudioPlayer {
       await _player.pause();
       isPlaying.value = false;
     } else {
-      isPlaying.value = true;
-      await _player.play();
+      final session = _activePlaySessionId;
+      final key = currentPlayingKey.value;
+      final focus = FastAudioService.instance;
+      int? token;
+      bool isCurrent() => session == _activePlaySessionId &&
+          key == currentPlayingKey.value &&
+          (token == null || token == focus.activePlaybackToken);
+      try {
+        token = await focus.claimAudioFocus(player: _player, onStopOther: stop);
+        if (!isCurrent()) return;
+        isPlaying.value = true;
+        // play completes at playback end. A pending resume must not hold the
+        // caller, and a late rejection must not change a newer request.
+        unawaited(_player.play().catchError((Object error, StackTrace stack) {
+          if (!isCurrent()) return;
+          isPlaying.value = _isPlayerPlaying;
+          debugPrint('Ayah resume error: $error');
+        }));
+      } catch (error) {
+        if (!isCurrent()) return;
+        isPlaying.value = _isPlayerPlaying;
+        debugPrint('Ayah resume error: $error');
+      }
     }
   }
 
