@@ -1,7 +1,8 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../utils/serial_task_queue.dart';
 
 enum SunanRawatibOperationStatus {
   persisted,
@@ -94,20 +95,9 @@ class SunanRawatibService extends ChangeNotifier {
   static const String _storageKey = 'sunan_rawatib_logs_v1';
   bool _isInitialized = false;
 
-  Future<void> _lastOp = Future.value();
+  final SerialTaskQueue _operations = SerialTaskQueue();
 
-  Future<T> _enqueue<T>(Future<T> Function() op) {
-    final c = Completer<T>();
-    _lastOp = _lastOp.then((_) async {
-      try {
-        final res = await op();
-        c.complete(res);
-      } catch (e, st) {
-        c.completeError(e, st);
-      }
-    });
-    return c.future;
-  }
+  Future<T> _enqueue<T>(Future<T> Function() op) => _operations.run(op);
 
   /// Map of dateKey ('yyyy-MM-dd') -> Set of completed Sunnah IDs
   final Map<String, Set<String>> _dailyCompleted = {};
