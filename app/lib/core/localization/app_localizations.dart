@@ -95,6 +95,21 @@ class QuranTranslationEdition {
     required this.author,
   });
 
+  /// Keep a saved unavailable edition visible without claiming another source.
+  /// This display-only entry is not an available translation or migration.
+  static List<QuranTranslationEdition> choicesWithSaved(String savedId) => [
+        if (!availableTranslations.any((edition) => edition.id == savedId))
+          QuranTranslationEdition(
+            id: savedId,
+            languageCode: '',
+            nameAr: 'الترجمة المحفوظة غير متاحة ($savedId). اختر ترجمة أخرى',
+            nameNative:
+                'Saved translation unavailable ($savedId). Choose another translation',
+            author: '',
+          ),
+        ...availableTranslations,
+      ];
+
   static const List<QuranTranslationEdition> availableTranslations = [
     QuranTranslationEdition(
       id: 'en_rwwad',
