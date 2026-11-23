@@ -24,11 +24,12 @@ void main() {
   final service = PrayerNotificationService.instance;
   final pending = <int, Map>{};
   final canceled = <int>[];
-  bool permission = true, fail = false;
+  bool permission = true, fail = false, failCancel = false;
   Completer<void>? hold;
   setUp(() async {
     permission = true;
     fail = false;
+    failCancel = false;
     hold = null;
     pending.clear();
     canceled.clear();
@@ -41,8 +42,10 @@ void main() {
       if (call.method == 'areNotificationsEnabled') return permission;
       if (call.method == 'getNotificationAppLaunchDetails')
         return {'notificationLaunchedApp': false};
+      if (call.method == 'cancelAll') pending.clear();
       if (call.method == 'cancel') {
         final id = (call.arguments as Map)['id'] as int;
+        if (failCancel && id == 805) throw PlatformException(code: 'cancel_failed');
         canceled.add(id);
         pending.remove(id);
       }
@@ -201,4 +204,52 @@ void main() {
     expect(service.shortInterval('salawat'), (enabled: false, minutes: 1));
     expect(pending[805], isNull);
   });
+  test('Apply repairs a saved matching interval after global cancellation', () async {
+    final session = SettingsSession();
+    addTearDown(session.draft.dispose);
+    const selected = (enabled: true, minutes: 7);
+    session.shortIntervals['salawat']!.stage(selected);
+    await service.setShortReminderInterval('salawat', selected);
+    await service.cancelAll();
+    expect(service.shortReminderError('salawat'), isNull);
+    expect((await session.draft.apply()).success, isTrue);
+    expect(pending[805]?['repeatIntervalMilliseconds'], 7 * 60000);
+  });
+
+  test('registration and cancellation need successful current effects', () async {
+    expect(service.shortReminderScheduleConfirmed('salawat'), isTrue);
+    await service.setShortReminderInterval('salawat', (enabled: true, minutes: 7));
+    expect(service.shortReminderScheduleConfirmed('salawat'), isTrue);
+    permission = false;
+    await service.scheduleShortReminders();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+    expect(service.shortReminderScheduleConfirmed('istighfar'), isTrue);
+    permission = true;
+    fail = true;
+    await service.scheduleShortReminders();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+    fail = false;
+    await service.scheduleShortReminders();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isTrue);
+    failCancel = true;
+    await service.setShortReminderInterval('salawat', (enabled: false, minutes: 7));
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+    failCancel = false;
+    await service.scheduleShortReminders();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isTrue);
+    await service.cancelAll();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+  });
+  test('in-flight work cannot confirm until current generation completes', () async {
+    hold = Completer<void>();
+    final first = service.setShortReminderInterval('salawat', (enabled: true, minutes: 7));
+    await Future<void>.delayed(Duration.zero);
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+    final second = service.scheduleShortReminders();
+    expect(service.shortReminderScheduleConfirmed('salawat'), isFalse);
+    hold!.complete();
+    await Future.wait([first, second]);
+    expect(service.shortReminderScheduleConfirmed('salawat'), isTrue);
+  });
+
 }
