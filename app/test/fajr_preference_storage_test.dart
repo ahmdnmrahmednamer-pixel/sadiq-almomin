@@ -266,10 +266,10 @@ void main() {
       store.reject = true;
       await service.setPreFajrMinutesBefore(65);
       await tester.pumpAndSettle();
-      final error = find.textContaining('تعذر حفظ إعداد المنبّه');
+      final error = find.textContaining('تعذر تأكيد حفظ إعداد المنبّه');
       expect(error, findsOneWidget);
       expect(tester.getSemantics(error).label,
-          contains('لم يُطبّق الاختيار الجديد'));
+          contains('قد يكون الاختيار حُفظ دون تحديث التنبيهات'));
       expect(service.preFajrMinutesBefore, 25);
       expect(tester.takeException(), isNull);
       const directory = String.fromEnvironment('FAJR_STORAGE_PIXELS');

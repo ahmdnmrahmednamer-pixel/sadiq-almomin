@@ -346,16 +346,25 @@ class FajrQiyamAlarmService extends ChangeNotifier {
 
   Future<bool> _saveChoice(
     Future<bool> Function(SharedPreferences prefs) write,
-    VoidCallback publish,
-  ) => _preferenceQueue.run(() async {
+    VoidCallback publish, {
+    required String key,
+    required Object expected,
+    required void Function(SharedPreferences) recover,
+  }) => _preferenceQueue.run(() async {
     SharedPreferences? prefs;
     try {
       prefs = await SharedPreferences.getInstance();
       if (!await write(prefs)) throw StateError('Alarm choice was not saved');
+      await prefs.reload();
+      if (prefs.get(key) != expected) throw StateError('Alarm choice readback changed');
     } catch (_) {
       // The plugin cache is optimistic even when the durable write fails.
-      try { await prefs?.reload(); } catch (_) {}
-      _preferenceError = 'تعذر حفظ إعداد المنبّه. لم يُطبّق الاختيار الجديد ولم تُحدّث التنبيهات. أعد اختيار الإعداد للمحاولة مرة أخرى.';
+      try {
+        if (prefs != null) { await prefs.reload(); recover(prefs); }
+      } catch (_) {
+        // Do not publish optimistic cache after a failed reload.
+      }
+      _preferenceError = 'تعذر تأكيد حفظ إعداد المنبّه. قد يكون الاختيار حُفظ دون تحديث التنبيهات. تحقق من الإعداد ثم أعد المحاولة.';
       notifyListeners();
       return false;
     }
@@ -369,43 +378,57 @@ class FajrQiyamAlarmService extends ChangeNotifier {
   Future<bool> setPreFajrEnabled(bool enabled) {
     final value = enabled;
     return _saveChoice((prefs) => prefs.setBool('wake_pre_fajr_enabled', value),
-        () => _preFajrEnabled = value);
+        () => _preFajrEnabled = value,
+        key: 'wake_pre_fajr_enabled', expected: value,
+        recover: (prefs) => _preFajrEnabled = prefs.getBool('wake_pre_fajr_enabled') ?? true);
   }
 
   Future<bool> setPreFajrMinutesBefore(int minutes) {
     final value = minutes.clamp(5, 120);
     return _saveChoice((prefs) => prefs.setInt('wake_pre_fajr_minutes', value),
-        () => _preFajrMinutesBefore = value);
+        () => _preFajrMinutesBefore = value,
+        key: 'wake_pre_fajr_minutes', expected: value,
+        recover: (prefs) => _preFajrMinutesBefore = prefs.getInt('wake_pre_fajr_minutes') ?? 25);
   }
 
   Future<bool> setPreFajrTone(String toneId) {
     final value = toneId;
     return _saveChoice((prefs) => prefs.setString('wake_pre_fajr_tone', value),
-        () => _preFajrToneId = value);
+        () => _preFajrToneId = value,
+        key: 'wake_pre_fajr_tone', expected: value,
+        recover: (prefs) => _preFajrToneId = prefs.getString('wake_pre_fajr_tone') ?? 'adhan_fajr');
   }
 
   Future<bool> setQiyamEnabled(bool enabled) {
     final value = enabled;
     return _saveChoice((prefs) => prefs.setBool('wake_qiyam_enabled', value),
-        () => _qiyamEnabled = value);
+        () => _qiyamEnabled = value,
+        key: 'wake_qiyam_enabled', expected: value,
+        recover: (prefs) => _qiyamEnabled = prefs.getBool('wake_qiyam_enabled') ?? true);
   }
 
   Future<bool> setQiyamMode(String mode) {
     final value = mode;
     return _saveChoice((prefs) => prefs.setString('wake_qiyam_mode', value),
-        () => _qiyamMode = value);
+        () => _qiyamMode = value,
+        key: 'wake_qiyam_mode', expected: value,
+        recover: (prefs) => _qiyamMode = prefs.getString('wake_qiyam_mode') ?? 'last_third');
   }
 
   Future<bool> setQiyamMinutesBeforeFajr(int minutes) {
     final value = minutes.clamp(20, 180);
     return _saveChoice((prefs) => prefs.setInt('wake_qiyam_minutes_before', value),
-        () => _qiyamMinutesBeforeFajr = value);
+        () => _qiyamMinutesBeforeFajr = value,
+        key: 'wake_qiyam_minutes_before', expected: value,
+        recover: (prefs) => _qiyamMinutesBeforeFajr = prefs.getInt('wake_qiyam_minutes_before') ?? 60);
   }
 
   Future<bool> setQiyamTone(String toneId) {
     final value = toneId;
     return _saveChoice((prefs) => prefs.setString('wake_qiyam_tone', value),
-        () => _qiyamToneId = value);
+        () => _qiyamToneId = value,
+        key: 'wake_qiyam_tone', expected: value,
+        recover: (prefs) => _qiyamToneId = prefs.getString('wake_qiyam_tone') ?? 'duaa_sharawi_post_prayer');
   }
 
   // One durable key prevents a new hour being paired with an old minute.
@@ -431,6 +454,9 @@ class FajrQiyamAlarmService extends ChangeNotifier {
         _qiyamFixedHour = normalizedHour;
         _qiyamFixedMinute = normalizedMinute;
       },
+      key: 'wake_qiyam_fixed_minutes_v1',
+      expected: normalizedHour * 60 + normalizedMinute,
+      recover: _loadFixedTime,
     );
   }
 
