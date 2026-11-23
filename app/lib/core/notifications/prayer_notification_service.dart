@@ -129,6 +129,21 @@ class PrayerNotificationService extends ChangeNotifier {
       };
 
   final Map<String, String?> _shortErrors = {};
+  final Map<String, ({bool master, ShortReminderInterval interval})>
+      _shortRegistrations = {};
+
+  int _shortConfirmationEpoch = 0;
+  void _invalidateShortConfirmations() {
+    ++_shortConfirmationEpoch;
+    _shortRegistrations.clear();
+  }
+
+  /// Confirms the last completed native effect for current settings, not audio.
+  bool shortReminderScheduleConfirmed(String key) =>
+      !_shortBusy &&
+      _shortRegistrations[key] ==
+          (master: _masterEnabled, interval: shortInterval(key));
+
   bool _shortBusy = false;
   Future<void>? _shortOperation;
   int _shortGeneration = 0;
@@ -179,6 +194,7 @@ class PrayerNotificationService extends ChangeNotifier {
     final prior = _shortOperation;
     final gate = Completer<void>();
     _shortOperation = gate.future;
+    _shortRegistrations.clear();
     _shortBusy = true;
     notifyListeners();
     try {
@@ -188,12 +204,21 @@ class PrayerNotificationService extends ChangeNotifier {
         final key = entry.key;
         try {
           _shortErrors[key] = null;
+          final captured = (master: _masterEnabled, interval: shortInterval(key));
+          final epoch = _shortConfirmationEpoch;
+          void confirm() {
+            if (generation == _shortGeneration && epoch == _shortConfirmationEpoch &&
+                captured == (master: _masterEnabled, interval: shortInterval(key))) {
+              _shortRegistrations[key] = captured;
+            }
+          }
           final frequency = shortFrequency(key);
-          if (!_masterEnabled ||
+          if (!captured.master ||
               !_isInitialized ||
               frequency == ShortReminderFrequency.off) {
             await _localNotifications.cancel(entry.value);
             if (generation != _shortGeneration) return;
+            if (!captured.master || !captured.interval.enabled) confirm();
             continue;
           }
           final android =
@@ -212,7 +237,7 @@ class PrayerNotificationService extends ChangeNotifier {
             key == 'salawat'
                 ? 'اللهم صل وسلم على نبينا محمد'
                 : 'أستغفر الله وأتوب إليه. لا حول ولا قوة إلا بالله',
-            Duration(minutes: shortInterval(key).minutes),
+            Duration(minutes: captured.interval.minutes),
             NotificationDetails(
                 android: AndroidNotificationDetails(
               'short_${key}_reminder_v1',
@@ -228,6 +253,7 @@ class PrayerNotificationService extends ChangeNotifier {
             payload: 'type=short_reminder&kind=$key',
           );
           if (generation != _shortGeneration) return;
+          confirm();
         } catch (_) {
           _shortErrors[key] =
               'تعذر تحديث التذكير. قد يبقى الإعداد السابق فعالاً. أعد المحاولة.';
@@ -479,6 +505,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> _loadSavedSchedulingPreferences({bool reload = false}) async {
+    _invalidateShortConfirmations();
     _adhkarRegistrations.clear();
     _confirmedPrayerVoices.clear();
     final prefs = await SharedPreferences.getInstance();
@@ -2358,6 +2385,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   Future<void> cancelAll() async {
+    _invalidateShortConfirmations();
     _confirmedPrayerVoices.clear();
     _adhkarRegistrations.clear();
     final adhkarPending = _adhkarOperation;
@@ -2366,13 +2394,18 @@ class PrayerNotificationService extends ChangeNotifier {
     ++_shortGeneration;
     final shortPending = _shortOperation;
     if (shortPending != null) await shortPending;
+    _invalidateShortConfirmations();
     final int generation = ++_derivedScheduleGeneration;
     await _serializeDerivedOp<void>(() async {
       _confirmedPrayerVoices.clear();
       if (generation != _derivedScheduleGeneration) return;
       try {
+        _invalidateShortConfirmations();
         await _localNotifications.cancelAll();
-      } catch (_) {}
+      } catch (_) {
+      } finally {
+        _invalidateShortConfirmations();
+      }
     });
   }
 }
