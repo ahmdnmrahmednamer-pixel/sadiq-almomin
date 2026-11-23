@@ -128,7 +128,9 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
                 color: AppColors.primaryGreen.withValues(alpha: 0.28),
               ),
             ),
-            child: Column(
+            // The outer semantic label already includes both visible texts.
+            // Keep InkWell's tap action while announcing name/value once.
+            child: ExcludeSemantics(child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -173,7 +175,7 @@ class SettingsPrayerAndFiqhSection extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
+            )),
           ),
         ),
       ),
