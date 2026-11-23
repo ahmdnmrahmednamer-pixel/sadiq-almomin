@@ -509,6 +509,7 @@ class PrayerNotificationService extends ChangeNotifier {
     // draft entries are not dirty, so this does not itself trigger cancellation.
     ++_masterTransitionEpoch;
     _completedOffTransitionEpoch = null;
+    _completedOnTransitionEpoch = null;
     _invalidateShortConfirmations();
     _adhkarRegistrations.clear();
     _confirmedPrayerVoices.clear();
@@ -923,6 +924,7 @@ class PrayerNotificationService extends ChangeNotifier {
 
   int _masterTransitionEpoch = 0;
   int? _completedOffTransitionEpoch;
+  int? _completedOnTransitionEpoch;
 
   /// This OFF transition's global plugin cancellation completed.
   /// Not continuing alarm absence, Android durability, or other services' state.
@@ -930,10 +932,17 @@ class PrayerNotificationService extends ChangeNotifier {
       !_masterEnabled &&
       _completedOffTransitionEpoch == _masterTransitionEpoch;
 
+  /// Historical completion of this ON transition's requested scheduler work.
+  /// A no-location transition confirms owned cleanup/fixed reminders only.
+  /// Not current alarm absence, Android durability, or future location work.
+  bool get masterOnTransitionCompleted =>
+      _masterEnabled && _completedOnTransitionEpoch == _masterTransitionEpoch;
+
   Future<void>? _masterOperation;
   Future<void> toggleMaster(bool enabled) async {
     final transition = ++_masterTransitionEpoch;
     _completedOffTransitionEpoch = null;
+    _completedOnTransitionEpoch = null;
     final prior = _masterOperation;
     final gate = Completer<void>();
     _masterOperation = gate.future;
@@ -948,15 +957,32 @@ class PrayerNotificationService extends ChangeNotifier {
         rethrow;
       }
       _masterEnabled = enabled;
+      var onBranchCompleted = false;
       if (!enabled) {
         final completed = await cancelAll();
         if (completed && transition == _masterTransitionEpoch && !_masterEnabled) {
           _completedOffTransitionEpoch = transition;
         }
       } else {
-        rescheduleCurrentPrayers();
+        final current = PrayerService.instance.currentData;
+        if (current != null) {
+          onBranchCompleted = await schedulePrayerNotifications(current) ==
+              PrayerScheduleOutcome.applied;
+        } else {
+          // No location is a valid deferred state, not prayer registration.
+          final cleanup = await cancelLocationDerivedNotifications(
+              cancelStaleAdhanSnooze: false);
+          final daily = await scheduleAdhkarReminders();
+          onBranchCompleted = cleanup && daily;
+        }
       }
+      // Keep independent short work even when another branch was unconfirmed.
       await scheduleShortReminders();
+      if (enabled && onBranchCompleted &&
+          shortReminderIds.keys.every(shortReminderScheduleConfirmed) &&
+          transition == _masterTransitionEpoch && _masterEnabled) {
+        _completedOnTransitionEpoch = transition;
+      }
       notifyListeners();
     } finally {
       if (!gate.isCompleted) gate.complete();
@@ -1484,24 +1510,25 @@ class PrayerNotificationService extends ChangeNotifier {
   /// pre-migration Friday slot if any), optionally cancels stale Adhan snooze
   /// (995) by policy, and migrates/rebuilds the fixed-clock Friday reminder on
   /// its dedicated ID (804). Never cancels Adhkar (801..803), Khatma (990), or
-  /// fixed-clock Qiyam (881).
-  Future<void> cancelLocationDerivedNotifications({
+  /// fixed-clock Qiyam (881). Returns current plugin-call completion only.
+  Future<bool> cancelLocationDerivedNotifications({
     bool cancelStaleAdhanSnooze = false,
   }) async {
     final int generation = ++_derivedScheduleGeneration;
     _confirmedPrayerVoices.clear();
-    if (!_isInitialized) return;
-    await _serializeDerivedOp<void>(() async {
-      if (generation != _derivedScheduleGeneration || !_isInitialized) return;
-      await _cancelLocationDerivedRange(generation);
-      if (generation != _derivedScheduleGeneration) return;
+    if (!_isInitialized) return false;
+    return _serializeDerivedOp<bool>(() async {
+      if (generation != _derivedScheduleGeneration || !_isInitialized) return false;
+      var applied = await _cancelLocationDerivedRange(generation);
+      if (generation != _derivedScheduleGeneration) return false;
       if (cancelStaleAdhanSnooze) {
         try {
           await _localNotifications.cancel(adhanSnoozeNotificationId);
-        } catch (_) {}
+        } catch (_) { applied = false; }
       }
-      if (generation != _derivedScheduleGeneration) return;
-      await scheduleFridayReminder();
+      if (generation != _derivedScheduleGeneration) return false;
+      final friday = await scheduleFridayReminder();
+      return applied && friday && generation == _derivedScheduleGeneration;
     });
   }
 
