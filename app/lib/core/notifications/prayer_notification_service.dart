@@ -511,7 +511,7 @@ class PrayerNotificationService extends ChangeNotifier {
     _completedOffTransitionEpoch = null;
     _completedOnTransitionEpoch = null;
     _invalidateShortConfirmations();
-    _adhkarRegistrations.clear();
+    _invalidateAdhkarConfirmations();
     _confirmedPrayerVoices.clear();
     final prefs = await SharedPreferences.getInstance();
     if (reload) await prefs.reload();
@@ -2218,6 +2218,14 @@ class PrayerNotificationService extends ChangeNotifier {
           ({bool master, ({bool enabled, int hour, int minute}) state})>
       _adhkarRegistrations = {};
   Future<void>? _adhkarOperation;
+  int _adhkarGeneration = 0;
+  int _adhkarConfirmationEpoch = 0;
+  int _globalCancellationsInFlight = 0;
+
+  void _invalidateAdhkarConfirmations() {
+    ++_adhkarConfirmationEpoch;
+    _adhkarRegistrations.clear();
+  }
 
   ({bool enabled, int hour, int minute}) _adhkarState(String key) =>
       switch (key) {
@@ -2241,16 +2249,20 @@ class PrayerNotificationService extends ChangeNotifier {
 
   /// Confirms native registration/cancellation for these settings, not playback.
   bool adhkarScheduleConfirmed(String key) =>
+      _globalCancellationsInFlight == 0 && _adhkarOperation == null &&
       _adhkarRegistrations[key] ==
       (master: _masterEnabled, state: _adhkarState(key));
 
   Future<bool> scheduleAdhkarReminders() async {
+    final generation = ++_adhkarGeneration;
+    final epoch = _adhkarConfirmationEpoch;
+    _adhkarRegistrations.clear();
     final prior = _adhkarOperation;
     final gate = Completer<void>();
     _adhkarOperation = gate.future;
     try {
       if (prior != null) await prior;
-      return await _scheduleAdhkarReminders();
+      return await _scheduleAdhkarReminders(generation, epoch);
     } finally {
       gate.complete();
       if (identical(_adhkarOperation, gate.future)) _adhkarOperation = null;
@@ -2258,7 +2270,7 @@ class PrayerNotificationService extends ChangeNotifier {
   }
 
   /// Schedules recurring daily notifications for Morning, Evening, and Sleep Adhkar
-  Future<bool> _scheduleAdhkarReminders() async {
+  Future<bool> _scheduleAdhkarReminders(int generation, int epoch) async {
     _adhkarRegistrations.clear();
     if (!_isInitialized) return false;
     final states = {
@@ -2279,6 +2291,8 @@ class PrayerNotificationService extends ChangeNotifier {
       permissionsAllowed = false;
       debugPrint('Unable to check adhkar scheduling permission: $e');
     }
+    bool canConfirm() => generation == _adhkarGeneration &&
+        epoch == _adhkarConfirmationEpoch && _globalCancellationsInFlight == 0;
     var applied = true;
     _ensureTimeZonesInitialized();
     final now = DateTime.now();
@@ -2319,7 +2333,7 @@ class PrayerNotificationService extends ChangeNotifier {
       } else {
         await _localNotifications.cancel(morningAdhkarNotificationId);
       }
-      if (master == _masterEnabled &&
+      if (canConfirm() && master == _masterEnabled &&
           states['morning'] == _adhkarState('morning')) {
         _adhkarRegistrations['morning'] =
             (master: master, state: states['morning']!);
@@ -2367,7 +2381,7 @@ class PrayerNotificationService extends ChangeNotifier {
       } else {
         await _localNotifications.cancel(eveningAdhkarNotificationId);
       }
-      if (master == _masterEnabled &&
+      if (canConfirm() && master == _masterEnabled &&
           states['evening'] == _adhkarState('evening')) {
         _adhkarRegistrations['evening'] =
             (master: master, state: states['evening']!);
@@ -2415,7 +2429,7 @@ class PrayerNotificationService extends ChangeNotifier {
       } else {
         await _localNotifications.cancel(sleepAdhkarNotificationId);
       }
-      if (master == _masterEnabled &&
+      if (canConfirm() && master == _masterEnabled &&
           states['sleep'] == _adhkarState('sleep')) {
         _adhkarRegistrations['sleep'] =
             (master: master, state: states['sleep']!);
@@ -2431,29 +2445,37 @@ class PrayerNotificationService extends ChangeNotifier {
 
   /// Reports this plugin call's completion, not durable absence of alarms.
   Future<bool> cancelAll() async {
-    _invalidateShortConfirmations();
-    _confirmedPrayerVoices.clear();
-    _adhkarRegistrations.clear();
-    final adhkarPending = _adhkarOperation;
-    if (adhkarPending != null) await adhkarPending;
-    _adhkarRegistrations.clear();
-    ++_shortGeneration;
-    final shortPending = _shortOperation;
-    if (shortPending != null) await shortPending;
-    _invalidateShortConfirmations();
-    final int generation = ++_derivedScheduleGeneration;
-    return _serializeDerivedOp<bool>(() async {
+    ++_globalCancellationsInFlight;
+    _invalidateAdhkarConfirmations();
+    try {
+      _invalidateShortConfirmations();
       _confirmedPrayerVoices.clear();
-      if (generation != _derivedScheduleGeneration) return false;
-      try {
-        _invalidateShortConfirmations();
-        await _localNotifications.cancelAll();
-        return generation == _derivedScheduleGeneration;
-      } catch (_) {
-        return false;
-      } finally {
-        _invalidateShortConfirmations();
-      }
-    });
+      _adhkarRegistrations.clear();
+      final adhkarPending = _adhkarOperation;
+      if (adhkarPending != null) await adhkarPending;
+      _adhkarRegistrations.clear();
+      ++_shortGeneration;
+      final shortPending = _shortOperation;
+      if (shortPending != null) await shortPending;
+      _invalidateShortConfirmations();
+      final int generation = ++_derivedScheduleGeneration;
+      return await _serializeDerivedOp<bool>(() async {
+        _confirmedPrayerVoices.clear();
+        if (generation != _derivedScheduleGeneration) return false;
+        try {
+          _invalidateShortConfirmations();
+          await _localNotifications.cancelAll();
+          return generation == _derivedScheduleGeneration;
+        } catch (_) {
+          return false;
+        } finally {
+          _invalidateShortConfirmations();
+        }
+      });
+    } finally {
+      --_globalCancellationsInFlight;
+      // Work admitted before or during the drain cannot publish after it.
+      _invalidateAdhkarConfirmations();
+    }
   }
 }
