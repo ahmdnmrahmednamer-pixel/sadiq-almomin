@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../localization/app_localizations.dart';
 import '../notifications/prayer_notification_service.dart';
 import 'adhkar_service.dart';
+import '../utils/serial_task_queue.dart';
 
 class ReciterInfo {
   final String id;
@@ -862,12 +863,38 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleAdhanAlerts(bool enabled) async {
+  final SerialTaskQueue _adhanIntentQueue = SerialTaskQueue();
+  Future<void> toggleAdhanAlerts(bool enabled) =>
+      _adhanIntentQueue.run(() => _toggleAdhanAlerts(enabled));
+
+  Future<void> _toggleAdhanAlerts(bool enabled) async {
+    final prefs = _prefs ??= await SharedPreferences.getInstance();
+    try {
+      if (!await prefs.setBool('adhan_alerts', enabled)) {
+        throw StateError('Adhan alert setting was not saved');
+      }
+      await prefs.reload();
+      if (prefs.getBool('adhan_alerts') != enabled) {
+        throw StateError('Adhan alert setting readback changed');
+      }
+    } catch (_) {
+      // Re-read actual persistence. Never begin native effects on uncertain intent.
+      try {
+        await prefs.reload();
+        _adhanAlertsEnabled = prefs.getBool('adhan_alerts') ?? _adhanAlertsEnabled;
+      } catch (_) {
+        // A failed reload leaves SharedPreferences' optimistic write cache.
+        // It is not persistence evidence. Keep the last confirmed live value.
+      }
+      notifyListeners();
+      rethrow;
+    }
     _adhanAlertsEnabled = enabled;
-    await _prefs?.setBool('adhan_alerts', _adhanAlertsEnabled);
     try {
       await PrayerNotificationService.instance.toggleMaster(enabled);
-    } catch (_) {}
+    } catch (_) {
+      // Preserve the existing native-failure contract for current callers.
+    }
     notifyListeners();
   }
 
