@@ -263,7 +263,7 @@ class SettingsSession {
           write: (value) => n.setShortReminderInterval(key, value),
           verify: (value) async => await _saved({
             'notif_short_${key}_frequency': PrayerNotificationService.encodeShortReminderInterval(value)
-          }) && n.shortReminderError(key) == null);
+          }) && n.shortReminderScheduleConfirmed(key));
 
       shortFrequencies[key] = draft.add<ShortReminderFrequency>(
           key: 'short_$key',
@@ -271,7 +271,7 @@ class SettingsSession {
           write: (value) => n.setShortReminderFrequency(key, value),
           verify: (value) async =>
               await _saved({'notif_short_${key}_frequency': value.name}) &&
-              n.shortReminderError(key) == null);
+              n.shortReminderScheduleConfirmed(key));
     }
     morningTime = _time('morning', () => n.morningAdhkarHour,
         () => n.morningAdhkarMinute, n.setMorningAdhkarTime);
